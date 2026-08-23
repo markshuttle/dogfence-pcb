@@ -5,18 +5,28 @@ This guide captures all exact fabrication parameters, high-reliability materials
 
 ---
 
-## 1. Quick File Preparation
+## 1. Automated 1-Command Production Build
 
-### A. Exporting Gerbers from KiCad (if generating fresh):
-1. In KiCad **PCB Editor**, open `pcb/pcb.kicad_pcb`.
-2. Go to **File → Fabrication Outputs → Gerbers (.gbr)...**
-3. Ensure layers are checked: `F.Cu`, `B.Cu`, `F.SilkS`, `B.SilkS`, `F.Mask`, `B.Mask`, `Edge.Cuts`. Click **Plot**.
-4. In the same dialog, click **Generate Drill Files...** → Click **Generate Drill File** (keep Excellon, Millimeters).
-5. Compress all generated `.gbr` and `.drl` files into **`Gerbers.zip`**.
+You can generate and package the complete JLCPCB manufacturing package with a single terminal command:
 
-### B. PCBA Production Files:
-* **BOM File:** `pcb/BOM.csv`
-* **Centroid / CPL File:** `pcb/CPL.csv`
+```bash
+make
+```
+
+This automatically generates the `build/` directory with all verified files ready for upload:
+* **`build/Gerbers.zip`** — Master 2-layer Gerbers & Excellon drill files.
+* **`build/BOM.csv`** — Verified PCBA Bill of Materials.
+* **`build/CPL.csv`** — Verified Pick-and-Place Centroid component positions.
+* **`build/FlyTest.zip`** — Flying Probe Test package (contains `pcb.d356` netlist + Gerbers).
+* **`build/pcb.d356`** — IPC-D-356 Electrical Test netlist.
+
+---
+
+### Manual GUI Export Steps (Alternative):
+1. **Gerbers:** In KiCad PCB Editor, **File → Fabrication Outputs → Gerbers (.gbr)...** (Layers: `F.Cu`, `B.Cu`, `F.SilkS`, `B.SilkS`, `F.Mask`, `B.Mask`, `Edge.Cuts`).
+2. **Drills:** In the same dialog, click **Generate Drill Files...** (Excellon, Millimeters, Separate PTH/NPTH).
+3. **IPC-D-356:** **File → Fabrication Outputs → IPC-D-356 Netlist File (.d356)...**
+4. **CPL Position:** **File → Fabrication Outputs → Component Placement (.pos)...** (Format: CSV, Units: mm).
 
 ---
 
