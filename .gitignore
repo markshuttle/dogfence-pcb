@@ -2,3 +2,4 @@ pcb/~pcb.kicad_pcb.lck
 pcb/Gerbers.zip
 pcb/FlyTest.zip
 build/
+.workshop.lock
