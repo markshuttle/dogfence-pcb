@@ -836,7 +836,7 @@
 		(layer "F.Cu")
 		(uuid "9121d0e6-c0a8-4519-8f10-657be6e58792")
 		(at 116 138.5)
-		(property "Reference" "R2 (6.8k 1W)"
+		(property "Reference" "R2 (2.2k 1W)"
 			(at 0 -3.3 0)
 			(layer "F.SilkS")
 			(uuid "63a149d3-4ed8-47b2-b0de-e5f3b12bced9")
@@ -847,7 +847,7 @@
 				)
 			)
 		)
-		(property "Value" "6.8k 1W"
+		(property "Value" "2.2k 1W"
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
@@ -1141,7 +1141,7 @@
 		(layer "F.Cu")
 		(uuid "b418dda5-ed0a-4a64-9ae3-7952a543779f")
 		(at 116 106.5)
-		(property "Reference" "R1 (6.8k 1W)"
+		(property "Reference" "R1 (2.2k 1W)"
 			(at 0 3.3 0)
 			(layer "F.SilkS")
 			(uuid "1f715a4b-6afc-4d73-8a12-a17972a7f9f8")
@@ -1152,7 +1152,7 @@
 				)
 			)
 		)
-		(property "Value" "6.8k 1W"
+		(property "Value" "2.2k 1W"
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)

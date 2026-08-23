@@ -33,7 +33,7 @@ This document provides a comprehensive risk and failure-mode analysis for the 4k
 
      [ Wire A/C (0V / DC Neg) ]                     [ Wire B (+36V DC) ]
                  │                                            │
-                 ├──[ 6.8kΩ 1W ]───[ 1N4007G ]───[ LED ]──────┤
+                 ├──[ 2.2kΩ 1W ]───[ 1N4007G ]───[ LED ]──────┤
                  │     (R1/R2)       (D1/D2)      (A/C)       │
                  │                                            │
                  ▼                                            ▼
@@ -67,8 +67,8 @@ This document provides a comprehensive risk and failure-mode analysis for the 4k
 
 | Fault Scenario | Immediate Effect | Component Safety | Resolution / Safeguard |
 |:---|:---|:---|:---|
-| **LED Flying Leads Inverted (`+` and `-` swapped at `J_LED_A` / `J_LED_C`)** | Affected LED does not light in TEST mode. | **Safe.** Protected by series 1N4007 diode and 6.8kΩ resistor. | Swap wire leads at screw terminal so Anode matches `+` (square pad). |
-| **Pigtail Wires Swapped at `J_IN` (e.g., A into B, B into A)** | Milestone rung logic inverted at that specific box. | **Safe.** 1N4007 diodes block reverse voltages; forward rungs limit current to $<5\text{ mA}$. | Rewire pigtails to match terminal silkscreen (`A`, `B`, `C`). |
+| **LED Flying Leads Inverted (`+` and `-` swapped at `J_LED_A` / `J_LED_C`)** | Affected LED does not light in TEST mode. | **Safe.** Protected by series 1N4007 diode and 2.2kΩ resistor. | Swap wire leads at screw terminal so Anode matches `+` (Left pad). |
+| **Pigtail Wires Swapped at `J_IN` (e.g., A into B, B into A)** | Milestone rung logic inverted at that specific box. | **Safe.** 1N4007 diodes block reverse voltages; forward rungs limit current to $<15\text{ mA}$. | Rewire pigtails to match terminal silkscreen (`A`, `B`, `C`). |
 | **Short Circuit Between Cores (e.g., Core A shorted to Core B in cable)** | In TEST mode: 36V power supply sees short across loop resistance. In RUN mode: Transmitter impedance shifts. | **Protected.** In TEST mode, the 2A inline power supply fuse blows instantly, protecting wiring and PCB traces. | Clear cable short; replace 2A fast-blow fuse. |
 | **Earth Stake Connected at Standard Milestone (Non-Surge Box)** | No operational effect; earth bus connects to GDTs only. | **Safe.** GDTs maintain 470V galvanic isolation between earth and signal lines. | Harmless, but extra ground stakes are only required at the 5 designated surge stations. |
 | **Earth Wire Connected Directly to Wire A, B, or C (Bypassing `J_EARTH`)** | Fence loop becomes directly grounded, attenuating the SmartFence RF signal. | **Safe for components; inhibits RF fence boundary.** | Move ground lead to `J_EARTH` terminal so GDT spark gaps isolate earth from RF. |
@@ -81,7 +81,7 @@ This document provides a comprehensive risk and failure-mode analysis for the 4k
 * **Direct Lightning Strike / High-Energy Induction:**
   * **Protection:** Ruilon 2R470TD-8 / Bourns 2027-42 GDTs rated for **20,000A (20kA)** impulse discharge ($8/20\ \mu\text{s}$) on all three conductor cores.
   * **PCB Track Sizing:** Fabricated with heavy **2 oz copper (70 µm)** and wide copper pours to carry transient discharge currents to earth rods without trace fusing.
-  * **Component Overload Headroom:** 1N4007G diodes tolerate **30A forward surge ($I_{\text{FSM}}$)**; 1W metal film resistors operate at only **16% rated power** during continuous DC test ($0.16\text{ W}$).
+  * **Component Overload Headroom:** 1N4007G diodes tolerate **30A forward surge ($I_{\text{FSM}}$)**; 1W metal film resistors operate at only **33% rated power** during continuous DC test ($0.33\text{ W}$).
 
 ---
 

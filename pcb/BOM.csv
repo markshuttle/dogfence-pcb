@@ -1,8 +1,8 @@
 Comment,Designator,Footprint,LCSC Part #,MPN,Manufacturer
 "KF128-5.08-3P",J_IN,"TerminalBlock_Phoenix_MKDS-1,5-3-5.08_1x03_P5.08mm_Horizontal",C474953,"KF128-5.08-3P","Cixi Kefa Elec"
-"KF129S-5.08-2P",J_EARTH,"TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal",C7435702,"KF129S-5.08-2P","Cixi Kefa Elec"
-"KF129S-5.08-2P",J_LED_A,"TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal",C7435702,"KF129S-5.08-2P","Cixi Kefa Elec"
-"KF129S-5.08-2P",J_LED_C,"TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal",C7435702,"KF129S-5.08-2P","Cixi Kefa Elec"
+"KF129-5.08-2P",J_EARTH,"TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal",C475092,"KF129-5.08-2P","Cixi Kefa Elec"
+"KF129-5.08-2P",J_LED_A,"TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal",C475092,"KF129-5.08-2P","Cixi Kefa Elec"
+"KF129-5.08-2P",J_LED_C,"TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal",C475092,"KF129-5.08-2P","Cixi Kefa Elec"
 "2.2k 1W",R1,"R_Axial_DIN0414_L11.9mm_D4.5mm_P15.24mm_Horizontal","ASSIGN_BY_JLCPCB","MFR01SF2201A10","Uni-Royal"
 "2.2k 1W",R2,"R_Axial_DIN0414_L11.9mm_D4.5mm_P15.24mm_Horizontal","ASSIGN_BY_JLCPCB","MFR01SF2201A10","Uni-Royal"
 "1N4007G",D1,"D_DO-41_SOD81_P10.16mm_Horizontal",C232439,"1N4007G","LGE"

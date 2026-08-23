@@ -56,7 +56,7 @@ Perform these steps in a clean workshop to assemble all 40 junction boxes before
 ### Step 2.1: Drill LED Holes in the WISKA 308 Lids
 1. Mark two drilling centers on the faceplate of the **WISKA COMBI MAR 308** lid (spaced $\approx 35\text{--}40\text{ mm}$ apart).
 2. Using a **10mm step drill bit** (or 10mm hole punch), drill clean, deburred 10.0mm holes.
-3. Insert the [APEM Q10F5SXXSG24E](file:///home/mark/projects/dogfence-1.0/MATERIALS.md) LEDs:
+3. Insert the [APEM Q10F5SXXSG02E](file:///home/mark/projects/dogfence-1.0/MATERIALS.md) LEDs (2V Raw Version):
    * Ensure the **black nitrile O-ring** is positioned on the outside face of the lid.
    * From the underside of the lid, install the lock washer and hex nut.
    * Tighten the nut securely ($1.5\text{--}2.0\text{ Nm}$) to compress the O-ring for an IP67 seal.
@@ -76,8 +76,8 @@ Perform these steps in a clean workshop to assemble all 40 junction boxes before
 
 ### Step 2.3: Pre-Wire Internal PCB Leads
 1. **LED Flying Leads:**
-   * Wire **LED A** leads into `J_LED_A`: Red/Anode ($+$) to **Pin 1 (Square Pad)**; Black/Cathode ($-$) to **Pin 2 (Round Pad)**.
-   * Wire **LED C** leads into `J_LED_C`: Red/Anode ($+$) to **Pin 1 (Square Pad)**; Black/Cathode ($-$) to **Pin 2 (Round Pad)**.
+   * Wire **LED A** leads into `J_LED_A`: Red/Anode ($+$) to **Left Terminal (`+` Silkscreen)**; Black/Cathode ($-$) to **Right Terminal (`-` Silkscreen)**.
+   * Wire **LED C** leads into `J_LED_C`: Red/Anode ($+$) to **Left Terminal (`+` Silkscreen)**; Black/Cathode ($-$) to **Right Terminal (`-` Silkscreen)**.
 2. **Pigtail Tap Wires:**
    * Strip three $\approx 12\text{ cm}$ lengths of $2.5\text{ mm}^2$ wire (Brown = A, Blue = B, Green-Yellow or Black = C).
    * Insert one end of each pigtail into `J_IN` on the PCB:
@@ -271,7 +271,7 @@ Clearly label the 3 switch positions on your control panel / faceplate:
    * Total loop resistance for the 4km run should be **$\approx 9.3\ \Omega$** ($\pm 2\ \Omega$).
 2. **Test 2: Diagnostic TEST Mode (LED Verification)**
    * Toggle the switch **DOWN (TEST MODE)**.
-   * The 36V power supply will energize. Total supply current should read $\approx \mathbf{0.39\text{ A}}$ (390 mA).
+   * The 36V power supply will energize. Total supply current should read $\approx \mathbf{0.79\text{ A}}$ (788 mA).
    * Walk or drive the 4km perimeter: **Both green LEDs (LED A and LED C) must be brightly illuminated at all 40 milestone boxes**.
    * *If any LED is dark:* Check for reversed flying leads ($+$ and $-$ swapped at `J_LED`) or a loose WAGO lever.
 3. **Test 3: SmartFence RUN Mode (RF Transparency)**

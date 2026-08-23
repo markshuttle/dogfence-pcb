@@ -16,6 +16,6 @@ J_EARTH       KF129S-5.08-2P  TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm
 J_IN          KF128-5.08-3P   TerminalBlock_Phoenix_MKDS-1,5-3-5.08_1x03_P5.08mm_Horizontal   106.0000  -122.5000    0.0000  top
 J_LED_A       KF129S-5.08-2P  TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal   144.0000  -106.5000   90.0000  top
 J_LED_C       KF129S-5.08-2P  TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal   144.0000  -138.5000  -90.0000  top
-R1_(6.8k_1W)  6.8k_1W         R_Axial_DIN0414_L11.9mm_D4.5mm_P15.24mm_Horizontal              116.0000  -106.5000    0.0000  top
-R2_(6.8k_1W)  6.8k_1W         R_Axial_DIN0414_L11.9mm_D4.5mm_P15.24mm_Horizontal              116.0000  -138.5000    0.0000  top
+R1_(2.2k_1W)  2.2k_1W         R_Axial_DIN0414_L11.9mm_D4.5mm_P15.24mm_Horizontal              116.0000  -106.5000    0.0000  top
+R2_(2.2k_1W)  2.2k_1W         R_Axial_DIN0414_L11.9mm_D4.5mm_P15.24mm_Horizontal              116.0000  -138.5000    0.0000  top
 ## End

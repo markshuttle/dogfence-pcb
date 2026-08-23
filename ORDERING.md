@@ -54,13 +54,16 @@ Set the following options on the PCB specification form:
 
 ### Verified Component Match List:
 
-| Designator | Component Name | LCSC Part # | Manufacturer & Model | Specs |
+| Designator | Component Name | JLCPCB Part # | Manufacturer & Model | Specs |
 |:---|:---|:---|:---|:---|
 | **`D1`, `D2`** | 1000V 1A Diode | **`C232439`** | 1N4007G (Glass Passivated) | DO-41, 1kV 1A, -65°C to +175°C |
 | **`GDT1`, `GDT2`, `GDT3`** | Surge Arrestor | **`C2836978`** | Ruilon 2R470TD-8 | 470V, 20kA (8/20 µs), <1.5pF |
-| **`R1`, `R2`** | 6.8kΩ Resistor | **`C82513`** | MFR01SF6801A10 | 1W Metal Film, 1% Tol, 350V |
-| **`J_EARTH`, `J_LED_A`, `J_LED_C`** | 2-Pin Screw Terminal | **`C7435702`** | Cixi Kefa KF129S-5.08-2P | 24A 630V Heavy Duty, M3 Screws |
+| **`R1`, `R2`** | 2.2kΩ 1W Resistor | **`ASSIGN_BY_JLCPCB`** | Uni-Royal / Yageo (MFR01SF2201A10) | 1W Metal Film 1% Axial Through-Hole |
+| **`J_EARTH`, `J_LED_A`, `J_LED_C`** | 2-Pin Screw Terminal | **`C475092`** | Cixi Kefa KF129-5.08-2P | 24A 250V Heavy Duty, M3 Screws |
 | **`J_IN`** | 3-Pin Screw Terminal | **`C474953`** | Cixi Kefa KF128-5.08-3P | 24A 250V Heavy Duty |
+
+> [!TIP]
+> **Resistor Matching on JLCPCB:** In the JLCPCB SMT/Assembly parts assignment screen, JLCPCB dynamically matches $R_1, R_2$ to their active in-stock 2.2kΩ 1W through-hole axial metal film resistor (search keyword `2.2k 1W` if prompted, or let the CAM engineer assign it during DFM file review).
 
 ---
 
