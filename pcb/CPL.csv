@@ -1,0 +1,12 @@
+Designator,Val,Package,Mid X,Mid Y,Rotation,Layer
+J_IN,"KF128-5.08-3P","TerminalBlock_Phoenix_MKDS-1,5-3-5.08_1x03_P5.08mm_Horizontal",106.00,122.50,0.0,top
+J_EARTH,"KF129S-5.08-2P","TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal",154.00,122.50,180.0,top
+J_LED_A,"KF129S-5.08-2P","TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal",144.00,106.50,90.0,top
+J_LED_C,"KF129S-5.08-2P","TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal",144.00,138.50,270.0,top
+GDT1,"2R470TD-8","R_Axial_DIN0617_L17.0mm_D6.0mm_P20.32mm_Horizontal",131.00,117.42,0.0,top
+GDT2,"2R470TD-8","R_Axial_DIN0617_L17.0mm_D6.0mm_P20.32mm_Horizontal",131.00,122.50,0.0,top
+GDT3,"2R470TD-8","R_Axial_DIN0617_L17.0mm_D6.0mm_P20.32mm_Horizontal",131.00,127.58,0.0,top
+R1,"6.8k 1W","R_Axial_DIN0414_L11.9mm_D4.5mm_P15.24mm_Horizontal",116.00,106.50,0.0,top
+D1,"1N4007G","D_DO-41_SOD81_P10.16mm_Horizontal",131.00,106.50,0.0,top
+R2,"6.8k 1W","R_Axial_DIN0414_L11.9mm_D4.5mm_P15.24mm_Horizontal",116.00,138.50,0.0,top
+D2,"1N4007G","D_DO-41_SOD81_P10.16mm_Horizontal",131.00,138.50,0.0,top
