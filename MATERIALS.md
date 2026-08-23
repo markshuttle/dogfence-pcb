@@ -1,5 +1,5 @@
 # Project Bill of Materials & Procurement Tracker
-**Dog Fence Indicator & Surge Protection System (v1.0)**
+**Dog Fence Indicator & Surge Protection System (v1.0.2)**
 
 ---
 
@@ -26,10 +26,10 @@ This document tracks all physical hardware, enclosures, switchgear, cabling, gro
 
 | Component | Description / Specification | Qty | Part Number / Supplier | Status | Notes |
 | :--- | :--- | :---: | :--- | :---: | :--- |
-| **PCBA Boards** | **Dog Fence Indicator & Surge 1.0** (60×45mm, 2 oz Cu, ENIG, High-TG FR4) | 40 | JLCPCB / PCBWay Turnkey PCBA (see [ORDERING.md](file:///home/mark/projects/dogfence-1.0/ORDERING.md)) | ✅ **ORDERED** | 35 standard milestones + 5 surge milestones. |
-| **Panel LED Indicators** | IP67 Green LED Panel Indicator (10mm mount, 2V standard version) | 80 | **APEM `Q10F5SXXSG02E`** | ✅ **ORDERED** | 2 per box. Powered via PCB's heavy-duty 2.2kΩ resistor. |
-| **Adhesive Board Standoffs** | Self-Adhesive Snap-Lock Nylon PCB Supports (9.5mm / 3/8" height, 3.2mm hole) | 160 | **Essentra `LCBSBM-6-01A-RT`**<br>[Digi-Key Link](https://www.digikey.com/en/products/result?keywords=LCBSBM-6-01A-RT) / [Mouser Link](https://www.mouser.com/c/?q=LCBSBM-6-01A-RT) | ✅ **ORDERED** | 4 per box. Elevates PCB by 9.5mm for 360° silicone gel encapsulation. |
-| **Silicone Potting Gel** | Re-enterable two-part silicone encapsulation gel (~200–220ml per box) | ~9–10 Litres | **WISKA MP0100** | ✅ **ORDERED** | Submersible IP68 hermetic seal. Poured into WISKA boxes after wiring & testing. |
+| **PCBA Boards** | **Dog Fence Indicator & Surge 1.0.2** (60×45mm, 2 oz Cu, ENIG, High-TG FR4) | 40 | JLCPCB / PCBWay Turnkey PCBA (see ORDERING.md) | ✅ **ORDERED** | 35 standard milestones + 5 surge milestones. |
+| **Panel LED Indicators** | IP67 Green LED Panel Indicator (10mm mount, 2V standard version) | 80 | **APEM `Q10F5SXXSG02E`** | ✅ **ORDERED** | 2 per box. Wire anode to the silkscreen `+` pad on the board mirrored LED connectors. |
+| **Adhesive Board Standoffs** | Self-Adhesive Snap-Lock Nylon PCB Supports (9.5mm / 3/8" height, 3.2mm hole) | 160 | **Essentra `LCBSBM-6-01A-RT`** | ✅ **ORDERED** | 4 per box. Elevates PCB by 9.5mm for 360° silicone gel encapsulation. |
+| **Silicone Potting Gel** | Re-enterable two-part silicone encapsulation gel (~180–190ml per box) | ~7–8 Litres | **WISKA MP0100** | ✅ **ORDERED** | Submersible IP68 hermetic seal. Poured into WISKA boxes after wiring & testing. |
 | **Internal Pigtail Tap Wire** | 2.5mm² solid/stranded copper wire (~15cm per tap) | ~20m total | *Spare 2.5mm² 3-core Cable Strippings* | ✅ **ON HAND** | Connects each WAGO 221 lever tap into PCB `J_IN` (`A`, `B`, `C`). |
 | **Continuous Cable Connectors** | 3-Way Compact Lever Splicing Connector (**0.5–6mm² / 41A**) | 120 | **WAGO `221-613`** | ✅ **ORDERED** | 3 per box (Wires A, B, C continuous through-splice; 6mm² series for easy insertion). |
 | **WAGO Gelbox (Optional)** | IPX8 Pre-filled Gel Housing | 40 or 120 | **WAGO `207-1333`** (Size 3)<br>or **`207-1331`** (Size 1) | ⏳ Optional | *Note: WISKA MP0100 pour-in gel already encapsulates WAGOs.* |

@@ -1,4 +1,4 @@
-# Dog Fence Indicator & Surge Protection System (v1.0)
+# Dog Fence Indicator & Surge Protection System (v1.0.2)
 **Comprehensive End-to-End Installation & Field Manual**
 
 ---
@@ -28,7 +28,7 @@ This manual covers the complete workshop pre-assembly, field installation, shed 
     │                                                                   │
     ▼ (Every 100m)                                                      ▼ (At 0m, 1km, 2km, 3km, 4km)
 [ 35× STANDARD MILESTONES ]                                 [ 5× SURGE & GROUNDING MILESTONES ]
-• WISKA COMBI MAR 308 Enclosure                             • WISKA COMBI MAR 308 Enclosure
+• WISKA COMBI 308 Enclosure                                 • WISKA COMBI 308 Enclosure
 • Dog Fence PCB (60×45mm, 2 oz Cu, ENIG)                    • Dog Fence PCB (60×45mm, 2 oz Cu, ENIG)
 • 2× APEM IP67 Green LEDs (Wires A & C)                     • 2× APEM IP67 Green LEDs (Wires A & C)
 • 3× WAGO 221-613 Lever Splices                             • 3× WAGO 221-613 Lever Splices
@@ -54,16 +54,16 @@ Perform these steps in a clean workshop to assemble all 40 junction boxes before
 ```
 
 ### Step 2.1: Drill LED Holes in the WISKA 308 Lids
-1. Mark two drilling centers on the faceplate of the **WISKA COMBI MAR 308** lid (spaced $\approx 35\text{--}40\text{ mm}$ apart).
+1. Mark two drilling centers on the faceplate of the **WISKA COMBI 308** lid (spaced $\approx 35\text{--}40\text{ mm}$ apart).
 2. Using a **10mm step drill bit** (or 10mm hole punch), drill clean, deburred 10.0mm holes.
-3. Insert the [APEM Q10F5SXXSG02E](file:///home/mark/projects/dogfence-1.0/MATERIALS.md) LEDs (2V Raw Version):
+3. Insert the [APEM Q10F5SXXSG02E](MATERIALS.md) LEDs (2V Raw Version):
    * Ensure the **black nitrile O-ring** is positioned on the outside face of the lid.
    * From the underside of the lid, install the lock washer and hex nut.
    * Tighten the nut securely ($1.5\text{--}2.0\text{ Nm}$) to compress the O-ring for an IP67 seal.
 
 ### Step 2.2: Mount PCB Inside the Enclosure
 1. Clean the flat interior floor of the WISKA box using an **Isopropyl Alcohol (IPA) wipe** to remove all plastic mold-release oils. Allow 30 seconds to dry.
-2. Take the manufactured **Dog Fence PCB** and snap four [Essentra LCBSBM-6-01A-RT](file:///home/mark/projects/dogfence-1.0/MATERIALS.md) (9.5mm height) standoffs into the $3.2\text{ mm}$ mounting holes ($H_1, H_2, H_3, H_4$).
+2. Take the manufactured **Dog Fence PCB** and snap four [Essentra LCBSBM-6-01A-RT](MATERIALS.md) (9.5mm height) standoffs into the $3.2\text{ mm}$ mounting holes ($H_1, H_2, H_3, H_4$).
 3. Peel the protective release film from all four adhesive pads simultaneously.
 4. Position the PCB centrally on the enclosure floor with terminal blocks oriented as follows:
    * `J_IN` facing **Left** (toward side cable entries).
@@ -78,6 +78,7 @@ Perform these steps in a clean workshop to assemble all 40 junction boxes before
 1. **LED Flying Leads:**
    * Wire **LED A** leads into `J_LED_A`: Red/Anode ($+$) to **Left Terminal (`+` Silkscreen)**; Black/Cathode ($-$) to **Right Terminal (`-` Silkscreen)**.
    * Wire **LED C** leads into `J_LED_C`: Red/Anode ($+$) to **Left Terminal (`+` Silkscreen)**; Black/Cathode ($-$) to **Right Terminal (`-` Silkscreen)**.
+   * *(Note: the two LED connectors are mirror-placed on the board so one faces each outward side; pin numbering is intentionally mirrored, but the silkscreen `+`/`-` remains authoritative - always follow silk, not barrel absolute position.)*
 2. **Pigtail Tap Wires:**
    * Strip three $\approx 12\text{ cm}$ lengths of $2.5\text{ mm}^2$ wire (Brown = A, Blue = B, Green-Yellow or Black = C).
    * Insert one end of each pigtail into `J_IN` on the PCB:
@@ -96,7 +97,7 @@ Perform these steps in a clean workshop to assemble all 40 junction boxes before
 ## 3. Field Installation of Milestone Junction Boxes
 
 ```
-          [ WISKA COMBI MAR 308 MOUNTED ON POST (0.8m–1.2m Height) ]
+          [ WISKA COMBI 308 MOUNTED ON POST (0.8m–1.2m Height) ]
  ┌───────────────────────────────────────────────────────────────────────────┐
  │                                                                           │
  │  INCOMING 3-CORE CABLE                              OUTGOING 3-CORE CABLE │
@@ -131,8 +132,7 @@ Perform these steps in a clean workshop to assemble all 40 junction boxes before
                              (Deep Soil Ground)
 ```
 
-### Step 3.1: Enclosure Mounting on Fence Posts
-* **Height:** Mount the box at **$0.8\text{m} \text{ to } 1.2\text{m}$ above ground level** (keeps it clear of weeds/strimmers and places LEDs at eye level).
+### Step 3.1: Enclosure Mounting on Fence Posts* **Height:** Mount the box at **$0.8\text{m} \text{ to } 1.2\text{m}$ above ground level** (keeps it clear of weeds/strimmers and places LEDs at eye level).
 * **Fixing:** 
   * *Timber Posts:* Fasten the snap-on mounting clip to the post using two $4.0\text{ mm} \times 35\text{ mm}$ stainless steel woodscrews, then click the box into the bracket. Alternatively, drive 4 screws through the corner holes.
   * *Metal / Pipe Posts:* Secure with heavy-duty UV-resistant cable ties or stainless steel Jubilee clips through the mounting bracket slots.
@@ -271,8 +271,8 @@ Clearly label the 3 switch positions on your control panel / faceplate:
    * Total loop resistance for the 4km run should be **$\approx 9.3\ \Omega$** ($\pm 2\ \Omega$).
 2. **Test 2: Diagnostic TEST Mode (LED Verification)**
    * Toggle the switch **DOWN (TEST MODE)**.
-   * The 36V power supply will energize. Total supply current should read $\approx \mathbf{0.79\text{ A}}$ (788 mA).
-   * Walk or drive the 4km perimeter: **Both green LEDs (LED A and LED C) must be brightly illuminated at all 40 milestone boxes**.
+   * The 36V power supply will energize. Total supply current should read $\approx \mathbf{1.21\text{ A}}$ (80 LEDs × 15 mA nominal before 4km cable drop).
+   * Walk or drive the 4km perimeter: **Both green LEDs (LED A and LED C) should illuminate at all 40 milestone boxes**. Expect a **progressive brightness gradient** along the run (the voltage-drop from 41.4Ω combined loop resistance distributes across milestones); near-end boxes glow brightest. Fault-finding compares A vs C *pairing* at each box, not absolute brightness.
    * *If any LED is dark:* Check for reversed flying leads ($+$ and $-$ swapped at `J_LED`) or a loose WAGO lever.
 3. **Test 3: SmartFence RUN Mode (RF Transparency)**
    * Toggle the switch **UP (RUN MODE)**.
@@ -308,7 +308,7 @@ Once electrical commissioning is 100% verified, encapsulate every junction box f
 ### The "Closed Pour + Top Vent" Procedure (Guarantees 0% Air Headspace):
 
 1. **Secure the Lid:**
-   * Close the WISKA COMBI MAR 308 lid and firmly tighten the 4 captive corner screws to compress the perimeter gasket.
+   * Close the WISKA COMBI 308 lid and firmly tighten the 4 captive corner screws to compress the perimeter gasket.
 2. **Open Two Top Access Ports:**
    * Unscrew the top-left **M20 plug** (Fill Port).
    * Unscrew the top-right **M20 plug** (Air Vent & Sight Glass).

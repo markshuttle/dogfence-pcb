@@ -28,16 +28,17 @@ IPC_OUT        := $(BUILD_DIR)/pcb.d356
 # Standard 2-Layer Gerber Layers for JLCPCB
 GERBER_LAYERS  := F.Cu,B.Cu,F.SilkS,B.SilkS,F.Mask,B.Mask,Edge.Cuts
 
-.PHONY: all clean gerbers drills bom cpl ipc zip-gerbers zip-flytest package help
+.PHONY: all clean gerbers drills bom cpl ipc zip-gerbers zip-flytest package help check
 
 # Default target: build complete turnkey manufacturing package
 all: package
 
 help:
 	@echo "======================================================================"
-	@echo "Dog Fence v1.0 - Production Build Commands"
+	@echo "Dog Fence v1.0.2 - Production Build Commands"
 	@echo "======================================================================"
-	@echo "  make all         - Build complete JLCPCB package (Gerbers, BOM, CPL, FlyTest)"
+	@echo "  make all         - Build complete JLCPCB package (DRC gate + artifacts)"
+	@echo "  make check       - Inline DRC gate (blocks export when violations exist)"
 	@echo "  make gerbers     - Export all 2-layer Gerber files (.gbr)"
 	@echo "  make drills      - Export Excellon drill files (PTH & NPTH .drl)"
 	@echo "  make bom         - Export / package Bill of Materials (BOM.csv)"
@@ -53,50 +54,59 @@ $(BUILD_DIR):
 	@mkdir -p $(BUILD_DIR)
 	@mkdir -p $(GERBER_DIR)
 
-# 1. Export Gerber layers using kicad-cli (or copy verified gerbers if kicad-cli not in path)
-gerbers: $(BUILD_DIR)
-	@echo "[1/6] Generating Gerber layers..."
-	@if command -v $(KICAD_CLI) >/dev/null 2>&1; then \
-		$(KICAD_CLI) pcb export gerbers \
-			--output $(GERBER_DIR)/ \
-			--layers $(GERBER_LAYERS) \
-			--subtract-soldermask \
-			--no-protel-ext \
-			$(PCB_FILE); \
-	elif [ -d pcb ] && ls pcb/*.gbr >/dev/null 2>&1; then \
-		echo "      (Using verified pre-exported .gbr files from pcb/)"; \
-		cp pcb/*.gbr $(GERBER_DIR)/; \
-	else \
-		echo "ERROR: Neither kicad-cli nor .gbr files found!"; exit 1; \
+# Paths for snap sandbox KiCad CLI (only HOME accessible)
+SEARCH := $(HOME)/dogfence_kicad_tmp
+SCRATCHPAD := $(HOME)/dogfence_kicad_tmp
+KPCB := $(SCRATCHPAD)/pcb.kicad_pcb
+
+# Prepare sandbox copy of PCB; teardown completed during package
+$(KPCB):
+	@mkdir -p $(SCRATCHPAD)
+	@cp -f $(PCB_FILE) $(KPCB)
+
+# 0. Inline DRC gate - fails hard when kicad-cli missing or DRC violations exist
+check: $(BUILD_DIR) $(KPCB)
+	@echo "[0/6] KiCad Design Rule Check (inline gate)..."
+	@if ! command -v $(KICAD_CLI) >/dev/null 2>&1; then \
+		echo "ERROR: kicad-cli not found - cannot run DRC. Install KiCad 9 snap."; \
+		exit 1; \
 	fi
+	@$(KICAD_CLI) pcb drc --format report --severity-error --exit-code-violations --output "$(SCRATCHPAD)/drc_report.txt" "$(KPCB)" || { \
+		echo "DRC VIOLATIONS FOUND - export blocked."; exit 1; }
+	@cp -f $(SCRATCHPAD)/drc_report.txt $(BUILD_DIR)/drc_report.txt
+	@echo "      DRC clean - proceeding."
+
+# 1. Export Gerber layers using kicad-cli
+gerbers: check $(BUILD_DIR) $(KPCB)
+	@echo "[1/6] Generating Gerber layers..."
+	@$(KICAD_CLI) pcb export gerbers \
+		--output $(SCRATCHPAD)/gerbers/ \
+		--layers $(GERBER_LAYERS) \
+		--subtract-soldermask \
+		--no-protel-ext \
+		$(KPCB)
+	@cp -f $(SCRATCHPAD)/gerbers/*.gbr $(GERBER_DIR)/
+	@rm -rf $(SCRATCHPAD)/gerbers
 
 # 2. Export Excellon drill files
-drills: $(BUILD_DIR)
+drills: $(BUILD_DIR) $(KPCB)
 	@echo "[2/6] Generating Excellon drill files (PTH & NPTH)..."
-	@if command -v $(KICAD_CLI) >/dev/null 2>&1; then \
-		$(KICAD_CLI) pcb export drill \
-			--output $(GERBER_DIR)/ \
-			--format excellon \
-			--drill-origin absolute \
-			--excellon-units mm \
-			--excellon-zeros-format decimal \
-			--excellon-separate-th \
-			$(PCB_FILE); \
-	elif [ -d pcb ] && ls pcb/*.drl >/dev/null 2>&1; then \
-		echo "      (Using verified pre-exported .drl files from pcb/)"; \
-		cp pcb/*.drl $(GERBER_DIR)/; \
-	fi
+	@$(KICAD_CLI) pcb export drill \
+		--output $(SCRATCHPAD)/gerbers/ \
+		--format excellon \
+		--drill-origin absolute \
+		--excellon-units mm \
+		--excellon-zeros-format decimal \
+		--excellon-separate-th \
+		$(KPCB)
+	@cp -f $(SCRATCHPAD)/gerbers/*.drl $(GERBER_DIR)/
+	@rm -rf $(SCRATCHPAD)/gerbers
 
 # 3. Export IPC-D-356 Netlist for Flying Probe Testing
-ipc: $(BUILD_DIR)
+ipc: $(BUILD_DIR) $(KPCB)
 	@echo "[3/6] Generating IPC-D-356 Flying Probe Test netlist..."
-	@if command -v $(KICAD_CLI) >/dev/null 2>&1; then \
-		$(KICAD_CLI) pcb export ipcd356 \
-			--output $(IPC_OUT) \
-			$(PCB_FILE); \
-	elif [ -f $(IPC_SOURCE) ]; then \
-		cp $(IPC_SOURCE) $(IPC_OUT); \
-	fi
+	@$(KICAD_CLI) pcb export ipcd356 --output $(SCRATCHPAD)/ipcd356_out $(KPCB)
+	@cp -f $(SCRATCHPAD)/ipcd356_out $(IPC_OUT)
 
 # 4. Export / package Bill of Materials (BOM)
 bom: $(BUILD_DIR)
@@ -104,18 +114,15 @@ bom: $(BUILD_DIR)
 	@cp $(BOM_SOURCE) $(BOM_OUT)
 
 # 5. Export / package Component Placement List (CPL / .pos)
-cpl: $(BUILD_DIR)
-	@echo "[5/6] Packaging Pick-and-Place Centroid (CPL.csv)..."
-	@if command -v $(KICAD_CLI) >/dev/null 2>&1; then \
-		$(KICAD_CLI) pcb export pos \
-			--output $(CPL_OUT) \
-			--format csv \
-			--units mm \
-			--side both \
-			$(PCB_FILE); \
-	elif [ -f $(CPL_SOURCE) ]; then \
-		cp $(CPL_SOURCE) $(CPL_OUT); \
-	fi
+cpl: $(BUILD_DIR) $(KPCB)
+	@echo "[5/6] Exporting Pick-and-Place Centroid (CPL.csv)..."
+	@$(KICAD_CLI) pcb export pos \
+		--output $(SCRATCHPAD)/pos_out \
+		--format csv \
+		--units mm \
+		--side both \
+		$(KPCB)
+	@cp -f $(SCRATCHPAD)/pos_out $(CPL_OUT)
 
 # 6. Compress Gerbers into Gerbers.zip
 zip-gerbers: gerbers drills
@@ -129,15 +136,16 @@ zip-flytest: ipc zip-gerbers
 	@echo "      Creating FlyTest.zip for JLCPCB electrical probe testing..."
 	@rm -f $(FLYTEST_ZIP)
 	@mkdir -p $(BUILD_DIR)/flytest_staging
-	@cp $(IPC_OUT) $(BUILD_DIR)/flytest_staging/ 2>/dev/null || true
+	@cp $(IPC_OUT) $(BUILD_DIR)/flytest_staging/
 	@cp $(GERBERS_ZIP) $(BUILD_DIR)/flytest_staging/
-	@echo "Dog Fence Indicator 1.0 - Flying Probe Electrical Test Package" > $(BUILD_DIR)/flytest_staging/README.txt
+	@echo "Dog Fence Indicator 1.0.2 - Flying Probe Electrical Test Package" > $(BUILD_DIR)/flytest_staging/README.txt
 	@echo "Contains IPC-D-356 netlist (pcb.d356) and master fabrication Gerbers.zip" >> $(BUILD_DIR)/flytest_staging/README.txt
 	@cd $(BUILD_DIR)/flytest_staging && zip -q -r ../FlyTest.zip *
 	@rm -rf $(BUILD_DIR)/flytest_staging
+	@rm -rf $(SCRATCHPAD)
 
 # Master Package Target
-package: gerbers drills ipc bom cpl zip-gerbers zip-flytest
+package: check gerbers drills ipc bom cpl zip-gerbers zip-flytest
 	@echo ""
 	@echo "======================================================================"
 	@echo "✅ Turnkey Production Package Built Successfully in $(BUILD_DIR)/"

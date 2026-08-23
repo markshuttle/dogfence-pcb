@@ -1,5 +1,5 @@
 # Electrical & Environmental Risk Analysis
-**Dog Fence Indicator & Surge Protection System (v1.0)**
+**Dog Fence Indicator & Surge Protection System (v1.0.2)**
 
 ---
 
@@ -81,7 +81,7 @@ This document provides a comprehensive risk and failure-mode analysis for the 4k
 * **Direct Lightning Strike / High-Energy Induction:**
   * **Protection:** Ruilon 2R470TD-8 / Bourns 2027-42 GDTs rated for **20,000A (20kA)** impulse discharge ($8/20\ \mu\text{s}$) on all three conductor cores.
   * **PCB Track Sizing:** Fabricated with heavy **2 oz copper (70 µm)** and wide copper pours to carry transient discharge currents to earth rods without trace fusing.
-  * **Component Overload Headroom:** 1N4007G diodes tolerate **30A forward surge ($I_{\text{FSM}}$)**; 1W metal film resistors operate at only **33% rated power** during continuous DC test ($0.33\text{ W}$).
+  * **Component Overload Headroom:** 1N4007G diodes tolerate **30A forward surge ($I_{\text{FSM}}$)**; 1W metal film resistors operate at only **50% rated power** during continuous DC test ($0.50\text{ W}$).
 
 ---
 

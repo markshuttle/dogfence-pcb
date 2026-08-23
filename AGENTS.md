@@ -1,4 +1,4 @@
-# Dog Fence Indicator & Surge Protection System (v1.0)
+# Dog Fence Indicator & Surge Protection System (v1.0.2)
 **Project Knowledge Base & Agent Briefing**
 
 ---
@@ -91,7 +91,7 @@ Every part on the board was specifically chosen for heavy-duty industrial endura
 |:---|:---|:---|:---|
 | **`D1`, `D2`** | 1000V 1A Rectifier Diode | **1N4007G** (LCSC: `C232439`) | **Glass-passivated junction (`G` suffix)**, -65°C to +175°C, 30A forward surge (IFSM). |
 | **`GDT1`, `GDT2`, `GDT3`** | Gas Discharge Tube Arrester | **Ruilon 2R470TD-8** (LCSC: `C2836978`) | **20,000A (20kA)** impulse surge handling (8/20 µs), 470V breakdown, <1.5 pF, -40°C to +90°C. |
-| **`R1`, `R2`** | 2.2kΩ Current Limiter | **1W Metal Film 1%** (MPN: `MFR01SF2201A10`) | 1W power rating (operates at 0.33W max), 350V working voltage, ±50ppm/°C temperature coefficient. |
+| **`R1`, `R2`** | 2.2kΩ Current Limiter | **1W Metal Film 1%** (MPN: `MFR01SF2201A10`) | 1W power rating (operates at ≈0.50W, 50% capacity), 350V working voltage, ±50ppm/°C temperature coefficient. |
 | **`J_EARTH`, `J_LED_A`, `J_LED_C`** | 2-Pin 5.08mm Screw Terminals | **Cixi Kefa KF129-5.08-2P** (JLCPCB: `C475092`) | **24A / 250V Heavy Duty**, M3 steel clamping screws, -40°C to +105°C, accepts up to 2.5mm² / 4mm² wire. |
 | **`J_IN`** | 3-Pin 5.08mm Screw Terminal | **Cixi Kefa KF128-5.08-3P** (JLCPCB: `C474953`) | **24A / 250V Heavy Duty**, matching rising cage clamp series, -40°C to +105°C. |
 
@@ -144,7 +144,7 @@ Every part on the board was specifically chosen for heavy-duty industrial endura
  └─────────────────────────────────────────────────────────────┘
 ```
 
-1. **Continuous Splice**: The main arriving and departing 3-core cable runs continuously through three **WAGO 221-413** 3-way lever connectors.
+1. **Continuous Splice**: The main arriving and departing 3-core cable runs continuously through three **WAGO 221-613** 3-way lever connectors.
 2. **PCB Tap**: A short 2.5mm² pigtail wire taps from each WAGO into `J_IN` (`A`, `B`, `C`).
 3. **LED Indicators**: External panel-mount green LEDs (Marl IP67) have flying leads screwed into `J_LED_A` and `J_LED_C`.
 4. **Surge Earth Ground (5 Stations Only)**: Heavy earth grounding cable from the copper ground rod is clamped into `J_EARTH`. (Standard boxes leave `J_EARTH` unpopulated/empty).

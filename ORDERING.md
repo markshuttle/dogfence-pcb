@@ -1,5 +1,5 @@
 # JLCPCB Turnkey PCBA Ordering Guide
-**Dog Fence Indicator & Surge 1.0 (60mm × 45mm)**
+**Dog Fence Indicator & Surge 1.0.2 (60mm × 45mm)**
 
 This guide captures all exact fabrication parameters, high-reliability materials, component matches, and repeat-order steps for turnkey manufacturing.
 
@@ -80,7 +80,7 @@ Set the following options on the PCB specification form:
 ## 4. 3D Preview Visual Verification
 
 In the JLCPCB 3D placement screen:
-1. **`J_LED_A` & `J_LED_C`**: Wire openings face **Right** (toward board edge).
+1. **`J_LED_A` & `J_LED_C`**: Wire openings face **outwards** from the board (both rotated +90°, plus on-board mirrored geometry; `J_LED_A` opens toward the top edge and `J_LED_C` opens toward the bottom edge).
 2. **`J_IN`**: Wire openings face **Left** (toward board edge).
 3. **`J_EARTH`**: Wire openings face **Down** (toward bottom edge).
 4. **`D1` & `D2`**: White cathode band points **Right** (toward the `+` square pad).

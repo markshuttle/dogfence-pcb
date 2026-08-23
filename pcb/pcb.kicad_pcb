@@ -41,10 +41,10 @@
 				(type "Top Solder Mask")
 				(thickness 0.01)
 			)
-			(layer "F.Cu"
-				(type "copper")
-				(thickness 0.035)
-			)
+		(layer "F.Cu"
+			(type "copper")
+			(thickness 0.07)
+		)
 			(layer "dielectric 1"
 				(type "core")
 				(thickness 1.51)
@@ -52,10 +52,10 @@
 				(epsilon_r 4.5)
 				(loss_tangent 0.02)
 			)
-			(layer "B.Cu"
-				(type "copper")
-				(thickness 0.035)
-			)
+		(layer "B.Cu"
+			(type "copper")
+			(thickness 0.07)
+		)
 			(layer "B.Mask"
 				(type "Bottom Solder Mask")
 				(thickness 0.01)
@@ -704,7 +704,7 @@
 				)
 			)
 		)
-		(property "Value" "KF129S-5.08-2P"
+		(property "Value" "KF129-5.08-2P"
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
@@ -868,7 +868,7 @@
 	(footprint "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal"
 		(layer "F.Cu")
 		(uuid "84165048-fb28-4096-bcd9-0ebf4b9c61fd")
-		(at 144 138.5 -90)
+		(at 144 138.5 90)
 		(property "Reference" "J_LED_C"
 			(at 0 0 0)
 			(layer "F.Fab")
@@ -881,7 +881,7 @@
 				)
 			)
 		)
-		(property "Value" "KF129S-5.08-2P"
+		(property "Value" "KF129-5.08-2P"
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
@@ -894,7 +894,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 0 0 270)
+			(at 0 0 90)
 			(layer "F.Fab")
 			(hide yes)
 			(uuid "2a8a768a-fbf3-4a5a-b188-6e06906f07c7")
@@ -906,7 +906,7 @@
 			)
 		)
 		(property "Description" ""
-			(at 0 0 270)
+			(at 0 0 90)
 			(layer "F.Fab")
 			(hide yes)
 			(uuid "1a2798f6-6515-4c59-afed-1a38479e0c71")
@@ -929,7 +929,7 @@
 			(uuid "c5ff6eb4-bb80-4a40-aa7f-a70574c7df00")
 		)
 		(pad "1" thru_hole roundrect
-			(at 0 -2.54 270)
+			(at 0 -2.54 90)
 			(size 2.8 2.8)
 			(drill 1.3)
 			(layers "*.Cu" "*.Mask")
@@ -939,7 +939,7 @@
 			(uuid "711969f0-0f36-4388-9dd5-3d851cbf866e")
 		)
 		(pad "2" thru_hole circle
-			(at 0 2.54 270)
+			(at 0 2.54 90)
 			(size 2.8 2.8)
 			(drill 1.3)
 			(layers "*.Cu" "*.Mask")
@@ -2529,7 +2529,7 @@
 			)
 		)
 	)
-	(gr_text "Dog Fence Indicator 1.0.1"
+	(gr_text "Dog Fence Indicator 1.0.2"
 		(at 122.2 102.3 0)
 		(layer "F.SilkS")
 		(uuid "f7d09868-ab47-4621-9f23-2fc558a23930")
