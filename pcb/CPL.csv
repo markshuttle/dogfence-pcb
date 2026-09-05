@@ -1,15 +1,15 @@
 Designator,Val,Package,Mid X,Mid Y,Rotation,Layer
 J_IN,"KF128-7.62-3P","TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-3-7.62_1x03_P7.62mm_Horizontal",106.50,122.50,0.0,top
-J_EARTH,"KF128-7.62-3P","TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-3-7.62_1x03_P7.62mm_Horizontal",153.50,122.50,180.0,top
-J_LED_A,"KF129-5.08-2P","TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal",144.00,106.50,90.0,top
-J_LED_C,"KF129-5.08-2P","TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal",144.00,138.50,90.0,top
+J_EARTH,"KF128-7.62-3P","TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-3-7.62_1x03_P7.62mm_Horizontal",155.00,122.50,180.0,top
+J_LED_A,"KF129-5.08-2P","TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal",143.00,106.50,90.0,top
+J_LED_C,"KF129-5.08-2P","TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal",143.00,138.50,90.0,top
 R1,"2.2k 1W","Resistor_THT:R_Axial_DIN0414_L11.9mm_D4.5mm_P15.24mm_Horizontal",116.00,106.50,0.0,top
 D1,"1N4007G","Diode_THT:D_DO-41_SOD81_P10.16mm_Horizontal",131.00,106.50,0.0,top
 R2,"2.2k 1W","Resistor_THT:R_Axial_DIN0414_L11.9mm_D4.5mm_P15.24mm_Horizontal",116.00,138.50,0.0,top
 D2,"1N4007G","Diode_THT:D_DO-41_SOD81_P10.16mm_Horizontal",131.00,138.50,0.0,top
 GDT_AB,"SMD5050-470NA","GDT_SMD:GDT_SMD_5.0x5.0mm",114.00,118.69,0.0,top
 GDT_BC,"SMD5050-470NA","GDT_SMD:GDT_SMD_5.0x5.0mm",114.00,126.31,0.0,top
-GDT_AC,"2RA470-L5.5","Resistor_THT:R_Axial_DIN0617_L17.0mm_D6.0mm_P15.24mm_Horizontal",121.00,122.50,0.0,top
+GDT_AC,"2RA470-L5.5","Resistor_THT:R_Axial_DIN0617_L17.0mm_D6.0mm_P15.24mm_Horizontal",124.00,122.50,0.0,top
 GDT_A_E,"2R470TD-8","Resistor_THT:R_Axial_DIN0617_L17.0mm_D6.0mm_P15.24mm_Horizontal",138.62,114.88,0.0,top
 GDT_B_E,"2R470TD-8","Resistor_THT:R_Axial_DIN0617_L17.0mm_D6.0mm_P15.24mm_Horizontal",138.62,122.50,0.0,top
 GDT_C_E,"2R470TD-8","Resistor_THT:R_Axial_DIN0617_L17.0mm_D6.0mm_P15.24mm_Horizontal",138.62,130.12,0.0,top
