@@ -1,5 +1,7 @@
 pcb/~pcb.kicad_pcb.lck
 pcb/Gerbers.zip
 pcb/FlyTest.zip
+pcb/*.bak
+pcb/pcb-backups/*.zip
 build/
 .workshop.lock

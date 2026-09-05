@@ -1,5 +1,5 @@
 # Electrical & Environmental Risk Analysis
-**Dog Fence Indicator & Surge Protection System (v1.0.2)**
+**Dog Fence Indicator & Surge Protection System (v1.1.0)**
 
 ---
 
@@ -73,15 +73,22 @@ This document provides a comprehensive risk and failure-mode analysis for the 4k
 | **Earth Stake Connected at Standard Milestone (Non-Surge Box)** | No operational effect; earth bus connects to GDTs only. | **Safe.** GDTs maintain 470V galvanic isolation between earth and signal lines. | Harmless, but extra ground stakes are only required at the 5 designated surge stations. |
 | **Earth Wire Connected Directly to Wire A, B, or C (Bypassing `J_EARTH`)** | Fence loop becomes directly grounded, attenuating the SmartFence RF signal. | **Safe for components; inhibits RF fence boundary.** | Move ground lead to `J_EARTH` terminal so GDT spark gaps isolate earth from RF. |
 | **Simultaneous RUN & TEST Mode Activation** | High-voltage DC injected into transmitter output stage. | **Prevented by Hardware.** Break-before-make 4PDT changeover switch physically isolates the DC supply when RUN mode is active. | Use dedicated 4PDT center-off changeover switch as specified in [INSTALL.md](file:///home/mark/projects/dogfence-1.0/INSTALL.md). |
+| **GDT_AC Bridging Contact with Wire B** | Axial component body or leads contacting Wire B top track. | **Triple Safeguard Layered Defense:**<br>1. **Solder Mask Insulation:** Continuous high-dielectric green LPI solder mask over the 3.2mm Wire B top copper track (>20 kV/mm dielectric strength).<br>2. **Vertical Air Gap Standoff:** Formed axial leads maintain $\ge 2.0\text{mm}$ elevated vertical clearance between the GDT body and board surface.<br>3. **Silicone Potting Gel:** Backfilling with WISKA MP0100 silicone gel replaces all remaining air volume with solid dielectric elastomer (>20 kV/mm).<br>*(Optional field precaution: small Kapton tape or heat-shrink silicone sleeve over GDT body).* | Full 3.2mm width of Wire B is maintained on both top and bottom copper layers (no waist relief). Symmetrical 3× heavy stitching vias ensure robust top/bottom copper bonding. |
+| **Earth Terminal Connection Loosening** | High ground surge cannot discharge safely through single terminal pin. | **Mitigated by Triple Contact Redundancy.** Mirrored 3-pin 7.62mm terminal (`J_EARTH`) ties all 3 pins in parallel to the 4.5mm 2 oz copper Earth bus (72A aggregate rating). | Multiple earth wires can be clamped into separate poles for redundant current paths to ground rod. |
 
 ---
 
 ## 4. Surge & High-Voltage Transient Risks
 
-* **Direct Lightning Strike / High-Energy Induction:**
-  * **Protection:** Ruilon 2R470TD-8 / Bourns 2027-42 GDTs rated for **20,000A (20kA)** impulse discharge ($8/20\ \mu\text{s}$) on all three conductor cores.
-  * **PCB Track Sizing:** Fabricated with heavy **2 oz copper (70 µm)** and wide copper pours to carry transient discharge currents to earth rods without trace fusing.
-  * **Component Overload Headroom:** 1N4007G diodes tolerate **30A forward surge ($I_{\text{FSM}}$)**; 1W metal film resistors operate at only **50% rated power** during continuous DC test ($0.50\text{ W}$).
+* **Comprehensive 6-GDT Full-Hybrid Network:**
+  * **Inter-Core Differential Protection (3× 5kA GDTs):** Ruilon `SMD5050-470NA` (`GDT_AB`, `GDT_BC`) and compact axial `2RA470-L5.5` (`GDT_AC`) clamp differential transients induced between adjacent conductor pairs to 470V with 5,000A (8/20 µs) capacity.
+  * **Common-Mode Line-to-Earth Protection (3× 20kA GDTs):** Ruilon `2R470TD-8` (`GDT_A_E`, `GDT_B_E`, `GDT_C_E`) clamp each core directly to the external earth ground rod with 20,000A (8/20 µs) impulse handling per line.
+  * **Tri-Rail Symmetrical Surge Current Sharing:** Wires A, B, and C each feature dedicated clusters of **3× heavy plated stitching vias** (1.0mm drill, 1.8mm pad) directly at the SMT GDT junctions, symmetrically equalizing transient surge current across both front and back 2 oz copper layers and minimizing surge loop inductance.
+  * **Monolithic Earth Bus Double-Layer Stitching (4 oz Cu):** The 4.5mm Earth bus features **5× heavy plated stitching vias** (1.0mm drill, 1.8mm pad) spanning the full height of the bus at X=150.0mm. Combined with the 3 GDT Earth pins and 3 `J_EARTH` terminal pins, this forms an 11-barrel inter-layer bond that guarantees the 20kA surge current divides equally across both front and back 2 oz copper layers (4 oz / 140 µm total Cu), preventing localized thermal rise and eliminating inter-plane inductive gradients.
+* **PCB Track Sizing & Heat Dissipation:**
+  * Fabricated with heavy **2 oz copper (70 µm)** and wide 3.2mm / 4.5mm parallel copper pours on both layers to carry transient discharge currents without trace fusing.
+* **Component Overload Headroom:**
+  * 1N4007G diodes tolerate **30A forward surge ($I_{\text{FSM}}$)**; 1W metal film resistors operate at only **50% rated power** during continuous DC test ($0.50\text{ W}$).
 
 ---
 
@@ -93,7 +100,7 @@ This document provides a comprehensive risk and failure-mode analysis for the 4k
 | **Coastal / Marine Salt Air & Fog** | Airborne saline aerosol ($NaCl$) causing crevice corrosion on terminal screws and copper wire wicking. | **100% Potting Encapsulation:** Complete submersion of PCB, WAGOs, and rear LED flying leads leaves zero internal air headspace. |
 | **Thermal Cycling (-40°C to +90°C)** | Solder joint fatigue, micro-cracking, and board delamination. | **High-TG Substrate:** Shengyi S1000H TG155 laminate with low Z-axis thermal expansion coefficient. |
 | **Copper Oxidation (20+ Year Life)** | Exposed copper tarnishing and increasing terminal contact resistance. | **ENIG 2U" Gold Plating:** Electroless Nickel Immersion Gold creates a pore-free 24k gold barrier over all copper surfaces. |
-| **Vibration & Mechanical Stress** | Terminal screw loosening or wire pull-out. | **Rising Cage Clamp Terminals:** Cixi Kefa KF129S/KF128 M3 steel screws clamping on 2.5mm² solid/stranded copper. |
+| **Vibration & Mechanical Stress** | Terminal screw loosening or wire pull-out. | **Rising Cage Clamp Terminals:** Cixi Kefa KF128 (7.62mm pitch) and KF129 (5.08mm pitch) with M3 steel screws clamping on 2.5mm² solid/stranded copper. |
 
 ---
 
@@ -107,7 +114,8 @@ $$\begin{array}{|l|c|c|l|}
 \text{DC Test Polarity Reversal} & \text{Medium} & \textbf{None (0\%)} & \text{1N4007 1000V reverse blocking} \\
 \text{Loop Ring Reversal} & \text{Low} & \textbf{None (0\%)} & \text{Closed ring circuit architecture} \\
 \text{LED Terminal Inversion} & \text{Low} & \textbf{None (0\%)} & \text{Diode + resistor reverse isolation} \\
-\text{Transient Overvoltage / Surge} & \text{High (Rural)} & \textbf{Ultra-Low} & \text{20kA GDTs + 2 oz Cu Ground Bus} \\
+\text{Transient Overvoltage / Surge} & \text{High (Rural)} & \textbf{Ultra-Low} & \text{6-GDT Hybrid (5kA core + 20kA earth) + 2 oz Cu} \\
+\text{GDT\_AC Bridging Short} & \text{Very Low} & \textbf{None (0\%)} & \text{Solder mask + 2mm air gap + silicone potting} \\
 \text{Moisture Ingress} & \text{High (Buried)} & \textbf{Ultra-Low} & \text{IP68 Silicone gel encapsulation} \\
 \hline
 \end{array}$$

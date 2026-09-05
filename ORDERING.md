@@ -1,5 +1,5 @@
 # JLCPCB Turnkey PCBA Ordering Guide
-**Dog Fence Indicator & Surge 1.0.2 (60mm × 45mm)**
+**Dog Fence Indicator & Surge 1.1.0 (60mm × 45mm)**
 
 This guide captures all exact fabrication parameters, high-reliability materials, component matches, and repeat-order steps for turnkey manufacturing.
 
@@ -58,7 +58,7 @@ Set the following options on the PCB specification form:
 ## 3. PCB Assembly (PCBA) Settings & Matched Parts
 
 1. On the quote page, enable the toggle for **"PCB Assembly"**.
-2. **Assembly Side**: **Top Side** (all 11 components are on top).
+2. **Assembly Side**: **Top Side** (all 14 components are on top).
 3. **PCBA Quantity**: **40**.
 4. Upload **`pcb/BOM.csv`** and **`pcb/CPL.csv`**.
 
@@ -67,24 +67,27 @@ Set the following options on the PCB specification form:
 | Designator | Component Name | JLCPCB Part # | Manufacturer & Model | Specs |
 |:---|:---|:---|:---|:---|
 | **`D1`, `D2`** | 1000V 1A Diode | **`C232439`** | 1N4007G (Glass Passivated) | DO-41, 1kV 1A, -65°C to +175°C |
-| **`GDT1`, `GDT2`, `GDT3`** | Surge Arrestor | **`C2836978`** | Ruilon 2R470TD-8 | 470V, 20kA (8/20 µs), <1.5pF |
-| **`R1`, `R2`** | 2.2kΩ 1W Resistor | **`ASSIGN_BY_JLCPCB`** | Uni-Royal / Yageo (MFR01SF2201A10) | 1W Metal Film 1% Axial Through-Hole |
-| **`J_EARTH`, `J_LED_A`, `J_LED_C`** | 2-Pin Screw Terminal | **`C475092`** | Cixi Kefa KF129-5.08-2P | 24A 250V Heavy Duty, M3 Screws |
-| **`J_IN`** | 3-Pin Screw Terminal | **`C474953`** | Cixi Kefa KF128-5.08-3P | 24A 250V Heavy Duty |
+| **`GDT_AB`, `GDT_BC`** | Inter-Core SMT GDT | **`C39692533`** | Ruilon SMD5050-470NA | 470V, 5kA (8/20 µs), <1.5pF, 5.0×5.0mm SMT |
+| **`GDT_AC`** | Inter-Core Axial GDT | **`C52741208`** | Ruilon 2RA470-L5.5 | 470V, 5kA (8/20 µs), <1.5pF, $\Phi 5.5\text{mm} \times 6\text{mm}$ Axial THT |
+| **`GDT_A_E`, `GDT_B_E`, `GDT_C_E`** | Line-to-Earth 20kA GDT | **`C434855`** | Ruilon 2R470TD-8 | 470V, 20kA (8/20 µs), <1.5pF, $\Phi 8.0\text{mm} \times 6\text{mm}$ Axial THT |
+| **`R1`, `R2`** | 2.2kΩ 1W Resistor | **`ASSIGN_BY_JLCPCB`** | Uni-Royal (MFR01SF2201A10) | 1W Metal Film 1% Axial Through-Hole |
+| **`J_IN`, `J_EARTH`** | 3-Pin 7.62mm Terminal | **`ASSIGN_BY_JLCPCB`** | Cixi Kefa KF128-7.62-3P | 24A 300V Heavy Duty, 7.62mm pitch |
+| **`J_LED_A`, `J_LED_C`** | 2-Pin 5.08mm Terminal | **`C475092`** | Cixi Kefa KF129-5.08-2P | 24A 250V Heavy Duty, M3 Screws |
 
 > [!TIP]
-> **Resistor Matching on JLCPCB:** In the JLCPCB SMT/Assembly parts assignment screen, JLCPCB dynamically matches $R_1, R_2$ to their active in-stock 2.2kΩ 1W through-hole axial metal film resistor (search keyword `2.2k 1W` if prompted, or let the CAM engineer assign it during DFM file review).
+> **Resistor and Terminal Matching on JLCPCB:** In the JLCPCB parts assignment screen, `R1, R2` match the active in-stock 2.2kΩ 1W axial resistor (`MFR01SF2201A10`). For `J_IN` and `J_EARTH`, JLCPCB assigns standard 3-pin 7.62mm pitch rising cage terminal blocks (KF128-7.62-3P or Phoenix MKDS-1,5-3-7.62).
 
 ---
 
 ## 4. 3D Preview Visual Verification
 
 In the JLCPCB 3D placement screen:
-1. **`J_LED_A` & `J_LED_C`**: Wire openings face **outwards** from the board — mirrored pair geometry. **CPL rotation `270°` for `J_LED_A` (opens toward the top edge) and `90°` for `J_LED_C` (opens toward the bottom edge)**. The silkscreen `+`/`-` markers remain the authoritative polarity guide for both.
-2. **`J_IN`**: Wire openings face **Left** (toward board edge).
-3. **`J_EARTH`**: Wire openings face **Down** (toward bottom edge).
-4. **`D1` & `D2`**: White cathode band points **Right** (toward the `+` square pad).
-*(If any 3D model appears rotated, use the 90° rotate tool in the top bar to snap it into position; the CAM engineer will also verify this during pre-production DFM review).*
+1. **`J_LED_A` & `J_LED_C`**: Wire openings face **outwards** from the board — mirrored pair geometry. **CPL rotation `90°` for `J_LED_A` (opens toward the top edge) and `90°` for `J_LED_C` (opens toward the bottom edge)**. Silkscreen `+`/`-` markers are the authoritative polarity guide.
+2. **`J_IN`**: Wire openings face **Left** (toward board edge, rotation `0°`).
+3. **`J_EARTH`**: Wire openings face **Right** (toward board edge, rotation `180°`).
+4. **`GDT_AC`**: Axial body spans across Wire B vertically with a minimum 2.0mm air gap standoff above the board surface.
+5. **`D1` & `D2`**: White cathode band points **Right** (toward the `+` pad).
+*(If any 3D model appears rotated, use the rotate tool in the top bar to snap it into position; the CAM engineer will also verify during pre-production DFM review).*
 
 ---
 
@@ -92,6 +95,6 @@ In the JLCPCB 3D placement screen:
 
 1. Log into your **[JLCPCB Account](https://jlcpcb.com)**.
 2. Go to **Order History / Order List**.
-3. Locate this order (**Dog Fence Indicator & Surge 1.0**) and click **"Re-order"** (or "Order Again").
+3. Locate this order (**Dog Fence Indicator & Surge 1.1**) and click **"Re-order"** (or "Order Again").
 4. The system automatically loads the saved production package, Gerber stackup, S1000H TG155 material, 2 oz copper, 2U" ENIG gold, BOM, and CPL alignment.
 5. Select your new quantity (e.g. 20 or 50) and checkout in 1 click!

@@ -1,4 +1,4 @@
-# Dog Fence Indicator & Surge Protection System (v1.0.2)
+# Dog Fence Indicator & Surge Protection System (v1.1.0)
 **Comprehensive End-to-End Installation & Field Manual**
 
 ---
@@ -66,9 +66,9 @@ Perform these steps in a clean workshop to assemble all 40 junction boxes before
 2. Take the manufactured **Dog Fence PCB** and snap four [Essentra LCBSBM-6-01A-RT](MATERIALS.md) (9.5mm height) standoffs into the $3.2\text{ mm}$ mounting holes ($H_1, H_2, H_3, H_4$).
 3. Peel the protective release film from all four adhesive pads simultaneously.
 4. Position the PCB centrally on the enclosure floor with terminal blocks oriented as follows:
-   * `J_IN` facing **Left** (toward side cable entries).
-   * `J_LED_A` & `J_LED_C` facing **Right** (toward LED lid leads).
-   * `J_EARTH` facing **Bottom**.
+   * `J_IN` (3-pin 7.62mm) facing **Left** (toward incoming pigtails).
+   * `J_LED_A` & `J_LED_C` (2-pin 5.08mm) facing **Top** and **Bottom** edges (toward LED lid leads).
+   * `J_EARTH` (3-pin 7.62mm) facing **Right** (mirrored across from J_IN).
 5. Press down firmly for 5 seconds to set the high-tack adhesive.
 
 > [!NOTE]
@@ -76,12 +76,12 @@ Perform these steps in a clean workshop to assemble all 40 junction boxes before
 
 ### Step 2.3: Pre-Wire Internal PCB Leads
 1. **LED Flying Leads:**
-   * Wire **LED A** leads into `J_LED_A`: Red/Anode ($+$) to **Left Terminal (`+` Silkscreen)**; Black/Cathode ($-$) to **Right Terminal (`-` Silkscreen)**.
-   * Wire **LED C** leads into `J_LED_C`: Red/Anode ($+$) to **Left Terminal (`+` Silkscreen)**; Black/Cathode ($-$) to **Right Terminal (`-` Silkscreen)**.
-   * *(Note: the two LED connectors are mirror-placed on the board so one faces each outward side; pin numbering is intentionally mirrored, but the silkscreen `+`/`-` remains authoritative - always follow silk, not barrel absolute position.)*
+   * Wire **LED A** leads into `J_LED_A`: Red/Anode ($+$) to **Pad 1 (`+` Silkscreen)**; Black/Cathode ($-$) to **Pad 2 (`-` Silkscreen)**.
+   * Wire **LED C** leads into `J_LED_C`: Red/Anode ($+$) to **Pad 1 (`+` Silkscreen)**; Black/Cathode ($-$) to **Pad 2 (`-` Silkscreen)**.
+   * *(Note: the two LED connectors are mirror-placed on the board so one faces each outward side; silkscreen `+`/`-` remains the authoritative guide.)*
 2. **Pigtail Tap Wires:**
    * Strip three $\approx 12\text{ cm}$ lengths of $2.5\text{ mm}^2$ wire (Brown = A, Blue = B, Green-Yellow or Black = C).
-   * Insert one end of each pigtail into `J_IN` on the PCB:
+   * Insert one end of each pigtail into `J_IN` on the PCB (heavy-duty 7.62mm pitch rising cage terminal):
      * Pin 1 = **Wire A**
      * Pin 2 = **Wire B**
      * Pin 3 = **Wire C**
@@ -114,16 +114,17 @@ Perform these steps in a clean workshop to assemble all 40 junction boxes before
  │                                    ▼                                      │
  │                            ┌──────────────┐                               │
  │                            │ J_IN (A,B,C) │                               │
+ │                            │  (7.62mm P)  │      ┌───────────┐            │
+ │                            │              │ ───> │  J_LED_A  │ ──> LED A  │
+ │                            │  PCB BOARD   │      └───────────┘     (IP67) │
+ │                            │  (60 x 45mm) │                               │
  │                            │              │      ┌───────────┐            │
- │                            │  PCB BOARD   │ ───> │  J_LED_A  │ ──> LED A  │
- │                            │  (60 x 45mm) │      └───────────┘     (IP67) │
- │                            │              │      ┌───────────┐            │
- │                            │              │ ───> │  J_LED_C  │ ──> LED C  │
- │                            │   J_EARTH    │      └───────────┘     (IP67) │
+ │                            │   J_EARTH    │ ───> │  J_LED_C  │ ──> LED C  │
+ │                            │  (7.62mm P)  │      └───────────┘     (IP67) │
  │                            └──────┬───────┘                               │
- │                                   │ (Pole 1 & Pole 2)                     │
+ │                                   │ (3-Pin Mirrored Earth Block)          │
  └───────────────────────────────────┼───────────────────────────────────────┘
-                                     │ (Dual 2.5mm² Earth Wires)
+                                     │ (Redundant Earth Wires)
                                      ▼ (Only at 5 Surge Boxes: 0, 1k, 2k, 3k, 4k)
                              [ BRONZE B-CLAMP ]
                                      │
@@ -132,7 +133,8 @@ Perform these steps in a clean workshop to assemble all 40 junction boxes before
                              (Deep Soil Ground)
 ```
 
-### Step 3.1: Enclosure Mounting on Fence Posts* **Height:** Mount the box at **$0.8\text{m} \text{ to } 1.2\text{m}$ above ground level** (keeps it clear of weeds/strimmers and places LEDs at eye level).
+### Step 3.1: Enclosure Mounting on Fence Posts
+* **Height:** Mount the box at **$0.8\text{m} \text{ to } 1.2\text{m}$ above ground level** (keeps it clear of weeds/strimmers and places LEDs at eye level).
 * **Fixing:** 
   * *Timber Posts:* Fasten the snap-on mounting clip to the post using two $4.0\text{ mm} \times 35\text{ mm}$ stainless steel woodscrews, then click the box into the bracket. Alternatively, drive 4 screws through the corner holes.
   * *Metal / Pipe Posts:* Secure with heavy-duty UV-resistant cable ties or stainless steel Jubilee clips through the mounting bracket slots.
@@ -150,12 +152,12 @@ Perform these steps in a clean workshop to assemble all 40 junction boxes before
 ### Step 3.3: Earth Grounding Installation (Surge Stations Only: 0m, 1km, 2km, 3km, 4km)
 1. Drive the **5/8" UL 467 copper-bonded earth rod** vertically into the soil directly below the milestone post until the top of the rod sits just below ground level (or inside a shallow inspection pit).
 2. Attach the heavy bronze/brass rod-to-cable B-clamp to the top of the rod.
-3. Strip $25\text{ mm}$ from **two separate $2.5\text{ mm}^2$ green/yellow earth wires** and clamp them both firmly under the B-clamp.
-4. Route both $2.5\text{ mm}^2$ wires into the box through the bottom M20 entry.
-5. Terminate the dual earth wires directly into the PCB:
-   * **Earth Wire 1** into **Pole 1** of `J_EARTH`.
-   * **Earth Wire 2** into **Pole 2** of `J_EARTH`.
-   * *(Note: Standard non-surge milestone boxes leave `J_EARTH` empty).*
+3. Strip $25\text{ mm}$ from **two or three separate $2.5\text{ mm}^2$ green/yellow earth wires** and clamp them all firmly under the B-clamp for multi-path redundancy.
+4. Route the earth wires into the box through the bottom M20 entry.
+5. Terminate the earth wires directly into the PCB's mirrored 3-pin 7.62mm screw terminal (`J_EARTH`):
+   * Insert the earth conductors into the poles of `J_EARTH` (all 3 poles are internally bridged by the massive 4.5mm 2 oz copper Earth bus).
+   * Tighten all screws firmly.
+   * *(Note: Standard non-surge milestone boxes leave `J_EARTH` unpopulated/empty).*
 
 ---
 

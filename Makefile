@@ -1,5 +1,5 @@
 # ==============================================================================
-# Dog Fence Indicator & Surge Protection System (v1.0)
+# Dog Fence Indicator & Surge Protection System (v1.1)
 # Automated Production Package Makefile (KiCad 7 / 8 / 9 & JLCPCB Turnkey PCBA)
 # ==============================================================================
 
@@ -35,7 +35,7 @@ all: package
 
 help:
 	@echo "======================================================================"
-	@echo "Dog Fence v1.0.2 - Production Build Commands"
+	@echo "Dog Fence v1.1.0 - Production Build Commands"
 	@echo "======================================================================"
 	@echo "  make all         - Build complete JLCPCB package (DRC gate + artifacts)"
 	@echo "  make check       - Inline DRC gate (blocks export when violations exist)"
@@ -138,7 +138,7 @@ zip-flytest: ipc zip-gerbers
 	@mkdir -p $(BUILD_DIR)/flytest_staging
 	@cp $(IPC_OUT) $(BUILD_DIR)/flytest_staging/
 	@cp $(GERBERS_ZIP) $(BUILD_DIR)/flytest_staging/
-	@echo "Dog Fence Indicator 1.0.2 - Flying Probe Electrical Test Package" > $(BUILD_DIR)/flytest_staging/README.txt
+	@echo "Dog Fence Indicator 1.1.0 - Flying Probe Electrical Test Package" > $(BUILD_DIR)/flytest_staging/README.txt
 	@echo "Contains IPC-D-356 netlist (pcb.d356) and master fabrication Gerbers.zip" >> $(BUILD_DIR)/flytest_staging/README.txt
 	@cd $(BUILD_DIR)/flytest_staging && zip -q -r ../FlyTest.zip *
 	@rm -rf $(BUILD_DIR)/flytest_staging

@@ -1,4 +1,4 @@
-# Dog Fence Indicator & Surge Protection System (v1.0.2)
+# Dog Fence Indicator & Surge Protection System (v1.1.0)
 **Project Knowledge Base & Agent Briefing**
 
 ---
@@ -10,10 +10,10 @@ This project implements a high-reliability, long-distance **4km (~2.5 miles) hid
 The fence boundary is formed by a continuous outdoor **3-core 2.5mm² cable** installed in a closed loop. All three internal copper conductors (Wire A, Wire B, Wire C) run in parallel, providing an effective total cross-sectional area of **7.5mm² (~8 AWG)** and an ultra-low total loop resistance of **≈ 9.3 Ω**, well within the DogWatch transmitter driving threshold (<30 Ω).
 
 To simplify long-term diagnostics, fault isolation, and lightning protection across 4 kilometres of rural terrain, **40 milestone junction boxes** are installed along the perimeter:
-- **35 Standard Diagnostic Milestones** (every ≈ 100m): Provide visual green LED status indicators for Wires A and C.
-- **5 Surge & Grounding Milestones** (at 0m, 1km, 2km, 3km, 4km): In addition to visual diagnostics, these stations connect to deep-driven copper earth ground rods to safely discharge lightning and static energy without affecting fence operation.
+- **35 Standard Diagnostic Milestones** (every ≈ 100m): Provide visual green LED status indicators for Wires A and C, plus full inter-core differential surge protection across all conductors.
+- **5 Surge & Grounding Milestones** (at 0m, 1km, 2km, 3km, 4km): In addition to visual diagnostics and inter-core surge protection, these stations connect via a mirrored 3-pin heavy-duty terminal block to deep-driven copper earth ground rods to safely discharge lightning and static energy to ground without affecting fence operation.
 
-All 40 junction boxes use an identical, unified **"Dog Fence Indicator & Surge 1.0" PCB**.
+All 40 junction boxes use an identical, unified **"Dog Fence Indicator & Surge 1.1" PCB (v1.1.0)**.
 
 ---
 
@@ -22,49 +22,64 @@ All 40 junction boxes use an identical, unified **"Dog Fence Indicator & Surge 1
 1. **20+ Year Outdoor Lifespan**: Zero compromise on durability. Materials are rated for -40°C to +90°C+ temperature swings, moisture, UV, and ground humidity.
 2. **Zero In-Field Soldering**: 100% turnkey factory assembly (PCBA) by JLCPCB/PCBWay. Field installation requires only a screwdriver.
 3. **Dual-Mode Operation (RF RUN Mode vs. DC TEST Mode)**:
-   - In **RUN Mode**, the board is electrically invisible to the DogWatch transmitter's 4–10 kHz RF signal (<1.5 pF capacitance load, zero antenna grounding).
+   - In **RUN Mode**, the board is electrically invisible to the DogWatch transmitter's 4–10 kHz RF signal (<1.5 pF capacitance load per GDT, zero antenna grounding).
    - In **TEST Mode**, an injected +36V DC supply illuminates milestone LEDs sequentially down the perimeter. If a core breaks, all downstream LEDs go dark, pin-pointing the exact 100m fault location immediately.
-4. **Hermetic Enclosure & Potting**: Housed in IP66/IP67 **WISKA COMBI 308** junction boxes, backfilled with re-enterable two-part silicone potting gel (**WISKA MP0100**) for submersible **IP68 hermetic sealing**.
+4. **Full 6-GDT Hybrid Surge Protection**:
+   - **3× Core-to-Core Differential GDTs** (`GDT_AB`, `GDT_BC`, `GDT_AC` rated at 5kA) clamp lightning-induced potential differences between adjacent conductors.
+   - **3× Line-to-Earth Common-Mode GDTs** (`GDT_A_E`, `GDT_B_E`, `GDT_C_E` rated at 20kA) divert catastrophic ground surges to external earth rods.
+5. **Hermetic Enclosure & Potting**: Housed in IP66/IP67 **WISKA COMBI 308** junction boxes, backfilled with re-enterable two-part silicone potting gel (**WISKA MP0100**) for submersible **IP68 hermetic sealing**.
 
 ---
 
 ## 3. Electrical Architecture & Dual-Mode Circuitry
 
 ```
-                  [ +36V DC in TEST Mode / RF Signal in RUN Mode ]
-                                         │
-                   ┌─────────────────────┴─────────────────────┐
-                   │                                           │
-             [ Wire A (Core 1) ]                         [ Wire C (Core 3) ]
-                   │                                           │
-            ┌──────┴──────┐                             ┌──────┴──────┐
-            │             │                             │             │
-        [ 2.2kΩ 1W ]   [ GDT 1 ]                     [ 2.2kΩ 1W ]   [ GDT 3 ]
-          (R1)       (470V 20kA)                       (R2)       (470V 20kA)
-            │             │                             │             │
-        [ 1N4007G ]       │                         [ 1N4007G ]       │
-          (D1)            │                           (D2)            │
-            │             │                             │             │
-        [ LED A (+) ]     │                         [ LED C (+) ]     │
-            │             │                             │             │
-        [ LED A (-) ]     │                         [ LED C (-) ]     │
-            │             │                             │             │
-            └──────┬──────┘                             └──────┬──────┘
-                   │                                           │
-                   ├───────────────────[ Wire B (Core 2) ]─────┤
-                   │                            │              │
-                   │                        [ GDT 2 ]          │
-                   │                       (470V 20kA)         │
-                   │                            │              │
-                   │                            ▼              │
-                   │                   [ EARTH GROUND BUS ]    │
-                   │                            │              │
-                   │                     [ J_EARTH Pin ]       │
-                   │                            │              │
-                   │                  (To External Earth Rod   │
-                   │                  at Surge Milestones only)│
-                   ▼                                           ▼
-         [ Return to 0V / DC Neg ]                   [ Return to 0V / DC Neg ]
+                 [ +36V DC in TEST Mode / RF Signal in RUN Mode ]
+                                        │
+           ┌────────────────────────────┼────────────────────────────┐
+           │                            │                            │
+     [ Wire A (Core 1) ]          [ Wire B (Core 2) ]          [ Wire C (Core 3) ]
+           │                            │                            │
+    [ 3x Stitch Vias ]           [ 3x Stitch Vias ]           [ 3x Stitch Vias ]
+     (Top <-> Bottom)             (Top <-> Bottom)             (Top <-> Bottom)
+           │                            │                            │
+           ├────────[ GDT_AB (5kA) ]────┤                            │
+           │                            ├────────[ GDT_BC (5kA) ]────┤
+           ├────────────────────────────┴────────[ GDT_AC (5kA) ]────┤
+           │                    (Axial arches over Wire B)           │
+           │                            │                            │
+    ┌──────┴──────┐                     │                     ┌──────┴──────┐
+    │             │                     │                     │             │
+[ 2.2kΩ 1W ]  [ GDT_A_E ]               │                 [ 2.2kΩ 1W ]  [ GDT_C_E ]
+   (R1)       (470V 20kA)               │                    (R2)       (470V 20kA)
+    │             │                     │                     │             │
+[ 1N4007G ]       │                     │                 [ 1N4007G ]       │
+   (D1)           │                     │                    (D2)           │
+    │             │                     │                     │             │
+[ LED A (+) ]     │                     │                 [ LED C (+) ]     │
+    │             │                     │                     │             │
+[ LED A (-) ]     │                     │                 [ LED C (-) ]     │
+    │             │                     │                     │             │
+    └──────┬──────┘                     │                     └──────┬──────┘
+           │                            │                            │
+           └──────────────────[ Wire B (DC 0V Return) ]──────────────┘
+                                        │
+                                   [ GDT_B_E ]
+                                   (470V 20kA)
+                                        │
+                                        ▼
+                             [ 4.5mm EARTH BUS (2 oz Cu) ]
+                                 [ 5x Stitch Vias ]
+                                  (Top <-> Bottom)
+                                        │
+                            [ J_EARTH (3-Pin 7.62mm) ]
+                             (Pins 1, 2, 3 in Parallel)
+                                        │
+                             (To External Earth Rod
+                             at Surge Milestones only)
+                                        │
+                                        ▼
+                                  [ Ground Rod ]
 ```
 
 ### Modes of Operation
@@ -72,8 +87,8 @@ All 40 junction boxes use an identical, unified **"Dog Fence Indicator & Surge 1
 #### Mode 1: RUN Mode (SmartFence Transmitter Active)
 * **Signal**: AC RF Carrier (4 kHz or 10.7 kHz), ≈ 10–20V RMS.
 * **Resistor-Diode Rungs**: Total resistance per milestone rung ≈ 2.2 kΩ. Total parallel impedance of 40 milestones is ≈ 55 Ω, drawing negligible differential RF current because Wire A and B are driven at identical potentials.
-* **GDT Capacitance**: <1.5 pF per GDT (<60 pF across entire 4km perimeter). Completely RF transparent.
-* **Ground Isolation**: Earth ground is completely decoupled from the fence antenna loop by the GDTs' 470V air/gas spark gaps.
+* **GDT Capacitance**: <1.5 pF per GDT (<9 pF per milestone, <360 pF total across entire 4km perimeter). Completely RF transparent.
+* **Ground Isolation**: Earth ground is completely decoupled from the fence antenna loop by the GDTs' 470V gas discharge spark gaps.
 
 #### Mode 2: TEST / Fault-Finding Mode (+36V DC Injected)
 * **Switchboard State**: Disconnects DogWatch transmitter; injects +36V DC onto Wires A and C, with Wire B acting as the DC 0V ground return.
@@ -90,10 +105,12 @@ Every part on the board was specifically chosen for heavy-duty industrial endura
 | Designator | Component Description | Selected Part | Key Durability Attributes |
 |:---|:---|:---|:---|
 | **`D1`, `D2`** | 1000V 1A Rectifier Diode | **1N4007G** (LCSC: `C232439`) | **Glass-passivated junction (`G` suffix)**, -65°C to +175°C, 30A forward surge (IFSM). |
-| **`GDT1`, `GDT2`, `GDT3`** | Gas Discharge Tube Arrester | **Ruilon 2R470TD-8** (LCSC: `C2836978`) | **20,000A (20kA)** impulse surge handling (8/20 µs), 470V breakdown, <1.5 pF, -40°C to +90°C. |
+| **`GDT_AB`, `GDT_BC`** | Core-to-Core SMT Arrester | **Ruilon SMD5050-470NA** (JLCPCB: `C39692533`) | **5,000A (5kA)** impulse surge (8/20 µs), 470V breakdown, <1.5 pF, 5.0×5.0mm SMT package. |
+| **`GDT_AC`** | Core-to-Core Axial Arrester | **Ruilon 2RA470-L5.5** (JLCPCB: `C52741208`) | **5,000A (5kA)** impulse surge (8/20 µs), 470V breakdown, compact axial body ($\Phi 5.5\text{mm} \times 6\text{mm}$), bridges Wire B. |
+| **`GDT_A_E`, `GDT_B_E`, `GDT_C_E`** | Line-to-Earth 20kA Arrester | **Ruilon 2R470TD-8** (JLCPCB: `C434855` / LCSC: `C2836978`) | **20,000A (20kA)** impulse surge (8/20 µs), 470V breakdown, heavy-duty axial body ($\Phi 8.0\text{mm} \times 6\text{mm}$). |
 | **`R1`, `R2`** | 2.2kΩ Current Limiter | **1W Metal Film 1%** (MPN: `MFR01SF2201A10`) | 1W power rating (operates at ≈0.50W, 50% capacity), 350V working voltage, ±50ppm/°C temperature coefficient. |
-| **`J_EARTH`, `J_LED_A`, `J_LED_C`** | 2-Pin 5.08mm Screw Terminals | **Cixi Kefa KF129-5.08-2P** (JLCPCB: `C475092`) | **24A / 250V Heavy Duty**, M3 steel clamping screws, -40°C to +105°C, accepts up to 2.5mm² / 4mm² wire. |
-| **`J_IN`** | 3-Pin 5.08mm Screw Terminal | **Cixi Kefa KF128-5.08-3P** (JLCPCB: `C474953`) | **24A / 250V Heavy Duty**, matching rising cage clamp series, -40°C to +105°C. |
+| **`J_IN`, `J_EARTH`** | 3-Pin 7.62mm Pitch Screw Terminals | **Cixi Kefa KF128-7.62-3P** (JLCPCB: `ASSIGN_BY_JLCPCB`) | **24A / 300V Heavy Duty**, M3 steel clamping screws, 7.62mm pitch for high-voltage creepage & clearance. `J_EARTH` has all 3 pins tied in parallel (72A rating) for contact redundancy. |
+| **`J_LED_A`, `J_LED_C`** | 2-Pin 5.08mm Screw Terminals | **Cixi Kefa KF129-5.08-2P** (JLCPCB: `C475092`) | **24A / 250V Heavy Duty**, M3 steel clamping screws, -40°C to +105°C. |
 
 ---
 
@@ -105,8 +122,11 @@ Every part on the board was specifically chosen for heavy-duty industrial endura
 * **Copper Weight**: **2 oz (70 µm)** on both top and bottom layers for high surge current absorption.
 * **Plating**: **ENIG 2U" (Electroless Nickel Immersion Gold)** — real 24k gold over nickel prevents copper oxidation for 20+ years.
 * **Plating Line**: **Horizontal Electroless Copper Plating** (ensures dense, void-free through-hole copper barrels).
+* **Tri-Rail Symmetrical Copper Stitching**: Wires A, B, and C each retain 100% full 3.2mm width across both `F.Cu` and `B.Cu` layers (no waist relief). Each wire conductor features a dedicated cluster of **3× heavy plated stitching vias** (1.0mm drill, 1.8mm pad) directly at the SMT GDT junctions (at X=112.5, 114.0, 115.5mm). This guarantees that both front and back 2 oz copper layers are fully engaged with minimal transient inductance and maximum surge current absorption.
+* **Earth Bus Symmetrical Copper Stitching**: The 4.5mm Earth bus connects all line-to-earth GDTs to the mirrored 3-pin `J_EARTH` terminal across both layers (2 oz top + 2 oz bottom = 4 oz / 140 µm total Cu). A dedicated column of **5× heavy plated stitching vias** (1.0mm drill, 1.8mm pad) at X=150.0mm stitches the top and bottom copper layers together every 3.81mm across the entire bus width, creating an 11-barrel monolithic ground network (3 GDT pins + 5 stitching vias + 3 terminal pins).
+* **GDT_AC Clearance**: `GDT_AC` axial leads are bent to maintain a 2.0mm+ vertical air gap standoff above the insulated Wire B top copper track. Through-hole pins bond top and bottom copper of Wire A and C directly at the SMT GDT junctions.
 * **Vias**: **Tented** with green solder mask.
-* **Polarity Silkscreen**: Explicit `+` (Anode / Square pad) and `-` (Cathode / Round pad) on LED outputs; `A`, `B`, `C` on input; `EARTH / ROD` on earth terminal.
+* **Polarity Silkscreen**: Explicit `+` (Anode / Square pad) and `-` (Cathode / Round pad) on LED outputs; `A`, `B`, `C` on input; `EARTH` on earth terminal.
 
 ---
 
