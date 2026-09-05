@@ -194,8 +194,8 @@
 		(property "Reference" "J_LED_A" (at 0 0 0) (layer "F.Fab") (hide yes) (uuid "7872e387-104e-4573-a247-92f23fa699dd") (effects (font (size 1 1) (thickness 0.15))))
 		(property "Value" "KF129-5.08-2P" (at 0 0 0) (layer "F.Fab") (hide yes) (uuid "eac5b783-a3fe-4001-ab59-a3099a0ef22f") (effects (font (size 1 1) (thickness 0.15))))
 		(fp_rect (start -4.2 -5.5) (end 4.2 5.5) (stroke (width 0.15) (type solid)) (fill no) (layer "F.SilkS") (uuid "4475d4db-fde9-4396-a954-79f17908ff4d"))
-		(pad "1" thru_hole roundrect (at 0 -2.54 90) (size 2.8 2.8) (drill 1.3) (layers "*.Cu" "*.Mask") (roundrect_rratio 0.25) (net 6 "LED_A_POS") (uuid "ccdb6c60-0656-49ad-9b09-cf670012987d"))
-		(pad "2" thru_hole circle (at 0 2.54 90) (size 2.8 2.8) (drill 1.3) (layers "*.Cu" "*.Mask") (net 2 "WIRE_B") (uuid "a35348aa-cf2b-4e55-a543-dc33ccc81fbd"))
+		(pad "1" thru_hole roundrect (at 0 2.54 90) (size 2.8 2.8) (drill 1.3) (layers "*.Cu" "*.Mask") (roundrect_rratio 0.25) (net 6 "LED_A_POS") (uuid "ccdb6c60-0656-49ad-9b09-cf670012987d"))
+		(pad "2" thru_hole circle (at 0 -2.54 90) (size 2.8 2.8) (drill 1.3) (layers "*.Cu" "*.Mask") (net 2 "WIRE_B") (uuid "a35348aa-cf2b-4e55-a543-dc33ccc81fbd"))
 	)
 
 	(footprint "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal"
@@ -205,8 +205,8 @@
 		(property "Reference" "J_LED_C" (at 0 0 0) (layer "F.Fab") (hide yes) (uuid "84165048-0001") (effects (font (size 1 1) (thickness 0.15))))
 		(property "Value" "KF129-5.08-2P" (at 0 0 0) (layer "F.Fab") (hide yes) (uuid "84165048-0002") (effects (font (size 1 1) (thickness 0.15))))
 		(fp_rect (start -4.2 -5.5) (end 4.2 5.5) (stroke (width 0.15) (type solid)) (fill no) (layer "F.SilkS") (uuid "84165048-0003"))
-		(pad "1" thru_hole roundrect (at 0 -2.54 90) (size 2.8 2.8) (drill 1.3) (layers "*.Cu" "*.Mask") (roundrect_rratio 0.25) (net 8 "LED_C_POS") (uuid "84165048-PAD1"))
-		(pad "2" thru_hole circle (at 0 2.54 90) (size 2.8 2.8) (drill 1.3) (layers "*.Cu" "*.Mask") (net 2 "WIRE_B") (uuid "84165048-PAD2"))
+		(pad "1" thru_hole roundrect (at 0 2.54 90) (size 2.8 2.8) (drill 1.3) (layers "*.Cu" "*.Mask") (roundrect_rratio 0.25) (net 8 "LED_C_POS") (uuid "84165048-PAD1"))
+		(pad "2" thru_hole circle (at 0 -2.54 90) (size 2.8 2.8) (drill 1.3) (layers "*.Cu" "*.Mask") (net 2 "WIRE_B") (uuid "84165048-PAD2"))
 	)
 
 	(footprint "Resistor_THT:R_Axial_DIN0414_L11.9mm_D4.5mm_P15.24mm_Horizontal"
@@ -337,6 +337,10 @@
 	(gr_text "WIRE B" (at 102 120 0) (layer "F.SilkS") (uuid "LBL-B") (effects (font (size 0.8 0.8) (thickness 0.12) (bold yes))))
 	(gr_text "WIRE C" (at 102 128 0) (layer "F.SilkS") (uuid "LBL-C") (effects (font (size 0.8 0.8) (thickness 0.12) (bold yes))))
 	(gr_text "EARTH BUS (2 oz Cu)" (at 148 135 0) (layer "F.SilkS") (uuid "LBL-EARTH") (effects (font (size 0.8 0.8) (thickness 0.12) (bold yes))))
+	(gr_text "+" (at 141.46 103.0 0) (layer "F.SilkS") (uuid "TXT-LED-A-POS") (effects (font (size 1.2 1.2) (thickness 0.18) (bold yes))))
+	(gr_text "-" (at 146.54 103.0 0) (layer "F.SilkS") (uuid "TXT-LED-A-NEG") (effects (font (size 1.2 1.2) (thickness 0.18) (bold yes))))
+	(gr_text "+" (at 141.46 142.0 0) (layer "F.SilkS") (uuid "TXT-LED-C-POS") (effects (font (size 1.2 1.2) (thickness 0.18) (bold yes))))
+	(gr_text "-" (at 146.54 142.0 0) (layer "F.SilkS") (uuid "TXT-LED-C-NEG") (effects (font (size 1.2 1.2) (thickness 0.18) (bold yes))))
 
 	(via (at 112.5 114.88) (size 1.8) (drill 1.0) (layers "F.Cu" "B.Cu") (net 1) (uuid "VIA-A-1"))
 	(via (at 114.0 114.88) (size 1.8) (drill 1.0) (layers "F.Cu" "B.Cu") (net 1) (uuid "VIA-A-2"))
@@ -365,12 +369,13 @@
 	(segment (start 106.5 122.50) (end 131.0 122.50) (width 3.2) (layer "B.Cu") (net 2) (uuid "TRK-B-B1"))
 	(segment (start 114.0 122.50) (end 114.0 121.19) (width 3.2) (layer "F.Cu") (net 2) (uuid "TRK-B-SMD1"))
 	(segment (start 114.0 122.50) (end 114.0 123.81) (width 3.2) (layer "F.Cu") (net 2) (uuid "TRK-B-SMD2"))
-	(segment (start 131.0 122.50) (end 131.0 111.0) (width 2.0) (layer "B.Cu") (net 2) (uuid "TRK-B-B2"))
-	(segment (start 131.0 111.0) (end 146.54 111.0) (width 2.0) (layer "B.Cu") (net 2) (uuid "TRK-B-B3"))
-	(segment (start 146.54 111.0) (end 146.54 106.5) (width 2.0) (layer "B.Cu") (net 2) (uuid "TRK-B-B4"))
-	(segment (start 131.0 122.50) (end 131.0 134.0) (width 2.0) (layer "B.Cu") (net 2) (uuid "TRK-B-B5"))
-	(segment (start 131.0 134.0) (end 146.54 134.0) (width 2.0) (layer "B.Cu") (net 2) (uuid "TRK-B-B6"))
-	(segment (start 146.54 134.0) (end 146.54 138.5) (width 2.0) (layer "B.Cu") (net 2) (uuid "TRK-B-B7"))
+	(segment (start 131.0 122.50) (end 138.62 122.50) (width 2.0) (layer "B.Cu") (net 2) (uuid "TRK-B-B2A"))
+	(segment (start 138.62 122.50) (end 138.62 110.20) (width 1.6) (layer "B.Cu") (net 2) (uuid "TRK-B-B2B"))
+	(segment (start 138.62 110.20) (end 146.54 110.20) (width 1.5) (layer "B.Cu") (net 2) (uuid "TRK-B-B3"))
+	(segment (start 146.54 110.20) (end 146.54 106.50) (width 1.5) (layer "B.Cu") (net 2) (uuid "TRK-B-B4"))
+	(segment (start 138.62 122.50) (end 138.62 134.80) (width 1.6) (layer "B.Cu") (net 2) (uuid "TRK-B-B5B"))
+	(segment (start 138.62 134.80) (end 146.54 134.80) (width 1.5) (layer "B.Cu") (net 2) (uuid "TRK-B-B6"))
+	(segment (start 146.54 134.80) (end 146.54 138.50) (width 1.5) (layer "B.Cu") (net 2) (uuid "TRK-B-B7"))
 
 	(segment (start 106.5 130.12) (end 131.0 130.12) (width 3.2) (layer "F.Cu") (net 3) (uuid "TRK-C-F1"))
 	(segment (start 106.5 130.12) (end 131.0 130.12) (width 3.2) (layer "B.Cu") (net 3) (uuid "TRK-C-B1"))
