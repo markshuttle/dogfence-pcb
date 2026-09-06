@@ -5,3 +5,4 @@ pcb/*.bak
 pcb/pcb-backups/*.zip
 build/
 .workshop.lock
+tmp/

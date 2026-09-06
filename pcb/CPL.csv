@@ -1,8 +1,8 @@
 Designator,Val,Package,Mid X,Mid Y,Rotation,Layer
 J_IN,"KF128-7.62-3P","TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-3-7.62_1x03_P7.62mm_Horizontal",106.00,122.50,0.0,top
 J_EARTH,"KF128-7.62-3P","TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-3-7.62_1x03_P7.62mm_Horizontal",155.00,122.50,180.0,top
-J_LED_A,"KF129-5.08-2P","TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal",145.50,102.50,90.0,top
-J_LED_C,"KF129-5.08-2P","TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal",145.50,142.00,90.0,top
+J_LED_A,"KF129-5.08-2P","TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal",145.50,103.00,90.0,top
+J_LED_C,"KF129-5.08-2P","TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal",145.50,142.00,270.0,top
 R1,"2.2k 1W","Resistor_THT:R_Axial_DIN0414_L11.9mm_D4.5mm_P15.24mm_Horizontal",116.00,104.50,0.0,top
 D1,"1N4007G","Diode_THT:D_DO-41_SOD81_P10.16mm_Horizontal",132.50,104.50,0.0,top
 R2,"2.2k 1W","Resistor_THT:R_Axial_DIN0414_L11.9mm_D4.5mm_P15.24mm_Horizontal",116.00,140.50,0.0,top

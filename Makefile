@@ -54,13 +54,13 @@ $(BUILD_DIR):
 	@mkdir -p $(BUILD_DIR)
 	@mkdir -p $(GERBER_DIR)
 
-# Paths for snap sandbox KiCad CLI (only HOME accessible)
-SEARCH := $(HOME)/dogfence_kicad_tmp
-SCRATCHPAD := $(HOME)/dogfence_kicad_tmp
+# Paths for snap sandbox KiCad CLI (workspace tmp/ directory inside HOME)
+SEARCH := $(CURDIR)/tmp
+SCRATCHPAD := $(CURDIR)/tmp
 KPCB := $(SCRATCHPAD)/pcb.kicad_pcb
 
 # Prepare sandbox copy of PCB; teardown completed during package
-$(KPCB):
+$(KPCB): $(PCB_FILE)
 	@mkdir -p $(SCRATCHPAD)
 	@cp -f $(PCB_FILE) $(KPCB)
 
@@ -160,3 +160,4 @@ package: check gerbers drills ipc bom cpl zip-gerbers zip-flytest
 clean:
 	@echo "Cleaning build artifacts..."
 	@rm -rf $(BUILD_DIR)
+	@rm -rf $(SCRATCHPAD)

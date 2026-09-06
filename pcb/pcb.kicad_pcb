@@ -1170,7 +1170,7 @@
 	(footprint "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal"
 		(layer "F.Cu")
 		(uuid "5166c585-2790-4128-83b4-137fd87aecef")
-		(at 145.5 102.5 90)
+		(at 145.5 103 90)
 		(property "Reference" "J_LED_A"
 			(at 0 0 0)
 			(layer "F.Fab")
@@ -1242,7 +1242,7 @@
 			(uuid "5166c585-2790-4128-83b4-137fd87aec01")
 		)
 		(pad "1" thru_hole roundrect
-			(at 0 2.54 90)
+			(at 0 -2.54 90)
 			(size 2.8 2.8)
 			(drill 1.3)
 			(layers "*.Cu" "*.Mask")
@@ -1252,7 +1252,7 @@
 			(uuid "ccdb6c60-0656-49ad-9b09-cf670012987d")
 		)
 		(pad "2" thru_hole circle
-			(at 0 -2.54 90)
+			(at 0 2.54 90)
 			(size 2.8 2.8)
 			(drill 1.3)
 			(layers "*.Cu" "*.Mask")
@@ -2114,7 +2114,7 @@
 	(footprint "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal"
 		(layer "F.Cu")
 		(uuid "84165048-fb28-4096-bcd9-0ebf4b9c61fd")
-		(at 145.5 142 90)
+		(at 145.5 142 270)
 		(property "Reference" "J_LED_C"
 			(at 0 0 0)
 			(layer "F.Fab")
@@ -2140,7 +2140,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 0 0 90)
+			(at 0 0 270)
 			(layer "F.Fab")
 			(hide yes)
 			(uuid "0b082026-568c-46ea-b0f5-cf683163a681")
@@ -2152,7 +2152,7 @@
 			)
 		)
 		(property "Description" ""
-			(at 0 0 90)
+			(at 0 0 270)
 			(layer "F.Fab")
 			(hide yes)
 			(uuid "bc9dfd9c-b1e1-4f7f-958e-4e12896352cb")
@@ -2186,7 +2186,7 @@
 			(uuid "84165048-fb28-4096-bcd9-0ebf4b9c6101")
 		)
 		(pad "1" thru_hole roundrect
-			(at 0 2.54 90)
+			(at 0 2.54 270)
 			(size 2.8 2.8)
 			(drill 1.3)
 			(layers "*.Cu" "*.Mask")
@@ -2196,7 +2196,7 @@
 			(uuid "b6d4c07d-4f0f-456d-8a13-06a668a69195")
 		)
 		(pad "2" thru_hole circle
-			(at 0 -2.54 90)
+			(at 0 -2.54 270)
 			(size 2.8 2.8)
 			(drill 1.3)
 			(layers "*.Cu" "*.Mask")
@@ -3228,7 +3228,7 @@
 		)
 	)
 	(gr_text "-"
-		(at 148.04 98.5 0)
+		(at 148.04 97 0)
 		(layer "F.SilkS")
 		(uuid "d5dc9949-f9c2-4339-a526-50800f133ee9")
 		(effects
@@ -3242,13 +3242,13 @@
 		(render_cache "-" 0
 			(polygon
 				(pts
-					(xy 147.789639 98.608154) (xy 147.789639 98.391609) (xy 148.291552 98.391609) (xy 148.291552 98.608154)
+					(xy 147.789639 97.108154) (xy 147.789639 96.891609) (xy 148.291552 96.891609) (xy 148.291552 97.108154)
 				)
 			)
 		)
 	)
 	(gr_text "+"
-		(at 142.96 98.5 0)
+		(at 142.96 97 0)
 		(layer "F.SilkS")
 		(uuid "f77b1ca5-094e-4f80-9e06-946ab198a8bb")
 		(effects
@@ -3262,9 +3262,9 @@
 		(render_cache "+" 0
 			(polygon
 				(pts
-					(xy 142.852283 98.949881) (xy 142.852283 98.599978) (xy 142.536037 98.599978) (xy 142.536037 98.400261)
-					(xy 142.852283 98.400261) (xy 142.852283 98.050756) (xy 143.068431 98.050756) (xy 143.068431 98.400261)
-					(xy 143.384201 98.400261) (xy 143.384201 98.599978) (xy 143.068431 98.599978) (xy 143.068431 98.949881)
+					(xy 142.852283 97.449881) (xy 142.852283 97.099978) (xy 142.536037 97.099978) (xy 142.536037 96.900261)
+					(xy 142.852283 96.900261) (xy 142.852283 96.550756) (xy 143.068431 96.550756) (xy 143.068431 96.900261)
+					(xy 143.384201 96.900261) (xy 143.384201 97.099978) (xy 143.068431 97.099978) (xy 143.068431 97.449881)
 				)
 			)
 		)
@@ -3399,7 +3399,7 @@
 	)
 	(segment
 		(start 148.04 107.5)
-		(end 148.04 102.5)
+		(end 148.04 103)
 		(width 1.6)
 		(layer "B.Cu")
 		(net 2)
@@ -3679,7 +3679,7 @@
 	)
 	(segment
 		(start 140.96 104.5)
-		(end 142.96 102.5)
+		(end 142.96 103)
 		(width 1.8)
 		(layer "F.Cu")
 		(net 6)

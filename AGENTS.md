@@ -42,17 +42,21 @@ Ubuntu Snaps execute inside an AppArmor-enforced security sandbox with `strict` 
 2. **No Access to Hidden Dot-Directories**:
    * The KiCad Snap is restricted from accessing hidden directories within `$HOME` (e.g., `~/.gemini/`, `~/.tmp/`, `~/.local/`, or `.workshop/`).
 3. **Allowed Paths**:
-   * The Snap can **only** read and write files located within standard, unhidden user directories inside `$HOME` (e.g., `$(HOME)/dogfence_kicad_tmp` or the workspace `/home/<username>/projects/...`).
+   * The Snap can **only** read and write files located within standard, unhidden user directories inside `$HOME` (e.g., the workspace `tmp/` directory or `/home/<username>/projects/...`).
 
-### Staging Protocol & Temporary Files
-* **Never invoke `kicad-cli` directly targeting `/tmp` or hidden directories.**
-* The repository's **[`Makefile`](Makefile)** automatically implements the required Snap staging protocol:
-  * Creates an unhidden temporary directory: `$(HOME)/dogfence_kicad_tmp`
-  * Copies the required `.kicad_pcb` or `.kicad_sch` files into the staging directory.
-  * Executes `kicad-cli` within the staging directory.
-  * Copies generated outputs back into `build/`.
-  * Tears down `$(HOME)/dogfence_kicad_tmp` upon completion.
-* When executing custom KiCad automation, always use `make` targets or replicate this staging protocol.
+### Staging Protocol & Temporary Files (`tmp/`)
+* **Never invoke `kicad-cli` directly targeting system `/tmp` or hidden dot-directories.**
+* **Use the Project-Local `tmp/` Subdirectory**:
+  * Temporary and staging files are kept inside the project tree in **`tmp/`** (`$(CURDIR)/tmp` in the `Makefile`).
+  * `tmp/` is ignored by git in `.gitignore`.
+  * Because `tmp/` is located inside the user's project workspace within `$HOME` and is not a hidden dot-directory, it satisfies all AppArmor snap confinement rules while keeping all ephemeral files neatly scoped to the project instead of littering `$HOME`.
+* The repository's **[`Makefile`](Makefile)** automatically implements this staging protocol:
+  * Creates the staging directory: `$(CURDIR)/tmp`
+  * Copies the required `.kicad_pcb` or `.kicad_sch` files into `tmp/`.
+  * Executes `kicad-cli` within `tmp/`.
+  * Copies generated production artifacts into `build/`.
+  * Cleans up `tmp/` during packaging and `make clean`.
+* When executing custom KiCad automation, always use `make` targets or replicate this `$(CURDIR)/tmp` staging protocol.
 
 ### CLI Binary Resolution Priority
 The `Makefile` resolves the `kicad-cli` binary across environments in this prioritized sequence:
@@ -129,6 +133,14 @@ When modifying schematics or PCB layouts, agents must strictly uphold the follow
    * Input Terminal (`J_IN`): **KF128-7.62-3P** (3-pin 7.62mm pitch, 24A / 300V).
    * Earth Terminal (`J_EARTH`): **KF128-7.62-3P** (all 3 pins tied in parallel for 72A rating).
    * LED Terminals (`J_LED_A`, `J_LED_C`): **KF129-5.08-2P** (2-pin 5.08mm pitch, 24A / 250V).
+8. **LED Terminal Outward Vertical Flip & Symmetrical Invariant**:
+   * `J_LED_A` and `J_LED_C` form a vertically mirrored pair across the board horizontal centerline ($Y = 122.50\text{ mm}$):
+     * `J_LED_A` is centered at **(145.50, 103.00)** with rotation **90°** (wire opening faces **UP / North** toward the top board edge, $6.50\text{ mm}$ edge margin, $10.50\text{ mm}$ Earth bus clearance).
+     * `J_LED_C` is centered at **(145.50, 142.00)** with rotation **270°** (wire opening faces **DOWN / South** toward the bottom board edge, $6.50\text{ mm}$ edge margin, $10.50\text{ mm}$ Earth bus clearance).
+   * **Do not reorient or match rotations**: Because the two connectors are vertically flipped $180^\circ$ relative to each other, their local coordinate axes transform to opposite horizontal directions on the board:
+     * `J_LED_A` ($90^\circ$): Pad 1 (`LED_A_POS` / Anode) is at local `(at 0 -2.54 90)`, mapping to the **Left ($X = 142.96\text{ mm}$)**. Pad 2 (`WIRE_B` / Cathode) is at local `(at 0 2.54 90)`, mapping to the **Right ($X = 148.04\text{ mm}$)**.
+     * `J_LED_C` ($270^\circ$): Pad 1 (`LED_C_POS` / Anode) is at local `(at 0 2.54 270)`, mapping to the **Left ($X = 142.96\text{ mm}$)**. Pad 2 (`WIRE_B` / Cathode) is at local `(at 0 -2.54 270)`, mapping to the **Right ($X = 148.04\text{ mm}$)**.
+   * On both channels, Pad 1 (Anode `+`) is consistently on the Left ($X = 142.96\text{ mm}$) and Pad 2 (Cathode `-`) on the Right ($X = 148.04\text{ mm}$). Inadvertently altering either rotation or pad offset breaks DRC by shorting `WIRE_B` with `LED_POS` and reverses outward screw opening geometry.
 
 ---
 

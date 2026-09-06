@@ -82,7 +82,7 @@ Set the following options on the PCB specification form:
 ## 4. 3D Preview Visual Verification
 
 In the JLCPCB 3D placement screen:
-1. **`J_LED_A` & `J_LED_C`**: Wire openings face **outwards** from the board — mirrored pair geometry. **CPL rotation `90°` for `J_LED_A` (opens toward the top edge) and `90°` for `J_LED_C` (opens toward the bottom edge)**. Silkscreen `+`/`-` markers are the authoritative polarity guide.
+1. **`J_LED_A` & `J_LED_C`**: Wire openings face **outwards** from the board — vertically flipped mirrored pair geometry across horizontal centerline $Y = 122.50\text{ mm}$. **CPL rotation `90°` for `J_LED_A` (opens toward the top edge) and `270°` for `J_LED_C` (opens toward the bottom edge)**. Silkscreen `+`/`-` markers are the authoritative polarity guide (Anode `+` on the Left at $X = 142.96\text{ mm}$, Cathode `-` on the Right at $X = 148.04\text{ mm}$).
 2. **`J_IN`**: Wire openings face **Left** (toward board edge, rotation `0°`).
 3. **`J_EARTH`**: Wire openings face **Right** (toward board edge, rotation `180°`).
 4. **`GDT_AC`**: Axial body spans across Wire B vertically with a minimum 2.0mm air gap standoff above the board surface.
