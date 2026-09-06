@@ -7,6 +7,7 @@
 
 This document serves as the operational guide and environment manual for **AI coding agents** (e.g., Antigravity, Cursor, Claude Code, GitHub Copilot) and **human developers** working on this repository.
 
+* For the current remediation task, start with **[`REMEDIATION.md`](REMEDIATION.md)**: agreed requirements, review findings, implementation checklists, release gates, and session handoff. Legacy claims in other documents remain pending correction; the physical guardrails still apply.
 * For the **master engineering specification**, circuit theory, dual-mode operational analysis, complete hardware bill of materials, PCB fabrication rules, and field installation architecture, see **[`README.md`](README.md)**.
 * For step-by-step physical installation instructions, see **[`INSTALL.md`](INSTALL.md)**.
 * For turnkey JLCPCB / PCBWay manufacturing instructions, see **[`ORDERING.md`](ORDERING.md)**.
@@ -281,4 +282,3 @@ For PCB, footprint, part-selection, or fabrication changes, apply the [master vi
 - **Verify pin fit for the exact part:** Use maximum finished lead dimensions from the selected manufacturer's drawing, including the diagonal of rectangular pins. With the ordinary JLCPCB component-hole tolerance, require `nominal finished hole - 0.08 mm >= maximum pin envelope + assembly allowance`. Start with at least 0.10 mm diametral allowance after tolerance, and account for pin-pitch, hole-position, and forming tolerances. Do not infer fit from pitch, footprint name, nominal pin diameter, or a matching C-code alone.
 - **Recheck copper after drill changes:** Meet the applicable two-layer, 2 oz component PTH annular-ring requirement (at least 0.254 mm nominal design ring), plus hole/copper and edge clearances. Generic via annular-ring rules do not establish component-pad compliance. Do not assume 2 oz surface copper means 70 micrometres of barrel plating; separately agree any required finished barrel-copper minimum.
 - **Keep evidence and outputs synchronized:** Record the manufacturer/MPN, drawing revision, tolerance calculation, and accepted process in the design/assembly documentation. Update affected PCB, BOM, CPL, and ordering notes; run `make check` for PCB/schematic changes and regenerate/inspect production outputs. Documentation or DRC alone does not close an outstanding physical fit or manufacturing-process approval.
-

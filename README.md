@@ -3,6 +3,8 @@
 
 ## Pending Remediation Requirements
 
+Implementation checklist and new-session context: **[REMEDIATION.md](REMEDIATION.md)**.
+
 User clarifications recorded on 2026-09-06 for the next design revision:
 
 - The prototype order remains **5 assembled boards**, using readily available FR-4, 2 oz outer copper, and ENIG.
