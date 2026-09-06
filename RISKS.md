@@ -18,8 +18,8 @@ This document provides a comprehensive risk and failure-mode analysis for the 4k
   * The SmartFence transmitter generates an AC RF carrier ($4\text{ kHz}$ or $10.7\text{ kHz}$, $\approx 10\text{--}20\text{ V RMS}$).
   * An AC signal alternates polarity thousands of times per second; there is no static positive or negative pole. Swapping $T_1$ and $T_2$ is electrically identical to a $180^\circ$ phase shift in an isolated closed loop.
   * In RUN mode, Wires A, B, and C are strapped in parallel at both ends, forming a single continuous $7.5\text{ mm}^2$ loop. Inter-core voltage difference across milestone boards is negligible ($<0.1\text{ V}$).
-  * The [1N4007G](file:///home/mark/projects/dogfence-1.0/AGENTS.md) diodes have a **1,000V Peak Repetitive Reverse Voltage ($\text{V}_{\text{RRM}}$)** rating, easily blocking any instantaneous AC potential with $>970\text{V}$ headroom.
-  * The Gas Discharge Tubes ([GDTs](file:///home/mark/projects/dogfence-1.0/pcb/pcb.kicad_sch)) are non-polar, bidirectional devices.
+  * The [1N4007G](README.md#4-hardware-component-selection--specifications) diodes have a **1,000V Peak Repetitive Reverse Voltage ($\text{V}_{\text{RRM}}$)** rating, easily blocking any instantaneous AC potential with $>970\text{V}$ headroom.
+  * The Gas Discharge Tubes ([GDTs](pcb/pcb.kicad_sch)) are non-polar, bidirectional devices.
 
 ---
 
@@ -41,7 +41,7 @@ This document provides a comprehensive risk and failure-mode analysis for the 4k
            Power   = 0 W                              (Rated for 1000V)
 ```
 
-1. **[1N4007G](file:///home/mark/projects/dogfence-1.0/pcb/pcb.kicad_sch) Blocking Diodes ($D_1, D_2$):**
+1. **[1N4007G](pcb/pcb.kicad_sch) Blocking Diodes ($D_1, D_2$):**
    * Reverse-biased when Wire B is positive relative to Wires A/C.
    * Rated for **1,000V DC blocking**. At $-36\text{V}$, the diode remains fully off, exhibiting only negligible leakage current ($I_R < 50\text{ nA}$ typical at room temperature, $<5\ \mu\text{A}$ max at extreme temperature).
 2. **LED Indicators ($J_{LED\_A}, J_{LED\_C}$):**
@@ -72,7 +72,7 @@ This document provides a comprehensive risk and failure-mode analysis for the 4k
 | **Short Circuit Between Cores (e.g., Core A shorted to Core B in cable)** | In TEST mode: 36V power supply sees short across loop resistance. In RUN mode: Transmitter impedance shifts. | **Protected.** In TEST mode, the 2A inline power supply fuse blows instantly, protecting wiring and PCB traces. | Clear cable short; replace 2A fast-blow fuse. |
 | **Earth Stake Connected at Standard Milestone (Non-Surge Box)** | No operational effect; earth bus connects to GDTs only. | **Safe.** GDTs maintain 470V galvanic isolation between earth and signal lines. | Harmless, but extra ground stakes are only required at the 5 designated surge stations. |
 | **Earth Wire Connected Directly to Wire A, B, or C (Bypassing `J_EARTH`)** | Fence loop becomes directly grounded, attenuating the SmartFence RF signal. | **Safe for components; inhibits RF fence boundary.** | Move ground lead to `J_EARTH` terminal so GDT spark gaps isolate earth from RF. |
-| **Simultaneous RUN & TEST Mode Activation** | High-voltage DC injected into transmitter output stage. | **Prevented by Hardware.** Break-before-make 4PDT changeover switch physically isolates the DC supply when RUN mode is active. | Use dedicated 4PDT center-off changeover switch as specified in [INSTALL.md](file:///home/mark/projects/dogfence-1.0/INSTALL.md). |
+| **Simultaneous RUN & TEST Mode Activation** | High-voltage DC injected into transmitter output stage. | **Prevented by Hardware.** Break-before-make 4PDT changeover switch physically isolates the DC supply when RUN mode is active. | Use dedicated 4PDT center-off changeover switch as specified in [INSTALL.md](INSTALL.md). |
 | **GDT_AC Bridging Contact with Wire B** | Axial component body or leads contacting Wire B top track. | **Triple Safeguard Layered Defense:**<br>1. **Solder Mask Insulation:** Continuous high-dielectric green LPI solder mask over the 3.2mm Wire B top copper track (>20 kV/mm dielectric strength).<br>2. **Vertical Air Gap Standoff:** Formed axial leads maintain $\ge 2.0\text{mm}$ elevated vertical clearance between the GDT body and board surface.<br>3. **Silicone Potting Gel:** Backfilling with WISKA MP0100 silicone gel replaces all remaining air volume with solid dielectric elastomer (>20 kV/mm).<br>*(Optional field precaution: small Kapton tape or heat-shrink silicone sleeve over GDT body).* | Full 3.2mm width of Wire B is maintained on both top and bottom copper layers (no waist relief). Symmetrical 3× heavy stitching vias ensure robust top/bottom copper bonding. |
 | **Wire B Return Short to Wire A / C or Earth on Back Layer** | Accidental copper collision or dielectric breakdown between Wire B and Earth. | **Eliminated by Geometric Design.** Wire B return traces run up a westward spine at $X=135.50\text{mm}$, ensuring **$8.44\text{mm}$ clearance ($2.81\times$ headroom over $3.0\text{mm}$)** to Earth GDT pins, **$>3.28\text{mm}$ clearance** to the flush Earth bus, and $2.20\text{mm}$ clearance to Wire A & C line inputs. | Automated geometric DRC proves zero copper collisions across all layers and nets with all Earth clearances exceeding 3.0mm. |
 | **Earth Terminal Connection Loosening** | High ground surge cannot discharge safely through single terminal pin. | **Mitigated by Triple Contact Redundancy.** Mirrored 3-pin 7.62mm terminal (`J_EARTH`) ties all 3 pins in parallel to the 4.5mm 2 oz copper Earth bus (72A aggregate rating). | Multiple earth wires can be clamped into separate poles for redundant current paths to ground rod. |

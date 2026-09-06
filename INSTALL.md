@@ -87,7 +87,7 @@ Perform these steps in a clean workshop to assemble all 40 junction boxes before
      * Pin 3 = **Wire C**
    * Tighten the rising cage screws firmly with a 3.0mm flathead screwdriver.
 3. **Pre-Attach WAGO Connectors:**
-   * Snap the free end of Pigtail A into Port 1 of a [WAGO 221-613](file:///home/mark/projects/dogfence-1.0/MATERIALS.md).
+   * Snap the free end of Pigtail A into Port 1 of a [WAGO 221-613](MATERIALS.md).
    * Snap Pigtail B into Port 1 of a second WAGO `221-613`.
    * Snap Pigtail C into Port 1 of a third WAGO `221-613`.
    * Leave Ports 2 & 3 open for the incoming/outgoing 3-core cables in the field.
@@ -315,7 +315,7 @@ Once electrical commissioning is 100% verified, encapsulate every junction box f
    * Unscrew the top-left **M20 plug** (Fill Port).
    * Unscrew the top-right **M20 plug** (Air Vent & Sight Glass).
 3. **Mix the Gel:**
-   * Take the two-part [WISKA MP0100 silicone gel](file:///home/mark/projects/dogfence-1.0/MATERIALS.md) (Part A and Part B).
+   * Take the two-part [WISKA MP0100 silicone gel](MATERIALS.md) (Part A and Part B).
    * Mix thoroughly for 60 seconds until a uniform translucent blue mixture is achieved.
 4. **Pour the Enclosure:**
    * Insert a small funnel into Port 1.
