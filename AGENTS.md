@@ -193,13 +193,14 @@ When modifying schematics or PCB layouts, agents must strictly uphold the follow
 2. **Tri-Rail Symmetrical Copper Stitching**:
    * Conductors Wire A, Wire B, and Wire C must maintain **100% full 3.2mm width** across both copper layers.
    * Dedicated clusters of **3× heavy plated stitching vias** (1.0mm drill, 1.8mm pad) at X=112.5, 114.0, 115.5mm on each rail must never be deleted or shrunk.
-3. **Earth Bus Stitching**:
-   * The 4.5mm Earth bus must maintain its column of **5× heavy plated stitching vias** (1.0mm drill, 1.8mm pad) at X=150.0mm, stitching the top and bottom layers into a monolithic ground network.
+3. **Earth Bus Stitching & Symmetrical Monolithic Fill**:
+   * The Earth bus maintains an identical solid 4.5mm-grid monolithic copper plane on both `F.Cu` and `B.Cu` ($X \in [143.99, 157.25]\text{ mm}$, $Y \in [111.25, 133.75]\text{ mm}$, 4 oz total Cu).
+   * It preserves its column of **5× heavy plated stitching vias** (1.0mm drill, 1.8mm pad) at X=150.0mm, stitching the top and bottom layers into a continuous, slit-free ground plane.
 4. **Line-to-Earth 20kA GDT Pitch (9.0mm)**:
    * `GDT_A_E` and `GDT_C_E` must remain spaced at Y=113.50mm and Y=131.50mm (**9.00mm center-to-center pitch**).
    * **Do not compress this pitch**: 9.00mm is required to provide a 1.00mm physical air gap and 0.50mm courtyard clearance between the heavy-duty $\Phi 8.0\text{mm} \times 6\text{mm}$ ceramic bodies of the Ruilon 2R470TD-8 arresters.
 5. **Surge Clearance Invariant (≥3.0mm)**:
-   * The Wire B LED return traces on `B.Cu` run westward at X=135.50mm to provide **4.31mm copper clearance** to the Earth GDT pins and **3.70mm clearance** to the Earth bus.
+   * The Wire B LED return traces on `B.Cu` run westward at X=135.50mm and turn along Y=107.20mm (North) and Y=137.80mm (South) to provide **8.44mm copper clearance** to the Earth GDT pins and **3.25mm clearance** to the solid Earth bus plane.
    * Clearance between fence conductors and the Earth ground bus must never drop below 3.0mm.
 6. **Axial Arrester GDT_AC Standoff**:
    * `GDT_AC` bridges over the top copper trace of Wire B. Axial leads must be formed to maintain a **≥2.0mm vertical air gap standoff** above the board surface.
