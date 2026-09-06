@@ -230,3 +230,20 @@ Whenever schematic components, footprint geometry, or layout routing are modifie
 3. Update part tracking in **[`MATERIALS.md`](MATERIALS.md)** and fabrication notes in **[`ORDERING.md`](ORDERING.md)**.
 4. If electrical modes or risk profiles change, update **[`RISKS.md`](RISKS.md)**.
 5. If operating environment, tooling, or build scripts change, update this file (**[`AGENTS.md`](AGENTS.md)**).
+
+---
+
+## 7. Component Sourcing & Web Research Protocol
+
+When researching component specifications, JLCPCB / LCSC part numbers (C-codes), stock availability, or datasheets:
+
+1. **Use Native Agent Tools**:
+   * Use **`search_web`** to query JLCPCB/LCSC part numbers, stock, and component specifications.
+   * Use **`read_url_content`** to fetch product pages, manufacturer specs, or datasheets directly.
+   * Native tools execute directly within the agent runtime and do not trigger interactive terminal permission prompts.
+
+2. **Prohibited Terminal Scraping**:
+   * **Do not** run ad-hoc inline Python scripts (`python3 -c "import urllib..."`), `curl`, or `wget` via `run_command` to scrape websites.
+   * Ad-hoc network commands in bash require sandbox bypass (`BypassSandbox: true`) and continuously interrupt the user with interactive approval prompts.
+   * `run_command` in this repository is strictly reserved for KiCad CLI tasks, `make` targets (`make check`, `make all`), and local file operations.
+
