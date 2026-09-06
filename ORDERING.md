@@ -67,6 +67,7 @@ Set the following options on the PCB specification form:
 2. **Assembly Side**: **Top Side** (all 14 components are on the top layer).
 3. **PCBA Quantity**: **5** (Select 5 fully assembled boards for the prototype run; select 40 for production).
 4. **Tooling Holes**: "Added by JLCPCB".
+5. **Assembly Note**: In the JLCPCB PCBA special assembly notes, specify that axial component GDT_AC leads must be pre-formed to enforce a ≥ 2.0 mm vertical air gap standoff above the PCB surface.
 5. Upload **`build/BOM.csv`** and **`build/CPL.csv`**.
 
 > [!WARNING]
