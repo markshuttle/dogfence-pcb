@@ -26,26 +26,48 @@ This document serves as the operational guide and environment manual for **AI co
 * **Headless Execution Invariant**:
   * All automated agent tasks **must run headlessly** via CLI commands.
   * **Do not** attempt to invoke interactive graphical desktop applications (e.g., launching the interactive `kicad` GUI editor, `pcbnew`, or `eeschema`).
-  * All design rule checks (DRC), netlist exports, Gerber generation, and drill outputs must be executed using headless CLI tooling (`kicad-cli` via `make`).
+  * All design rule checks (DRC), netlist exports, Gerber generation, and drill outputs must be executed using headless CLI tooling (`kicad.kicad-cli` directly or via `make`).
+  * **Agent Sandbox Notice**: Because KiCad is installed as an Ubuntu Snap under `/snap/bin`, agent tools running in containerized sandboxes must execute commands with sandbox bypass (`BypassSandbox: true`) so the host snap binaries and mounts are visible.
 
 ---
 
-## 3. KiCad Snap Architecture & Confinement Constraints
+## 3. KiCad Snap Architecture & Command Execution Guide
 
-The system relies on KiCad 9 (or KiCad 8) installed as an **Ubuntu Snap package** (`snap install kicad`).
+KiCad 9 is installed on the host system as an **Ubuntu Snap package** (`snap install kicad`). Because KiCad is packaged as a snap, binary naming, directory access, and execution environments differ fundamentally from standard native packages.
 
-### Strict Snap Confinement Restrictions
-Ubuntu Snaps execute inside an AppArmor-enforced security sandbox with `strict` confinement:
+### 3.1 Snap Binary Naming (`kicad.kicad-cli` vs `kicad-cli`)
+In Ubuntu snaps that bundle multiple binaries, executables in `/snap/bin` use the `<snap-name>.<command>` prefix:
+* **The headless CLI binary is `kicad.kicad-cli`** (full path: `/snap/bin/kicad.kicad-cli`).
+* **There is NO bare `kicad-cli` command** in `$PATH` on standard snap installations. Running `kicad-cli` directly will result in `bash: kicad-cli: command not found`.
+* The snap provides the following binaries in `/snap/bin/`:
+  * `/snap/bin/kicad.kicad-cli` — Headless CLI tool for DRC, Gerbers, drills, netlists, and rendering (**the primary tool for agents**).
+  * `/snap/bin/kicad` — KiCad project manager (interactive GUI, not for headless use).
+  * `/snap/bin/kicad.eeschema` — Schematic editor (interactive GUI).
+  * `/snap/bin/kicad.pcbnew` — PCB layout editor (interactive GUI).
+  * `/snap/bin/kicad.gerbview` — Gerber viewer (interactive GUI).
+  * `/snap/bin/kicad.pcbcalculator` — Component & trace calculator.
+  * `/snap/bin/kicad.bitmap2component` — Bitmap converter utility.
+
+### 3.2 AI Agent Runner Sandbox vs. Host (`BypassSandbox: true`)
+AI coding agents (e.g., Antigravity, Cursor, Claude Code) typically execute bash commands inside an isolated container sandbox by default (`BypassSandbox: false`):
+* **The default agent container sandbox does NOT mount `/snap/bin` or host snap namespaces.**
+* Running `make check`, `which kicad-cli`, `which kicad.kicad-cli`, or `ls -l /snap/bin` inside the sandbox produces:
+  * `ls: cannot access '/snap/bin': No such file or directory`
+  * `ERROR: kicad-cli not found - cannot run DRC. Install KiCad 9 snap.`
+* **MANDATORY FOR AGENTS**: Any command that runs `make` (`make check`, `make all`, etc.) or calls `kicad.kicad-cli` **must be executed with `BypassSandbox: true`** (unsandboxed host context). On the host, `/snap/bin` is populated, in `$PATH`, and `/snap/bin/kicad.kicad-cli` runs normally.
+
+### 3.3 Strict Snap Confinement Restrictions (AppArmor)
+Even when running on the host outside the agent sandbox, the KiCad snap itself executes inside an Ubuntu AppArmor-enforced security sandbox with `strict` confinement:
 1. **No Access to System `/tmp` or Root Paths**:
-   * The KiCad Snap **cannot access** `/tmp`, `/var/tmp`, `/run`, or arbitrary directories outside `$HOME`.
-   * Passing paths such as `/tmp/drc_report.txt` or `/tmp/gerbers/` to `kicad-cli` will fail immediately with permission-denied or file-not-found errors.
+   * The KiCad snap **cannot access** `/tmp`, `/var/tmp`, `/run`, or arbitrary directories outside `$HOME`.
+   * Passing paths such as `/tmp/drc_report.txt` or `/tmp/gerbers/` to `kicad.kicad-cli` will fail immediately with permission-denied or file-not-found errors.
 2. **No Access to Hidden Dot-Directories**:
-   * The KiCad Snap is restricted from accessing hidden directories within `$HOME` (e.g., `~/.gemini/`, `~/.tmp/`, `~/.local/`, or `.workshop/`).
+   * The KiCad snap is restricted from accessing hidden directories within `$HOME` (e.g., `~/.gemini/`, `~/.tmp/`, `~/.local/`, or `.workshop/`).
 3. **Allowed Paths**:
-   * The Snap can **only** read and write files located within standard, unhidden user directories inside `$HOME` (e.g., the workspace `tmp/` directory or `/home/<username>/projects/...`).
+   * The snap can **only** read and write files located within standard, unhidden user directories inside `$HOME` (e.g., the workspace `tmp/` directory or `/home/<username>/projects/...`).
 
-### Staging Protocol & Temporary Files (`tmp/`)
-* **Never invoke `kicad-cli` directly targeting system `/tmp` or hidden dot-directories.**
+### 3.4 Staging Protocol & Project-Local `tmp/` Directory
+* **Never invoke `kicad.kicad-cli` targeting system `/tmp` or hidden dot-directories.**
 * **Use the Project-Local `tmp/` Subdirectory**:
   * Temporary and staging files are kept inside the project tree in **`tmp/`** (`$(CURDIR)/tmp` in the `Makefile`).
   * `tmp/` is ignored by git in `.gitignore`.
@@ -53,12 +75,12 @@ Ubuntu Snaps execute inside an AppArmor-enforced security sandbox with `strict` 
 * The repository's **[`Makefile`](Makefile)** automatically implements this staging protocol:
   * Creates the staging directory: `$(CURDIR)/tmp`
   * Copies the required `.kicad_pcb` or `.kicad_sch` files into `tmp/`.
-  * Executes `kicad-cli` within `tmp/`.
+  * Executes `kicad.kicad-cli` within `tmp/`.
   * Copies generated production artifacts into `build/`.
   * Cleans up `tmp/` during packaging and `make clean`.
 * When executing custom KiCad automation, always use `make` targets or replicate this `$(CURDIR)/tmp` staging protocol.
 
-### CLI Binary Resolution Priority
+### 3.5 CLI Binary Resolution in `Makefile`
 The `Makefile` resolves the `kicad-cli` binary across environments in this prioritized sequence:
 ```makefile
 KICAD_CLI ?= $(shell \
@@ -70,6 +92,61 @@ KICAD_CLI ?= $(shell \
 	else echo kicad-cli; fi)
 ```
 
+### 3.6 Direct CLI Invocation Cheatsheet
+If you need to invoke KiCad CLI directly without `make`, always run with `BypassSandbox: true`, use `kicad.kicad-cli` (or `/snap/bin/kicad.kicad-cli`), and stage files in `tmp/`:
+
+* **Check Version**:
+  ```bash
+  /snap/bin/kicad.kicad-cli --version
+  # Output: 9.0.7
+  ```
+
+* **Run Inline Design Rule Check (DRC)**:
+  ```bash
+  mkdir -p tmp build
+  cp -f pcb/pcb.kicad_pcb tmp/pcb.kicad_pcb
+  kicad.kicad-cli pcb drc --format report --severity-error --exit-code-violations --output tmp/drc_report.txt tmp/pcb.kicad_pcb
+  cp -f tmp/drc_report.txt build/drc_report.txt
+  ```
+
+* **Export Gerber Layers**:
+  ```bash
+  mkdir -p tmp/gerbers build/gerbers
+  cp -f pcb/pcb.kicad_pcb tmp/pcb.kicad_pcb
+  kicad.kicad-cli pcb export gerbers \
+    --output tmp/gerbers/ \
+    --layers F.Cu,B.Cu,F.SilkS,B.SilkS,F.Mask,B.Mask,Edge.Cuts \
+    --subtract-soldermask \
+    --no-protel-ext \
+    tmp/pcb.kicad_pcb
+  cp -f tmp/gerbers/*.gbr build/gerbers/
+  ```
+
+* **Export Excellon Drill Files (PTH & NPTH)**:
+  ```bash
+  mkdir -p tmp/gerbers build/gerbers
+  cp -f pcb/pcb.kicad_pcb tmp/pcb.kicad_pcb
+  kicad.kicad-cli pcb export drill \
+    --output tmp/gerbers/ \
+    --format excellon \
+    --drill-origin absolute \
+    --excellon-units mm \
+    --excellon-zeros-format decimal \
+    --excellon-separate-th \
+    tmp/pcb.kicad_pcb
+  cp -f tmp/gerbers/*.drl build/gerbers/
+  ```
+
+### 3.7 Agent Troubleshooting & Diagnostic Matrix
+
+| Symptom / Error | Root Cause | Exact Remedy |
+| :--- | :--- | :--- |
+| `ls: cannot access '/snap/bin': No such file or directory`<br>`ERROR: kicad-cli not found - cannot run DRC` | Command executed inside the agent container sandbox (`BypassSandbox: false`). The sandbox does not mount `/snap/bin`. | Re-run the command with **`BypassSandbox: true`** (unsandboxed host execution). |
+| `bash: kicad-cli: command not found` | Using bare `kicad-cli` instead of the snap-namespaced command `kicad.kicad-cli`. | Use **`kicad.kicad-cli`** or explicit path `/snap/bin/kicad.kicad-cli`. |
+| `kicad.kicad-cli: command not found` (even with bypass sandbox) | Non-login subshell does not have `/snap/bin` in `$PATH`. | Run `/snap/bin/kicad.kicad-cli` directly or prepend `export PATH="/snap/bin:$PATH"`. |
+| `Permission denied` or `Failed to open file` | File path is in system `/tmp/` or a hidden dot-directory (`~/.gemini/`, etc.), violating AppArmor snap confinement. | Stage all files in project-local **`tmp/`** (`$(CURDIR)/tmp`). |
+| DRC reported violations and blocked build | Clearance, trace spacing, or component courtyards violate design rules. | Inspect `tmp/drc_report.txt` or `build/drc_report.txt` and resolve PCB layout violations. |
+
 ---
 
 ## 4. Build, DRC, and Verification Workflow
@@ -79,7 +156,8 @@ Whenever any modification is made to the PCB layout (`pcb/pcb.kicad_pcb`) or sch
 ```bash
 make check
 ```
-* The DRC gate runs `kicad-cli pcb drc --format report --severity-error --exit-code-violations`.
+*(Always execute with `BypassSandbox: true` in agent environments.)*
+* The DRC gate runs `kicad.kicad-cli pcb drc --format report --severity-error --exit-code-violations`.
 * **Zero violations rule**: If any DRC error or courtyard violation is detected, the command exits with non-zero status and halts the export.
 * The resulting report is written to `build/drc_report.txt`.
 

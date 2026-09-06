@@ -68,7 +68,9 @@ $(KPCB): $(PCB_FILE)
 check: $(BUILD_DIR) $(KPCB)
 	@echo "[0/6] KiCad Design Rule Check (inline gate)..."
 	@if ! command -v $(KICAD_CLI) >/dev/null 2>&1; then \
-		echo "ERROR: kicad-cli not found - cannot run DRC. Install KiCad 9 snap."; \
+		echo "ERROR: kicad-cli / kicad.kicad-cli not found - cannot run DRC."; \
+		echo "       Hint: KiCad is installed as a snap (/snap/bin/kicad.kicad-cli)."; \
+		echo "       If running inside an AI agent sandbox, set BypassSandbox: true so /snap/bin is accessible."; \
 		exit 1; \
 	fi
 	@$(KICAD_CLI) pcb drc --format report --severity-error --exit-code-violations --output "$(SCRATCHPAD)/drc_report.txt" "$(KPCB)" || { \
