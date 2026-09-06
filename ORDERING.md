@@ -34,6 +34,8 @@ This target runs KiCad's headless Design Rule Check (DRC) gate (`make check`) an
 
 Go to **[jlcpcb.com/quote](https://jlcpcb.com/quote)** and upload **`build/Gerbers.zip`**.
 
+> **Pre-order hold:** Resolve the outstanding component-hole and SMT via/mask intersections before submitting the current design. Follow the [via and component hole DFM policy](README.md#via-and-component-hole-dfm); the normal covering options do not guarantee sealing of the protected 1.0 mm stitching holes. The pending revision requirements at the start of `README.md` supersede legacy station counts and source-sizing assumptions in this guide.
+
 Set the following options on the PCB specification form:
 
 | Specification | Phase 1: Prototype (5 Boards) | Phase 2: Production (40–50 Boards) | Engineering Rationale & Longevity Benefit |
@@ -46,8 +48,8 @@ Set the following options on the PCB specification form:
 | **Copper Weight** | **2 oz (70 µm)** | **2 oz (70 µm)** | **CRUCIAL INVARIANT:** 2× standard copper thickness. Essential for safely absorbing high lightning transients (20kA) and keeping 4km loop resistance ultra-low. |
 | **Surface Finish** | **ENIG (Immersion Gold)** | **ENIG (Immersion Gold)** | **CRUCIAL:** 24k gold over nickel barrier prevents copper oxidation and terminal fretting permanently. |
 | **Gold Thickness** | **1U"** (Standard) | **2U"** (2 micro-inches) | **Prototype:** 1U" is standard, cost-effective, and fully corrosion-resistant for test boards.<br>**Production:** 2U" provides a pore-free gold seal for multi-decade service life. |
-| **Via Process / Covering** | **Solder Mask Plugged** (or Tented) | **Solder Mask Plugged** (or Tented) | **Freeze-Thaw Void Protection:** Solder mask plugging seals the via barrel hole, eliminating open air voids where moisture could collect.<br>*(See Engineering FAQ below on via conductivity).* |
-| **Via Plating** | **Horizontal Electroless Copper** | **Horizontal Electroless Copper** | Automated conveyorized chemical deposition line ensuring dense, void-free copper barrels. |
+| **Via Process / Covering** | **CAM-approved process required** | **CAM-approved process required** | The 1.0 mm stitching holes exceed normal reliable tenting/plugging/filling limits. Do not shrink them or assume a guaranteed seal. Resolve SMT solder-wicking geometry and obtain written acceptance of the selected treatment. |
+| **Via Plating** | **Confirm finished barrel copper** | **Specify required finished minimum** | Outer copper weight and a plating-line name do not guarantee barrel thickness or absence of voids. Any minimum used in electrical calculations must be agreed with the fabricator. |
 | **Edge Rails / Panel** | **Added by JLCPCB (73×76mm)** | **Added by JLCPCB (73×76mm)** | **Required for Assembly:** Automated 5mm breakaway rails allow SMT conveyor clamping without contacting board edges. Breakaway tabs are cleanly removed post-assembly. |
 | **Conformal Coating** | **No / Skip** | **No / Skip** | Redundant because boards are submerged in 100% solid silicone potting gel ([WISKA MP0100](MATERIALS.md)). |
 | **Flying Probe Test** | **Fully Tested** | **Fully Tested** | 100% electrical continuity and isolation testing (free and automatic for 2-layer boards). |
@@ -55,9 +57,9 @@ Set the following options on the PCB specification form:
 
 > [!NOTE]
 > **Engineering FAQ: Does "Plugged" provide more electrical conductivity than "Tented"?**
-> **No.** Electrical conductivity through a via is determined **100% by the electroplated copper barrel wall thickness** (20–25 µm of copper deposited during plating), not the plugging material. Solder mask plugging uses **non-conductive dielectric ink** (epoxy/solder mask), which adds zero electrical conductivity. 
+> **No, not for ordinary soldermask ink or nonconductive epoxy.** The copper barrel remains the conductive path; its cross-section depends on diameter and plating thickness. JLCPCB lists 18 micrometres average hole plating, which is not a guaranteed finished minimum for every barrel. The 2 oz outer-copper selection does not establish barrel thickness.
 > 
-> However, "Plugged" is strongly preferred over "Tented" for outdoor durability because it physically seals the hollow barrel cavity, preventing air/flux entrapment and eliminating freeze-thaw water expansion. Furthermore, because every board is fully submerged in **WISKA MP0100 silicone potting gel**, all vias are permanently encased in waterproof silicone elastomer regardless!
+> The protected 1.0 mm holes need an explicitly accepted process; normal plugging/filling cannot be assumed to close them reliably. Provide a coordinate-based via-identification drawing, since the resistor insertion holes also use 1.0 mm drills. Do not instruct CAM to fill every hole of that diameter. Approve the processed hole treatment, mask, and assembly stencil, and do not treat plugging or potting as proof of hermetic or freeze-thaw performance.
 
 ---
 

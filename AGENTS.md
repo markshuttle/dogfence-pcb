@@ -268,4 +268,17 @@ To prevent interrupting the human user with unnecessary terminal approval prompt
    * Inline `-c` commands change with every execution (different variables, regexes, comments), preventing user permission whitelists from matching.
    * If a non-trivial computation or automation script is required, place it in a dedicated file (e.g. under `scripts/`) so that the command invocation remains clean, consistent, and auto-approvable.
 
+---
+
+## 9. JLCPCB Via and Component Hole DFM
+
+For PCB, footprint, part-selection, or fabrication changes, apply the [master via and component hole DFM policy](README.md#via-and-component-hole-dfm). The published limits were reviewed on 2026-09-06; verify them again for the actual order. These checks supplement electrical DRC, not replace it.
+
+- **Preserve the surge geometry:** The protected 1.0 mm drill / 1.8 mm pad stitching vias must not be deleted or shrunk to meet a covering-process limit. If the proposed process is incompatible, flag the conflict and seek an approved layout/process solution.
+- **Do not equate covering with filling:** JLCPCB's normal tenting and ink-plugging guidance is for holes at most 0.5 mm. The filled-and-capped guide and capability table give upper limits of 0.5 and 0.55 mm respectively; neither establishes support for reliably filling these 1.0 mm holes. Require written CAM acceptance for exceptions. Do not claim guaranteed sealing from a tenting flag, plugging checkbox, or gel encapsulation.
+- **Check soldering geometry:** Compare drill holes with actual mask and paste apertures and check the mask barrier to adjacent wettable copper. A neighboring SMT pad can expose a nominally tented via. Inspect processed Gerbers/stencil data as well as the source layout.
+- **Specify hole treatment by function:** Distinguish component PTH pads from vias; never use an ordinary via as a component insertion hole. Do not request filling by diameter alone when resistor holes and stitching vias share the same drill size. Provide a coordinate-based identification drawing and confirm CAM has not reduced protected via diameters.
+- **Verify pin fit for the exact part:** Use maximum finished lead dimensions from the selected manufacturer's drawing, including the diagonal of rectangular pins. With the ordinary JLCPCB component-hole tolerance, require `nominal finished hole - 0.08 mm >= maximum pin envelope + assembly allowance`. Start with at least 0.10 mm diametral allowance after tolerance, and account for pin-pitch, hole-position, and forming tolerances. Do not infer fit from pitch, footprint name, nominal pin diameter, or a matching C-code alone.
+- **Recheck copper after drill changes:** Meet the applicable two-layer, 2 oz component PTH annular-ring requirement (at least 0.254 mm nominal design ring), plus hole/copper and edge clearances. Generic via annular-ring rules do not establish component-pad compliance. Do not assume 2 oz surface copper means 70 micrometres of barrel plating; separately agree any required finished barrel-copper minimum.
+- **Keep evidence and outputs synchronized:** Record the manufacturer/MPN, drawing revision, tolerance calculation, and accepted process in the design/assembly documentation. Update affected PCB, BOM, CPL, and ordering notes; run `make check` for PCB/schematic changes and regenerate/inspect production outputs. Documentation or DRC alone does not close an outstanding physical fit or manufacturing-process approval.
 
