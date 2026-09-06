@@ -116,8 +116,8 @@ Every part on the board was specifically chosen for heavy-duty industrial endura
 
 ## 5. PCB Layout & Fabrication Rules
 
-* **Board Dimensions**: 60.0 mm × 52.0 mm.
-* **Mounting**: 4× M3 mounting holes (3.2mm drill) with 6.4mm courtyard clearance at (103.5, 100.0), (156.5, 100.0), (103.5, 145.0), (156.5, 145.0).
+* **Board Dimensions**: 63.0 mm × 56.0 mm.
+* **Mounting**: 4× M3 mounting holes (3.2mm drill) with 6.4mm keepout collar / 6.9mm courtyard clearance at (101.5, 99.0), (155.5, 99.0), (101.5, 146.0), (155.5, 146.0), positioned with uniform 4.5mm edge inset and 1.05mm courtyard clearance to all board edges.
 * **Substrate**: Shengyi **S1000H High-TG (TG155)** FR-4 laminate (low thermal expansion, anti-CAF, high moisture resistance).
 * **Copper Weight**: **2 oz (70 µm)** on both top and bottom layers for high surge current absorption.
 * **Plating**: **ENIG 2U" (Electroless Nickel Immersion Gold)** — real 24k gold over nickel prevents copper oxidation for 20+ years.
@@ -125,7 +125,7 @@ Every part on the board was specifically chosen for heavy-duty industrial endura
 * **Tri-Rail Symmetrical Copper Stitching**: Wires A, B, and C each retain 100% full 3.2mm width across both `F.Cu` and `B.Cu` layers (no waist relief). Each wire conductor features a dedicated cluster of **3× heavy plated stitching vias** (1.0mm drill, 1.8mm pad) directly at the SMT GDT junctions (at X=112.5, 114.0, 115.5mm). This guarantees that both front and back 2 oz copper layers are fully engaged with minimal transient inductance and maximum surge current absorption.
 * **Earth Bus Symmetrical Copper Stitching**: The 4.5mm Earth bus connects all line-to-earth GDTs to the mirrored 3-pin `J_EARTH` terminal across both layers (2 oz top + 2 oz bottom = 4 oz / 140 µm total Cu). A dedicated column of **5× heavy plated stitching vias** (1.0mm drill, 1.8mm pad) at X=150.0mm stitches the top and bottom copper layers together across the entire bus width, creating an 11-barrel monolithic ground network (3 GDT pins + 5 stitching vias + 3 terminal pins).
 * **Line-to-Earth 20kA GDT Respacing (9.0mm Pitch)**: To accommodate the heavy-duty $\Phi 8.0\text{mm} \times 6\text{mm}$ ceramic bodies of the Ruilon 2R470TD-8 arresters without physical collision (which occurred on legacy 7.62mm pitch), `GDT_A_E` and `GDT_C_E` are spaced to Y=113.50mm and Y=131.50mm (9.00mm center-to-center pitch). This provides a verified 1.00mm physical air gap between arrester bodies and 0.50mm courtyard clearance.
-* **Indicator Rung Courtyard Optimization & LED Terminal Vertical Symmetry**: `D1` and `D2` (DO-41) are positioned at X=132.50mm, eliminating the legacy 0.0mm pad clearance and 0.55mm courtyard overlap with `R1`/`R2`, achieving 1.50mm pad-to-pad copper gap and 0.95mm courtyard clearance. `J_LED_A` and `J_LED_C` (KF129-5.08-2P) are centered symmetrically at **(145.50, 103.00)** and **(145.50, 142.00)** across the horizontal centerline ($Y = 122.50\text{ mm}$), maintaining identical $6.50\text{ mm}$ board-edge margins and $10.50\text{ mm}$ Earth-bus clearances. Crucially, the terminal blocks are **vertically flipped so their wire openings face outward from the board** (opening UP at rotation `90°` for `J_LED_A` and opening DOWN at rotation `270°` for `J_LED_C`), while Pad 1 (Anode `+`) is consistently on the Left ($X = 142.96\text{ mm}$) and Pad 2 (Cathode `-`) on the Right ($X = 148.04\text{ mm}$) on both channels.
+* **Indicator Rung Courtyard Optimization & LED Terminal Vertical Symmetry**: `D1` and `D2` (DO-41) are positioned at X=132.50mm, eliminating the legacy 0.0mm pad clearance and 0.55mm courtyard overlap with `R1`/`R2`, achieving 1.50mm pad-to-pad copper gap and 0.95mm courtyard clearance. `J_LED_A` and `J_LED_C` (KF129-5.08-2P) are centered symmetrically at **(145.50, 103.00)** and **(145.50, 142.00)** across the horizontal centerline ($Y = 122.50\text{ mm}$), maintaining identical $8.50\text{ mm}$ board-edge margins and $10.50\text{ mm}$ Earth-bus clearances. Crucially, the terminal blocks are **vertically flipped so their wire openings face outward from the board** (opening UP at rotation `90°` for `J_LED_A` and opening DOWN at rotation `270°` for `J_LED_C`), while Pad 1 (Anode `+`) is consistently on the Left ($X = 142.96\text{ mm}$) and Pad 2 (Cathode `-`) on the Right ($X = 148.04\text{ mm}$) on both channels.
 * **Wire B LED Return Westward Routing**: To eliminate any potential short circuits with the line-to-earth GDT inputs on Wire A and Wire C at X=131.00mm while maximizing surge clearance to the Earth network, the Wire B LED return traces on `B.Cu` run up a vertical spine at X=135.50mm with elevated horizontal rungs at Y=107.50mm (north) and Y=137.50mm (south), connecting directly into Pad 2 at (148.04, 103.00) and (148.04, 142.00). This achieves a copper clearance of **4.31mm (1.44× headroom over 3.0mm)** to the Earth GDT pins, with **3.70mm clearance** from the horizontal return tracks to the Earth bus.
 * **Full Courtyard Compliance**: 100% of footprints define explicit, standard `F.CrtYd` (and `B.CrtYd` for mounting holes) bounding geometries according to IPC-7351B / IPC-7251 and manufacturer datasheets, with zero courtyard overlaps across all 18 board footprints.
 * **GDT_AC Clearance**: `GDT_AC` axial leads are bent to maintain a 2.0mm+ vertical air gap standoff above the insulated Wire B top copper track. Through-hole pins bond top and bottom copper of Wire A and C directly at the SMT GDT junctions.
@@ -160,7 +160,7 @@ Every part on the board was specifically chosen for heavy-duty industrial endura
  │   │ J_IN (A,B,C) │         │  J_LED_A  │ ──> Panel LED A    │
  │   │              │         │  (+, -)   │     (Green IP67)   │
  │   │  PCB BOARD   │         └───────────┘                    │
- │   │  (60 x 52mm) │         ┌───────────┐                    │
+ │   │  (63 x 56mm) │         ┌───────────┐                    │
  │   │              │         │  J_LED_C  │ ──> Panel LED C    │
  │   │   J_EARTH    │         │  (+, -)   │     (Green IP67)   │
  │   └──────┬───────┘         └───────────┘                    │
@@ -213,6 +213,6 @@ make check
 * [`LED.md`](LED.md) — Selected IP67 LED panel indicator part details.
 * [`Makefile`](Makefile) — Automated manufacturing package build script.
 * `pcb/pcb.kicad_sch` — KiCad 9 Master Schematic.
-* `pcb/pcb.kicad_pcb` — KiCad 9 Master PCB Layout (60mm × 52mm, 2 oz Cu, ENIG).
+* `pcb/pcb.kicad_pcb` — KiCad 9 Master PCB Layout (63mm × 56mm, 2 oz Cu, ENIG).
 * `pcb/BOM.csv` — Standard JLCPCB/PCBWay Turnkey PCBA Bill of Materials.
 * `pcb/CPL.csv` — Standard JLCPCB/PCBWay Pick-and-Place Centroid Coordinates.

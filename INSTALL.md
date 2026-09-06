@@ -29,7 +29,7 @@ This manual covers the complete workshop pre-assembly, field installation, shed 
     ▼ (Every 100m)                                                      ▼ (At 0m, 1km, 2km, 3km, 4km)
 [ 35× STANDARD MILESTONES ]                                 [ 5× SURGE & GROUNDING MILESTONES ]
 • WISKA COMBI 308 Enclosure                                 • WISKA COMBI 308 Enclosure
-• Dog Fence PCB (60×52mm, 2 oz Cu, ENIG)                    • Dog Fence PCB (60×52mm, 2 oz Cu, ENIG)
+• Dog Fence PCB (63×56mm, 2 oz Cu, ENIG)                    • Dog Fence PCB (63×56mm, 2 oz Cu, ENIG)
 • 2× APEM IP67 Green LEDs (Wires A & C)                     • 2× APEM IP67 Green LEDs (Wires A & C)
 • 3× WAGO 221-613 Lever Splices                             • 3× WAGO 221-613 Lever Splices
 • Potted with WISKA MP0100 Silicone Gel                     • Dual 2.5mm² Earth Runs into J_EARTH
@@ -117,7 +117,7 @@ Perform these steps in a clean workshop to assemble all 40 junction boxes before
  │                            │  (7.62mm P)  │      ┌───────────┐            │
  │                            │              │ ───> │  J_LED_A  │ ──> LED A  │
  │                            │  PCB BOARD   │      └───────────┘     (IP67) │
- │                            │  (60 x 52mm) │                               │
+ │                            │  (63 x 56mm) │                               │
  │                            │              │      ┌───────────┐            │
  │                            │   J_EARTH    │ ───> │  J_LED_C  │ ──> LED C  │
  │                            │  (7.62mm P)  │      └───────────┘     (IP67) │

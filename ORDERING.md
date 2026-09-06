@@ -1,5 +1,5 @@
 # JLCPCB Turnkey PCBA Ordering Guide
-**Dog Fence Indicator & Surge 1.1.0 (60mm × 52mm)**
+**Dog Fence Indicator & Surge 1.1.0 (63mm × 56mm)**
 
 This guide captures all exact fabrication parameters, high-reliability materials, component matches, and repeat-order steps for turnkey manufacturing.
 
@@ -41,14 +41,14 @@ Set the following options on the PCB specification form:
 | **Base Material** | **FR-4** | Standard fiberglass reinforced epoxy. |
 | **Material / TG** | **S1000H TG155** (Shengyi) | **Crucial:** High glass transition temp (155°C) with low Z-axis thermal expansion and high moisture/anti-CAF resistance for extreme outdoor climate swings (-20°C to +50°C). |
 | **Layers** | **2 Layers** | Top (Signal/Surge) & Bottom (Ground/Surge Return). |
-| **Dimensions** | **60 mm × 52 mm** | Auto-detected from Gerber files. |
+| **Dimensions** | **63 mm × 56 mm** | Auto-detected from Gerber files. |
 | **PCB Quantity** | **40** (or 50) | 35 standard milestones + 5 surge milestones + interchangeable spares. |
 | **Copper Weight** | **2 oz (70 µm)** | **Crucial:** 2× standard copper thickness. Essential for safely absorbing high lightning surge transients and minimizing resistance across the 4km run. |
 | **Surface Finish** | **ENIG (Electroless Nickel Immersion Gold)** | **Crucial:** 24k gold over nickel prevents copper oxidation and contact corrosion permanently. |
 | **Gold Thickness** | **2U" (2 micro-inches)** | Pore-free gold seal providing maximum long-term environmental protection. |
 | **Via Covering** | **Tented** | Solder mask covers all via annular rings to prevent moisture ingress. |
 | **Via Plating** | **Horizontal Electroless Copper Plating** | Automated conveyorized chemical deposition line ensuring uniform, void-free copper barrels. |
-| **Edge Rails / Fiducials** | **Added by JLCPCB (70×72mm temporary panel)** | Automated breakaway rails for assembly machines; final board remains 60×52mm. |
+| **Edge Rails / Fiducials** | **Added by JLCPCB (73×76mm temporary panel)** | Automated breakaway rails for assembly machines; final board remains 63×56mm. |
 | **Conformal Coating** | **No / Skip** | Redundant because boards are submerged in 100% solid silicone potting gel in the WISKA boxes. |
 | **Flying Probe Test** | **Fully Tested** | 100% electrical continuity and isolation testing. |
 | **Confirm Production File** | **Yes** | A CAM engineer manually verifies pick-and-place alignment before manufacturing. |

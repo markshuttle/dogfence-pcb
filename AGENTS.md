@@ -213,8 +213,8 @@ When modifying schematics or PCB layouts, agents must strictly uphold the follow
    * LED Terminals (`J_LED_A`, `J_LED_C`): **KF129-5.08-2P** (2-pin 5.08mm pitch, 24A / 250V).
 8. **LED Terminal Outward Vertical Flip & Symmetrical Invariant**:
    * `J_LED_A` and `J_LED_C` form a vertically mirrored pair across the board horizontal centerline ($Y = 122.50\text{ mm}$):
-     * `J_LED_A` is centered at **(145.50, 103.00)** with rotation **90°** (wire opening faces **UP / North** toward the top board edge, $6.50\text{ mm}$ edge margin, $10.50\text{ mm}$ Earth bus clearance).
-     * `J_LED_C` is centered at **(145.50, 142.00)** with rotation **270°** (wire opening faces **DOWN / South** toward the bottom board edge, $6.50\text{ mm}$ edge margin, $10.50\text{ mm}$ Earth bus clearance).
+     * `J_LED_A` is centered at **(145.50, 103.00)** with rotation **90°** (wire opening faces **UP / North** toward the top board edge, $8.50\text{ mm}$ edge margin, $10.50\text{ mm}$ Earth bus clearance).
+     * `J_LED_C` is centered at **(145.50, 142.00)** with rotation **270°** (wire opening faces **DOWN / South** toward the bottom board edge, $8.50\text{ mm}$ edge margin, $10.50\text{ mm}$ Earth bus clearance).
    * **Do not reorient or match rotations**: Because the two connectors are vertically flipped $180^\circ$ relative to each other, their local coordinate axes transform to opposite horizontal directions on the board:
      * `J_LED_A` ($90^\circ$): Pad 1 (`LED_A_POS` / Anode) is at local `(at 0 -2.54 90)`, mapping to the **Left ($X = 142.96\text{ mm}$)**. Pad 2 (`WIRE_B` / Cathode) is at local `(at 0 2.54 90)`, mapping to the **Right ($X = 148.04\text{ mm}$)**.
      * `J_LED_C` ($270^\circ$): Pad 1 (`LED_C_POS` / Anode) is at local `(at 0 2.54 270)`, mapping to the **Left ($X = 142.96\text{ mm}$)**. Pad 2 (`WIRE_B` / Cathode) is at local `(at 0 -2.54 270)`, mapping to the **Right ($X = 148.04\text{ mm}$)**.
