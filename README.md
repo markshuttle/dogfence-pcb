@@ -235,6 +235,7 @@ make check
 * [`AGENTS.md`](AGENTS.md) — Operating environment guide for AI agents and developers (Ubuntu conventions, KiCad Snap confinement, build workflows).
 * [`INSTALL.md`](INSTALL.md) — Complete Step-by-Step Field & Shed Installation Manual.
 * [`ORDERING.md`](ORDERING.md) — Turnkey JLCPCB Ordering & Re-ordering Guide.
+* [`ACCEPTANCE.md`](ACCEPTANCE.md) — Prototype Acceptance & Bench Commissioning Protocol.
 * [`MATERIALS.md`](MATERIALS.md) — Hardware Procurement & Materials Tracker.
 * [`RISKS.md`](RISKS.md) — Electrical, polarity, miswiring, and environmental risk analysis.
 * [`LED.md`](LED.md) — Selected IP67 LED panel indicator part details.

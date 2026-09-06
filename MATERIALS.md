@@ -26,7 +26,7 @@ This document tracks all physical hardware, enclosures, switchgear, cabling, gro
 
 | Component | Description / Specification | Qty | Part Number / Supplier | Status | Notes |
 | :--- | :--- | :---: | :--- | :---: | :--- |
-| **PCBA Boards** | **Dog Fence Indicator & Surge 1.1.0** (63×56mm, 2 oz Cu, ENIG, High-TG 170 FR-4, Epoxy Filled Vias, 6-GDT Full-Hybrid) | 40 | JLCPCB / PCBWay Turnkey PCBA (see ORDERING.md) | ⏳ Pending | 35 standard milestones + 5 surge milestones. Ready to order via ORDERING.md. |
+| **PCBA Boards** | **Dog Fence Indicator & Surge 1.1.0** (63×56mm, 2 oz Cu, ENIG, TG155/High-TG 170 FR-4, Plugged Vias, 6-GDT Full-Hybrid) | 5 (Prototype) + 40 (Production) | JLCPCB Turnkey PCBA (see [ORDERING.md](ORDERING.md) & [ACCEPTANCE.md](ACCEPTANCE.md)) | ⏳ Ordering 5 Prototypes | Phase 1: 5 prototype boards for bench commissioning. Phase 2: 40 production boards for perimeter. |
 | **Panel LED Indicators** | IP67 Green LED Panel Indicator (10mm mount, 2V standard version) | 80 | **APEM `Q10F5SXXSG02E`** | ✅ **ORDERED** | 2 per box. Wire anode to the silkscreen `+` pad on the board mirrored LED connectors. |
 | **Adhesive Board Standoffs** | Self-Adhesive Snap-Lock Nylon PCB Supports (9.5mm / 3/8" height, 3.2mm hole) | 160 | **Essentra `LCBSBM-6-01A-RT`** | ✅ **ORDERED** | 4 per box. Elevates PCB by 9.5mm for 360° silicone gel encapsulation. |
 | **Silicone Potting Gel** | Re-enterable two-part silicone encapsulation gel (~180–190ml per box) | ~7–8 Litres | **WISKA MP0100** | ✅ **ORDERED** | Submersible IP68 hermetic seal. Poured into WISKA boxes after wiring & testing. |
@@ -66,7 +66,7 @@ This document tracks all physical hardware, enclosures, switchgear, cabling, gro
 
 * **Milestone LEDs:** ✅ **Complete** (80× APEM `Q10F5SXXSG02E` ordered)
 * **Board Standoffs:** ✅ **Complete** (160× Essentra `LCBSBM-6-01A-RT` ordered)
-* **PCBA Manufacturing:** ⏳ **Pending** (40× boards v1.1.0 ready for order via ORDERING.md)
+* **PCBA Manufacturing:** ⏳ **Phase 1 Prototype In Progress** (5× prototype boards ready to order via [ORDERING.md](ORDERING.md), bench acceptance via [ACCEPTANCE.md](ACCEPTANCE.md))
 * **Silicone Potting Gel:** ✅ **Complete** (WISKA MP0100 ordered)
 * **36V Power Supply:** ✅ **Complete** (Ordered)
 * **Shed Changeover Switch:** ✅ **Complete** (4PDT ON-OFF-ON Switch ordered)
