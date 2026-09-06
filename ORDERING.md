@@ -39,19 +39,23 @@ Set the following options on the PCB specification form:
 | Option | Selected Value | Engineering Rationale / Longevity Benefit |
 |:---|:---|:---|
 | **Base Material** | **FR-4** | Standard fiberglass reinforced epoxy. |
-| **Material / TG** | **S1000H TG155** (Shengyi) | **Crucial:** High glass transition temp (155°C) with low Z-axis thermal expansion and high moisture/anti-CAF resistance for extreme outdoor climate swings (-20°C to +50°C). |
+| **Material / TG** | **FR-4 High-TG 170** (Shengyi S1000-2) | **Recommended 20–50 Year Durability Upgrade:** Glass transition temp ($170^\circ\text{C}$) reduces Z-axis thermal expansion to $\le 2.5\%$, minimizing stress on plated via barrels during freezing winter and summer heat swings (-20°C to +50°C). High-Tg resin cross-linking provides superior anti-CAF (Conductive Anodic Filamentation) resistance against decades of moisture vapor tracking. (Cost delta: ~+$0.50/board). |
 | **Layers** | **2 Layers** | Top (Signal/Surge) & Bottom (Ground/Surge Return). |
 | **Dimensions** | **63 mm × 56 mm** | Auto-detected from Gerber files. |
 | **PCB Quantity** | **40** (or 50) | 35 standard milestones + 5 surge milestones + interchangeable spares. |
 | **Copper Weight** | **2 oz (70 µm)** | **Crucial:** 2× standard copper thickness. Essential for safely absorbing high lightning surge transients and minimizing resistance across the 4km run. |
 | **Surface Finish** | **ENIG (Electroless Nickel Immersion Gold)** | **Crucial:** 24k gold over nickel prevents copper oxidation and contact corrosion permanently. |
 | **Gold Thickness** | **2U" (2 micro-inches)** | Pore-free gold seal providing maximum long-term environmental protection. |
-| **Via Covering** | **Tented** | Solder mask covers all via annular rings to prevent moisture ingress. |
+| **Via Process / Covering** | **Epoxy Filled & Capped (IPC-4761 Type VII / POFV)** or **Plugged** | **Crucial Freeze-Thaw Protection:** Standard tented vias leave hollow air cavities inside barrels. In an outdoor environment, moisture vapor can condense in these voids; freezing winter temperatures (-20°C) can cause ice expansion and barrel cracking. Solid epoxy filling completely eliminates internal barrel cavities, doubles the shear strength of stitching vias, and creates a planar copper surface. (Cost delta: ~+$0.75/board). |
 | **Via Plating** | **Horizontal Electroless Copper Plating** | Automated conveyorized chemical deposition line ensuring uniform, void-free copper barrels. |
 | **Edge Rails / Fiducials** | **Added by JLCPCB (73×76mm temporary panel)** | Automated breakaway rails for assembly machines; final board remains 63×56mm. |
 | **Conformal Coating** | **No / Skip** | Redundant because boards are submerged in 100% solid silicone potting gel in the WISKA boxes. |
 | **Flying Probe Test** | **Fully Tested** | 100% electrical continuity and isolation testing. |
 | **Confirm Production File** | **Yes** | A CAM engineer manually verifies pick-and-place alignment before manufacturing. |
+
+> [!TIP]
+> **Board Cost Uplift Recommendation (~+$1.25 to +$1.50 per board):**
+> Selecting **High-TG 170 (S1000-2)** and **Epoxy Filled & Capped Vias (POFV)** on the quote page represents approximately a **$1.25 to $1.50 uplift per board** ($50 to $60 for the entire 40-board order). This is the single highest-return investment for outdoor reliability: it permanently eliminates hollow via freeze voids and provides maximum anti-CAF substrate protection over a 20–50 year lifespan without requiring any component pre-ordering or adding lead time.
 
 ---
 
@@ -76,6 +80,10 @@ Set the following options on the PCB specification form:
 
 > [!TIP]
 > **Component Matching on JLCPCB:** All 14 components are mapped directly to verified, active in-stock JLCPCB part numbers. `R1, R2` match the active in-stock Vishay DIN 0414 1W metal film resistor (`MBE04140C2201FC100`). `J_IN` and `J_EARTH` match the active Cixi Kefa 3-pin 7.62mm pitch rising cage terminal block (`KF128-7.62-3P` / `C474957`). `GDT_AC` matches the active in-stock Bencent 5kA 470V axial arrester (`B5G470L` / `C5337217`), and `GDT_A_E, B_E, C_E` match the active in-stock Ruilon 20kA arrester (`2R470TD-8` / `C2836978`).
+
+> [!NOTE]
+> **Turnkey In-Stock vs. Future Pre-Order Upgrades:**
+> This BOM is optimized for **100% instant in-stock assembly** with zero component lead time for test builds. For a future final production run, optional Tier-1 pre-order components (Vishay Superectifier glass diodes, Vishay PR02 2W power metal film resistors, Littelfuse SH470 GDTs, and Phoenix Contact GMKDS/MKDS Reakdyn anti-loosening terminals) can be pre-ordered into your JLCPCB Private Library. See **[`README.md`](README.md) Section 5** for full engineering rationales, part numbers, and verified footprint compatibility.
 
 ---
 
