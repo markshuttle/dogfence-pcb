@@ -116,15 +116,15 @@ Every part on the board was specifically chosen for heavy-duty industrial endura
 
 ## 5. PCB Layout & Fabrication Rules
 
-* **Board Dimensions**: 60.0 mm × 45.0 mm.
-* **Mounting**: 4× M3 mounting holes (3.2mm drill) with 6.4mm courtyard clearance.
+* **Board Dimensions**: 60.0 mm × 52.0 mm.
+* **Mounting**: 4× M3 mounting holes (3.2mm drill) with 6.4mm courtyard clearance at (103.5, 100.0), (156.5, 100.0), (103.5, 145.0), (156.5, 145.0).
 * **Substrate**: Shengyi **S1000H High-TG (TG155)** FR-4 laminate (low thermal expansion, anti-CAF, high moisture resistance).
 * **Copper Weight**: **2 oz (70 µm)** on both top and bottom layers for high surge current absorption.
 * **Plating**: **ENIG 2U" (Electroless Nickel Immersion Gold)** — real 24k gold over nickel prevents copper oxidation for 20+ years.
 * **Plating Line**: **Horizontal Electroless Copper Plating** (ensures dense, void-free through-hole copper barrels).
 * **Tri-Rail Symmetrical Copper Stitching**: Wires A, B, and C each retain 100% full 3.2mm width across both `F.Cu` and `B.Cu` layers (no waist relief). Each wire conductor features a dedicated cluster of **3× heavy plated stitching vias** (1.0mm drill, 1.8mm pad) directly at the SMT GDT junctions (at X=112.5, 114.0, 115.5mm). This guarantees that both front and back 2 oz copper layers are fully engaged with minimal transient inductance and maximum surge current absorption.
 * **Earth Bus Symmetrical Copper Stitching**: The 4.5mm Earth bus connects all line-to-earth GDTs to the mirrored 3-pin `J_EARTH` terminal across both layers (2 oz top + 2 oz bottom = 4 oz / 140 µm total Cu). A dedicated column of **5× heavy plated stitching vias** (1.0mm drill, 1.8mm pad) at X=150.0mm stitches the top and bottom copper layers together every 3.81mm across the entire bus width, creating an 11-barrel monolithic ground network (3 GDT pins + 5 stitching vias + 3 terminal pins).
-* **Wire B LED Return Westward Routing**: To eliminate any potential short circuits with the line-to-earth GDT inputs on Wire A and Wire C at X=131.00mm while maximizing surge clearance to the Earth network, the Wire B LED return traces on `B.Cu` run up a vertical spine at X=135.50mm with elevated horizontal rungs at Y=109.50mm (north) and Y=135.50mm (south). This achieves an expansive **8.44mm clearance (2.81× headroom over 3.0mm)** to the Earth GDT pins, with **>3.28mm clearance** from the hooks to the flush Earth bus, and 2.20mm clearance to the 36V DC line inputs.
+* **Wire B LED Return Westward Routing**: To eliminate any potential short circuits with the line-to-earth GDT inputs on Wire A and Wire C at X=131.00mm while maximizing surge clearance to the Earth network, the Wire B LED return traces on `B.Cu` run up a vertical spine at X=135.50mm with elevated horizontal rungs at Y=109.50mm (north) and Y=135.50mm (south), connecting directly into Pad 2 at (145.54, 103.00) and (145.54, 142.00). This achieves an expansive **8.44mm clearance (2.81× headroom over 3.0mm)** to the Earth GDT pins, with **>3.13mm clearance** from the return tracks to the Earth network.
 * **GDT_AC Clearance**: `GDT_AC` axial leads are bent to maintain a 2.0mm+ vertical air gap standoff above the insulated Wire B top copper track. Through-hole pins bond top and bottom copper of Wire A and C directly at the SMT GDT junctions.
 * **Vias**: **Tented** with green solder mask.
 * **Polarity Silkscreen**: Explicit `+` (Anode / Square pad) and `-` (Cathode / Round pad) on LED outputs; `A`, `B`, `C` on input; `EARTH` on earth terminal.
@@ -153,7 +153,7 @@ Every part on the board was specifically chosen for heavy-duty industrial endura
  │   │ J_IN (A,B,C) │         │  J_LED_A  │ ──> Panel LED A    │
  │   │              │         │  (+, -)   │     (Green IP67)   │
  │   │  PCB BOARD   │         └───────────┘                    │
- │   │  (60 x 45mm) │         ┌───────────┐                    │
+ │   │  (60 x 52mm) │         ┌───────────┐                    │
  │   │              │         │  J_LED_C  │ ──> Panel LED C    │
  │   │   J_EARTH    │         │  (+, -)   │     (Green IP67)   │
  │   └──────┬───────┘         └───────────┘                    │
@@ -176,7 +176,7 @@ Every part on the board was specifically chosen for heavy-duty industrial endura
 ## 7. Project File Directory
 
 * `pcb/pcb.kicad_sch` — KiCad 9 Master Schematic.
-* `pcb/pcb.kicad_pcb` — KiCad 9 Master PCB Layout (60mm × 45mm, 2 oz Cu, ENIG).
+* `pcb/pcb.kicad_pcb` — KiCad 9 Master PCB Layout (60mm × 52mm, 2 oz Cu, ENIG).
 * `pcb/BOM.csv` — Standard JLCPCB/PCBWay Turnkey PCBA Bill of Materials.
 * `pcb/CPL.csv` — Standard JLCPCB/PCBWay Pick-and-Place Centroid Coordinates.
 * `ORDERING.md` — Complete Turnkey JLCPCB Ordering & Re-ordering Guide.
