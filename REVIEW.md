@@ -49,20 +49,6 @@ Present your findings grouped by severity:
 Please begin by asking me for the files and confirming you understand the project scope.
 
 ---
-Previous prompt: In preparation for an order of a prototype batch of 5 boards at JLCPCB, and a future production run of
-40 boards, please conduct a from-scratch review of this PCB. Please review the clearances, courtyards, connectivity,
-placement, polarity, physical interactions and general design of every single component. Check the layout against
-JLCPCB's specific capability limits for the selected copper weight, substrate (High-TG), and via process (POFV /
-plugged). Please cross-verify CPL.csv rotations against the fab’s expected pin-1 orientation and silkscreen polarity
-markers so I know if manual rotation in the JLCPCB 3D preview will be needed.
-
-Please do not make any changes, but conduct a root-to-tip review in preparation for the order. If all is robust and
-correct, then please review the stock availability of every component at JLCPCB. For any component with insufficient
-stock, find and verify an active, pin-compatible in-stock alternative, preferring high quality components and providing
-commentary about the impact of such a change on durability and reliability. Before you do all of this, run the automated
-build pipeline (make all) and confirm artifact freshness.
-
----
 Suggested prompt:
 
 In preparation for placing a PCBA order at JLCPCB, please conduct a comprehensive, from-scratch pre-flight engineering
