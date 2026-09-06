@@ -204,9 +204,9 @@ When modifying schematics or PCB layouts, agents must strictly uphold the follow
    * `GDT_AC` bridges over the top copper trace of Wire B. Axial leads must be formed to maintain a **≥2.0mm vertical air gap standoff** above the board surface.
 7. **Component Matches & Ratings**:
    * Rectifier Diodes (`D1`, `D2`): **1N4007G** (1000V / 1A glass-passivated DO-41).
-   * Resistors (`R1`, `R2`): **2.2kΩ 1W Metal Film 1%** (derated to 50% power).
+   * Resistors (`R1`, `R2`): **Vishay MBE04140C2201FC100** (2.2kΩ 1W Metal Film 1% DIN 0414, derated to 50% power).
    * Differential GDTs (`GDT_AB`, `GDT_BC`): **Ruilon SMD5050-470NA** (5kA / 470V SMT).
-   * Differential GDT (`GDT_AC`): **Ruilon 2RA470-L5.5** (5kA / 470V axial $\Phi 5.5\text{mm} \times 6\text{mm}$).
+   * Differential GDT (`GDT_AC`): **Bencent B5G470L** (5kA / 470V axial $\Phi 5.5\text{mm} \times 6\text{mm}$).
    * Common-Mode GDTs (`GDT_A_E`, `GDT_B_E`, `GDT_C_E`): **Ruilon 2R470TD-8** (20kA / 470V axial $\Phi 8.0\text{mm} \times 6\text{mm}$).
    * Input Terminal (`J_IN`): **KF128-7.62-3P** (3-pin 7.62mm pitch, 24A / 300V).
    * Earth Terminal (`J_EARTH`): **KF128-7.62-3P** (all 3 pins tied in parallel for 72A rating).

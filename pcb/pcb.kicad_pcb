@@ -1891,7 +1891,7 @@
 				)
 			)
 		)
-		(property "Value" "2RA470-L5.5"
+		(property "Value" "B5G470L"
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)

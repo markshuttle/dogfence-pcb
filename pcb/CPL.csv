@@ -9,7 +9,7 @@ R2,"2.2k 1W","Resistor_THT:R_Axial_DIN0414_L11.9mm_D4.5mm_P15.24mm_Horizontal",1
 D2,"1N4007G","Diode_THT:D_DO-41_SOD81_P10.16mm_Horizontal",132.50,140.50,0.0,top
 GDT_AB,"SMD5050-470NA","GDT_SMD:GDT_SMD_5.0x5.0mm",114.00,118.69,0.0,top
 GDT_BC,"SMD5050-470NA","GDT_SMD:GDT_SMD_5.0x5.0mm",114.00,126.31,0.0,top
-GDT_AC,"2RA470-L5.5","Resistor_THT:R_Axial_DIN0617_L17.0mm_D6.0mm_P15.24mm_Horizontal",124.00,122.50,0.0,top
+GDT_AC,"B5G470L","Resistor_THT:R_Axial_DIN0617_L17.0mm_D6.0mm_P15.24mm_Horizontal",124.00,122.50,0.0,top
 GDT_A_E,"2R470TD-8","Resistor_THT:R_Axial_DIN0617_L17.0mm_D6.0mm_P15.24mm_Horizontal",138.62,113.50,0.0,top
 GDT_B_E,"2R470TD-8","Resistor_THT:R_Axial_DIN0617_L17.0mm_D6.0mm_P15.24mm_Horizontal",138.62,122.50,0.0,top
 GDT_C_E,"2R470TD-8","Resistor_THT:R_Axial_DIN0617_L17.0mm_D6.0mm_P15.24mm_Horizontal",138.62,131.50,0.0,top

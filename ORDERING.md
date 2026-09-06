@@ -68,14 +68,14 @@ Set the following options on the PCB specification form:
 |:---|:---|:---|:---|:---|
 | **`D1`, `D2`** | 1000V 1A Diode | **`C232439`** | 1N4007G (Glass Passivated) | DO-41, 1kV 1A, -65°C to +175°C |
 | **`GDT_AB`, `GDT_BC`** | Inter-Core SMT GDT | **`C39692533`** | Ruilon SMD5050-470NA | 470V, 5kA (8/20 µs), <1.5pF, 5.0×5.0mm SMT |
-| **`GDT_AC`** | Inter-Core Axial GDT | **`C52741208`** | Ruilon 2RA470-L5.5 | 470V, 5kA (8/20 µs), <1.5pF, $\Phi 5.5\text{mm} \times 6\text{mm}$ Axial THT |
-| **`GDT_A_E`, `GDT_B_E`, `GDT_C_E`** | Line-to-Earth 20kA GDT | **`C434855`** | Ruilon 2R470TD-8 | 470V, 20kA (8/20 µs), <1.5pF, $\Phi 8.0\text{mm} \times 6\text{mm}$ Axial THT |
-| **`R1`, `R2`** | 2.2kΩ 1W Resistor | **`ASSIGN_BY_JLCPCB`** | Uni-Royal (MFR01SF2201A10) | 1W Metal Film 1% Axial Through-Hole |
-| **`J_IN`, `J_EARTH`** | 3-Pin 7.62mm Terminal | **`ASSIGN_BY_JLCPCB`** | Cixi Kefa KF128-7.62-3P | 24A 300V Heavy Duty, 7.62mm pitch |
+| **`GDT_AC`** | Inter-Core Axial GDT | **`C5337217`** | Bencent B5G470L | 470V, 5kA (8/20 µs), <1.5pF, $\Phi 5.5\text{mm} \times 6\text{mm}$ Axial THT |
+| **`GDT_A_E`, `GDT_B_E`, `GDT_C_E`** | Line-to-Earth 20kA GDT | **`C2836978`** | Ruilon 2R470TD-8 | 470V, 20kA (8/20 µs), <1.5pF, $\Phi 8.0\text{mm} \times 6\text{mm}$ Axial THT |
+| **`R1`, `R2`** | 2.2kΩ 1W Resistor | **`C1368610`** | Vishay Intertech (MBE04140C2201FC100) | 1W Metal Film 1% Axial Through-Hole (DIN 0414) |
+| **`J_IN`, `J_EARTH`** | 3-Pin 7.62mm Terminal | **`C474957`** | Cixi Kefa KF128-7.62-3P | 24A 300V Heavy Duty, 7.62mm pitch |
 | **`J_LED_A`, `J_LED_C`** | 2-Pin 5.08mm Terminal | **`C475092`** | Cixi Kefa KF129-5.08-2P | 24A 250V Heavy Duty, M3 Screws |
 
 > [!TIP]
-> **Resistor and Terminal Matching on JLCPCB:** In the JLCPCB parts assignment screen, `R1, R2` match the active in-stock 2.2kΩ 1W axial resistor (`MFR01SF2201A10`). For `J_IN` and `J_EARTH`, JLCPCB assigns standard 3-pin 7.62mm pitch rising cage terminal blocks (KF128-7.62-3P or Phoenix MKDS-1,5-3-7.62).
+> **Component Matching on JLCPCB:** All 14 components are mapped directly to verified, active in-stock JLCPCB part numbers. `R1, R2` match the active in-stock Vishay DIN 0414 1W metal film resistor (`MBE04140C2201FC100`). `J_IN` and `J_EARTH` match the active Cixi Kefa 3-pin 7.62mm pitch rising cage terminal block (`KF128-7.62-3P` / `C474957`). `GDT_AC` matches the active in-stock Bencent 5kA 470V axial arrester (`B5G470L` / `C5337217`), and `GDT_A_E, B_E, C_E` match the active in-stock Ruilon 20kA arrester (`2R470TD-8` / `C2836978`).
 
 ---
 
