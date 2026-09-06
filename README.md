@@ -158,10 +158,10 @@ Every proposed upgrade component has been pre-verified for **100% native courtya
 * **Full Courtyard Compliance**: 100% of footprints define explicit, standard `F.CrtYd` (and `B.CrtYd` for mounting holes) bounding geometries according to IPC-7351B / IPC-7251 and manufacturer datasheets, with zero courtyard overlaps across all 18 board footprints.
 * **GDT_AC Clearance**: `GDT_AC` axial leads are bent to maintain a 2.0mm+ vertical air gap standoff above the insulated Wire B top copper track. Through-hole pins bond top and bottom copper of Wire A and C directly at the SMT GDT junctions.
 * **Polarity Silkscreen**: Explicit `+` (Anode / Square pad) and `-` (Cathode / Round pad) on LED outputs; `A`, `B`, `C` on input; `EARTH` on earth terminal.
-* **Typography & Silkscreen**: Unified **Ubuntu** font family across all board elements using a clean 2-size, 2-weight hierarchy (Large = 1.30mm, Small = 0.85mm):
+* **Typography & Silkscreen**: Unified **Ubuntu Bold** font family across all board elements using a clean, high-contrast hierarchy (Large = 1.30mm, Medium = 1.00mm, Small = 0.85mm):
   - **Large Bold** (1.30mm × 1.30mm, 0.18mm stroke): Board title `"Dog Fence Indicator & Surge v1.1.0"`, and explicit polarity markings (`+` Anode / Square pad, `-` Cathode / Round pad) symmetrically aligned with LED terminals `J_LED_A` and `J_LED_C`.
   - **Small Bold** (0.85mm × 0.85mm, 0.15mm stroke): Input channel indicators (`A`, `B`, `C` on `J_IN`) and ground terminal indicator (`EARTH` on `J_EARTH` on `F.SilkS` at (155.00, 108.00) for installer visibility).
-  - **Small Regular** (0.85mm × 0.85mm, 0.12mm stroke): All discrete and arrester component references (`D1`, `D2`, `R1`, `R2`, `GDT_AB`, `GDT_BC`, `GDT_AC`, `GDT_A_E`, `GDT_B_E`, `GDT_C_E`).
+  - **Medium Bold** (1.00mm height, 0.15mm stroke): All discrete and arrester component references (`D1`, `D2`, `R1`, `R2`, `GDT_AB`, `GDT_BC`, `GDT_AC` at 1.00mm × 1.00mm, and `GDT_A_E`, `GDT_B_E`, `GDT_C_E` at 1.00mm × 0.80mm), strictly conforming to JLCPCB $\ge 0.15\text{mm}$ silkscreen line width rules with zero pad solder mask clipping.
 
 ---
 

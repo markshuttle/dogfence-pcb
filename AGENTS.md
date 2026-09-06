@@ -54,7 +54,8 @@ AI coding agents (e.g., Antigravity, Cursor, Claude Code) typically execute bash
 * Running `make check`, `which kicad-cli`, `which kicad.kicad-cli`, or `ls -l /snap/bin` inside the sandbox produces:
   * `ls: cannot access '/snap/bin': No such file or directory`
   * `ERROR: kicad-cli not found - cannot run DRC. Install KiCad 9 snap.`
-* **MANDATORY FOR AGENTS**: Any command that runs `make` (`make check`, `make all`, etc.) or calls `kicad.kicad-cli` **must be executed with `BypassSandbox: true`** (unsandboxed host context). On the host, `/snap/bin` is populated, in `$PATH`, and `/snap/bin/kicad.kicad-cli` runs normally.
+* **MANDATORY FOR AGENTS (KiCad Only)**: Any command that runs `make` (`make check`, `make all`, etc.) or calls `kicad.kicad-cli` **must be executed with `BypassSandbox: true`** (unsandboxed host context). On the host, `/snap/bin` is populated, in `$PATH`, and `/snap/bin/kicad.kicad-cli` runs normally.
+* **RESTRICT `BypassSandbox: true` TO KICAD ONLY**: Do NOT set `BypassSandbox: true` for general file inspections, git operations, or local helper scripts. Running non-KiCad commands with sandbox bypass triggers unnecessary interactive approval prompts for the user. Keep all other commands sandboxed (`BypassSandbox: false`).
 
 ### 3.3 Strict Snap Confinement Restrictions (AppArmor)
 Even when running on the host outside the agent sandbox, the KiCad snap itself executes inside an Ubuntu AppArmor-enforced security sandbox with `strict` confinement:
@@ -245,5 +246,25 @@ When researching component specifications, JLCPCB / LCSC part numbers (C-codes),
 2. **Prohibited Terminal Scraping**:
    * **Do not** run ad-hoc inline Python scripts (`python3 -c "import urllib..."`), `curl`, or `wget` via `run_command` to scrape websites.
    * Ad-hoc network commands in bash require sandbox bypass (`BypassSandbox: true`) and continuously interrupt the user with interactive approval prompts.
-   * `run_command` in this repository is strictly reserved for KiCad CLI tasks, `make` targets (`make check`, `make all`), and local file operations.
+   * `run_command` in this repository is strictly reserved for KiCad CLI tasks and `make` targets (`make check`, `make all`).
+
+---
+
+## 8. File Inspection & Command Execution Protocol (Prompt Reduction)
+
+To prevent interrupting the human user with unnecessary terminal approval prompts during development:
+
+1. **Use Native Inspection Tools Over Shell/Python**:
+   * **Do not run ad-hoc Python scripts (`python3 -c "..."`) or shell commands (`grep`, `sed`, `awk`) to search or inspect files.**
+   * Always use native agent tools (**`view_file`**, **`grep_search`**, and **`find_by_name`**) to inspect schematics (`pcb.kicad_sch`), PCB layouts (`pcb.kicad_pcb`), BOMs, and project files.
+   * Native tools execute directly inside the agent runtime without launching a shell process and require **zero** user approval prompts.
+
+2. **Run Workspace Scripts in Standard Sandbox (`BypassSandbox: false`)**:
+   * When running local Python scripts, data processing, or calculations that only read and write within the project directory, always run with **`BypassSandbox: false`**.
+   * Standard sandbox mode allows safe, automatic execution inside the repository without prompting the user.
+
+3. **Avoid Inline `python3 -c "..."` Commands**:
+   * Inline `-c` commands change with every execution (different variables, regexes, comments), preventing user permission whitelists from matching.
+   * If a non-trivial computation or automation script is required, place it in a dedicated file (e.g. under `scripts/`) so that the command invocation remains clean, consistent, and auto-approvable.
+
 

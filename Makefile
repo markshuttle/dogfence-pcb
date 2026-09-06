@@ -25,8 +25,8 @@ BOM_OUT        := $(BUILD_DIR)/BOM.csv
 CPL_OUT        := $(BUILD_DIR)/CPL.csv
 IPC_OUT        := $(BUILD_DIR)/pcb.d356
 
-# Standard 2-Layer Gerber Layers for JLCPCB
-GERBER_LAYERS  := F.Cu,B.Cu,F.SilkS,B.SilkS,F.Mask,B.Mask,Edge.Cuts
+# Standard 2-Layer Gerber Layers for JLCPCB (including Top Paste for SMT GDTs)
+GERBER_LAYERS  := F.Cu,B.Cu,F.SilkS,B.SilkS,F.Mask,B.Mask,F.Paste,Edge.Cuts
 
 .PHONY: all clean gerbers drills bom cpl ipc zip-gerbers zip-flytest package help check
 
@@ -116,15 +116,9 @@ bom: $(BUILD_DIR)
 	@cp $(BOM_SOURCE) $(BOM_OUT)
 
 # 5. Export / package Component Placement List (CPL / .pos)
-cpl: $(BUILD_DIR) $(KPCB)
-	@echo "[5/6] Exporting Pick-and-Place Centroid (CPL.csv)..."
-	@$(KICAD_CLI) pcb export pos \
-		--output $(SCRATCHPAD)/pos_out \
-		--format csv \
-		--units mm \
-		--side both \
-		$(KPCB)
-	@cp -f $(SCRATCHPAD)/pos_out $(CPL_OUT)
+cpl: $(BUILD_DIR)
+	@echo "[5/6] Packaging Pick-and-Place Centroid (CPL.csv)..."
+	@cp $(CPL_SOURCE) $(CPL_OUT)
 
 # 6. Compress Gerbers into Gerbers.zip
 zip-gerbers: gerbers drills
