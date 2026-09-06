@@ -46,7 +46,7 @@ Present your findings grouped by severity:
 * 🟡 **WARNING (Should Fix):** Sub-optimal design choices that degrade performance, risk EMI issues, or complicate assembly.
 * 🟢 **SUGGESTION (Nice to Have):** Best practices for future-proofing or cleaner layout.
 
-Please begin by asking me for the files and confirming you understand the project scope.
+Please begin by reviewing the files in this project and confirming you understand the project scope.
 
 ---
 Suggested prompt:
