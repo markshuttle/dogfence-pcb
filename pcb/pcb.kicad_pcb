@@ -174,8 +174,8 @@
 			)
 		)
 		(fp_rect
-			(start -4.5 -11.8)
-			(end 4.5 11.8)
+			(start -4.7 -11.43)
+			(end 5.2 11.43)
 			(stroke
 				(width 0.15)
 				(type solid)
@@ -185,8 +185,8 @@
 			(uuid "c2b52e7a-a002-4562-8b87-0a8d94525bb9")
 		)
 		(fp_rect
-			(start -4.75 -12.05)
-			(end 4.75 12.05)
+			(start -5.55 -11.68)
+			(end 5.45 11.68)
 			(stroke
 				(width 0.05)
 				(type solid)
@@ -1315,8 +1315,8 @@
 			)
 		)
 		(fp_rect
-			(start -4.5 -11.8)
-			(end 4.5 11.8)
+			(start -5.3 -11.43)
+			(end 5.2 11.43)
 			(stroke
 				(width 0.15)
 				(type solid)
@@ -1326,8 +1326,8 @@
 			(uuid "e0b829e9-8fb1-49d8-a94e-3aa270940526")
 		)
 		(fp_rect
-			(start -4.75 -12.05)
-			(end 4.75 12.05)
+			(start -5.55 -11.68)
+			(end 5.1 11.68)
 			(stroke
 				(width 0.05)
 				(type solid)
