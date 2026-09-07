@@ -1,309 +1,253 @@
-# Dog Fence Indicator & Surge Protection System (v1.1.0)
-**4km High-Reliability Perimeter Containment & Lightning Protection**
+# Dog Fence Indicator & Surge Protection System
 
-## Pending Remediation Requirements
+**Draft hardware revision: 1.2.0-dev. Reviewed baseline: 1.1.0. Manufacturing and field release remain on hold.**
 
-Implementation checklist and new-session context: **[REMEDIATION.md](REMEDIATION.md)**.
+This is the specification for a 4 km DogWatch SmartFence boundary with local DC fault indicators and GDT surge paths. It is not a board-level surge rating, a completed qualification report, or permission to upload the existing manufacturing files.
 
-User clarifications recorded on 2026-09-06 for the next design revision:
+[REMEDIATION.md](REMEDIATION.md) records the agreed requirements, issue evidence, and release gates. The design sources are the working schematic, PCB, project settings/rules, and libraries under `pcb/`, with reviewed sourcing in `pcb/BOM.csv`. Generated `build/` files, backup archives, and `tmp/` copies are not design authorities. [Electrical analysis](pcb/ELECTRICAL.md) and [controlled assembly notes](pcb/ASSEMBLY.md) distinguish implemented changes from unresolved protection, fit and process decisions. `pcb/verification.json` enforces the engineering publication holds. Revision labels and documentation changes alone do not establish hardware qualification.
 
-- The prototype order remains **5 assembled boards**, using readily available FR-4, 2 oz outer copper, and ENIG.
-- Stations at 0 m, 100 m, ..., 4000 m mean **41 installed station boards and 82 LEDs**, including separate 0 km and 4 km stations at the shed. Legacy 40-station quantities below and in associated documents await synchronization during remediation.
-- The purchased PSU is believed to be a **Mean Well LRS-35-36**; nameplate confirmation is pending. Its [manufacturer specification](https://www.meanwell.com/Upload/PDF/LRS-35/LRS-35-SPEC.PDF) is 36 V, 1 A, 36 W. The user is willing to upgrade to an **LRS-75-36**, [specified at 36 V, 2.1 A, 75.6 W](https://www.meanwell.com/Upload/PDF/LRS-75/LRS-75-SPEC.PDF), for additional capacity. The upgrade is a candidate, not a confirmed purchase. Keep the nominal TEST voltage at 36 V; both models offer 32.4-39.6 V adjustment and hiccup-mode overload protection. Source/GDT/fuse coordination remains unresolved and is not fixed merely by increasing PSU wattage.
-- The **Kraus & Naimer CA10.A362** six-pole centre-off switch is a sourcing candidate. Its 20 A thermal rating exceeds the expected normal current, but the exact changeover function's DC breaking capability and transfer sequencing still require confirmation. It is not an approved lightning-isolation device.
-- Normal TEST sessions may last **one to two hours**, and the user prefers **continuous-safe TEST** rather than relying on a timeout. Design for accidental extended normal TEST operation using continuous-duty thermal limits; assess abnormal faults and surges separately. TEST still disables RF containment, so the hub must identify the fence-inactive state clearly and restoration to RUN remains an operator action.
-- The site is on the **Isle of Man, less than 1 km from the coast**, with frequent rain. Observed outdoor ambient temperatures are approximately **-10 to +30 degrees C**. Raised junction boxes may be in direct sun or shade; continuous submersion is not an intended service condition. Qualification must allow for weather margin, solar heating, salt contamination, and condensation rather than treating +30 degrees C as the maximum internal component temperature.
-- The likely cable is **Oceanflex 3-core tinned thin-wall 3 x 2.5 mm^2**, as listed by [12 Volt Planet](https://www.12voltplanet.co.uk/CAB3CTNTW2.5PNT.html), product code **P01018**, listed part **CM03/05.100**. Actual purchased cable identity is still to be confirmed. The listing specifies **60 V maximum**, **-15 to +70 degrees C** complete-cable working temperature, **7.3 mm maximum overall diameter**, and **35 strands of 0.30 mm per core**. Its reference to ISO 6722 Class B / 105 degrees C concerns the cores, not a 105-degree rating for the complete cable. Do not retain the earlier unverified arctic-temperature assumption. The page does not establish maximum conductor resistance, permanent UV/weather exposure, wet-conduit suitability, or impulse withstand; its colour table also lists only black/red for three cores. Obtain the applicable manufacturer data or verify the actual cable before assigning core colours or qualification limits. A 60 V operating rating alone neither qualifies nor disproves survival of a short surge above 60 V.
-- The cable will mostly run **0.3-1.0 m above ground** on a **timber fence with horizontal metal wire strands**, and through plastic conduit below driveways and gates. The supporting fence is not energized, but an energized cattle wire may run in parallel for **up to 300 m**, with **at least 0.5 m separation**. Use 0.5 m / 300 m as the planned repetitive-pulse qualification case, not a demonstrated interference-safe clearance. Compare energizer-off and energizer-on operation in both RUN and TEST: verify the intended RF boundary field, absence of unintended receiver responses outside it, correct LED indications, and no damaging or sustained protection conduction. Record the actual energizer/pulse characteristics and routing used for qualification. Maintain the minimum actual separation, allow for wire movement, and increase separation where practical. Do not electrically connect the boundary cable to supporting or energized fence wires; plastic conduit is mechanical protection, not electromagnetic shielding.
-- The diagnostic requirement is to locate **one damage site affecting any one, two, or all three cores within a 100 m span**. For multiple sites, **repair the first fault and repeat TEST** is acceptable. Identifying the particular broken core(s) is not required; optional low-voltage multimeter checks at the isolated shed ends can assist troubleshooting. An additional TEST-direction selector is not required for this baseline.
-- The LED visibility target is **4-5 m in full daylight**. Verify that ON and OFF are distinguishable at 5 m in the intended mounting/viewing direction, including glare, at the lowest expected far-station current. The current nominal same-end DC model predicts approximately 8 mA per far-end LED; this is not a guaranteed cable/temperature worst case or proof of visibility. Finalize the current budget from verified cable data and test the actual purchased indicators before claiming compliance. Retain safe near-station current and continuous resistor dissipation if the optical or electrical design changes.
-- The proposed shed arrangement shares an earth connection between the **DogWatch SmartFence protection and both shed-end milestone stations**. Confirm its relationship to the actual building protective-earth system against the regional DogWatch installation requirements and a qualified installer's site-specific earthing/bonding design; do not substitute arbitrary separate, unbonded rods. Do not equate this proposal with directly bonding a fence core or PSU DC negative to earth.
+## 1. Deployment Baseline
 
-**TEST topology for remediation:** Use the same-end feed/return: Start A/C to +36 V, Start B to DC negative, and End A, End B, and End C each separately open, with the transmitter isolated. This produces an LED-state boundary for all seven one-location open-circuit cut-core combinations in the DC model, assuming healthy boards and no additional inter-core shorts. Connecting both B ends to DC negative is not the normal TEST arrangement because it masks a B-only break. Use the agreed repair-and-retest workflow for multiple sites; no reverse-feed selector is needed. RUN retains the three parallel cores at each transmitter end. This replaces the legacy opposite-end B-return design in the remediation plan, but is **not yet implemented in the hub wiring documents or qualified on hardware**.
+| Item | Agreed requirement |
+| :--- | :--- |
+| Stations | **41**, at 0, 100, ..., 4000 m, covering 40 diagnostic spans. The 0 km and 4 km stations are separate boards at the shed. |
+| Station types | **36 standard + 5 earth-connected**, retaining earth-connected locations at 0, 1000, 2000, 3000, and 4000 m. Five locations do not imply five independent electrodes. |
+| Field equipment | One identical, fully populated board and two external LEDs per station: **41 boards, 82 LEDs, 164 supports, and 123 WAGO 221-613 splices**. |
+| Initial order | **Five fully assembled JLCPCB boards**, all required SMT and THT parts fitted. No field soldering. Prototype allocation and later production/spares are separate decisions. |
+| Fabrication | Readily available **FR-4, two layers, 2 oz / 70 micrometres copper on both F.Cu and B.Cu, ENIG, nominal 1.6 mm finished thickness**. Green soldermask is the quote default, not a new performance qualification. No imposed high-Tg laminate, gold thickness upgrade, or filled-via process. |
+| Enclosure | WISKA COMBI 308 with Essentra LCBSBM-6-01A-RT supports and WISKA MP0100 gel, subject to assembled fit and process acceptance. Raised installation, not continuous submersion. |
+| TEST duty | Nominal 36 V DC, usually one to two hours. **Continuous-safe normal TEST** is required for accidental extended operation; a timer is not the baseline safeguard. Fault/surge safety needs separate evidence. |
+| Visibility | ON/OFF distinguishable at **5 m in full daylight**, at the final minimum field current and actual viewing angles. |
 
-The circuit, hub wiring, production files, and remaining legacy claims have not yet been remediated. These requirements and the DFM policy below are **not manufacturing or field-release approval**.
+[MATERIALS.md](MATERIALS.md) separates purchases from requirements. In particular, the **80 purchased LEDs remain recorded as 80**, leaving a field shortfall of **2** before prototype losses or spares. Enclosure/gland quantities and retained test units must also be allocated; a five-board prototype order is not five proven field spares.
 
----
+## 2. Operation And Fault Localization
 
-## 1. Project Overview & Intent
+### Hub Contact Matrix
 
-This project implements a high-reliability, long-distance **4km (~2.5 miles) hidden perimeter dog containment fence** powered by the **DogWatch SmartFence** system.
+Both physical ends of the boundary cable return to the shed. Use **six independent cable-end connections** and this functional matrix; map it to physical terminals only after the exact switch contact program is approved.
 
-The fence boundary is formed by a continuous outdoor **3-core 2.5mm² cable** installed in a closed loop. All three internal copper conductors (Wire A, Wire B, Wire C) run in parallel, providing an effective total cross-sectional area of **7.5mm² (~8 AWG)** and an ultra-low total loop resistance of **≈ 9.3 Ω**, well within the DogWatch transmitter driving threshold (<30 Ω).
+| Boundary-cable end | RUN | OFF | TEST |
+| :--- | :--- | :--- | :--- |
+| Start A | Transmitter T1 | Isolated | +36 V |
+| Start B | Transmitter T1 | Isolated | DC negative |
+| Start C | Transmitter T1 | Isolated | +36 V |
+| End A | Transmitter T2 | Isolated | Isolated |
+| End B | Transmitter T2 | Isolated | Isolated |
+| End C | Transmitter T2 | Isolated | Isolated |
 
-To simplify long-term diagnostics, fault isolation, and lightning protection across 4 kilometres of rural terrain, **40 milestone junction boxes** are installed along the perimeter:
-- **35 Standard Diagnostic Milestones** (every ≈ 100m): Provide visual green LED status indicators for Wires A and C, plus full inter-core differential surge protection across all conductors.
-- **5 Surge & Grounding Milestones** (at 0m, 1km, 2km, 3km, 4km): In addition to visual diagnostics and inter-core surge protection, these stations connect via a mirrored 3-pin heavy-duty terminal block to deep-driven copper earth ground rods to safely discharge lightning and static energy to ground without affecting fence operation.
+Required RUN ties and TEST positive ties belong on the source-side contacts, not on permanent field-end straps. End A/B/C remain individually open in TEST; all six ends are individually isolated in OFF. Do not use an opposite-end B return, connect both B ends to negative, or retain an End A/C common connection: these defeat the agreed cut indication. No reverse-feed selector, automatic core classifier, or automatic return to RUN is required.
 
-All 40 junction boxes use an identical, unified **"Dog Fence Indicator & Surge 1.1" PCB (v1.1.0)**.
+The **Kraus & Naimer CA10.A362 six-pole centre-off** switch is a candidate, not an approved or confirmed purchased replacement. Its 20 A thermal rating is not its DC load-breaking rating. Obtain the actual contact development and **global transfer sequence across all poles**, ensuring the transmitter and DC supply cannot be connected together during operation or transfer. OFF is ordinary disconnection, not demonstrated lightning isolation.
 
----
+**TEST and OFF disable RF containment.** Provide clear RUN/OFF/TEST and fence-inactive labeling/indication, independent animal containment during testing, and an explicit operator return to RUN. See [INSTALL.md](INSTALL.md) for the controlled operating instructions and [RISKS.md](RISKS.md) for fault/earthing limitations.
 
-## 2. Core Philosophy & Design Goals
+### Indication For A Clean Cut
 
-1. **20+ Year Outdoor Lifespan**: Zero compromise on durability. Materials are rated for -40°C to +90°C+ temperature swings, moisture, UV, and ground humidity.
-2. **Zero In-Field Soldering**: 100% turnkey factory assembly (PCBA) by JLCPCB/PCBWay. Field installation requires only a screwdriver.
-3. **Dual-Mode Operation (RF RUN Mode vs. DC TEST Mode)**:
-   - In **RUN Mode**, the board is electrically invisible to the DogWatch transmitter's 4–10 kHz RF signal (<1.5 pF capacitance load per GDT, zero antenna grounding).
-   - In **TEST Mode**, an injected +36V DC supply illuminates milestone LEDs sequentially down the perimeter. If a core breaks, all downstream LEDs go dark, pin-pointing the exact 100m fault location immediately.
-4. **Full 6-GDT Hybrid Surge Protection**:
-   - **3× Core-to-Core Differential GDTs** (`GDT_AB`, `GDT_BC`, `GDT_AC` rated at 5kA) clamp lightning-induced potential differences between adjacent conductors.
-   - **3× Line-to-Earth Common-Mode GDTs** (`GDT_A_E`, `GDT_B_E`, `GDT_C_E` rated at 20kA) divert catastrophic ground surges to external earth rods.
-5. **Hermetic Enclosure & Potting**: Housed in IP66/IP67 **WISKA COMBI 308** junction boxes, backfilled with re-enterable two-part silicone potting gel (**WISKA MP0100**) for submersible **IP68 hermetic sealing**.
+With healthy indicators/GDTs, no additional inter-core shorts, and one cut site:
 
----
+| Cut cores | Stations before cut | Stations after cut |
+| :--- | :--- | :--- |
+| A | Both on | A off, C on |
+| B | Both on | Both off |
+| C | Both on | A on, C off |
+| A + B | Both on | Both off |
+| A + C | Both on | Both off |
+| B + C | Both on | Both off |
+| A + B + C | Both on | Both off |
 
-## 3. Electrical Architecture & Dual-Mode Circuitry
+Use the first applicable state transition to identify the adjacent 100 m span, including 3900-4000 m. Exact broken-core identification is not required. For multiple sites, repair the first fault and repeat TEST. Mixed open/short faults, failed local indicators, and failed GDTs need separate troubleshooting; not every dark LED proves a cable cut.
 
-```
-                 [ +36V DC in TEST Mode / RF Signal in RUN Mode ]
-                                        │
-           ┌────────────────────────────┼────────────────────────────┐
-           │                            │                            │
-     [ Wire A (Core 1) ]          [ Wire B (Core 2) ]          [ Wire C (Core 3) ]
-           │                            │                            │
-    [ 3x Stitch Vias ]           [ 3x Stitch Vias ]           [ 3x Stitch Vias ]
-     (Top <-> Bottom)             (Top <-> Bottom)             (Top <-> Bottom)
-           │                            │                            │
-           ├────────[ GDT_AB (5kA) ]────┤                            │
-           │                            ├────────[ GDT_BC (5kA) ]────┤
-           ├────────────────────────────┴────────[ GDT_AC (5kA) ]────┤
-           │                    (Axial arches over Wire B)           │
-           │                            │                            │
-    ┌──────┴──────┐                     │                     ┌──────┴──────┐
-    │             │                     │                     │             │
-[ 2.2kΩ 1W ]  [ GDT_A_E ]               │                 [ 2.2kΩ 1W ]  [ GDT_C_E ]
-   (R1)       (470V 20kA)               │                    (R2)       (470V 20kA)
-    │             │                     │                     │             │
-[ 1N4007G ]       │                     │                 [ 1N4007G ]       │
-   (D1)           │                     │                    (D2)           │
-    │             │                     │                     │             │
-[ LED A (+) ]     │                     │                 [ LED C (+) ]     │
-    │             │                     │                     │             │
-[ LED A (-) ]     │                     │                 [ LED C (-) ]     │
-    │             │                     │                     │             │
-    └──────┬──────┘                     │                     └──────┬──────┘
-           │                            │                            │
-           └──────────────────[ Wire B (DC 0V Return) ]──────────────┘
-                                        │
-                                   [ GDT_B_E ]
-                                   (470V 20kA)
-                                        │
-                                        ▼
-                             [ 4.5mm EARTH BUS (2 oz Cu) ]
-                                 [ 5x Stitch Vias ]
-                                  (Top <-> Bottom)
-                                        │
-                            [ J_EARTH (3-Pin 7.62mm) ]
-                             (Pins 1, 2, 3 in Parallel)
-                                        │
-                             (To External Earth Rod
-                             at Surge Milestones only)
-                                        │
-                                        ▼
-                                  [ Ground Rod ]
-```
+### Station Connections
 
-### Modes of Operation
+Three **WAGO 221-613** three-way splices maintain A/B/C cable continuity and provide short 2.5 mm^2 taps to `J_IN`. Normal perimeter current does **not** pass through every PCB's rails; each PCB draws its local indicator current. Surge current through a board is a different design case.
 
-#### Mode 1: RUN Mode (SmartFence Transmitter Active)
-* **Signal**: AC RF Carrier (4 kHz or 10.7 kHz), ≈ 10–20V RMS.
-* **Resistor-Diode Rungs**: Total resistance per milestone rung ≈ 2.2 kΩ. Total parallel impedance of 40 milestones is ≈ 55 Ω, drawing negligible differential RF current because Wire A and B are driven at identical potentials.
-* **GDT Capacitance**: <1.5 pF per GDT (<9 pF per milestone, <360 pF total across entire 4km perimeter). Completely RF transparent.
-* **Ground Isolation**: Earth ground is completely decoupled from the fence antenna loop by the GDTs' 470V gas discharge spark gaps.
+| Baseline circuit path | Connection |
+| :--- | :--- |
+| A indicator | WIRE_A -> R1 (2.2 kohm) -> D1 -> external LED A -> WIRE_B |
+| C indicator | WIRE_C -> R2 (2.2 kohm) -> D2 -> external LED C -> WIRE_B |
+| Differential GDTs | GDT_AB between A/B, GDT_BC between B/C, GDT_AC between A/C |
+| Earth GDTs | GDT_A_E, GDT_B_E, GDT_C_E each connect their respective core to the separate EARTH bus |
+| Earth terminal | All three `J_EARTH` pins connect to EARTH copper. The terminal and GDTs remain fitted on standard boards; their external earth terminal is left unwired. |
 
-#### Mode 2: TEST / Fault-Finding Mode (+36V DC Injected)
-* **Switchboard State**: Disconnects DogWatch transmitter; injects +36V DC onto Wires A and C, with Wire B acting as the DC 0V ground return.
-* **LED Current**: $I = (36\text{V} - 2.1\text{V} - 0.7\text{V}) / 2.2\text{k}\Omega \approx 15.0\text{ mA}$ per LED.
-* **Power Dissipation**: $P = I^2 R \approx 0.50\text{W}$ (The 1W-rated metal film resistors run cool at 50% capacity).
-* **Fault Detection**: If Wire A breaks at 1.4km, LED A illuminates at boxes 0m–1.3km and stays OFF at 1.4km–4.0km.
+In RUN, all three cores are paralleled at each transmitter end. Their nominal combined copper area is 7.5 mm^2; the illustrative 27.6 ohm/core model gives 9.2 ohms for three healthy parallel cores. This is not proof of transmitter compatibility. Healthy symmetry reduces differential indicator loading, but real cable imbalance, faults, protection capacitance, and earth coupling must be checked with the actual transmitter and receiver. Do not describe the boards as RF-invisible or add a blanket earth plane across the isolated fence nets.
 
----
+## 3. Electrical Limits And Open Protection Work
 
-## 4. Hardware Component Selection & Specifications (Current In-Stock Baseline)
+The **forward-only calculated baseline**, not a measurement, uses 41 stations, an ideal 36 V source, 27.6 ohms per 4 km core, 2.2 kohm per LED branch, and 2.8 V combined LED/rectifier forward drop:
 
-Every part on the board was specifically chosen for heavy-duty industrial endurance using parts actively stocked in the JLCPCB/LCSC Shenzhen warehouse for instant, friction-free assembly:
+| Configuration | Calculated source load | LED current |
+| :--- | :--- | :--- |
+| Healthy 4 km, same-end TEST | **0.8477 A / 30.52 W** | **15.09 mA near source -> 8.04 mA at far end** |
+| Five boards with negligible cable drop | **0.1509 A / 5.43 W** | About 15.09 mA each |
+| All 41 boards with negligible cable drop | **1.2375 A / 44.55 W** | About 15.09 mA each |
+| Illustrative sensitivity: 40 ohms/core and 4.0 V combined forward drop | Not a guaranteed cable/temperature limit | About **6.21 mA** at the far end |
 
-| Designator | Component Description | Selected Part | Key Durability Attributes |
-|:---|:---|:---|:---|
-| **`D1`, `D2`** | 1000V 1A Rectifier Diode | **1N4007G** (LCSC: `C232439`) | **Glass-passivated junction (`G` suffix)**, -65°C to +175°C, 30A forward surge (IFSM). Operates under <2% electrical stress. |
-| **`GDT_AB`, `GDT_BC`** | Core-to-Core SMT Arrester | **Ruilon SMD5050-470NA** (JLCPCB: `C39692533`) | **5,000A (5kA)** impulse surge (8/20 µs), 470V breakdown, <1.5 pF, 5.0×5.0mm SMT package. |
-| **`GDT_AC`** | Core-to-Core Axial Arrester | **Bencent B5G470L** (JLCPCB: `C5337217`) | **5,000A (5kA)** impulse surge (8/20 µs), 470V breakdown, compact axial body ($\Phi 5.5\text{mm} \times 6\text{mm}$), bridges Wire B. |
-| **`GDT_A_E`, `GDT_B_E`, `GDT_C_E`** | Line-to-Earth 20kA Arrester | **Ruilon 2R470TD-8** (JLCPCB: `C2836978`) | **20,000A (20kA)** impulse surge (8/20 µs), 470V breakdown, heavy-duty axial body ($\Phi 8.0\text{mm} \times 6\text{mm}$). |
-| **`R1`, `R2`** | 2.2kΩ Current Limiter | **1W Metal Film 1%** (Vishay `MBE04140C2201FC100`, JLCPCB: `C1368610`) | 1W power rating (operates at ≈0.50W, 50% capacity), 500V working voltage, DIN 0414 axial package. |
-| **`J_IN`, `J_EARTH`** | 3-Pin 7.62mm Pitch Screw Terminals | **Cixi Kefa KF128-7.62-3P** (JLCPCB: `C474957`) | **24A / 300V Heavy Duty**, M3 steel clamping screws, 7.62mm pitch for high-voltage creepage & clearance. `J_EARTH` has all 3 pins tied in parallel (72A rating) for contact redundancy. |
-| **`J_LED_A`, `J_LED_C`** | 2-Pin 5.08mm Screw Terminals | **Cixi Kefa KF129-5.08-2P** (JLCPCB: `C475092`) | **24A / 250V Heavy Duty**, M3 steel clamping screws, -40°C to +105°C. |
+Recalculate tolerances, shorts, and observability for the final protection circuit. The forward-only model does not establish safe reverse bias, RF behavior, surge survival, thermal limits, or daylight visibility. Neither the 8.04 mA result nor the illustrative 6.21 mA result is an accepted worst-case current until the cable and component bounds are known.
 
----
+The purchased PSU is believed to be **Mean Well LRS-35-36 (36 V, 1 A, 36 W)**; **confirm the nameplate**. Its nominal margin against the healthy-cable model is limited, and the all-near-source case exceeds its capacity. **LRS-75-36 (36 V, 2.1 A, 75.6 W)** is the preferred capacity-margin candidate, not a confirmed purchase. Both have 32.4-39.6 V adjustment and hiccup overload protection. A larger PSU does not solve source/fuse/GDT coordination; verify the installed setting, available adjustment, tolerances, and fault behavior.
 
-## 5. Multi-Decade (20–50 Year) Ultra-Durable Component Upgrades (Pre-Order Option)
+At nominal source-end current, each 2.2 kohm resistor dissipates about **0.50 W**, approximately **1 W per board in the two resistors alone**. Vishay MBE0414's **1 W power-mode** rating differs from its **0.65 W standard-mode** rating and associated derating conditions. A nominal 50% power-mode load is not evidence of cool operation or long life inside gel. Continuous potted thermal measurements must cover credible supply/solar conditions and component limits.
 
-For initial prototyping, testing, and pilot deployments, the design is 100% turnkey manufacturable using **JLCPCB in-house inventory** (Section 4). All 14 components are active, stocked on reels in Shenzhen, and build in 3–5 days without sourcing delays.
+The implemented stdlib analysis is reproducible with `python3 -B scripts/analyze_limits.py`. It independently models all three cores, checks all **280 clean-cut cases**, and screens shorts and conditional ignited-GDT paths. Its conservative selected adjustment/tolerance envelope is **40.39597 V**, giving **18.6452 mA and 0.753190 W per minimum-resistance branch** with zero forward drops. That exceeds standard-mode resistor power and is not an accepted combined PSU maximum or measured temperature. A representative far-end 10 V GDT arc draws **0.259543 A / 2.602168 W in the modeled path**, while total source demand remains **0.979810 A**. The PSU/fuse therefore cannot be assumed to disconnect it. See the declared assumptions, candidate-part research and unresolved architecture in [pcb/ELECTRICAL.md](pcb/ELECTRICAL.md); no new protection MPN has been approved or added.
 
-For a **final permanent perimeter deployment** targeting an uncompromising **20 to 50 year outdoor service life**, the following Tier-1 Western industrial components can be pre-ordered into your **JLCPCB Private Library (via JLCPCB Global Sourcing)** from authorized distributors (Mouser, DigiKey, Farnell) prior to production assembly.
+**Protection holds remain open:**
 
-Every proposed upgrade component has been pre-verified for **100% native courtyard, pad geometry, and physical layout compatibility** with zero changes required to the PCB routing or KiCad copper layers:
+- **C4, LED protection:** A series 1N4007G does not guarantee the raw LED stays below its 5 V reverse limit. Reversed supply and reversed LED flying leads are different faults. Darkness is not evidence of safe reverse voltage, and a single antiparallel diode at the PCB connector does not cover both cases. The protection design and tests must also bound forward pulse current.
+- **C5, powered faults:** The ordered 2 A Littelfuse 0217002.MXP fuse has published DC interrupting data, but cable-limited faults and PSU hiccup behavior may prevent prompt clearing. GDT follow current/extinction with a powered 36 V source remains unqualified. Roughly 10-15 V GDT arc voltage matters after ignition; being below DC sparkover does not prove extinction.
+- **Transient coordination:** A 470 V DC sparkover value is not a 470 V transient clamp. Reviewed impulse sparkover at 1 kV/us reaches 950 V for SMD5050-470NA and 1100 V for 2R470TD-8; B5G470L's 850 V figure covers 99% of measured values. Account for lead overshoot and unverified cable impulse withstand.
+- **System ratings:** Component 5/20 kA impulse ratings, paralleled terminal pins, and heavy copper do not establish an assembled 20 kA rating, 72 A terminal capability, equal current sharing, direct-strike protection, or a multi-decade service life. Complete-path qualification and documented limits are required.
 
-| Designator | In-Stock Baseline | 20–50 Year Pre-Order Upgrade | Manufacturer & MPN | Multi-Decade Durability Justification | Courtyard & Physical Compatibility |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **`D1`, `D2`** | 1N4007G (DO-41, `C232439`) | **1N4007GP-E3/54 (Superectifier®)** | **Vishay Intertech** `1N4007GP-E3/54` | **Cavity-Free Hermetic Glass Bead:** The silicon die is brazed at >600°C and completely encapsulated in a solid glass sleeve before outer flame-retardant molding. Permanently prevents moisture tracking along the lead wires to the junction over 50 years. 1000V / 1A, -65°C to +175°C. | **100% Drop-in Match:** Standard JEDEC DO-41 (DO-204AL), 10.16mm pitch. Courtyard: $5.00 \times 2.60\text{ mm}$. Pad drill: 1.1mm. |
-| **`R1`, `R2`** | MBE0414 1W (DIN 0414, `C1368610`) | **PR02 Series (2.2kΩ 2W Power Metal Film)** | **Vishay Intertech** `PR02000202201JA100` | **4× Derating Headroom (25% Load):** Operates at only 0.50W (25% of 2W rating) during 36V TEST mode, keeping local potting temperature rise minimal during extended fault-finding. Pure silicone flameproof lacquer withstands up to 155°C without aging or outgassing. | **100% Drop-in Match:** Body is $10.0 \times 3.9\text{ mm}$, which is slightly *more compact* than DIN 0414 ($11.9 \times 4.5\text{ mm}$). Fits inside existing $12.00 \times 4.50\text{ mm}$ courtyard on 15.24mm pitch. |
-| **`GDT_AB`, `GDT_BC`** | SMD5050-470NA (5kA SMT, `C39692533`) | **SH470 / SH Series (5kA 470V SMT)** | **Littelfuse** `SH470` | **Global Tier-1 Vacuum Brazing:** Ultra-low capacitance (<0.7 pF), planar metal end electrodes for high thermal-fatigue endurance, ceramic-to-metal vacuum brazed envelope ensures multi-decade noble gas containment without air leakage. | **100% Drop-in Match:** Standard $5.0 \times 5.0\text{ mm}$ squared SMT footprint. Fits existing $5.20 \times 5.20\text{ mm}$ courtyard and $5.2 \times 2.0\text{ mm}$ pads. |
-| **`GDT_AC`** | B5G470L (5kA axial, `C5337217`) | **2027-47-BLF or CG2-470L (10kA 470V axial)** | **Bourns / Littelfuse** `2027-47-BLF` | **2× Surge Energy Absorption (10kA):** Upgrades differential inter-core A-C protection from 5kA to 10kA (8/20 µs). Rugged ceramic envelope with 15.24mm axial lead forming. | **100% Drop-in Match:** $\Phi 6.0 \times 6.0\text{ mm}$ body on 15.24mm pitch. Fits existing $5.60 \times 6.00\text{ mm}$ courtyard. Leads maintain $\ge 2.0\text{ mm}$ vertical standoff over Wire B. |
-| **`GDT_A_E`, `GDT_B_E`, `GDT_C_E`** | 2R470TD-8 (20kA axial, `C2836978`) | **SL1021A470R (20kA 470V axial)** | **Littelfuse** `SL1021A470R` *(or retain Ruilon 2R470TD-8)* | **Heavy-Duty 20,000A Telecom Grade:** Exact Tier-1 equivalent with ultra-low fail rate, exceptional AC discharge withstand, and multi-decade noble gas seal integrity. | **100% Drop-in Match:** $\Phi 8.0 \times 6.0\text{ mm}$ body, 15.24mm pitch. Courtyard: $6.00 \times 8.00\text{ mm}$. Sits on 9.00mm pitch layout with verified 1.00mm physical air gap between bodies. |
-| **`J_IN`, `J_EARTH`** | KF128-7.62-3P (3-Pin, `C474957`) | **GMKDS 3/ 3-7,62 (3-Pin 7.62mm)** | **Phoenix Contact** `1731734` | **Patented Reakdyn Anti-Loosening Screw Clamping:** Integrated resilient screw collar prevents screw backout under decades of diurnal thermal cycling (-20°C to +50°C). High-conductivity copper alloy with galvanic nickel/tin plating prevents contact relaxation and fretting corrosion. 24A, 630V rating. | **100% Native Drop-in Match:** The KiCad footprint was originally designed for Phoenix Contact MKDS/GMKDS! Pad drill: 1.3mm. Courtyard: $10.50 \times 22.86\text{ mm}$. |
-| **`J_LED_A`, `J_LED_C`** | KF129-5.08-2P (2-Pin, `C475092`) | **MKDS 1,5/ 2-5,08 (2-Pin 5.08mm)** | **Phoenix Contact** `1715721` | **Patented Reakdyn Rising Cage:** Captive M3 screw with integrated anti-loosening spring sleeve. Solid copper alloy contact pins with nickel barrier layer. 17.5A, 400V rating. | **100% Native Drop-in Match:** KiCad footprint is `TerminalBlock_Phoenix_MKDS-1,5-2-5.08`. Pad drill: 1.3mm. Courtyard: $10.60 \times 11.26\text{ mm}$. Rotations 90° and 270° fully preserved. |
+## 4. Hardware Component Selection & Specifications
 
-### How to Order Pre-Order Components via JLCPCB Global Sourcing (Final Run)
-1. Sign in to **[jlcpcb.com](https://jlcpcb.com)** and navigate to **User Center $\rightarrow$ Parts Manager $\rightarrow$ Global Sourcing** (or **Order Parts**).
-2. Enter the MPNs listed above (e.g. Phoenix Contact `1731734`, `1715721`, Vishay `1N4007GP-E3/54`, etc.).
-3. Pre-purchase the required quantities for your order into your **"My Parts Lib"** (private inventory).
-4. Sourcing lead time is typically **5 to 10 business days** for parts to arrive in Shenzhen.
-5. Once marked "In Stock in My Parts Lib", upload `build/Gerbers.zip`, `build/BOM.csv`, and `build/CPL.csv` to place the turnkey PCBA order. The system will automatically allocate your private inventory to the board.
+The reviewed 1.1.0 baseline has **14 electrical parts, all top-side: two SMT and twelve THT**, plus four mechanical hole footprints. This is a baseline count, not a frozen 1.2.0-dev protection BOM. Recount from the approved schematic/PCB if parts are added. Codes identify sourcing candidates, not reserved stock or verified footprint compatibility.
 
----
+| References | Manufacturer / MPN | Sourcing code | Component data and design role |
+| :--- | :--- | :--- | :--- |
+| D1, D2 | **onsemi 1N4007G** | C232439 | 1000 V / 1 A rectifier, DO-41. BOM and schematic/PCB identities are corrected, and 1.10 mm holes are implemented. Do not infer junction technology from an ordering suffix alone. |
+| R1, R2 | Vishay MBE04140C2201FC100 | C1368610 | 2.2 kohm, 1%, DIN 0414 axial, 15.24 mm formed pitch in the baseline; use the actual power-mode/standard-mode, voltage and pulse limits. |
+| GDT_AB, GDT_BC | Ruilon SMD5050-470NA | C39692533 | 470 V DC sparkover, component 5 kA impulse rating (8/20 us), nominal 5 x 5 mm SMT body. |
+| GDT_AC | Bencent B5G470L | C5337217 | 470 V DC sparkover, component 5 kA (8/20 us), nominal 5.5 mm diameter x 6 mm axial body, bridging over B. |
+| GDT_A_E, GDT_B_E, GDT_C_E | Ruilon 2R470TD-8 | C2836978 | 470 V DC sparkover, component 20 kA (8/20 us), nominal 8 mm diameter x 6 mm axial body. |
+| J_IN, J_EARTH | Cixi Kefa KF128-7.62-3P | C474957 | Three-pin 7.62 mm pitch, listed component 24 A / 300 V. All J_EARTH pins share the earth net; do not multiply the rating by three. |
+| J_LED_A, J_LED_C | Cixi Kefa KF129-5.08-2P | C475092 | Two-pin 5.08 mm pitch, listed component 24 A / 250 V. Outward orientation and intentional pad polarity must be preserved. |
 
-## 6. PCB Layout & Fabrication Rules
+Use the exact manufacturers' drawings and rating conditions, including maximum body/lead dimensions, capacitance, pulse endurance, and soldering limits. [REMEDIATION source links](REMEDIATION.md#source-links) include the reviewed datasheets. The purchased external indicator is **APEM Q10F5SXXSG02E**, a **no-internal-resistor** device with a **20 mA family maximum and 5 V reverse maximum**, not a regulated 2 V lamp; see [LED.md](LED.md).
 
-* **Board Dimensions**: 63.0 mm × 56.0 mm.
-* **Mounting**: 4× M3 mounting holes (3.2mm drill) with 6.4mm keepout collar / 6.9mm courtyard clearance at (101.5, 99.0), (155.5, 99.0), (101.5, 146.0), (155.5, 146.0), positioned with uniform 4.5mm edge inset and 1.05mm courtyard clearance to all board edges.
-* **Substrate**: Shengyi **S1000-2 High-TG (TG170)** or **S1000H (TG155)** FR-4 laminate (low Z-axis thermal expansion $\le 2.5\%$, high anti-CAF resistance, high moisture resistance for multi-decade ground humidity).
-* **Copper Weight**: **2 oz (70 µm)** on both top and bottom layers for high surge current absorption.
-* **Plating**: **ENIG 2U" (Electroless Nickel Immersion Gold)** — real 24k gold over nickel prevents copper oxidation for 20+ years.
-* **Hole Plating**: Specify any required minimum finished barrel-copper thickness separately with the fabricator. A 2 oz outer-copper selection or a plating-line description does not establish via-barrel thickness or guarantee void-free plating.
-* **Via Process**: **Requires explicit CAM agreement for the protected 1.0 mm stitching holes.** Normal tenting, soldermask plugging, and filled-and-capped processes cannot be assumed to seal these holes. See the [via and component hole DFM policy](#via-and-component-hole-dfm); do not shrink the stitching vias to obtain a covering option.
-* **Tri-Rail Symmetrical Copper Stitching**: Wires A, B, and C each retain 100% full 3.2mm width across both `F.Cu` and `B.Cu` layers (no waist relief). Each wire conductor features a dedicated cluster of **3× heavy plated stitching vias** (1.0mm drill, 1.8mm pad) directly at the SMT GDT junctions (at X=112.5, 114.0, 115.5mm). This guarantees that both front and back 2 oz copper layers are fully engaged with minimal transient inductance and maximum surge current absorption.
-* **Earth Bus Symmetrical Copper Stitching & Monolithic Plane**: The 4.5mm-grid Earth bus connects all line-to-earth GDTs to the mirrored 3-pin `J_EARTH` terminal across both layers (2 oz top + 2 oz bottom = 4 oz / 140 µm total Cu). Both front and back layers feature an identical solid monolithic copper plane ($13.26\text{ mm} \times 22.50\text{ mm}$, zero voids, zero slit gaps). A dedicated column of **5× heavy plated stitching vias** (1.0mm drill, 1.8mm pad) at X=150.0mm stitches the top and bottom copper layers together across the entire bus width, creating an 11-barrel monolithic ground network (3 GDT pins + 5 stitching vias + 3 terminal pins).
-* **Line-to-Earth 20kA GDT Respacing (9.0mm Pitch)**: To accommodate the heavy-duty $\Phi 8.0\text{mm} \times 6\text{mm}$ ceramic bodies of the Ruilon 2R470TD-8 arresters without physical collision (which occurred on legacy 7.62mm pitch), `GDT_A_E` and `GDT_C_E` are spaced to Y=113.50mm and Y=131.50mm (9.00mm center-to-center pitch). This provides a verified 1.00mm physical air gap between arrester bodies and 0.50mm courtyard clearance.
-* **Indicator Rung Courtyard Optimization & LED Terminal Vertical Symmetry**: `D1` and `D2` (DO-41) are positioned at X=132.50mm, eliminating the legacy 0.0mm pad clearance and 0.55mm courtyard overlap with `R1`/`R2`, achieving 1.50mm pad-to-pad copper gap and 0.95mm courtyard clearance. `J_LED_A` and `J_LED_C` (KF129-5.08-2P) are centered symmetrically at **(145.50, 103.00)** and **(145.50, 142.00)** across the horizontal centerline ($Y = 122.50\text{ mm}$), maintaining identical $8.50\text{ mm}$ board-edge margins and $10.50\text{ mm}$ Earth-bus clearances. Crucially, the terminal blocks are **vertically flipped so their wire openings face outward from the board** (opening UP at rotation `90°` for `J_LED_A` and opening DOWN at rotation `270°` for `J_LED_C`), while Pad 1 (Anode `+`) is consistently on the Left ($X = 142.96\text{ mm}$) and Pad 2 (Cathode `-`) on the Right ($X = 148.04\text{ mm}$) on both channels.
-* **Wire B LED Return Westward Routing**: To eliminate any potential short circuits with the line-to-earth GDT inputs on Wire A and Wire C at X=131.00mm while maximizing surge clearance to the Earth network, the Wire B LED return traces on `B.Cu` run up a vertical spine at X=135.50mm with elevated horizontal rungs at Y=107.20mm (north) and Y=137.80mm (south), connecting directly into Pad 2 at (148.04, 103.00) and (148.04, 142.00). This achieves a copper clearance of **8.44mm** to the Earth GDT pins, with **3.25mm clearance** from the horizontal return tracks to the solid Earth bus plane ($\ge 3.0\text{mm}$ surge invariant satisfied).
-* **Full Courtyard Compliance**: 100% of footprints define explicit, standard `F.CrtYd` (and `B.CrtYd` for mounting holes) bounding geometries according to IPC-7351B / IPC-7251 and manufacturer datasheets, with zero courtyard overlaps across all 18 board footprints.
-* **GDT_AC Clearance**: `GDT_AC` axial leads are bent to maintain a 2.0mm+ vertical air gap standoff above the insulated Wire B top copper track. Through-hole pins bond top and bottom copper of Wire A and C directly at the SMT GDT junctions.
-* **Polarity Silkscreen**: Explicit `+` (Anode / Square pad) and `-` (Cathode / Round pad) on LED outputs; `A`, `B`, `C` on input; `EARTH` on earth terminal.
-* **Typography & Silkscreen**: Unified **Ubuntu Bold** font family across all board elements using a clean, high-contrast hierarchy (Large = 1.30mm, Medium = 1.00mm, Small = 0.85mm):
-  - **Large Bold** (1.30mm × 1.30mm, 0.18mm stroke): Board title `"Dog Fence Indicator & Surge v1.1.0"`, and explicit polarity markings (`+` Anode / Square pad, `-` Cathode / Round pad) symmetrically aligned with LED terminals `J_LED_A` and `J_LED_C`.
-  - **Small Bold** (0.85mm × 0.85mm, 0.15mm stroke): Input channel indicators (`A`, `B`, `C` on `J_IN`) and ground terminal indicator (`EARTH` on `J_EARTH` on `F.SilkS` at (155.00, 108.00) for installer visibility).
-  - **Medium Bold** (1.00mm height, 0.15mm stroke): All discrete and arrester component references (`D1`, `D2`, `R1`, `R2`, `GDT_AB`, `GDT_BC`, `GDT_AC` at 1.00mm × 1.00mm, and `GDT_A_E`, `GDT_B_E`, `GDT_C_E` at 1.00mm × 0.80mm), strictly conforming to JLCPCB $\ge 0.15\text{mm}$ silkscreen line width rules with zero pad solder mask clipping.
+## 5. Unapproved Alternatives
 
----
+Retain these earlier sourcing suggestions for investigation, **not as approved upgrades or drop-ins**. No purchase, footprint fit, higher assembled surge capability, or lifetime benefit is established by this list. Differences in electrode configuration, body, lead diameter, pin mapping, RF loading, and thermal/pulse behavior may require redesign and new qualification.
+
+| Intended references | Previously suggested alternatives |
+| :--- | :--- |
+| D1, D2 | Vishay 1N4007GP-E3/54 |
+| R1, R2 | Vishay PR02000202201JA100 (PR02 series) |
+| GDT_AB, GDT_BC | Littelfuse SH470 |
+| GDT_AC | Bourns 2027-47-BLF or Littelfuse CG2-470L |
+| Earth GDTs | Littelfuse SL1021A470R |
+| J_IN, J_EARTH | Phoenix Contact 1731734, GMKDS 3/ 3-7,62 |
+| LED terminals | Phoenix Contact 1715721, MKDS 1,5/ 2-5,08 |
+| External LED | APEM Q14P5BXXHG02E, discussed in LED.md |
+
+A higher resistor wattage does not reduce heat at the same resistance/current. A larger LED bezel does not prove better daylight contrast. Global sourcing/private inventory is an option only after engineering approval and a supplier quote; it is not a guaranteed route to stock or a fixed lead time.
+
+## 6. PCB And Assembly Constraints
+
+These are protected nominal design features, not tolerance-free measured acceptance. See [AGENTS.md](AGENTS.md), [REMEDIATION.md](REMEDIATION.md#physical-guardrails), and the controlled assembly evidence under `pcb/` before changing them.
+
+| Feature | Required geometry / verification |
+| :--- | :--- |
+| Board | 63 x 56 mm; outline (97.0, 94.5) to (160.0, 150.5) mm. |
+| Mounting | Four 3.2 mm holes at (101.5, 99.0), (155.5, 99.0), (101.5, 146.0), (155.5, 146.0); preserve 6.4 mm keepout collars and 6.9 mm mechanical courtyards. Nominal centres are 4.5 mm from edges. |
+| Fence rails | Full 3.2 mm nominal width on **both** copper layers; no waist relief or unapproved narrowing. |
+| Rail stitching | Nine vias: X = 112.5, 114.0, 115.5 mm on each rail at Y = 114.88, 122.50, 130.12 mm. Each **1.0 mm drill / 1.8 mm pad**. |
+| Earth bus | Matching solid copper on both layers, X = 143.99-157.25 mm, Y = 111.25-133.75 mm; preserve continuity and the 4.5 mm-grid construction. |
+| Earth stitching | Five **1.0/1.8 mm drill/pad** vias at X = 150.0 mm, Y = 114.88, 118.69, 122.50, 126.31, 130.12 mm. Together with the rail vias, **14 protected vias**. |
+| Fence/earth isolation | At least **3.0 mm copper clearance**. Preserve B-return routing at X = 135.50 mm, Y = 107.20 / 137.80 mm unless an approved equivalent maintains the constraints. Historical geometry gave 3.25 mm to the earth plane and 8.44 mm to earth-GDT input pins; remeasure revised outputs. |
+| Earth GDT spacing | Centres Y = 113.50, 122.50, 131.50 mm, retaining **9.00 mm pitch**. Nominal 8 mm bodies suggest a 1 mm gap, but actual maximum bodies, formed leads, and honest courtyards must establish fit. |
+| GDT_AC overpass | Now at X=125.80 mm, north-south over Wire B, 15.24 mm formed pitch. **At least 2.0 mm physical standoff under the entire raised span**, per the controlled side-view/forming drawing and inspection method. |
+| LED terminals | J_LED_A origin (145.50, 103.00), 90 degrees, opens north; J_LED_C (145.50, 142.00), 270 degrees, opens south. On both, pad 1 positive is at X = 142.96 and pad 2 B return at X = 148.04 mm. Do not replace intentional custom pad mappings with stock-library geometry. |
+| Other orientation | J_IN opens left (0 degrees), J_EARTH right (180 degrees); J_IN A/B/C run north to south. D1/D2 cathodes face right toward the LED positive terminals in the baseline. Footprint origins/rotations are not automatically assembler centroids/model rotations. |
+| Legend | Native 1.0 mm height / 0.15 mm stroke lettering, underside references and 1.2.0-dev identification are implemented. A/B/C/EARTH, polarity and cathode identification remain; processed printing still needs inspection. |
+
+The source stackup now sums to **1.600 mm**: 1.440 mm core, two 0.070 mm copper layers and two 0.010 mm mask layers. Confirm the actual supplier thickness convention, tolerance and support fit; this arithmetic is not a stock-laminate guarantee. ENIG is the selected solderable surface finish, **not a hermetic seal or a guarantee against terminal corrosion**. Do not narrow protected copper with generic thermal spokes to ease soldering; agree a suitable heavy-copper assembly process.
+
+Intentional geometry is captured in **ten project-local footprints and six symbols**. GDT_AB/GDT_BC moved to X=119.50 mm, with their original pads and full-width connections retained; GDT_AC moved east to make genuine courtyard space. J_IN's courtyard now bounds its nominal body. Maximum-body evidence remains incomplete for some parts, and the provisional J_EARTH body extends **0.30 mm beyond the board edge**, requiring panel/enclosure acceptance. [ASSEMBLY.md](pcb/ASSEMBLY.md) records exact placements, dimensions and remaining holds.
 
 ### Via and Component Hole DFM
 
-**Policy reviewed 2026-09-06.** Recheck the selected fabricator's capabilities for each order and whenever a part, footprint, copper weight, or via process changes. The controlling references are [JLCPCB capabilities](https://jlcpcb.com/capabilities/pcb-capabilities), [via covering](https://jlcpcb.com/help/article/pcb-via-covering), and [via versus component-hole tolerances](https://jlcpcb.com/help/article/difference-and-tolerance-explanation-between-via-and-pad-holes). Order-specific written acceptance takes precedence over assumptions based on checkout options.
+**Policy reviewed 2026-09-06.** Recheck capabilities for each order and whenever a part, footprint, copper weight, or via process changes. References: [JLCPCB capabilities](https://jlcpcb.com/capabilities/pcb-capabilities), [via covering](https://jlcpcb.com/help/article/pcb-via-covering), and [via versus component-hole tolerances](https://jlcpcb.com/help/article/difference-and-tolerance-explanation-between-via-and-pad-holes). Obtain order-specific written acceptance rather than assuming a checkout option is compatible.
 
-**Via process selection:** The diameter limits below concern the **hole**, not its copper pad.
+The following limits concern the **hole**, not its copper pad:
 
-| Process | Published guidance | Consequence for this board's 1.0 mm stitching holes |
+| Process | Published guidance | Consequence for the protected 1.0 mm holes |
 | :--- | :--- | :--- |
-| Untented | No additional covering-process requirement. Copper remains exposed and solderable. | Ordinary hole fabrication is possible, but there is no seal; evaluate solder wicking and environmental protection. |
-| Tented | Ideally at most 0.4 mm; normal coverage guidance is at most 0.5 mm. Larger holes are not guaranteed fully covered. | Do not treat the KiCad tenting setting as a guaranteed closure. |
-| Soldermask plugged | At most 0.5 mm, no mask openings on either side, and at least 0.35 mm process clearance from other mask openings/pads. | Outside the normal process limit. Ink plugging is not equivalent to filled-and-capped via-in-pad processing. |
-| Filled and capped | The detailed guide recommends at most 0.5 mm; the capability table lists 0.15-0.55 mm. Resolve the applicable limit with CAM. | 1.0 mm exceeds both published ranges. Any exception requires written process acceptance. |
+| Untented | No covering process; copper remains exposed and solderable. | No seal. Evaluate solder wicking and environmental protection. |
+| Tented | Ideally at most 0.4 mm; normal coverage guidance at most 0.5 mm. | Larger holes are not guaranteed covered. A KiCad tenting flag is not proof. |
+| Soldermask plugged | At most 0.5 mm, no mask openings on either side, at least 0.35 mm process clearance from other mask openings/pads. | Outside the normal limit. Ink plugging is not filled-and-capped via-in-pad processing. |
+| Filled and capped | Detailed guide recommends at most 0.5 mm; capability table lists 0.15-0.55 mm. Resolve the applicable limit with CAM. | 1.0 mm exceeds both ranges; any exception needs written process acceptance. |
 
-- Preserve the nine rail-stitching and five earth-stitching vias and their electrical geometry. Revise surrounding soldering geometry or obtain an approved manufacturing solution rather than silently deleting or reducing these vias.
-- Inspect the actual drill circles against `F.Mask`, `B.Mask`, and `F.Paste`, including the assembler's processed mask/stencil data. A nearby SMT mask opening can expose part of a nominally tented hole. Keep holes out of SMT wettable areas and retain a process-approved mask barrier; otherwise explicitly qualify the via-in-pad process and solder volume.
-- JLCPCB does not control ordinary via-hole diameter like a component insertion hole and may adjust it in CAM. Obtain agreement not to reduce the protected hole sizes if the electrical design depends on them.
-- Identify vias by coordinates and hole function when specifying treatment. The present resistor insertion holes and stitching vias both use 1.0 mm drills: **do not request blanket filling of every 1.0 mm hole**.
-- Outer copper weight does not specify barrel plating. The capability page lists **18 micrometres average hole plating**, not a guaranteed minimum for every barrel. Use an agreed finished minimum if a current/surge calculation depends on it. Soldermask or ordinary nonconductive epoxy fill adds no conductive copper cross-section.
-- Tenting, opacity, or potting is not evidence of hermetic sealing, freeze-thaw immunity, or an assembled IP rating.
+- Preserve **all 14 stitching vias at 1.0 mm drill / 1.8 mm pad** and the protected copper. Fix surrounding soldering geometry or seek an approved process/layout solution; do not delete or shrink vias to fit a covering option.
+- Inspect full drill circles and exposed annuli against actual `F.Mask`, `B.Mask`, and `F.Paste`, then inspect the assembler's processed mask/stencil. Nearby SMT openings can expose nominally tented holes. The reviewed **0.19 mm intersections involving nine rail vias and all four SMT pads** are removed by relocation: current minimum nominal hole-to-aperture gap is **0.933911 mm**, full-annulus-to-aperture **0.533911 mm**. The retained land pattern differs from the retrieved Ruilon recommended-pattern table; confirm the drawing or obtain written alternative-pattern/solder-volume acceptance. Geometry correction alone does not close W1's process hold.
+- Identify treatment by **coordinates and hole function**. Resistor insertion holes also use 1.0 mm drills: **no blanket filling of every 1.0 mm hole**. Ordinary via diameters may be adjusted in CAM; obtain agreement and check processed data to ensure the protected vias have not been reduced.
+- **70 micrometres of exterior copper is not 70 micrometres of barrel plating.** JLCPCB's published 18 micrometres average hole plating is not a guaranteed minimum in every barrel. Agree any finished minimum used in current/surge calculations separately. Nonconductive fill adds no conductive cross-section.
+- Tenting, plugging, opacity, or gel encapsulation does not prove hermetic sealing, freeze-thaw immunity, or an assembled ingress rating.
 
-**Component insertion holes:** Use plated through-hole **pads**, not vias, for component leads. For every exact manufacturer/MPN, record the drawing revision, maximum finished lead dimensions, lead spacing, proposed finished hole, and assembly allowance. Nominal package names and supplier CAD footprints are not sufficient fit evidence.
-
-For a round insertion hole, check:
+Use **component PTH pads**, never ordinary vias, for lead insertion. Record the exact manufacturer/MPN, drawing revision, maximum finished lead dimensions, pitch, proposed hole, and assembly allowance. For round holes:
 
 ```text
-Round lead envelope     = maximum finished lead diameter
-Rectangular envelope    = sqrt(maximum_width^2 + maximum_thickness^2)
-Minimum finished hole   = nominal finished hole - negative hole tolerance
-Minimum finished hole  >= maximum lead envelope + diametral assembly allowance
+Round pin envelope       = maximum finished lead diameter
+Rectangular pin envelope = sqrt(maximum_width^2 + maximum_thickness^2)
+nominal finished hole - 0.08 mm >= maximum pin envelope + 0.10 mm
 ```
 
-JLCPCB publishes **+0.13/-0.08 mm** for ordinary component PTH holes. Use at least **0.10 mm diametral assembly allowance after the negative tolerance** as a conservative project starting point, unless the component/assembly requirements call for more. This project allowance is distinct from JLCPCB's general recommendation to make the nominal hole 0.10 mm larger than the maximum pin. Also account for pin-pitch, hole-position, and lead-forming tolerances, especially for rigid multi-pin connectors. Do not assume tighter press-fit tolerances are available for this two-layer order.
+The last line uses JLCPCB's ordinary component-hole **+0.13/-0.08 mm** tolerance and the project's starting **0.10 mm diametral allowance after tolerance**. Increase the allowance when required; also account for pin-pitch, hole-position, and forming tolerances, particularly rigid connectors. This is stricter than simply adding 0.10 mm to a nominal pin. Do not assume press-fit tolerances for this order.
 
-For example, the [onsemi 1N4007G drawing](https://www.onsemi.com/pdf/datasheet/1n4001-d.pdf) allows a 0.86 mm lead. The current 0.90 mm hole can finish at 0.82 mm and fail insertion. A 1.10 mm hole can finish at 1.02 mm, providing 0.16 mm diametral clearance at the maximum lead size. **The 1.10 mm hole is a remediation proposal, not a change already applied to the PCB.**
+For **onsemi 1N4007G / C232439**, the old 0.90 mm hole could finish at 0.82 mm and fail insertion. **D1/D2 now have 1.10 mm finished holes with 2.20 mm pads** in the source/local library. Minimum hole 1.02 mm gives **0.1564 mm** clearance over the controlling 0.034-inch / 0.8636 mm maximum lead, and a 0.55 mm nominal ring. Native drill validation checks the exported diameters; actual finished holes, lead forming and insertion still require acceptance.
 
-After increasing a drill, separately recheck pad size, annular ring, hole/copper spacing, and the component envelope. JLCPCB's two-layer, 2 oz **component PTH annular-ring design requirement is at least 0.254 mm**; do not substitute its smaller generic via-ring rule. For finished-ring requirements, include hole-size and registration tolerances. Resolve fit in CAD and regenerate production files rather than relying on forced insertion or post-fabrication reaming of plated holes.
+Connector maximum-pin/body drawings remain necessary. Supplier CAD showing a 1.60 mm hole is a candidate, not fit proof. Rebuild fabrication outlines and courtyards from real maximum bodies plus assembly clearance; do not hide interference by shrinking courtyards. Verify lead forming, rework and screwdriver access, not pitch alone.
 
-A normal electrical DRC pass does not verify these part-tolerance or via-covering requirements. Complete this review in addition to `make check` and inspect the final processed production files before approval.
+After drill changes, recheck pad sizes, hole/copper spacing, edge clearances and **at least 0.254 mm nominal component PTH annular ring for two-layer 2 oz fabrication**. Generic via-ring rules do not establish component-pad compliance. Finished-ring acceptance also requires hole and registration tolerances. Resolve fit in CAD, not by forced insertion or reaming plated boards.
 
----
+DRC alone cannot close hole-fit, solder-wicking, body/forming, or process approval. Record the accepted evidence in the controlled assembly notes, regenerate the production outputs, and inspect the final processed files.
 
-## 7. Field Installation Guide
+## 7. Enclosure, Cable And Site
 
-```
-          [ WISKA COMBI 308 IP66/IP67 ENCLOSURE ]
- ┌─────────────────────────────────────────────────────────────┐
- │                                                             │
- │  INCOMING 3-CORE CABLE               OUTGOING 3-CORE CABLE  │
- │   (2.5mm² SWA / Exterior)           (2.5mm² SWA / Exterior) │
- │          │                                     │            │
- │          ▼                                     ▼            │
- │   [ WAGO 221-413 (Wire A) ] ─── Pigtail A ───┐              │
- │   [ WAGO 221-413 (Wire B) ] ─── Pigtail B ───┼──────────┐   │
- │   [ WAGO 221-413 (Wire C) ] ─── Pigtail C ───┼──────┐   │   │
- │                                              │      │   │   │
- │     ┌────────────────────────────────────────┘      │   │   │
- │     │    ┌──────────────────────────────────────────┘   │   │
- │     │    │    ┌─────────────────────────────────────────┘   │
- │     ▼    ▼    ▼                                             │
- │   ┌──────────────┐         ┌───────────┐                    │
- │   │ J_IN (A,B,C) │         │  J_LED_A  │ ──> Panel LED A    │
- │   │              │         │  (+, -)   │     (Green IP67)   │
- │   │  PCB BOARD   │         └───────────┘                    │
- │   │  (63 x 56mm) │         ┌───────────┐                    │
- │   │              │         │  J_LED_C  │ ──> Panel LED C    │
- │   │   J_EARTH    │         │  (+, -)   │     (Green IP67)   │
- │   └──────┬───────┘         └───────────┘                    │
- │          │                                                  │
- │          ▼ (Only at 5 Surge Boxes: 0m, 1km, 2km, 3km, 4km)  │
- │   [ Copper Ground Stake ]                                   │
- │                                                             │
- │   [ BACKFILLED WITH WISKA MP0100 SILICONE POTTING GEL ]     │
- └─────────────────────────────────────────────────────────────┘
-```
+WISKA COMBI 308 external dimensions are **85 x 85 x 51 mm**. Published box ratings include IP66 via membranes and IP67 with the specified gland arrangement, and -30 to +100 degrees C; they do not transfer automatically to drilled, wired, gel-filled assemblies. Essentra LCBSBM-6-01A-RT data lists nominal **3.18 mm support hole, 1.57 mm panel thickness, and 9.53 mm spacing**. Confirm tolerance compatibility with the PCB and dry-fit the actual WAGOs, cable bends/glands, earth wires, formed GDTs, lid LEDs, and screwdriver access.
 
-1. **Continuous Splice**: The main arriving and departing 3-core cable runs continuously through three **WAGO 221-613** 3-way lever connectors.
-2. **PCB Tap**: A short 2.5mm² pigtail wire taps from each WAGO into `J_IN` (`A`, `B`, `C`).
-3. **LED Indicators**: External panel-mount green LEDs (Marl IP67) have flying leads screwed into `J_LED_A` and `J_LED_C`.
-4. **Surge Earth Ground (5 Stations Only)**: Heavy earth grounding cable from the copper ground rod is clamped into `J_EARTH`. (Standard boxes leave `J_EARTH` unpopulated/empty).
-5. **Gel Encapsulation**: Once wired and tested, mix and pour **WISKA MP0100 re-enterable two-part silicone potting gel** to fill the box cavity.
+The baseline APEM LEDs use nominal 10 mm panel mounting; use the exact cutout/seal instructions and **0.20-0.25 Nm mounting torque**, subject to the supplied model instructions. Check adhesive, enclosure and MP0100 compatibility, surface cleanliness, mixing/cure and fill process. The old 180-190 ml/box gel estimate is only a planning estimate. Gel does not establish IP68, hermeticity, or lifetime performance. Retain an unpotted reference prototype.
 
----
+The site is on the **Isle of Man, less than 1 km from the coast**, with rain, salt exposure and possible condensation. Observed outdoor ambient is about **-10 to +30 degrees C**; these are not guaranteed lifetime extremes or maximum internal temperatures. Some boxes receive direct sun. Qualification must include credible solar and weather margins.
 
-## 8. Automated Production Build
+The likely purchased cable is **Oceanflex CM03/05.100**, supplier code **P01018**, from [12 Volt Planet](https://www.12voltplanet.co.uk/CAB3CTNTW2.5PNT.html). Actual reel identity remains unconfirmed. The listing describes **three tinned-copper 2.5 mm^2 cores, 35/0.30 mm strands per core, 7.3 mm maximum outside diameter, 60 V maximum, and -15 to +70 degrees C complete-cable working temperature**. The ISO 6722 / 105-degree reference concerns the cores, not the complete cable. Do not treat it as -40-degree arctic cable, mains cable, or armoured cable.
 
-You can generate and package the complete JLCPCB manufacturing package with a single terminal command:
+Obtain the actual three-core colours and maximum conductor resistance; the supplier's black/red colour table is incomplete. Confirm permanent UV/weather exposure, wet-conduit suitability and impulse data. A 60 V working rating does not itself qualify surge withstand or prove failure under every brief higher voltage. Assign A/B/C from verified core identity and labels; **never use green/yellow as an active fence core**.
+
+Routing is mostly **0.3-1.0 m above ground** on timber fencing with horizontal metal wires, with plastic conduit under driveways/gates. Conduit can become wet and is not electromagnetic shielding. Do not connect the boundary cable electrically to supporting fence wires. A separate energized cattle wire may run **at least 0.5 m away for up to 300 m in parallel**: maintain separation allowing for movement, increase it where practical, and use that exposure for repetitive-pulse qualification in RUN and TEST. Compare energizer off/on, receiver behavior, LED indications, protection stress and recovery; it is not an established interference-safe clearance.
+
+The proposed shed earth is shared by the DogWatch protector and both shed-end boards. A qualified installer must confirm building PE/electrode relationships against applicable regional OEM instructions and the site design. Do not add arbitrary unbonded rods, directly earth a fence core, or assume DC negative needs an earth bond. Ordered rods and parallel earth wires are inventory, not an approved discharge-path design.
+
+## 8. Verification And Release
+
+The implemented [Makefile](Makefile) uses one locked transaction in `scripts/manufacturing.py`. It stages a **complete project** including schematic, PCB, settings/rules and local libraries, runs strict **DRC, ERC, schematic/PCB parity, protected-geometry and artifact checks**, and retains readable/machine-readable reports. All errors and unreviewed warnings block; the exact eight intentional single-sheet global-label warnings are explicitly reviewed by UUID/name in `pcb/verification.json`, not broadly suppressed. Every public export alias, including BOM/CPL/drill/netlist, uses the complete gated transaction.
+
+The native XML netlist export also warns about the ten intentional nonnumeric J_/GDT_ references. Isolated numbering controls confirmed the cause; duplicate/unassigned-reference probes showed why the generic warning alone is not safe to accept. Its separate review is locked to the exact KiCad 9.0.7 diagnostic and schematic/project/library/table hashes. Other export diagnostics and changed inputs block; neither exception hides a native warning or constitutes circuit approval.
+
+Use headless KiCad 9 (tested baseline **9.0.7**). The CLI is verified by invocation and the complete snapshot lives in `tmp/manufacturing/runs/attempt-*/project`. Cleanup affects only build-owned runs/outputs, not other `tmp/` evidence. New attempts quarantine previous public outputs, and source/artifact verification precedes publication. Do not rely on PCB-only error-level DRC or assume KiCad 7/8 compatibility.
 
 ```bash
+make check
 make all
 ```
 
-This runs the automated KiCad DRC check and exports:
-* **`build/Gerbers.zip`** — Master 2-layer Gerbers & Excellon drill files.
-* **`build/BOM.csv`** — Verified PCBA Bill of Materials.
-* **`build/CPL.csv`** — Verified Pick-and-Place Centroid component positions.
-* **`build/FlyTest.zip`** — Flying Probe Electrical Test package (contains `pcb.d356` netlist + Gerbers).
-* **`build/pcb.d356`** — IPC-D-356 Netlist for probe verification.
+`make check` performs file verification and refreshes the generated CPL reference without publishing an upload package. **`make all` remains blocked by the engineering holds in `pcb/verification.json`**, even when file checks pass. Reports are in `build/reports/` and `build/drc_report.*` / `build/erc_report.*`; `build/status.json` identifies the attempt. Only a published `build/manifest.json` with `status=verified` and matching source/artifact hashes identifies a current file-verified package. It still does not approve a prototype order or field use. Run `make clean` separately from builds and preserve desired run evidence first.
 
-To run only the DRC gate verification:
-```bash
-make check
-```
+| Intended output | Purpose, only after verification |
+| :--- | :--- |
+| `build/Gerbers.zip` | Copper, mask, legend, top paste, outline and separate PTH/NPTH drills for fabrication; generated mirror at `pcb/Gerbers.zip`. |
+| `build/BOM.csv` | Reviewed source population and exact sourcing identities matched to the schematic/PCB. |
+| `build/CPL.csv` | Native-generated placement including all required SMT/THT parts, excluding mechanical/DNP items; `pcb/CPL.csv` is the generated draft reference. Native signed Y is retained and rotations normalized modulo 360. |
+| `build/pcb.d356`, `build/FlyTest.zip` | IPC-D-356 and fabrication data for bare-board electrical testing, not assembled functional or surge testing. |
+| `build/Assembly.pdf`, `build/Assembly.txt`, `build/ViaTreatment.csv` | Native assembly drawing/placements and coordinate-based via identification, accompanied by controlled `ASSEMBLY.md` / `ELECTRICAL.md` notes. Not supplier placement/process approval. |
 
----
+Fresh exports must agree in origin, handedness, drills, geometry, population, net connectivity and archive contents. Never hand-edit generated fabrication data or correct placement handedness using absolute Y values. Obtain separate **processed PCB/stencil CAM approval** and **parts-placement/assembly approval**, including any evidence-backed centroid/model rotation corrections. See [ORDERING.md](ORDERING.md).
 
-## 9. Documentation & Project Structure
+| Release gate | Evidence required |
+| :--- | :--- |
+| A: File ready | Correct source/circuit/library/rule data, passing automated checks, reviewed regenerated artifacts and synchronized documentation with open qualifications identified. |
+| B: Prototype order | Gate A plus required part-fit, via/solder/forming process, CAM and placement acceptance, and a controlled prototype test scope. Known manufacturing defects must not be deferred to chance assembly. |
+| C: Field release | Required reversal/fault, continuous thermal, 5 m daylight, full-hub cut, RF/site, environmental and protection evidence, accepted earthing and documented performance limits. |
 
-* [`README.md`](README.md) — Master project overview, architecture, and specifications (this file).
-* [`AGENTS.md`](AGENTS.md) — Operating environment guide for AI agents and developers (Ubuntu conventions, KiCad Snap confinement, build workflows).
-* [`INSTALL.md`](INSTALL.md) — Complete Step-by-Step Field & Shed Installation Manual.
-* [`ORDERING.md`](ORDERING.md) — Turnkey JLCPCB Ordering & Re-ordering Guide.
-* [`ACCEPTANCE.md`](ACCEPTANCE.md) — Prototype Acceptance & Bench Commissioning Protocol.
-* [`MATERIALS.md`](MATERIALS.md) — Hardware Procurement & Materials Tracker.
-* [`RISKS.md`](RISKS.md) — Electrical, polarity, miswiring, and environmental risk analysis.
-* [`LED.md`](LED.md) — Selected IP67 LED panel indicator part details.
-* [`Makefile`](Makefile) — Automated manufacturing package build script.
-* `pcb/pcb.kicad_sch` — KiCad 9 Master Schematic.
-* `pcb/pcb.kicad_pcb` — KiCad 9 Master PCB Layout (63mm × 56mm, 2 oz Cu, ENIG).
-* `pcb/BOM.csv` — Standard JLCPCB/PCBWay Turnkey PCBA Bill of Materials.
-* `pcb/CPL.csv` — Standard JLCPCB/PCBWay Pick-and-Place Centroid Coordinates.
+Gate B can precede defined physical qualification tests, but neither documentation nor five basic bench passes closes **C4/C5** or authorizes full rollout. A successful build means manufacturing data verified for that revision, not lightning protection verified.
+
+## 9. Documentation Map
+
+| Document | Role |
+| :--- | :--- |
+| [REMEDIATION.md](REMEDIATION.md) | Agreed requirements, issue/evidence register, gates and session handoff. |
+| [AGENTS.md](AGENTS.md) | Headless tooling, staging and physical guardrails. |
+| [INSTALL.md](INSTALL.md), [RISKS.md](RISKS.md), [ACCEPTANCE.md](ACCEPTANCE.md) | Operating, risk and qualification procedures, synchronized by their owners with the final circuit. |
+| [ORDERING.md](ORDERING.md), [MATERIALS.md](MATERIALS.md), [LED.md](LED.md) | Quote/approval workflow, procurement ledger, indicator limits and visibility target. |
+| [REVIEW.md](REVIEW.md) | Reusable read-only audit brief, not a completed review or sign-off. |
+| `pcb/ELECTRICAL.md`, `pcb/ASSEMBLY.md` | Electrical analysis and controlled assembly/fit notes for this draft; require their actual revision and evidence before release. |
+| [Makefile](Makefile), `pcb/pcb.kicad_sch`, `pcb/pcb.kicad_pcb`, `pcb/pcb.kicad_pro` | Build implementation and authoritative design/project sources, together with applicable rules and local libraries. |

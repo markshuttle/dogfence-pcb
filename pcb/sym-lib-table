@@ -1,0 +1,4 @@
+(sym_lib_table
+  (version 7)
+  (lib (name "DogFence")(type "KiCad")(uri "${KIPRJMOD}/DogFence.kicad_sym")(options "")(descr "DogFence symbols with preserved pin coordinates and explicit custom polarity"))
+)

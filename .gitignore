@@ -7,3 +7,5 @@ pcb/pcb-backups/*.zip
 build/
 .workshop.lock
 tmp/
+__pycache__/
+*.py[cod]

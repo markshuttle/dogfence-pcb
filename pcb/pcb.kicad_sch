@@ -7,13 +7,13 @@
 	(title_block
 		(title "Universal Milestone Indicator & Surge PCB")
 		(date "2026-09-06")
-		(rev "1.1.0")
+		(rev "1.2.0-dev")
 		(company "DogFence Project")
 		(comment 1 "4km 3-Core DogWatch SmartFence Diagnostic & Surge System")
-		(comment 2 "Turnkey PCBA - 20+ Year Outdoor Deployment Specification")
+		(comment 2 "Development baseline: protection, fit and process approval pending")
 	)
 	(lib_symbols
-		(symbol "Connector_Generic:Conn_01x02"
+		(symbol "DogFence:Conn_01x02"
 			(pin_names
 				(offset 1.016)
 				(hide yes)
@@ -115,7 +115,7 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "Connector_Generic:Conn_01x03"
+		(symbol "DogFence:Conn_01x03"
 			(pin_names
 				(offset 1.016)
 				(hide yes)
@@ -235,7 +235,7 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "Device:D"
+		(symbol "DogFence:D_A_Left_K_Right"
 			(pin_numbers
 				(hide yes)
 			)
@@ -254,7 +254,7 @@
 					)
 				)
 			)
-			(property "Value" "D"
+			(property "Value" "D_A_Left_K_Right"
 				(at 0 -2.54 0)
 				(effects
 					(font
@@ -280,7 +280,7 @@
 					(hide yes)
 				)
 			)
-			(property "Description" "Diode"
+			(property "Description" "Diode: anode pin 2 left, cathode pin 1 right; intentional project mapping"
 				(at 0 0 0)
 				(effects
 					(font
@@ -307,10 +307,11 @@
 					(hide yes)
 				)
 			)
-			(symbol "D_1_1"
+			(symbol "D_A_Left_K_Right_1_1"
 				(polyline
 					(pts
-						(xy -1.27 1.27) (xy -1.27 -1.27)
+						(xy 1.27 1.27)
+						(xy 1.27 -1.27)
 					)
 					(stroke
 						(width 0.254)
@@ -322,7 +323,8 @@
 				)
 				(polyline
 					(pts
-						(xy 1.27 1.27) (xy 1.27 -1.27)
+						(xy -1.27 1.27)
+						(xy -1.27 -1.27)
 					)
 					(stroke
 						(width 0.254)
@@ -334,7 +336,10 @@
 				)
 				(polyline
 					(pts
-						(xy 1.27 0) (xy -1.27 1.27) (xy -1.27 -1.27) (xy 1.27 0)
+						(xy 1.27 0)
+						(xy -1.27 1.27)
+						(xy -1.27 -1.27)
+						(xy 1.27 0)
 					)
 					(stroke
 						(width 0.254)
@@ -383,7 +388,7 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "Device:GDT"
+		(symbol "DogFence:GDT"
 			(pin_numbers
 				(hide yes)
 			)
@@ -440,7 +445,8 @@
 			(symbol "GDT_1_1"
 				(polyline
 					(pts
-						(xy -2.032 -0.889) (xy -2.032 0.889)
+						(xy -2.032 -0.889)
+						(xy -2.032 0.889)
 					)
 					(stroke
 						(width 0.381)
@@ -463,7 +469,8 @@
 				)
 				(polyline
 					(pts
-						(xy 2.032 -0.889) (xy 2.032 0.889)
+						(xy 2.032 -0.889)
+						(xy 2.032 0.889)
 					)
 					(stroke
 						(width 0.381)
@@ -512,7 +519,7 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "Device:R"
+		(symbol "DogFence:R"
 			(pin_numbers
 				(hide yes)
 			)
@@ -617,7 +624,7 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "Mechanical:MountingHole"
+		(symbol "DogFence:MountingHole"
 			(pin_numbers
 				(hide yes)
 			)
@@ -626,7 +633,7 @@
 				(hide yes)
 			)
 			(exclude_from_sim no)
-			(in_bom yes)
+			(in_bom no)
 			(on_board yes)
 			(property "Reference" "H"
 				(at 0 3.81 0)
@@ -689,7 +696,11 @@
 	)
 	(polyline
 		(pts
-			(xy 25.4 19.05) (xy 101.6 19.05) (xy 101.6 39.37) (xy 25.4 39.37) (xy 25.4 19.05)
+			(xy 25.4 19.05)
+			(xy 101.6 19.05)
+			(xy 101.6 39.37)
+			(xy 25.4 39.37)
+			(xy 25.4 19.05)
 		)
 		(stroke
 			(width 0.2)
@@ -702,7 +713,11 @@
 	)
 	(polyline
 		(pts
-			(xy 66.04 50.8) (xy 128.27 50.8) (xy 128.27 133.35) (xy 66.04 133.35) (xy 66.04 50.8)
+			(xy 66.04 50.8)
+			(xy 128.27 50.8)
+			(xy 128.27 133.35)
+			(xy 66.04 133.35)
+			(xy 66.04 50.8)
 		)
 		(stroke
 			(width 0.2)
@@ -715,7 +730,11 @@
 	)
 	(polyline
 		(pts
-			(xy 134.62 50.8) (xy 196.85 50.8) (xy 196.215 162.56) (xy 133.985 162.56) (xy 134.62 50.8)
+			(xy 134.62 50.8)
+			(xy 196.85 50.8)
+			(xy 196.215 162.56)
+			(xy 133.985 162.56)
+			(xy 134.62 50.8)
 		)
 		(stroke
 			(width 0.2)
@@ -728,7 +747,11 @@
 	)
 	(polyline
 		(pts
-			(xy 199.39 50.8) (xy 284 50.8) (xy 284 133.35) (xy 199.39 133.985) (xy 199.39 50.8)
+			(xy 199.39 50.8)
+			(xy 284 50.8)
+			(xy 284 133.35)
+			(xy 199.39 133.985)
+			(xy 199.39 50.8)
 		)
 		(stroke
 			(width 0.2)
@@ -751,7 +774,7 @@
 		)
 		(uuid "44440001-0000-0000-0000-000000000001")
 	)
-	(text "CORE-TO-CORE DIFFERENTIAL SURGE (5kA)"
+	(text "CORE-TO-CORE GDT NETWORK"
 		(exclude_from_sim no)
 		(at 68.58 54.61 0)
 		(effects
@@ -763,7 +786,7 @@
 		)
 		(uuid "44440001-0000-0000-0000-000000000002")
 	)
-	(text "LINE-TO-EARTH SURGE (20kA)"
+	(text "LINE-TO-EARTH GDT NETWORK"
 		(exclude_from_sim no)
 		(at 137.16 54.61 0)
 		(effects
@@ -787,7 +810,7 @@
 		)
 		(uuid "44440001-0000-0000-0000-000000000004")
 	)
-	(text "DOG FENCE INDICATOR & SURGE PROTECTION SYSTEM (v1.1.0)"
+	(text "DOG FENCE INDICATOR & SURGE SYSTEM (1.2.0-dev)"
 		(exclude_from_sim no)
 		(at 115 28 0)
 		(effects
@@ -799,7 +822,7 @@
 		)
 		(uuid "44440001-0000-0000-0000-000000000005")
 	)
-	(text "4km 3-Core DogWatch SmartFence Diagnostic Milestone & 20kA Grounding Unit"
+	(text "4km 3-Core Diagnostic Milestone - PROTECTION / MANUFACTURING HOLD"
 		(exclude_from_sim no)
 		(at 115 35 0)
 		(effects
@@ -822,12 +845,12 @@
 		)
 		(uuid "44440001-0000-0000-0000-000000000007")
 	)
-	(text "Axial GDT bridges over Wire B"
+	(text "Axial GDT_AC bridges Wire B"
 		(exclude_from_sim no)
-		(at 88.38 97.65 0)
+		(at 91.44 97.65 0)
 		(effects
 			(font
-				(size 0.889 0.889)
+				(size 1 1)
 				(italic yes)
 			)
 			(justify left)
@@ -846,7 +869,7 @@
 		)
 		(uuid "44440001-0000-0000-0000-000000000009")
 	)
-	(text "1. RF RUN MODE (Transmitter Active): 4-10 kHz AC carrier. GDT capacitance <1.5pF (RF transparent). Diodes D1/D2 block reverse flow."
+	(text "1. RUN: actual transmitter/cable RF loading requires qualification. The series diodes do not guarantee LED reverse-voltage protection."
 		(exclude_from_sim no)
 		(at 25.4 186 0)
 		(effects
@@ -857,7 +880,7 @@
 		)
 		(uuid "44440001-0000-0000-0000-000000000010")
 	)
-	(text "2. DC TEST MODE (Fault Finding): Disconnect RF transmitter; inject +36V DC on Wires A & C with Wire B as DC 0V return. ~15mA/LED."
+	(text "2. TEST: isolate transmitter; feed Start A/C +36V and Start B negative. Isolate End A/B/C separately. See REMEDIATION.md."
 		(exclude_from_sim no)
 		(at 25.4 190.5 0)
 		(effects
@@ -868,7 +891,7 @@
 		)
 		(uuid "44440001-0000-0000-0000-000000000011")
 	)
-	(text "3. SURGE SUPPRESSION: GDT_AB/BC/AC clamp 5kA differential pulses; GDT_A/B/C_E divert 20kA lightning to Earth bus & ground rods."
+	(text "3. HOLD: LED reversal, transient coordination and powered GDT extinction are unresolved. No assembled-board surge rating is assigned."
 		(exclude_from_sim no)
 		(at 25.4 195 0)
 		(effects
@@ -881,10 +904,10 @@
 	)
 	(text "(>=2.0mm air gap standoff)"
 		(exclude_from_sim no)
-		(at 88.38 100.65 0)
+		(at 91.44 100.65 0)
 		(effects
 			(font
-				(size 0.889 0.889)
+				(size 1 1)
 				(italic yes)
 			)
 			(justify left)
@@ -1025,7 +1048,8 @@
 	)
 	(wire
 		(pts
-			(xy 214.63 123.19) (xy 222.25 123.19)
+			(xy 214.63 123.19)
+			(xy 222.25 123.19)
 		)
 		(stroke
 			(width 0)
@@ -1035,7 +1059,8 @@
 	)
 	(wire
 		(pts
-			(xy 86.36 123.19) (xy 114.3 123.19)
+			(xy 86.36 123.19)
+			(xy 114.3 123.19)
 		)
 		(stroke
 			(width 0)
@@ -1045,7 +1070,8 @@
 	)
 	(wire
 		(pts
-			(xy 35.56 62.23) (xy 48.26 62.23)
+			(xy 35.56 62.23)
+			(xy 48.26 62.23)
 		)
 		(stroke
 			(width 0)
@@ -1055,7 +1081,8 @@
 	)
 	(wire
 		(pts
-			(xy 48.26 62.23) (xy 73.66 62.23)
+			(xy 48.26 62.23)
+			(xy 73.66 62.23)
 		)
 		(stroke
 			(width 0)
@@ -1065,7 +1092,8 @@
 	)
 	(wire
 		(pts
-			(xy 73.66 62.23) (xy 114.3 62.23)
+			(xy 73.66 62.23)
+			(xy 114.3 62.23)
 		)
 		(stroke
 			(width 0)
@@ -1075,7 +1103,8 @@
 	)
 	(wire
 		(pts
-			(xy 114.3 62.23) (xy 139.7 62.23)
+			(xy 114.3 62.23)
+			(xy 139.7 62.23)
 		)
 		(stroke
 			(width 0)
@@ -1085,7 +1114,8 @@
 	)
 	(wire
 		(pts
-			(xy 73.66 62.23) (xy 73.66 72.39)
+			(xy 73.66 62.23)
+			(xy 73.66 72.39)
 		)
 		(stroke
 			(width 0)
@@ -1095,7 +1125,8 @@
 	)
 	(wire
 		(pts
-			(xy 114.3 62.23) (xy 114.3 72.39)
+			(xy 114.3 62.23)
+			(xy 114.3 72.39)
 		)
 		(stroke
 			(width 0)
@@ -1105,7 +1136,8 @@
 	)
 	(wire
 		(pts
-			(xy 139.7 62.23) (xy 139.7 135.89)
+			(xy 139.7 62.23)
+			(xy 139.7 135.89)
 		)
 		(stroke
 			(width 0)
@@ -1115,7 +1147,8 @@
 	)
 	(wire
 		(pts
-			(xy 35.56 64.77) (xy 40.64 64.77)
+			(xy 35.56 64.77)
+			(xy 40.64 64.77)
 		)
 		(stroke
 			(width 0)
@@ -1125,7 +1158,8 @@
 	)
 	(wire
 		(pts
-			(xy 40.64 64.77) (xy 40.64 92.71)
+			(xy 40.64 64.77)
+			(xy 40.64 92.71)
 		)
 		(stroke
 			(width 0)
@@ -1135,7 +1169,8 @@
 	)
 	(wire
 		(pts
-			(xy 40.64 92.71) (xy 48.26 92.71)
+			(xy 40.64 92.71)
+			(xy 48.26 92.71)
 		)
 		(stroke
 			(width 0)
@@ -1145,7 +1180,8 @@
 	)
 	(wire
 		(pts
-			(xy 48.26 92.71) (xy 73.66 92.71)
+			(xy 48.26 92.71)
+			(xy 73.66 92.71)
 		)
 		(stroke
 			(width 0)
@@ -1155,7 +1191,8 @@
 	)
 	(wire
 		(pts
-			(xy 73.66 92.71) (xy 86.36 92.71)
+			(xy 73.66 92.71)
+			(xy 86.36 92.71)
 		)
 		(stroke
 			(width 0)
@@ -1165,7 +1202,8 @@
 	)
 	(wire
 		(pts
-			(xy 73.66 82.55) (xy 73.66 92.71)
+			(xy 73.66 82.55)
+			(xy 73.66 92.71)
 		)
 		(stroke
 			(width 0)
@@ -1175,7 +1213,8 @@
 	)
 	(wire
 		(pts
-			(xy 86.36 92.71) (xy 86.36 102.87)
+			(xy 86.36 92.71)
+			(xy 86.36 102.87)
 		)
 		(stroke
 			(width 0)
@@ -1185,7 +1224,8 @@
 	)
 	(wire
 		(pts
-			(xy 160.02 92.71) (xy 160.02 135.89)
+			(xy 160.02 92.71)
+			(xy 160.02 135.89)
 		)
 		(stroke
 			(width 0)
@@ -1195,7 +1235,8 @@
 	)
 	(wire
 		(pts
-			(xy 259.08 64.77) (xy 254 64.77)
+			(xy 259.08 64.77)
+			(xy 254 64.77)
 		)
 		(stroke
 			(width 0)
@@ -1205,7 +1246,8 @@
 	)
 	(wire
 		(pts
-			(xy 254 64.77) (xy 254 92.71)
+			(xy 254 64.77)
+			(xy 254 92.71)
 		)
 		(stroke
 			(width 0)
@@ -1215,7 +1257,8 @@
 	)
 	(wire
 		(pts
-			(xy 259.08 125.73) (xy 254 125.73)
+			(xy 259.08 125.73)
+			(xy 254 125.73)
 		)
 		(stroke
 			(width 0)
@@ -1225,7 +1268,8 @@
 	)
 	(wire
 		(pts
-			(xy 254 125.73) (xy 254 92.71)
+			(xy 254 125.73)
+			(xy 254 92.71)
 		)
 		(stroke
 			(width 0)
@@ -1235,7 +1279,8 @@
 	)
 	(wire
 		(pts
-			(xy 35.56 67.31) (xy 38.1 67.31)
+			(xy 35.56 67.31)
+			(xy 38.1 67.31)
 		)
 		(stroke
 			(width 0)
@@ -1245,7 +1290,8 @@
 	)
 	(wire
 		(pts
-			(xy 38.1 67.31) (xy 38.1 123.19)
+			(xy 38.1 67.31)
+			(xy 38.1 123.19)
 		)
 		(stroke
 			(width 0)
@@ -1255,7 +1301,8 @@
 	)
 	(wire
 		(pts
-			(xy 38.1 123.19) (xy 48.26 123.19)
+			(xy 38.1 123.19)
+			(xy 48.26 123.19)
 		)
 		(stroke
 			(width 0)
@@ -1265,7 +1312,8 @@
 	)
 	(wire
 		(pts
-			(xy 48.26 123.19) (xy 86.36 123.19)
+			(xy 48.26 123.19)
+			(xy 86.36 123.19)
 		)
 		(stroke
 			(width 0)
@@ -1275,7 +1323,8 @@
 	)
 	(wire
 		(pts
-			(xy 114.3 123.19) (xy 180.34 123.19)
+			(xy 114.3 123.19)
+			(xy 180.34 123.19)
 		)
 		(stroke
 			(width 0)
@@ -1285,7 +1334,8 @@
 	)
 	(wire
 		(pts
-			(xy 86.36 113.03) (xy 86.36 123.19)
+			(xy 86.36 113.03)
+			(xy 86.36 123.19)
 		)
 		(stroke
 			(width 0)
@@ -1295,7 +1345,8 @@
 	)
 	(wire
 		(pts
-			(xy 114.3 82.55) (xy 114.3 123.19)
+			(xy 114.3 82.55)
+			(xy 114.3 123.19)
 		)
 		(stroke
 			(width 0)
@@ -1305,7 +1356,8 @@
 	)
 	(wire
 		(pts
-			(xy 180.34 123.19) (xy 180.34 135.89)
+			(xy 180.34 123.19)
+			(xy 180.34 135.89)
 		)
 		(stroke
 			(width 0)
@@ -1315,7 +1367,8 @@
 	)
 	(wire
 		(pts
-			(xy 35.56 158.75) (xy 38.1 158.75)
+			(xy 35.56 158.75)
+			(xy 38.1 158.75)
 		)
 		(stroke
 			(width 0)
@@ -1325,7 +1378,8 @@
 	)
 	(wire
 		(pts
-			(xy 35.56 161.29) (xy 38.1 161.29)
+			(xy 35.56 161.29)
+			(xy 38.1 161.29)
 		)
 		(stroke
 			(width 0)
@@ -1335,7 +1389,8 @@
 	)
 	(wire
 		(pts
-			(xy 35.56 163.83) (xy 38.1 163.83)
+			(xy 35.56 163.83)
+			(xy 38.1 163.83)
 		)
 		(stroke
 			(width 0)
@@ -1345,7 +1400,8 @@
 	)
 	(wire
 		(pts
-			(xy 38.1 158.75) (xy 38.1 161.29)
+			(xy 38.1 158.75)
+			(xy 38.1 161.29)
 		)
 		(stroke
 			(width 0)
@@ -1355,7 +1411,8 @@
 	)
 	(wire
 		(pts
-			(xy 38.1 161.29) (xy 38.1 163.83)
+			(xy 38.1 161.29)
+			(xy 38.1 163.83)
 		)
 		(stroke
 			(width 0)
@@ -1365,7 +1422,8 @@
 	)
 	(wire
 		(pts
-			(xy 38.1 158.75) (xy 48.26 158.75)
+			(xy 38.1 158.75)
+			(xy 48.26 158.75)
 		)
 		(stroke
 			(width 0)
@@ -1375,7 +1433,8 @@
 	)
 	(wire
 		(pts
-			(xy 48.26 158.75) (xy 139.7 158.75)
+			(xy 48.26 158.75)
+			(xy 139.7 158.75)
 		)
 		(stroke
 			(width 0)
@@ -1385,7 +1444,8 @@
 	)
 	(wire
 		(pts
-			(xy 139.7 158.75) (xy 160.02 158.75)
+			(xy 139.7 158.75)
+			(xy 160.02 158.75)
 		)
 		(stroke
 			(width 0)
@@ -1395,7 +1455,8 @@
 	)
 	(wire
 		(pts
-			(xy 160.02 158.75) (xy 180.34 158.75)
+			(xy 160.02 158.75)
+			(xy 180.34 158.75)
 		)
 		(stroke
 			(width 0)
@@ -1405,7 +1466,8 @@
 	)
 	(wire
 		(pts
-			(xy 139.7 146.05) (xy 139.7 158.75)
+			(xy 139.7 146.05)
+			(xy 139.7 158.75)
 		)
 		(stroke
 			(width 0)
@@ -1415,7 +1477,8 @@
 	)
 	(wire
 		(pts
-			(xy 160.02 146.05) (xy 160.02 158.75)
+			(xy 160.02 146.05)
+			(xy 160.02 158.75)
 		)
 		(stroke
 			(width 0)
@@ -1425,7 +1488,8 @@
 	)
 	(wire
 		(pts
-			(xy 180.34 146.05) (xy 180.34 158.75)
+			(xy 180.34 146.05)
+			(xy 180.34 158.75)
 		)
 		(stroke
 			(width 0)
@@ -1435,7 +1499,8 @@
 	)
 	(wire
 		(pts
-			(xy 209.55 62.23) (xy 214.63 62.23)
+			(xy 209.55 62.23)
+			(xy 214.63 62.23)
 		)
 		(stroke
 			(width 0)
@@ -1445,7 +1510,8 @@
 	)
 	(wire
 		(pts
-			(xy 48.26 62.23) (xy 48.26 58.42)
+			(xy 48.26 62.23)
+			(xy 48.26 58.42)
 		)
 		(stroke
 			(width 0)
@@ -1455,7 +1521,8 @@
 	)
 	(wire
 		(pts
-			(xy 48.26 92.71) (xy 48.26 88.9)
+			(xy 48.26 92.71)
+			(xy 48.26 88.9)
 		)
 		(stroke
 			(width 0)
@@ -1465,7 +1532,8 @@
 	)
 	(wire
 		(pts
-			(xy 48.26 123.19) (xy 48.26 119.38)
+			(xy 48.26 123.19)
+			(xy 48.26 119.38)
 		)
 		(stroke
 			(width 0)
@@ -1475,7 +1543,8 @@
 	)
 	(wire
 		(pts
-			(xy 48.26 158.75) (xy 48.26 154.94)
+			(xy 48.26 158.75)
+			(xy 48.26 154.94)
 		)
 		(stroke
 			(width 0)
@@ -1485,7 +1554,8 @@
 	)
 	(wire
 		(pts
-			(xy 214.63 62.23) (xy 214.63 74.93)
+			(xy 214.63 62.23)
+			(xy 214.63 74.93)
 		)
 		(stroke
 			(width 0)
@@ -1495,7 +1565,8 @@
 	)
 	(wire
 		(pts
-			(xy 238.76 62.23) (xy 238.76 74.93)
+			(xy 238.76 62.23)
+			(xy 238.76 74.93)
 		)
 		(stroke
 			(width 0)
@@ -1505,7 +1576,8 @@
 	)
 	(wire
 		(pts
-			(xy 214.63 123.19) (xy 214.63 110.49)
+			(xy 214.63 123.19)
+			(xy 214.63 110.49)
 		)
 		(stroke
 			(width 0)
@@ -1515,7 +1587,8 @@
 	)
 	(wire
 		(pts
-			(xy 238.76 123.19) (xy 238.76 110.49)
+			(xy 238.76 123.19)
+			(xy 238.76 110.49)
 		)
 		(stroke
 			(width 0)
@@ -1525,7 +1598,8 @@
 	)
 	(wire
 		(pts
-			(xy 209.55 123.19) (xy 214.63 123.19)
+			(xy 209.55 123.19)
+			(xy 214.63 123.19)
 		)
 		(stroke
 			(width 0)
@@ -1535,7 +1609,8 @@
 	)
 	(wire
 		(pts
-			(xy 238.76 123.19) (xy 259.08 123.19)
+			(xy 238.76 123.19)
+			(xy 259.08 123.19)
 		)
 		(stroke
 			(width 0)
@@ -1545,7 +1620,8 @@
 	)
 	(wire
 		(pts
-			(xy 86.36 92.71) (xy 160.02 92.71)
+			(xy 86.36 92.71)
+			(xy 160.02 92.71)
 		)
 		(stroke
 			(width 0)
@@ -1555,7 +1631,8 @@
 	)
 	(wire
 		(pts
-			(xy 180.34 123.19) (xy 201.93 123.19)
+			(xy 180.34 123.19)
+			(xy 201.93 123.19)
 		)
 		(stroke
 			(width 0)
@@ -1565,7 +1642,8 @@
 	)
 	(wire
 		(pts
-			(xy 238.76 62.23) (xy 259.08 62.23)
+			(xy 238.76 62.23)
+			(xy 259.08 62.23)
 		)
 		(stroke
 			(width 0)
@@ -1575,7 +1653,8 @@
 	)
 	(wire
 		(pts
-			(xy 214.63 62.23) (xy 220.98 62.23)
+			(xy 214.63 62.23)
+			(xy 220.98 62.23)
 		)
 		(stroke
 			(width 0)
@@ -1585,7 +1664,8 @@
 	)
 	(wire
 		(pts
-			(xy 139.7 62.23) (xy 201.93 62.23)
+			(xy 139.7 62.23)
+			(xy 201.93 62.23)
 		)
 		(stroke
 			(width 0)
@@ -1595,7 +1675,8 @@
 	)
 	(wire
 		(pts
-			(xy 228.6 62.23) (xy 238.76 62.23)
+			(xy 228.6 62.23)
+			(xy 238.76 62.23)
 		)
 		(stroke
 			(width 0)
@@ -1605,7 +1686,8 @@
 	)
 	(wire
 		(pts
-			(xy 160.02 92.71) (xy 254 92.71)
+			(xy 160.02 92.71)
+			(xy 254 92.71)
 		)
 		(stroke
 			(width 0)
@@ -1615,7 +1697,8 @@
 	)
 	(wire
 		(pts
-			(xy 229.87 123.19) (xy 238.76 123.19)
+			(xy 229.87 123.19)
+			(xy 238.76 123.19)
 		)
 		(stroke
 			(width 0)
@@ -1788,7 +1871,7 @@
 		)
 	)
 	(symbol
-		(lib_id "Connector_Generic:Conn_01x02")
+		(lib_id "DogFence:Conn_01x02")
 		(at 264.16 123.19 0)
 		(unit 1)
 		(exclude_from_sim no)
@@ -1815,7 +1898,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal"
+		(property "Manufacturer" "Cixi Kefa Elec"
 			(at 264.16 123.19 0)
 			(effects
 				(font
@@ -1824,7 +1907,16 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "~"
+		(property "Footprint" "DogFence:KF129_5.08_2P_LED_C"
+			(at 264.16 123.19 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "https://www.lcsc.com/datasheet/C475092.pdf"
 			(at 264.16 123.19 0)
 			(effects
 				(font
@@ -1876,7 +1968,7 @@
 		)
 	)
 	(symbol
-		(lib_id "Connector_Generic:Conn_01x03")
+		(lib_id "DogFence:Conn_01x03")
 		(at 30.48 62.23 0)
 		(mirror y)
 		(unit 1)
@@ -1902,7 +1994,7 @@
 				)
 			)
 		)
-		(property "Footprint" "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-3-7.62_1x03_P7.62mm_Horizontal"
+		(property "Manufacturer" "Cixi Kefa Elec"
 			(at 30.48 62.23 0)
 			(effects
 				(font
@@ -1911,7 +2003,16 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "~"
+		(property "Footprint" "DogFence:KF128_7.62_3P_Input"
+			(at 30.48 62.23 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "https://www.lcsc.com/datasheet/C474957.pdf"
 			(at 30.48 62.23 0)
 			(effects
 				(font
@@ -1966,11 +2067,11 @@
 		)
 	)
 	(symbol
-		(lib_id "Mechanical:MountingHole")
+		(lib_id "DogFence:MountingHole")
 		(at 53.34 29.21 0)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(uuid "3ca7d026-d41a-4e80-bdb3-544feb869f08")
@@ -1983,7 +2084,7 @@
 				)
 			)
 		)
-		(property "Value" "3.2mm M3"
+		(property "Value" "MountingHole_3.2mm"
 			(at 53.34 33.02 0)
 			(effects
 				(font
@@ -1991,7 +2092,7 @@
 				)
 			)
 		)
-		(property "Footprint" "MountingHole:MountingHole_3.2mm_M3"
+		(property "Footprint" "DogFence:MountingHole_3.2mm"
 			(at 53.34 29.21 0)
 			(effects
 				(font
@@ -2026,11 +2127,11 @@
 		)
 	)
 	(symbol
-		(lib_id "Mechanical:MountingHole")
+		(lib_id "DogFence:MountingHole")
 		(at 88.9 29.21 0)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(uuid "44c9f1d7-5309-42d2-8fb0-7df3af568e55")
@@ -2043,7 +2144,7 @@
 				)
 			)
 		)
-		(property "Value" "3.2mm M3"
+		(property "Value" "MountingHole_3.2mm"
 			(at 88.9 33.02 0)
 			(effects
 				(font
@@ -2051,7 +2152,7 @@
 				)
 			)
 		)
-		(property "Footprint" "MountingHole:MountingHole_3.2mm_M3"
+		(property "Footprint" "DogFence:MountingHole_3.2mm"
 			(at 88.9 29.21 0)
 			(effects
 				(font
@@ -2086,7 +2187,7 @@
 		)
 	)
 	(symbol
-		(lib_id "Connector_Generic:Conn_01x02")
+		(lib_id "DogFence:Conn_01x02")
 		(at 264.16 62.23 0)
 		(unit 1)
 		(exclude_from_sim no)
@@ -2113,7 +2214,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal"
+		(property "Manufacturer" "Cixi Kefa Elec"
 			(at 264.16 62.23 0)
 			(effects
 				(font
@@ -2122,7 +2223,16 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "~"
+		(property "Footprint" "DogFence:KF129_5.08_2P_LED_A"
+			(at 264.16 62.23 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "https://www.lcsc.com/datasheet/C475092.pdf"
 			(at 264.16 62.23 0)
 			(effects
 				(font
@@ -2174,7 +2284,7 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:R")
+		(lib_id "DogFence:R")
 		(at 205.74 62.23 90)
 		(unit 1)
 		(exclude_from_sim no)
@@ -2199,7 +2309,16 @@
 				)
 			)
 		)
-		(property "Footprint" "Resistor_THT:R_Axial_DIN0414_L11.9mm_D4.5mm_P15.24mm_Horizontal"
+		(property "Manufacturer" "Vishay Intertech"
+			(at 205.74 62.23 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Footprint" "DogFence:MBE0414_P15.24mm"
 			(at 205.74 62.23 90)
 			(effects
 				(font
@@ -2208,7 +2327,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "~"
+		(property "Datasheet" "https://www.vishay.com/docs/28766/mbxsma.pdf"
 			(at 205.74 62.23 0)
 			(effects
 				(font
@@ -2259,7 +2378,7 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:GDT")
+		(lib_id "DogFence:GDT")
 		(at 160.02 140.97 270)
 		(unit 1)
 		(exclude_from_sim no)
@@ -2286,7 +2405,16 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Resistor_THT:R_Axial_DIN0617_L17.0mm_D6.0mm_P15.24mm_Horizontal"
+		(property "Manufacturer" "Ruilon"
+			(at 160.02 140.97 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Footprint" "DogFence:2R470TD-8_P15.24mm"
 			(at 160.02 140.97 90)
 			(effects
 				(font
@@ -2295,7 +2423,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "~"
+		(property "Datasheet" "https://www.lcsc.com/datasheet/C2836978.pdf"
 			(at 160.02 140.97 0)
 			(effects
 				(font
@@ -2346,7 +2474,7 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:GDT")
+		(lib_id "DogFence:GDT")
 		(at 139.7 140.97 270)
 		(unit 1)
 		(exclude_from_sim no)
@@ -2373,7 +2501,16 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Resistor_THT:R_Axial_DIN0617_L17.0mm_D6.0mm_P15.24mm_Horizontal"
+		(property "Manufacturer" "Ruilon"
+			(at 139.7 140.97 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Footprint" "DogFence:2R470TD-8_P15.24mm"
 			(at 139.7 140.97 90)
 			(effects
 				(font
@@ -2382,7 +2519,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "~"
+		(property "Datasheet" "https://www.lcsc.com/datasheet/C2836978.pdf"
 			(at 139.7 140.97 0)
 			(effects
 				(font
@@ -2433,7 +2570,7 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:GDT")
+		(lib_id "DogFence:GDT")
 		(at 114.3 77.47 270)
 		(unit 1)
 		(exclude_from_sim no)
@@ -2460,7 +2597,16 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Resistor_THT:R_Axial_DIN0617_L17.0mm_D6.0mm_P15.24mm_Horizontal"
+		(property "Manufacturer" "Bencent"
+			(at 114.3 77.47 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Footprint" "DogFence:B5G470L_P15.24mm_NS_Overpass"
 			(at 114.3 77.47 90)
 			(effects
 				(font
@@ -2469,7 +2615,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "~"
+		(property "Datasheet" "https://www.lcsc.com/datasheet/C5337217.pdf"
 			(at 114.3 77.47 0)
 			(effects
 				(font
@@ -2520,7 +2666,7 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:D")
+		(lib_id "DogFence:D_A_Left_K_Right")
 		(at 224.79 62.23 0)
 		(unit 1)
 		(exclude_from_sim no)
@@ -2545,7 +2691,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Diode_THT:D_DO-41_SOD81_P10.16mm_Horizontal"
+		(property "Manufacturer" "onsemi"
 			(at 224.79 62.23 0)
 			(effects
 				(font
@@ -2554,7 +2700,16 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "~"
+		(property "Footprint" "DogFence:1N4007G_P10.16mm_K_Right"
+			(at 224.79 62.23 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "https://www.onsemi.com/pdf/datasheet/1n4001-d.pdf"
 			(at 224.79 62.23 0)
 			(effects
 				(font
@@ -2605,7 +2760,7 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:GDT")
+		(lib_id "DogFence:GDT")
 		(at 180.34 140.97 270)
 		(unit 1)
 		(exclude_from_sim no)
@@ -2632,7 +2787,16 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Resistor_THT:R_Axial_DIN0617_L17.0mm_D6.0mm_P15.24mm_Horizontal"
+		(property "Manufacturer" "Ruilon"
+			(at 180.34 140.97 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Footprint" "DogFence:2R470TD-8_P15.24mm"
 			(at 180.34 140.97 90)
 			(effects
 				(font
@@ -2641,7 +2805,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "~"
+		(property "Datasheet" "https://www.lcsc.com/datasheet/C2836978.pdf"
 			(at 180.34 140.97 0)
 			(effects
 				(font
@@ -2692,11 +2856,11 @@
 		)
 	)
 	(symbol
-		(lib_id "Mechanical:MountingHole")
+		(lib_id "DogFence:MountingHole")
 		(at 71.12 29.21 0)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(uuid "a2422d99-59c6-40ac-ae56-e0cad817acf8")
@@ -2709,7 +2873,7 @@
 				)
 			)
 		)
-		(property "Value" "3.2mm M3"
+		(property "Value" "MountingHole_3.2mm"
 			(at 71.12 33.02 0)
 			(effects
 				(font
@@ -2717,7 +2881,7 @@
 				)
 			)
 		)
-		(property "Footprint" "MountingHole:MountingHole_3.2mm_M3"
+		(property "Footprint" "DogFence:MountingHole_3.2mm"
 			(at 71.12 29.21 0)
 			(effects
 				(font
@@ -2752,7 +2916,7 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:GDT")
+		(lib_id "DogFence:GDT")
 		(at 73.66 77.47 270)
 		(unit 1)
 		(exclude_from_sim no)
@@ -2779,7 +2943,16 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "GDT_SMD:GDT_SMD_5.0x5.0mm"
+		(property "Manufacturer" "Ruilon"
+			(at 73.66 77.47 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Footprint" "DogFence:SMD5050-470NA"
 			(at 73.66 77.47 90)
 			(effects
 				(font
@@ -2788,7 +2961,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "~"
+		(property "Datasheet" "https://www.lcsc.com/datasheet/C39692533.pdf"
 			(at 73.66 77.47 0)
 			(effects
 				(font
@@ -2839,7 +3012,7 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:D")
+		(lib_id "DogFence:D_A_Left_K_Right")
 		(at 226.06 123.19 0)
 		(unit 1)
 		(exclude_from_sim no)
@@ -2864,7 +3037,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Diode_THT:D_DO-41_SOD81_P10.16mm_Horizontal"
+		(property "Manufacturer" "onsemi"
 			(at 226.06 123.19 0)
 			(effects
 				(font
@@ -2873,7 +3046,16 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "~"
+		(property "Footprint" "DogFence:1N4007G_P10.16mm_K_Right"
+			(at 226.06 123.19 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "https://www.onsemi.com/pdf/datasheet/1n4001-d.pdf"
 			(at 226.06 123.19 0)
 			(effects
 				(font
@@ -2924,7 +3106,7 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:GDT")
+		(lib_id "DogFence:GDT")
 		(at 86.36 107.95 270)
 		(unit 1)
 		(exclude_from_sim no)
@@ -2951,7 +3133,16 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "GDT_SMD:GDT_SMD_5.0x5.0mm"
+		(property "Manufacturer" "Ruilon"
+			(at 86.36 107.95 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Footprint" "DogFence:SMD5050-470NA"
 			(at 86.36 107.95 90)
 			(effects
 				(font
@@ -2960,7 +3151,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "~"
+		(property "Datasheet" "https://www.lcsc.com/datasheet/C39692533.pdf"
 			(at 86.36 107.95 0)
 			(effects
 				(font
@@ -3011,7 +3202,7 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:R")
+		(lib_id "DogFence:R")
 		(at 205.74 123.19 90)
 		(unit 1)
 		(exclude_from_sim no)
@@ -3036,7 +3227,16 @@
 				)
 			)
 		)
-		(property "Footprint" "Resistor_THT:R_Axial_DIN0414_L11.9mm_D4.5mm_P15.24mm_Horizontal"
+		(property "Manufacturer" "Vishay Intertech"
+			(at 205.74 123.19 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Footprint" "DogFence:MBE0414_P15.24mm"
 			(at 205.74 123.19 90)
 			(effects
 				(font
@@ -3045,7 +3245,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "~"
+		(property "Datasheet" "https://www.vishay.com/docs/28766/mbxsma.pdf"
 			(at 205.74 123.19 0)
 			(effects
 				(font
@@ -3096,11 +3296,11 @@
 		)
 	)
 	(symbol
-		(lib_id "Mechanical:MountingHole")
+		(lib_id "DogFence:MountingHole")
 		(at 35.56 29.21 0)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(uuid "d1cdf22e-27b5-4f5e-a4a8-469e939b72be")
@@ -3113,7 +3313,7 @@
 				)
 			)
 		)
-		(property "Value" "3.2mm M3"
+		(property "Value" "MountingHole_3.2mm"
 			(at 35.56 33.02 0)
 			(effects
 				(font
@@ -3121,7 +3321,7 @@
 				)
 			)
 		)
-		(property "Footprint" "MountingHole:MountingHole_3.2mm_M3"
+		(property "Footprint" "DogFence:MountingHole_3.2mm"
 			(at 35.56 29.21 0)
 			(effects
 				(font
@@ -3156,7 +3356,7 @@
 		)
 	)
 	(symbol
-		(lib_id "Connector_Generic:Conn_01x03")
+		(lib_id "DogFence:Conn_01x03")
 		(at 30.48 158.75 0)
 		(mirror y)
 		(unit 1)
@@ -3174,7 +3374,7 @@
 				)
 			)
 		)
-		(property "Value" "KF128-7.62-3P (Ground Rod)"
+		(property "Value" "KF128-7.62-3P"
 			(at 30.48 152.67 0)
 			(effects
 				(font
@@ -3182,7 +3382,7 @@
 				)
 			)
 		)
-		(property "Footprint" "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-3-7.62_1x03_P7.62mm_Horizontal"
+		(property "Manufacturer" "Cixi Kefa Elec"
 			(at 30.48 158.75 0)
 			(effects
 				(font
@@ -3191,7 +3391,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "~"
+		(property "Footprint" "DogFence:KF128_7.62_3P_Earth"
 			(at 30.48 158.75 0)
 			(effects
 				(font
@@ -3200,7 +3400,16 @@
 				(hide yes)
 			)
 		)
-		(property "Description" "To Ground Rod (3 Pins Paralleled for 72A Redundancy)"
+		(property "Datasheet" "https://www.lcsc.com/datasheet/C474957.pdf"
+			(at 30.48 158.75 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Three pins on EARTH; connection per approved site bonding design, no 72A assembly rating"
 			(at 30.48 158.75 0)
 			(effects
 				(font

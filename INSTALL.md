@@ -1,370 +1,167 @@
-# Dog Fence Indicator & Surge Protection System (v1.1.0)
-**Comprehensive End-to-End Installation & Field Manual**
+# Installation and Operation
 
----
+**Draft revision: 1.2.0-dev. Engineering and release hold.**
 
-## 1. System Overview & Architecture
+This manual describes the agreed installation and operating requirements, not an approved or qualified hardware release. [REMEDIATION.md](REMEDIATION.md) controls settled requirements, the live checklist, and [release gates A/B/C](REMEDIATION.md#release-gates). [pcb/ELECTRICAL.md](pcb/ELECTRICAL.md) records the implemented DC model and unresolved design decisions; **no new LED reversal/pulse protection or powered-GDT shutdown circuit is selected or fitted**. File checks and documentation do not close C4 (LED reversal), C5 (fault/follow-current coordination), continuous thermal safety, or site qualification. Keep the engineering publication holds and do not install this draft as qualified hardware.
 
-This manual covers the complete workshop pre-assembly, field installation, shed switchboard wiring, testing, and marine-grade gel potting for the **4km perimeter dog containment fence**.
+Use [ACCEPTANCE.md](ACCEPTANCE.md) for controlled prototype qualification and commissioning records, and [RISKS.md](RISKS.md) for limitations. Do not roll out an unqualified design or rely on it for containment or lightning protection.
 
-```
-                           [ CENTRAL SHED SWITCHBOARD ]
-           ┌────────────────────────────────────────────────────────┐
-           │  • DogWatch SmartFence Transmitter (T1, T2)            │
-           │  • 36V DC Diagnostic Power Supply (Mean Well)          │
-           │  • Phoenix Contact UK 5-HESILED 60 (2A Fast-Blow Fuse) │
-           │  • 4PDT Heavy-Duty Changeover Switch (Center-Off)      │
-           └───────────────────────────┬────────────────────────────┘
-                                       │
-                  ┌────────────────────┴────────────────────┐
-                  ▼                                         ▼
-         [ Loop Start: A, B, C ]                   [ Loop Return: A, B, C ]
-                  │                                         │
-                  └───────────────────┬─────────────────────┘
-                                      │
-               4km 3-Core 2.5mm² Cable Loop (Effective Area: 7.5mm², R ≈ 9.3 Ω)
-                                      │
-    ┌─────────────────────────────────┴─────────────────────────────────┐
-    │                                                                   │
-    ▼ (Every 100m)                                                      ▼ (At 0m, 1km, 2km, 3km, 4km)
-[ 35× STANDARD MILESTONES ]                                 [ 5× SURGE & GROUNDING MILESTONES ]
-• WISKA COMBI 308 Enclosure                                 • WISKA COMBI 308 Enclosure
-• Dog Fence PCB (63×56mm, 2 oz Cu, ENIG)                    • Dog Fence PCB (63×56mm, 2 oz Cu, ENIG)
-• 2× APEM IP67 Green LEDs (Wires A & C)                     • 2× APEM IP67 Green LEDs (Wires A & C)
-• 3× WAGO 221-613 Lever Splices                             • 3× WAGO 221-613 Lever Splices
-• Potted with WISKA MP0100 Silicone Gel                     • Dual 2.5mm² Earth Runs into J_EARTH
-                                                            • 5/8" UL 467 Copper-Bonded Ground Rod
-                                                            • Potted with WISKA MP0100 Silicone Gel
+## System Layout
+
+- Install **41 stations at 0, 100, ..., 4000 m**, with one board and two external LEDs per station: **82 LEDs and 40 diagnostic spans**. The 0 m and 4000 m stations are separate stations even though both cable ends reach the shed.
+- Retain the five earth-connected station locations at 0, 1000, 2000, 3000, and 4000 m, subject to the accepted earthing design. This leaves **36 standard stations**. Five earth-connected stations do not imply five independent earth electrodes.
+- Preserve the WAGO through-splice/PCB-tap arrangement. Use three WAGO 221-613 splices and four supports per station, giving 123 splices and 164 supports before prototype/spare allowances. Required quantities are not evidence of purchases; reconcile the recorded 80-LED purchase and other inventory in [MATERIALS.md](MATERIALS.md).
+- The first order is five fully assembled prototypes, with no field PCB soldering. Retain an unpotted reference and qualify the assembly before preparing the perimeter batch; passing basic tests on five boards is not field-release approval.
+
+Each core has its own through-splice. Do not join different cores at a station:
+
+```text
+Incoming A ---- WAGO A ---- Outgoing A
+                  |
+                J_IN A
+
+Incoming B ---- WAGO B ---- Outgoing B
+                  |
+                J_IN B
+
+Incoming C ---- WAGO C ---- Outgoing C
+                  |
+                J_IN C
 ```
 
----
+At the two shed-end stations, the corresponding hub lead occupies the end connection. Normal perimeter current follows the cable and WAGO splices, not a series path through every PCB. Each PCB takes its local indicator current; surge current through a board is a separate qualification case.
 
-## 2. Workshop Pre-Assembly Phase (Bench Setup)
+## Safety First
 
-Perform these steps in a clean workshop to assemble all 40 junction boxes before heading into the field.
+- **TEST and OFF disable the RF fence.** Secure animals using independent containment before selecting either mode, opening a box, or testing the transmitter. Do not use an animal as a test receiver. Provide clear hub mode indication and an operator reminder to restore RUN.
+- OFF is ordinary hub disconnection, **not demonstrated lightning isolation or safe maintenance isolation**. Long outdoor conductors can acquire dangerous induced voltage even with local supplies off. Do not handle the fence, earth connections, or test equipment during electrical storms.
+- Before wiring or resistance checks, isolate the transmitter, TEST PSU, their mains feeds and every battery/backup source using the accepted safe-isolation procedure. Prevent reconnection, allow stored energy to discharge, and verify absence of voltage before touching terminals, using a suitable instrument and a check-before/check-after procedure. Then disconnect all six boundary ends from the hub and keep them individually separated for the work/checks. Coordinate isolation of nearby energizers that could couple into the circuit before handling field conductors. A switch label or fuse-holder lamp is not an isolation test.
+- A qualified installer must design and install the mains enclosure, protective earth (PE), supply protection, bonding, electrode arrangements, and transmitter protectors to applicable Isle of Man/regional and OEM requirements. Do not copy US outlet-faceplate grounding instructions into this installation.
+- Retain the actual DogWatch transmitter's required protector(s) and obtain regional OEM approval for this nonstandard boundary configuration. The station boards are not replacements for the OEM protection. A nominal 36 V supply is not permission to touch wet or surge-exposed wiring.
 
-```
-       [ STEP 1: LID PREPARATION ]                 [ STEP 2: BASE & PCB PREPARATION ]
-       ┌─────────────────────────┐                 ┌─────────────────────────────────┐
-       │   (O) LED A   (O) LED C │                 │  [Essentra 9.5mm Standoffs]     │
-       │    ▲           ▲        │                 │  Snapped to 4 PCB Corners       │
-       │    └─ 10mm ────┘        │                 │                │                │
-       │       Holes             │                 │  Wipe Box Base with IPA & Stick │
-       └─────────────────────────┘                 └─────────────────────────────────┘
-```
+## Materials and Site
 
-### Step 2.1: Drill LED Holes in the WISKA 308 Lids
-1. Mark two drilling centers on the faceplate of the **WISKA COMBI 308** lid (spaced $\approx 35\text{--}40\text{ mm}$ apart).
-2. Using a **10mm step drill bit** (or 10mm hole punch), drill clean, deburred 10.0mm holes.
-3. Insert the [APEM Q10F5SXXSG02E](MATERIALS.md) LEDs (2V Raw Version):
-   * Ensure the **black nitrile O-ring** is positioned on the outside face of the lid.
-   * From the underside of the lid, install the lock washer and hex nut.
-   * Tighten the nut securely ($1.5\text{--}2.0\text{ Nm}$) to compress the O-ring for an IP67 seal.
+| Item | Installation requirement / unresolved evidence |
+| :--- | :--- |
+| Indicators | Purchased baseline **APEM Q10F5SXXSG02E**, the **no-internal-resistor** option. Published family limits are **20 mA maximum forward current and 5 V maximum reverse voltage**, subject to applicable temperature/pulse conditions. `02` does not mean regulated 2 V operation. Use the qualified board drive, not a direct 36 V connection. |
+| Boundary cable | Likely Oceanflex **CM03/05.100**, supplier code **P01018**, but confirm the actual reel/markings. The listing describes three tinned-copper 2.5 mm^2 cores, 35/0.30 mm strands per core, 7.3 mm maximum outside diameter, **60 V maximum**, and **-15 to +70 degrees C** complete-cable working temperature. Obtain maximum conductor resistance and actual core colours. |
+| Core identification | Identify every core end-to-end and label it A, B, or C at every termination. Do not infer colours from an incomplete supplier colour table. **GREEN/YELLOW MUST NOT BE USED AS AN ACTIVE A, B, OR C CONDUCTOR**, including by re-sleeving it. If the purchased cable cannot provide three permissible active cores, stop for an approved cable solution. |
+| Cable exposure | The 105-degree ISO 6722 reference is for the cores, not the complete cable. Obtain evidence for exposed-weather/UV service, wet conduit, and the required insulation/impulse performance. The 60 V operating rating neither establishes surge withstand nor proves failure at every brief higher voltage. Do not assume armoured, arctic, or mains cable properties. |
+| Enclosure | WISKA **COMBI 308**, external dimensions 85 x 85 x 51 mm. Internal usable space must be measured with the actual assembly. Its published IP66 membrane/IP67 specified-gland arrangements are not automatic ratings for a drilled, wired, gel-filled assembly. No continuous submersion is intended. |
+| Supports and gel | Essentra **LCBSBM-6-01A-RT** supports and WISKA **MP0100** gel. Obtain the exact support tolerance/retention drawing and the supplied gel's technical/process and safety documents. Do not substitute a related gel formulation's instructions. |
+| Environment | Isle of Man, less than 1 km from the coast, with frequent rain, salt and possible condensation. Observed outdoor ambient is approximately **-10 to +30 degrees C**; some boxes receive direct sun. These observations are not lifetime extremes or maximum internal temperatures. Gel, cable, seals, adhesives and electronics need a qualified solar/thermal envelope. |
 
-### Step 2.2: Mount PCB Inside the Enclosure
-1. Clean the flat interior floor of the WISKA box using an **Isopropyl Alcohol (IPA) wipe** to remove all plastic mold-release oils. Allow 30 seconds to dry.
-2. Take the manufactured **Dog Fence PCB** and snap four [Essentra LCBSBM-6-01A-RT](MATERIALS.md) (9.5mm height) standoffs into the $3.2\text{ mm}$ mounting holes ($H_1, H_2, H_3, H_4$).
-3. Peel the protective release film from all four adhesive pads simultaneously.
-4. Position the PCB centrally on the enclosure floor with terminal blocks oriented as follows:
-   * `J_IN` (3-pin 7.62mm) facing **Left** (toward incoming pigtails).
-   * `J_LED_A` & `J_LED_C` (2-pin 5.08mm) facing **Top** and **Bottom** edges (toward LED lid leads).
-   * `J_EARTH` (3-pin 7.62mm) facing **Right** (mirrored across from J_IN).
-5. Press down firmly for 5 seconds to set the high-tack adhesive.
+Route the cable mostly 0.3-1.0 m above ground on timber fencing, with abrasion protection, suitable supports, slack for movement, and no electrical connection to the horizontal supporting metal wires. The supporting fence is not energized. Plastic conduit under driveways/gates can become wet and is not electromagnetic shielding; verify cable suitability, mechanical protection, drainage arrangements, and utility locations before ground work.
 
-> [!NOTE]
-> **Adhesive Longevity:** Standard self-adhesive pads inevitably fail over 20+ years outdoors due to heat cycling and humidity. However, their only job here is to temporarily hold the PCB off the floor for the 24 hours it takes the WISKA silicone potting gel to cure (see Step 6). Once cured, the solid silicone block permanently suspends the PCB, making the long-term failure of the adhesive completely irrelevant!
+A separate energized cattle wire may run **at least 0.5 m away for up to 300 m in parallel**. Maintain clearance with allowance for wind, sag and animal movement, and increase separation where practical. This is the agreed repetitive-pulse qualification exposure, **not proof of interference-safe clearance**. Record the actual energizer and routing for RUN and TEST qualification.
 
-### Step 2.3: Pre-Wire Internal PCB Leads
-1. **LED Flying Leads:**
-   * Wire **LED A** leads into `J_LED_A`: Red/Anode ($+$) to **Pad 1 (`+` Silkscreen)**; Black/Cathode ($-$) to **Pad 2 (`-` Silkscreen)**.
-   * Wire **LED C** leads into `J_LED_C`: Red/Anode ($+$) to **Pad 1 (`+` Silkscreen)**; Black/Cathode ($-$) to **Pad 2 (`-` Silkscreen)**.
-   * *(Note: the two LED connectors are mirror-placed on the board so one faces each outward side; silkscreen `+`/`-` remains the authoritative guide.)*
-2. **Pigtail Tap Wires:**
-   * Strip three $\approx 12\text{ cm}$ lengths of $2.5\text{ mm}^2$ wire (Brown = A, Blue = B, Green-Yellow or Black = C).
-   * Insert one end of each pigtail into `J_IN` on the PCB (heavy-duty 7.62mm pitch rising cage terminal):
-     * Pin 1 = **Wire A**
-     * Pin 2 = **Wire B**
-     * Pin 3 = **Wire C**
-   * Tighten the rising cage screws firmly with a 3.0mm flathead screwdriver.
-3. **Pre-Attach WAGO Connectors:**
-   * Snap the free end of Pigtail A into Port 1 of a [WAGO 221-613](MATERIALS.md).
-   * Snap Pigtail B into Port 1 of a second WAGO `221-613`.
-   * Snap Pigtail C into Port 1 of a third WAGO `221-613`.
-   * Leave Ports 2 & 3 open for the incoming/outgoing 3-core cables in the field.
+## Hub Wiring
 
----
+### Functional Matrix
 
-## 3. Field Installation of Milestone Junction Boxes
+The following is a **functional contact matrix, not a physical terminal-number diagram**. T1 and T2 mean the transmitter's two boundary connections through the required OEM protector arrangement. They do not authorize bypassing those protectors.
 
-```
-          [ WISKA COMBI 308 MOUNTED ON POST (0.8m–1.2m Height) ]
- ┌───────────────────────────────────────────────────────────────────────────┐
- │                                                                           │
- │  INCOMING 3-CORE CABLE                              OUTGOING 3-CORE CABLE │
- │  (2.5mm² Outdoor SWA/Tough PVC)                     (2.5mm² Outdoor Cable)│
- │          │                                                    │           │
- │          │   ┌────────────────────────────────────────────┐   │           │
- │          └───┤ WAGO 221-613 (Core A In + Out + Pigtail A) ├───┘           │
- │              ├────────────────────────────────────────────┤               │
- │              │ WAGO 221-613 (Core B In + Out + Pigtail B) │               │
- │              ├────────────────────────────────────────────┤               │
- │              │ WAGO 221-613 (Core C In + Out + Pigtail C) │               │
- │              └─────────────────────┬──────────────────────┘               │
- │                                    │ (3x Pigtails)                        │
- │                                    ▼                                      │
- │                            ┌──────────────┐                               │
- │                            │ J_IN (A,B,C) │                               │
- │                            │  (7.62mm P)  │      ┌───────────┐            │
- │                            │              │ ───> │  J_LED_A  │ ──> LED A  │
- │                            │  PCB BOARD   │      └───────────┘     (IP67) │
- │                            │  (63 x 56mm) │                               │
- │                            │              │      ┌───────────┐            │
- │                            │   J_EARTH    │ ───> │  J_LED_C  │ ──> LED C  │
- │                            │  (7.62mm P)  │      └───────────┘     (IP67) │
- │                            └──────┬───────┘                               │
- │                                   │ (3-Pin Mirrored Earth Block)          │
- └───────────────────────────────────┼───────────────────────────────────────┘
-                                     │ (Redundant Earth Wires)
-                                     ▼ (Only at 5 Surge Boxes: 0, 1k, 2k, 3k, 4k)
-                             [ BRONZE B-CLAMP ]
-                                     │
-                    [ 5/8" UL 467 COPPER-BONDED ROD ]
-                                     │
-                             (Deep Soil Ground)
-```
+| Boundary-cable end | RUN | OFF | TEST |
+| :--- | :--- | :--- | :--- |
+| Start A | Transmitter T1 | Isolated | +36 V |
+| Start B | Transmitter T1 | Isolated | DC negative |
+| Start C | Transmitter T1 | Isolated | +36 V |
+| End A | Transmitter T2 | Isolated | Isolated |
+| End B | Transmitter T2 | Isolated | Isolated |
+| End C | Transmitter T2 | Isolated | Isolated |
 
-### Step 3.1: Enclosure Mounting on Fence Posts
-* **Height:** Mount the box at **$0.8\text{m} \text{ to } 1.2\text{m}$ above ground level** (keeps it clear of weeds/strimmers and places LEDs at eye level).
-* **Fixing:** 
-  * *Timber Posts:* Fasten the snap-on mounting clip to the post using two $4.0\text{ mm} \times 35\text{ mm}$ stainless steel woodscrews, then click the box into the bracket. Alternatively, drive 4 screws through the corner holes.
-  * *Metal / Pipe Posts:* Secure with heavy-duty UV-resistant cable ties or stainless steel Jubilee clips through the mounting bracket slots.
-* **Orientation:** Position cable entry ports facing **downward** and faceplate pointing toward the patrol track.
+Use **six independent boundary-end connections**, individually accessible and isolated at the hub in OFF. All three End connections remain **separately isolated in TEST**. Required RUN ties and the TEST positive tie belong on the appropriate **source-side contacts**, never as permanent boundary-side straps. TEST feeds and returns at Start; no additional End return connection is permitted.
 
-### Step 3.2: Cable Entry & Termination
-1. Route the arriving and departing 3-core $2.5\text{ mm}^2$ cables up to the bottom of the box, forming a **$50\text{ mm}$ downward drip loop** so water runs off the cable away from the entry glands.
-2. Strip $\approx 60\text{ mm}$ of the outer cable jacket and strip $13\text{ mm}$ from each core conductor.
-3. Terminate into the three WAGO 221-613 connectors:
-   * **Wire A:** Incoming Core A into Port 2; Outgoing Core A into Port 3.
-   * **Wire B:** Incoming Core B into Port 2; Outgoing Core B into Port 3.
-   * **Wire C:** Incoming Core C into Port 2; Outgoing Core C into Port 3.
-4. Snap all orange levers closed. Verify bare copper is fully seated with no exposed strands.
+The transmitter must be isolated from the TEST source in TEST, and the TEST source isolated from the boundary/transmitter in RUN. Transfer must also preserve isolation: **all old-source connections must break before any new-source connection can make across the entire six-end contact program**, in either direction. Per-pole timing or a centre-off label alone does not establish this global break-before-make requirement.
 
-### Step 3.3: Earth Grounding Installation (Surge Stations Only: 0m, 1km, 2km, 3km, 4km)
-1. Drive the **5/8" UL 467 copper-bonded earth rod** vertically into the soil directly below the milestone post until the top of the rod sits just below ground level (or inside a shallow inspection pit).
-2. Attach the heavy bronze/brass rod-to-cable B-clamp to the top of the rod.
-3. Strip $25\text{ mm}$ from **two or three separate $2.5\text{ mm}^2$ green/yellow earth wires** and clamp them all firmly under the B-clamp for multi-path redundancy.
-4. Route the earth wires into the box through the bottom M20 entry.
-5. Terminate the earth wires directly into the PCB's mirrored 3-pin 7.62mm screw terminal (`J_EARTH`):
-   * Insert the earth conductors into the poles of `J_EARTH` (all 3 poles are internally bridged by the massive 4.5mm 2 oz copper Earth bus).
-   * Tighten all screws firmly.
-   * *(Note: Standard non-surge milestone boxes leave `J_EARTH` unpopulated/empty).*
+### Switch and Supply
 
----
+1. Confirm the actual switch and obtain its manufacturer's contact development, DC load-breaking suitability for the actual circuit, global transfer sequence, mounting details, and applicable insulation conditions. **Kraus & Naimer CA10.A362** is a six-pole centre-off sourcing candidate, not an approved pinout. Its 20 A thermal rating does not prove DC breaking or lightning isolation. Previously purchased switch inventory is not evidence of compliance. Do not assign terminal numbers or energize the hub until the exact program is accepted.
+2. Confirm the PSU nameplate. The user believes the purchased unit is **Mean Well LRS-35-36 (36 V / 1 A / 36 W)**. **LRS-75-36 (36 V / 2.1 A / 75.6 W)** is the preferred capacity-margin candidate, not a confirmed purchase. Both have adjustable output and hiccup overload protection. Set and record only the voltage range authorized by the final electrical/thermal analysis; do not raise it to compensate for poor visibility.
+3. Install the PSU using its actual mounting and ventilation instructions inside a dry, guarded mains enclosure. Do not assume an LRS chassis supply snaps onto DIN rail. A 35 mm rail may carry the compatible fuse holder and other approved rail-mounted parts. Keep mains terminals finger-safe and mains wiring segregated from the field/test wiring as the installer specifies.
+4. Verify the specified **Littelfuse 0217002.MXP, 2 A 217-series fuse**, and **Phoenix Contact UK 5-HESILED 60 / 3004139** holder against supplied items and the final source design. The fuse has published DC interrupting data; its unresolved issue here is clearing coordination with cable-limited faults and PSU hiccup behavior. Do not assume every short clears it, or change its value without analysis. The PSU upgrade does not resolve C5.
+5. With sources and field disconnected, verify the accepted wiring against every cell of the functional matrix. Check that no source, protector connection, test lead, jumper or label creates an unintended field-end tie. Static continuity checks supplement, but do not prove, rated DC breaking or transfer timing. Record the accepted terminal drawing separately once the exact hardware is confirmed.
 
-## 4. Central Shed Switchboard & Hub Installation
+Label the actual detents only after their function is verified; do not assume a particular UP/DOWN orientation:
 
-```
-             ┌───────────────────────────────────────────────────────────┐
-             │            SHED SWITCHBOARD / HUB SCHEMATIC               │
-             └───────────────────────────────────────────────────────────┘
+| Label | Operator meaning |
+| :--- | :--- |
+| **RUN - RF FENCE SELECTED** | Confirm transmitter and receiver operation before relying on containment. |
+| **OFF - SIX ENDS ISOLATED - NO CONTAINMENT** | Neither source connected to the boundary at the hub; not lightning-safe isolation. |
+| **TEST - 36 V CABLE TEST - NO CONTAINMENT** | Independent animal containment required. **RESTORE RUN AFTER TEST.** |
 
-           [ 230V AC Mains ]
-                  │
-                  ▼
-       ┌─────────────────────┐
-       │ 36V DC Power Supply │ (Mean Well NDR-75-36)
-       │    (+V)       (-V)  │
-       └─────┬───────────┬───┘
-             │           │
-    [ Phoenix Contact ]  │
-    [ UK 5-HESILED 60 ]  │
-    [ 2A Fast-Blow Fuse] │
-             │           │
-             ▼           │
-       [ +36V Bus ]      │
-             │           │
-             │           └────────────────────────────────┐
-             │                                            │
-             │   ┌────────────────────────────────────────┼──────────────┐
-             ▼   ▼                                        ▼              ▼
-     ┌─────────────────────────────────────────────────────────────────────────────┐
-     │                      4PDT CHANGEOVER SWITCH (S1)                            │
-     │                                                                             │
-     │  [Pole 1: Start A,C]  [Pole 2: Start B]   [Pole 3: End A,C]   [Pole 4: End B]│
-     │  Pin 1: SmartFence T1 Pin 4: SmartFence T1 Pin 7: SmartFence T2 Pin 10: T2   │
-     │  Pin 2: [Start A + C] Pin 5: [Start B]     Pin 8: [End A + C]   Pin 11: End B│
-     │  Pin 3: +36V DC Fuse  Pin 6: EMPTY (N/C)   Pin 9: EMPTY (N/C)   Pin 12: 0V   │
-     └───────┬───────────────────┬───────────────────┬───────────────────┬─────────┘
-             │                   │                   │                   │
-             ▼                   ▼                   ▼                   ▼
-     [ Start of Cores A,C ] [ Start of Core B ] [ End of Cores A,C ] [ End of Core B ]
-```
+## Workshop Assembly
 
-### Step 4.1: Switchboard Component Mounting
-1. Mount a 35mm DIN rail inside a dry wall-mounted enclosure in the shed.
-2. Snap the **36V DC Power Supply** and **Phoenix Contact `3004139` (UK 5-HESILED 60)** fuse block onto the DIN rail.
-3. Install the **Littelfuse `0217002.MXP` (2A Fast-Blow)** fuse into the fuse holder carrier.
-4. Mount the **4PDT Heavy-Duty Switch** onto the enclosure front panel.
+First dry-fit a complete prototype. Do not drill or prepare all lids until that fit and the process have been accepted.
 
-### Step 4.2: Switchboard Terminal Connections & 4PDT Pinout Matrix
+1. Match each received board to the reviewed revision, BOM and assembly drawing. Inspect workmanship and run the all-five basic checks in [ACCEPTANCE.md](ACCEPTANCE.md). Board outline is nominally 63 x 56 mm with four 3.2 mm mounting holes; actual thickness and hole tolerances must suit the supports. No forcing leads into undersized holes, reaming finished plated holes, or field PCB soldering is allowed.
+2. Check the **Essentra LCBSBM-6-01A-RT** drawing against actual holes and finished board thickness, including fabrication tolerance. The listing's nominal 3.18 mm support hole, 1.57 mm panel and 9.53 mm spacing are not a universal fit guarantee. Verify all four locks engage without board damage or flex. Qualify adhesive retention, surface preparation and cure/dwell conditions on the actual enclosure plastic. Use IPA only if accepted by the material/adhesive instructions, and allow the surface to dry fully. Do not assume cured gel becomes a permanent structural support.
+3. Lay out both lid indicators to suit real viewing angles and internal clearances. The earlier approximately 35-40 mm centre spacing is only a dry-fit starting point. Use the exact APEM cutout tolerance and lid-thickness instructions; the nominal cutout is 10 mm. Deburr without damaging the sealing surface. Install the specified seal, washer and nut in the model's documented order. Published Q10 tightening guidance is **0.20-0.25 Nm, subject to the exact Q10F5SXXSG02E instructions**; use a suitable low-range torque tool and record the instruction revision. Do not over-compress the seal or crack the lid.
+4. Position the board with `J_IN` toward the incoming tap wiring and `J_EARTH` toward the earth wiring. In the controlled board view, `J_IN` opens left, `J_EARTH` right, `J_LED_A` north and `J_LED_C` south. The two LED connectors are intentionally oppositely oriented; verify both `+` and `-` markings against the actual assembly drawing rather than assuming matching rotations.
+5. Trial-fit **all** contents: three WAGO 221-613s, actual incoming/outgoing cable and glands, three pigtails, earth conductors where applicable, supports, both LED bodies, lid seals, plugs, and a suitable terminal screwdriver. Allow cable bend radii, wire strain relief and lid service slack. Close the lid fully and verify no wire or LED body pushes the axial `GDT_AC` bridge down. Preserve its **at least 2.0 mm physical standoff above the PCB** and the earth GDTs' 9.00 mm centre pitch; actual body tolerances still require clearance inspection. Do not rely on solder mask, tape or gel to excuse contact or bad forming.
+6. Prepare labelled A/B/C pigtails, nominally 2.5 mm^2, with lengths determined by the dry-fit; approximately 120-150 mm is a starting allowance, not a prescribed bend geometry. Use a separately identified permissible active conductor for each core. Follow the terminal manufacturers' conductor range, strip length, ferrule policy and screw torque. Do not solder-tin stranded wire ends, put multiple wires in an unapproved clamp, or leave stray/exposed strands.
+7. Connect each pigtail between its own WAGO and the matching `J_IN` **A, B or C** marking. Connect each actual APEM anode to its channel's `+` and cathode to `-`; verify the supplied lead identification rather than relying solely on assumed red/black colours. **The existing series diode does not guarantee safety if an LED or the supply is reversed.** Correct suspect wiring while isolated, not by leaving it powered to see whether it stays dark.
+8. Seat one conductor per WAGO port, close each lever and perform a gentle retention check. The WAGO 221-613 strip marking is the authority (nominally 13 mm); use the PCB terminal's own specification for its end of a pigtail. Record torques, component identities, clearances and photographs before gel makes inspection harder.
 
-Viewed from the **rear (pin / terminal side)** of the 4PDT switch (12 pins arranged in 4 columns of 3):
+## Field Mounting
 
-```
-       [ REAR VIEW OF 4PDT SWITCH TERMINALS (4 COLUMNS × 3 ROWS) ]
-       ┌────────────────────┬────────────────────┬────────────────────┬────────────────────┐
-       │ Column 1 (Pole 1)  │ Column 2 (Pole 2)  │ Column 3 (Pole 3)  │ Column 4 (Pole 4)  │
-┌──────┼────────────────────┼────────────────────┼────────────────────┼────────────────────┤
-│Row 1 │ [ Pin 1 ]          │ [ Pin 4 ]          │ [ Pin 7 ]          │ [ Pin 10 ]         │
-│(RUN) │ SmartFence T1      │ SmartFence T1      │ SmartFence T2      │ SmartFence T2      │
-├──────┼────────────────────┼────────────────────┼────────────────────┼────────────────────┤
-│Row 2 │ [ Pin 2 ] (COMMON) │ [ Pin 5 ] (COMMON) │ [ Pin 8 ] (COMMON) │ [ Pin 11 ] (COMMON)│
-│(COM) │ Start A & Start C  │ Start B            │ End A & End C      │ End B              │
-├──────┼────────────────────┼────────────────────┼────────────────────┼────────────────────┤
-│Row 3 │ [ Pin 3 ]          │ [ Pin 6 ]          │ [ Pin 9 ]          │ [ Pin 12 ]         │
-│(TEST)│ +36V DC (via Fuse) │ EMPTY (N/C)        │ EMPTY (N/C)        │ 0V DC Return (-)   │
-└──────┴────────────────────┴────────────────────┴────────────────────┴────────────────────┘
-```
+1. Label stations by distance, **0 m through 4000 m**, with A/C lens identification and the direction from Start toward End. Orient the lid toward the patrol track at the angles used for the 5 m visibility acceptance test.
+2. Mount boxes raised, typically **0.8-1.2 m above ground** where safe and accessible, away from strimmers, standing water and predictable animal/mechanical damage. Use the enclosure's approved mounting bracket or mounting points. On timber, choose suitable corrosion-resistant fasteners for the post and bracket; on other supports, use an accepted UV/corrosion-resistant mounting method without crushing the enclosure or electrically joining fence conductors to metalwork. Do not make unapproved penetrations through the sealing envelope.
+3. Prefer downward cable entries. Form drip loops below the entries, approximately 50 mm where compatible with the cable's minimum bend radius, so runoff does not lead into the gland. Select each gland by the **measured jacket diameter**, clamping/sealing range, enclosure thread/seal system and exposure, not just by the label M20. Do not assume one ordinary gland seals two cables, or that a conduit fitting seals the cable. Fit approved plugs/seals to unused entries.
+4. Remove only enough jacket for the accepted layout, keeping the jacket under the gland's sealing/strain-relief area. Maintain A-to-A, B-to-B and C-to-C continuity in the three independent WAGO splices. Support the cable externally so the splices, PCB taps and lid leads carry no cable tension. Check every termination before closing the box.
+5. Install earth connections **only to the accepted site drawing**. At the five earth-connected stations, use `J_EARTH`, never an A/B/C terminal. Standard stations leave the external `J_EARTH` connection empty; they have no assured local common-mode discharge path. The three earth terminal positions share a PCB net, but their ratings cannot simply be added and equal surge-current sharing is not established.
 
-| Switch Pin | Connection Target | Wire Spec | Function |
-| :---: | :--- | :---: | :--- |
-| **Pin 1** | DogWatch SmartFence **Terminal 1** (T1) | $2.5\text{ mm}^2$ | RF Drive to Start A & C (RUN mode) |
-| **Pin 4** | Bridge to **Pin 1** (SmartFence T1) | $2.5\text{ mm}^2$ Jumper | RF Drive to Start B (RUN mode) |
-| **Pin 7** | DogWatch SmartFence **Terminal 2** (T2) | $2.5\text{ mm}^2$ | RF Return from End A & C (RUN mode) |
-| **Pin 10**| Bridge to **Pin 7** (SmartFence T2) | $2.5\text{ mm}^2$ Jumper | RF Return from End B (RUN mode) |
-| **Pin 2** | **Start A** AND **Start C** | $2 \times 2.5\text{ mm}^2$ | Start of the 4km Loop (Cores A & C) |
-| **Pin 5** | **Start B** | $2.5\text{ mm}^2$ | Start of the 4km Loop (Core B) |
-| **Pin 8** | **End A** AND **End C** | $2 \times 2.5\text{ mm}^2$ | Far end of the 4km Loop (Cores A & C) |
-| **Pin 11**| **End B** | $2.5\text{ mm}^2$ | Far end of the 4km Loop (Core B) |
-| **Pin 3** | **+36V DC** (From load side of 2A Fuse Block) | $2.5\text{ mm}^2$ | Diagnostic +36V DC Supply (TEST mode) |
-| **Pin 6** | **EMPTY** (Leave disconnected) | - | Isolates Start B during TEST mode |
-| **Pin 9** | **EMPTY** (Leave disconnected) | - | Isolates End A & C during TEST mode |
-| **Pin 12**| **0V DC Return** (Direct to Power Supply `-V`) | $2.5\text{ mm}^2$ | Diagnostic 0V Ground Return (TEST mode) |
+The user's proposal to share local earth between the DogWatch protection and the two shed-end boards must be reviewed against the **actual building PE/electrodes**, regional OEM instructions, and touch/step-potential and bonding requirements. Do not install arbitrary unbonded rods, directly earth a fence core, or assume DC negative should be earth-bonded. Recorded rod/clamp hardware, including 5/8 inch clamp inventory and paired 2.5 mm^2 green/yellow leads, is not approval of electrode placement, conductor sizing or multiwire clamping. The installer must specify compatible clamps, conductor routing and mechanical protection, inspectable connections, and any electrodes/bonds. Check buried services before any electrode or conduit work. Never remove protective earth casually as part of fault diagnosis.
 
-#### Electrician's Pro-Tip: The "Forward Loop" Diagnostic Feed
-This exact wiring achieves a "forward loop" constant-length circuit in TEST Mode. +36V pushes into Start A & C, flows through the milestone LEDs, and continues forward down Wire B to exit at End B. This perfectly balances voltage drop (meaning uniform brightness at all 40 milestones) AND allows you to easily tell *which* core broke during a fault:
-*   **If Wire A/C breaks:** LEDs *before* the break light up; LEDs *after* the break are dark.
-*   **If Wire B breaks:** LEDs *before* the break are dark; LEDs *after* the break light up.
+## Commissioning and Diagnosis
 
-#### Switch Plate Labeling
-Clearly label the 3 switch positions on your control panel / faceplate:
-* **UP:** `FENCE RUN (SMARTFENCE ACTIVE)`
-* **CENTER:** `STORM ISOLATE (ALL DISCONNECTED)`
-* **DOWN:** `CABLE TEST (+36V DIAGNOSTIC)`
+### Optional DMM Checks
 
+These are low-voltage diagnostic checks, not insulation or arrester qualification:
 
----
+1. Secure animals and isolate **all six boundary ends from the hub, transmitter, PSU and every backup source** as described in Safety First. Both physical cable ends are at the shed. Verify de-energization before selecting resistance mode. Do not use resistance mode on RUN or TEST wiring.
+2. Measure **Start A to End A**, then **Start B to End B**, then **Start C to End C**, leaving the other ends separately isolated. Record lead resistance/compensation, instrument range and uncertainty, cable temperature and the commissioning baseline for each core. An ideal **individual 4 km / 2.5 mm^2 copper core is about 28 ohms at 20 degrees C**, not zero and not a three-core parallel-loop reading. Use verified cable resistance/tolerance data and installed connection losses to set actual limits, not an arbitrary tolerance around 28 ohms.
+3. Unexpected or changing readings require sectional investigation. Connected indicator/protection branches can affect measurements; follow the final circuit's measurement procedure and disconnect electronics for cable-only measurements where necessary. These checks aid diagnosis but do not replace LED span localization or rule out every short.
+4. **Never apply a high-voltage insulation tester/megger through connected boards, LEDs, transmitter, protectors or PSU.** Any cable-only insulation test requires all electronics removed from the test circuit and an installer-approved test voltage/procedure appropriate to the actual cable. A DMM-open GDT only shows no detected conduction at that meter's test conditions; it does not prove that the arrester will fire or survive a surge.
 
-## 5. Pre-Potting Electrical Commissioning & Testing
+### Normal Commissioning
 
-**DO NOT pour potting gel until these three verification checks are complete:**
+Complete the controlled [acceptance programme](ACCEPTANCE.md) on the approved prototype configuration before field release. Initial workmanship, dry-fit and normal electrical checks precede potting the selected qualification units; potted thermal/material tests are still required before rollout. Record the final source setting and per-station currents/voltages instead of copying old aggregate-current or uniform-brightness assumptions.
 
-```
-   TEST 1: Loop Resistance Check        TEST 2: DC TEST Mode Illumination     TEST 3: SmartFence RF Collar Check
-   ┌───────────────────────────┐        ┌───────────────────────────────┐     ┌────────────────────────────────┐
-   │ Multimeter on 4km Loop    │        │ Switch to DOWN (TEST MODE)    │     │ Switch to UP (RUN MODE)        │
-   │ Verify R ≈ 9.3 Ω (±2 Ω)   │        │ Verify all 80 LEDs Glow Bright│     │ Walk perimeter with dog collar │
-   └───────────────────────────┘        └───────────────────────────────┘     └────────────────────────────────┘
-```
+In a healthy qualified TEST installation, both indicators should be on at all **41 stations**, including the separate shed-end stations. Same-end feeding creates a brightness/current gradient; the final minimum current must still pass 5 m daylight visibility at real angles. In RUN, verify the actual transmitter, boundary field and receiver behavior with the required protectors fitted. Indicators should not give misleading light in RUN; their darkness is **not** proof that a series diode blocks RF or that the added circuit is transparent. Test the specified cattle-energizer off/on exposure in both modes.
 
-1. **Test 1: DC Continuity & Loop Resistance**
-   * Set switch to **CENTER (OFF)**.
-   * Measure resistance between the Start and End of Wires A, B, and C with a digital multimeter.
-   * Total loop resistance for the 4km run should be **$\approx 9.3\ \Omega$** ($\pm 2\ \Omega$).
-2. **Test 2: Diagnostic TEST Mode (LED Verification)**
-   * Toggle the switch **DOWN (TEST MODE)**.
-   * The 36V power supply will energize. Total supply current should read $\approx \mathbf{1.21\text{ A}}$ (80 LEDs × 15 mA nominal before 4km cable drop).
-   * Walk or drive the 4km perimeter: **Both green LEDs (LED A and LED C) should illuminate at all 40 milestone boxes**. Expect a **progressive brightness gradient** along the run (the voltage-drop from 41.4Ω combined loop resistance distributes across milestones); near-end boxes glow brightest. Fault-finding compares A vs C *pairing* at each box, not absolute brightness.
-   * *If any LED is dark:* Check for reversed flying leads ($+$ and $-$ swapped at `J_LED`) or a loose WAGO lever.
-3. **Test 3: SmartFence RUN Mode (RF Transparency)**
-   * Toggle the switch **UP (RUN MODE)**.
-   * The SmartFence transmitter will engage its $4\text{ kHz}$ or $10.7\text{ kHz}$ carrier.
-   * **All milestone LEDs must remain completely DARK.** (The 1N4007 diodes block the RF signal).
-   * Walk the perimeter with a DogWatch test receiver collar to verify full, uniform boundary activation.
+### Clean-Cut Indications
 
----
+For **one clean damage site** in a span, healthy boards/LEDs/GDTs, and no other inter-core shorts, the required steady-state truth table is:
 
-## 6. Marine-Grade Potting & Gel Encapsulation
+| Cut cores | Before the cut | After the cut |
+| :--- | :--- | :--- |
+| A | Both on | A off, C on |
+| B | Both on | Both off |
+| C | Both on | A on, C off |
+| A + B | Both on | Both off |
+| A + C | Both on | Both off |
+| B + C | Both on | Both off |
+| A + B + C | Both on | Both off |
 
-Once electrical commissioning is 100% verified, encapsulate every junction box for **submersible IP68 marine durability**.
+The aim is the damaged **100 m span**, not exact broken-core classification. B-only and several multi-core cuts have the same indication. All-on indications do not certify freedom from shorts; an A-C short, for example, can create backfeed and mask an open. A failed local LED, loose tap, damaged branch or failed GDT can also mislead the display. An isolated dark station with healthy stations beyond it calls for local inspection, not an automatic conclusion that the preceding cable span is cut.
 
-```
-                  [ TOP M20 PORT 1 ]                      [ TOP M20 PORT 2 ]
-                 Pour Gel Through Funnel                  Acts as Air Vent / Sight Glass
-                           │                                         ▲
-                           ▼                                         │
-              ┌────────────┴─────────────────────────────────────────┴────────────┐
-              │               WISKA 308 LID (Fully Screwed Down)                  │
-              ├───────────────────────────────────────────────────────────────────┤
-              │  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  │ ◄── Stop when gel crowns!
-              │  │  [ APEM LED Bodies & Wire Ends 100% Submerged ]              │  │     (100% Full / 0% Air)
-              │  │                                                              │  │
-              │  │  [ WAGO 221-613 Connectors Submerged ]                       │  │
-              │  │                                                              │  │
-              │  │  [ PCB, Terminals, Diodes, GDTs Submerged ]                  │  │
-              │  │  ════════════════ 9.5mm Standoff Gap ══════════════════════  │  │
-              │  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  │
-              └───────────────────────────────────────────────────────────────────┘
-```
+### Repair and Retest
 
-### The "Closed Pour + Top Vent" Procedure (Guarantees 0% Air Headspace):
+1. Secure independent animal containment and notify the responsible operator. Use only the accepted hub switching procedure to select TEST, with the transmitter isolated and the supply at its qualified setting. Typical TEST use is one to two hours; **continuous-safe normal TEST is required** for accidental extended use, but this remains a qualification requirement, not a claim about the legacy board. A timeout or automatic return to RUN is not the baseline safeguard.
+2. Check the **0 m station first**, then follow increasing distance and record both LED states at every station. If the source-end indicators are wrong, investigate the hub, PSU/fuse/protective shutdown, polarity and local assembly before assigning a cable fault. Do not repeatedly reset protection or replace fuses without finding the cause.
+3. Use the **first applicable LED-state transition** to identify the span between adjacent stations. Include the final **3900-4000 m** span and inspect the 4000 m station separately from the 0 m station at the shed. LEDs show a steady network state, not a timed sequence.
+4. Isolate all sources and six ends before opening wiring. Inspect/repair the identified span and its terminations using an approved cable joint or replacement section with suitable mechanical and environmental protection. Replace defective PCB assemblies rather than improvising field soldering. Investigate shorts, earth faults and local indicator failures separately when the pattern does not fit the clean-cut assumptions.
+5. Restore the accepted TEST configuration and check **all 41 stations again**. Multiple damage sites may only become apparent after the first repair; repeat location, isolation, repair and retest until the required normal indications and electrical checks are restored.
+6. Close and reseal repaired boxes using the qualified material process. **The operator must restore RUN**, verify the transmitter has returned to normal, and check boundary/receiver operation before removing independent animal containment. TEST/OFF do not automatically restore the RF fence.
 
-1. **Secure the Lid:**
-   * Close the WISKA COMBI 308 lid and firmly tighten the 4 captive corner screws to compress the perimeter gasket.
-2. **Open Two Top Access Ports:**
-   * Unscrew the top-left **M20 plug** (Fill Port).
-   * Unscrew the top-right **M20 plug** (Air Vent & Sight Glass).
-3. **Mix the Gel:**
-   * Take the two-part [WISKA MP0100 silicone gel](MATERIALS.md) (Part A and Part B).
-   * Mix thoroughly for 60 seconds until a uniform translucent blue mixture is achieved.
-4. **Pour the Enclosure:**
-   * Insert a small funnel into Port 1.
-   * Pour the liquid gel slowly. The gel floods the floor, flows under the 9.5mm PCB standoffs, submerges the terminals and WAGOs, and rises toward the ceiling.
-   * Air exhausts freely through Port 2.
-5. **Stop Point:**
-   * The instant gel reaches the roof and **crowns at the lip of Vent Port 2**, stop pouring ($\approx 180\text{--}190\text{ ml}$ total).
-6. **Cap & Seal:**
-   * Screw both M20 threaded plugs with their rubber O-rings back into the ports.
-   * The box is now a **100% solid, void-free silicone block**. It will cure into soft, self-healing elastic gel in 20–30 minutes.
+## Gel and Service
 
----
+**Hold pouring until the exact MP0100 process is accepted.** Obtain and retain the supplied product's formulation/variant, batch and shelf-life information, technical and safety document revisions, mixing method/ratio if applicable, preparation requirements, working time, temperature limits, fill/vent method, cure conditions and re-entry instructions. Confirm compatibility with COMBI plastic and seals, Essentra supports/adhesive, cable insulation, WAGO connectors, LED rear seals/leads, components and residual assembly materials. This manual intentionally supplies no invented mix ratio, fixed mixing time, cure time or fill volume.
 
-## 7. Operational & Fault-Finding Guide
+1. Complete the documented pre-potting inspections and electrical checks on a clean, dry, unpowered assembly. Photograph the wiring and record the board/parts revision and measured fit. Leave the designated reference prototype unpotted.
+2. Prepare the assembly and material exactly as accepted, including compatible cleaning, full drying and any adhesive dwell requirements. Protect the enclosure gasket and gland sealing surfaces. Do not assume gel cures correctly over water, salt or incompatible flux residue.
+3. Use the accepted fill level, orientation and venting process to obtain the specified coverage, including beneath the PCB and around the actual wiring. A closed fill/vent method may be used only if the manufacturer-compatible process has been validated on the real assembly. A vent overflowing does not demonstrate a void-free interior; do not force an arbitrary full-to-the-roof fill or add unapproved ports. Record actual material consumption and any void/coverage inspection.
+4. Observe the specified cure/environmental conditions and refit the accepted plugs, glands and lid seals at their specified torques. Perform the post-process normal electrical, fit, sealing and instrumented thermal checks in [ACCEPTANCE.md](ACCEPTANCE.md). No hermetic seal, automatic IP68 rating or multi-decade lifetime follows from adding gel.
 
-### Switch Positions
-
-| Switch Position | Mode Name | System State & Behavior |
-| :---: | :--- | :--- |
-| **UP** | **FENCE RUN** | SmartFence transmitter active. All milestone LEDs dark. Loop operates at full containment power. |
-| **CENTER** | **STORM ISOLATE** | Completely disconnects the 4km cable loop from both the transmitter and power supply. Recommended during severe electrical storms. |
-| **DOWN** | **CABLE TEST** | Disconnects transmitter; injects +36V DC onto Wires A & C. Milestone LEDs light sequentially to indicate continuity. |
-
----
-
-### How to Pinpoint Cable Faults in TEST Mode
-
-If the fence transmitter alarms for a wire break:
-
-```
-[ Shed (0m) ] ───► [ Box 1 (100m) ] ───► [ Box 2 (200m) ] ───► ✕ (BREAK AT 240m) ───► [ Box 3 (300m) ]
-  LEDs: ON           LEDs: ON              LEDs: ON              (Wire A severed)        LED A: OFF
-                                                                                         LED C: ON
-```
-
-1. Flip the switch to **DOWN (CABLE TEST)**.
-2. Drive or walk along the perimeter observing the milestone LED pairs:
-   * **Both LEDs ON:** Cable cores A, B, and C are healthy up to this point.
-   * **LED A OFF / LED C ON:** Core A is broken between this milestone and the preceding box.
-   * **LED C OFF / LED A ON:** Core C is broken between this milestone and the preceding box.
-   * **Both LEDs OFF:** Core B (Common Return) is broken, or all cores are severed.
-3. The exact fault location is isolated to the **specific 100m span** between the last lit box and the first dark box!
-
----
-
-### Re-Entering a Potted Box for Maintenance
-* The cured **WISKA MP0100 silicone gel is non-hardening and re-enterable**.
-* If a box ever needs repair or wire changes:
-  1. Unscrew the 4 lid screws and pull the lid off.
-  2. Peel away the soft silicone gel by hand or with a plastic scraper (it comes away cleanly from the WAGOs and PCB terminals).
-  3. Perform your electrical repair or component replacement.
-  4. Top the box back up with a small cup of freshly mixed MP0100 gel and recap.
+For service, isolate the installation first and follow the exact material's accepted re-entry, PPE, cleaning and repair instructions. Do not assume gel always peels off cleanly by hand or that arbitrary fresh gel can be poured over contaminated cured material. Replace damaged seals, supports, glands or assemblies as needed; re-inspect and retest after disturbance. Agree inspection intervals with the installer for this coastal site and inspect after suspected surge damage, water ingress or mechanical impact. Keep installation, repair, source-setting and qualification records with the live release checklist in [REMEDIATION.md](REMEDIATION.md).

@@ -1,284 +1,264 @@
-# Dog Fence Indicator & Surge Protection System (v1.1.0)
-**Agent & Developer Operating Briefing & Environment Guide**
+# Dog Fence Agent And Developer Guide
 
----
+Hardware development revision: **1.2.0-dev**. Tested native CLI: **KiCad 9.0.7**.
+Manufacturing and field release remain held; file checks are not hardware approval.
 
-## 1. Document Scope & Target Audience
+## 1. Start Here
 
-This document serves as the operational guide and environment manual for **AI coding agents** (e.g., Antigravity, Cursor, Claude Code, GitHub Copilot) and **human developers** working on this repository.
+1. Read [REMEDIATION.md](REMEDIATION.md), including the agreed requirements,
+   issue register, current session handoff and release gates, before editing.
+2. Inspect `git status` and the existing diff. Preserve changes by the user and
+   other agents. Do not commit, upload, order or clean unrelated evidence unless
+   requested. Use headless tools only, never interactive KiCad applications.
+3. Authoritative inputs are `pcb/pcb.kicad_pcb`, `pcb/pcb.kicad_sch`, project/rule
+   files, local libraries/tables, reviewed `pcb/BOM.csv`, and the controlled
+   engineering records. Backups, generated `build/`, and `tmp/` are not designs.
+4. [README.md](README.md) describes the system; [INSTALL.md](INSTALL.md) controls
+   operation; [ORDERING.md](ORDERING.md) controls quote/CAM/placement review;
+   [MATERIALS.md](MATERIALS.md) preserves procurement history;
+   [ACCEPTANCE.md](ACCEPTANCE.md) separates qualification activities;
+   [RISKS.md](RISKS.md) records limitations. `REVIEW.md` is an audit template,
+   not completed approval.
+5. [pcb/ELECTRICAL.md](pcb/ELECTRICAL.md) records the implemented DC model and
+   unresolved protection architecture. [pcb/ASSEMBLY.md](pcb/ASSEMBLY.md) controls
+   placement, lead forming, nominal geometry, fit evidence and process holds.
+   Do not populate a candidate protection part just because it is listed there.
 
-* For the current remediation task, start with **[`REMEDIATION.md`](REMEDIATION.md)**: agreed requirements, review findings, implementation checklists, release gates, and session handoff. Legacy claims in other documents remain pending correction; the physical guardrails still apply.
-* For the **master engineering specification**, circuit theory, dual-mode operational analysis, complete hardware bill of materials, PCB fabrication rules, and field installation architecture, see **[`README.md`](README.md)**.
-* For step-by-step physical installation instructions, see **[`INSTALL.md`](INSTALL.md)**.
-* For turnkey JLCPCB / PCBWay manufacturing instructions, see **[`ORDERING.md`](ORDERING.md)**.
-* For procurement and hardware tracking, see **[`MATERIALS.md`](MATERIALS.md)**.
-* For failure modes, reverse-flow, and lightning surge risk analysis, see **[`RISKS.md`](RISKS.md)**.
+## 2. Headless Environment
 
----
+- Linux, Bash, GNU Make, git and Python standard library. Python 3.14.4 and
+  KiCad 9.0.7 were exercised in this session; no KiCad 7/8 compatibility is claimed.
+- The host Snap CLI is `/snap/bin/kicad.kicad-cli`. Bare `kicad-cli` need not exist.
+  Do not launch `kicad`, `pcbnew`, `eeschema` or a desktop editor.
+- `scripts/manufacturing.py` resolves native, Snap and Flatpak invocations by
+  actually executing `--version`. `KICAD_CLI` can contain a quoted executable or
+  a multiword Flatpak command; it is split into argv, never evaluated by a shell.
+- If the agent runner requires a KiCad-only host/sandbox bypass and provides
+  that option, use it for native KiCad tasks. Do not apply it to ordinary file,
+  git or Python work. This tool interface has no `BypassSandbox` parameter;
+  normal CLI execution reached the host Snap successfully. Do not invent tool
+  arguments or report a bypass that was not used.
+- Snap confinement is separate from the agent runner. KiCad inputs/outputs must
+  stay under a non-hidden user-workspace directory, not system `/tmp`, `/run`,
+  `/var/tmp` or hidden home directories. Project-local `tmp/` is git-ignored.
 
-## 2. Operating System & Desktop Environment Conventions
+## 3. Verification And Production
 
-* **Host OS**: Ubuntu Linux (tested and verified on Ubuntu Desktop 24.04 / 26.04 LTS).
-* **Execution Context**: Agents and automation scripts operate within the standard desktop user space (`$HOME = /home/<username>`) with non-root privileges.
-* **Shell & Core Utilities**:
-  * Default shell: `bash`.
-  * Build system: GNU Make (`make`).
-  * Packaging utilities: `zip`, `git`, standard POSIX utilities (`cp`, `rm`, `mkdir`, `sed`, `grep`).
-* **Headless Execution Invariant**:
-  * All automated agent tasks **must run headlessly** via CLI commands.
-  * **Do not** attempt to invoke interactive graphical desktop applications (e.g., launching the interactive `kicad` GUI editor, `pcbnew`, or `eeschema`).
-  * All design rule checks (DRC), netlist exports, Gerber generation, and drill outputs must be executed using headless CLI tooling (`kicad.kicad-cli` directly or via `make`).
-  * **Agent Sandbox Notice**: Because KiCad is installed as an Ubuntu Snap under `/snap/bin`, agent tools running in containerized sandboxes must execute commands with sandbox bypass (`BypassSandbox: true`) so the host snap binaries and mounts are visible.
+After any PCB/schematic/layout change, run:
 
----
-
-## 3. KiCad Snap Architecture & Command Execution Guide
-
-KiCad 9 is installed on the host system as an **Ubuntu Snap package** (`snap install kicad`). Because KiCad is packaged as a snap, binary naming, directory access, and execution environments differ fundamentally from standard native packages.
-
-### 3.1 Snap Binary Naming (`kicad.kicad-cli` vs `kicad-cli`)
-In Ubuntu snaps that bundle multiple binaries, executables in `/snap/bin` use the `<snap-name>.<command>` prefix:
-* **The headless CLI binary is `kicad.kicad-cli`** (full path: `/snap/bin/kicad.kicad-cli`).
-* **There is NO bare `kicad-cli` command** in `$PATH` on standard snap installations. Running `kicad-cli` directly will result in `bash: kicad-cli: command not found`.
-* The snap provides the following binaries in `/snap/bin/`:
-  * `/snap/bin/kicad.kicad-cli` — Headless CLI tool for DRC, Gerbers, drills, netlists, and rendering (**the primary tool for agents**).
-  * `/snap/bin/kicad` — KiCad project manager (interactive GUI, not for headless use).
-  * `/snap/bin/kicad.eeschema` — Schematic editor (interactive GUI).
-  * `/snap/bin/kicad.pcbnew` — PCB layout editor (interactive GUI).
-  * `/snap/bin/kicad.gerbview` — Gerber viewer (interactive GUI).
-  * `/snap/bin/kicad.pcbcalculator` — Component & trace calculator.
-  * `/snap/bin/kicad.bitmap2component` — Bitmap converter utility.
-
-### 3.2 AI Agent Runner Sandbox vs. Host (`BypassSandbox: true`)
-AI coding agents (e.g., Antigravity, Cursor, Claude Code) typically execute bash commands inside an isolated container sandbox by default (`BypassSandbox: false`):
-* **The default agent container sandbox does NOT mount `/snap/bin` or host snap namespaces.**
-* Running `make check`, `which kicad-cli`, `which kicad.kicad-cli`, or `ls -l /snap/bin` inside the sandbox produces:
-  * `ls: cannot access '/snap/bin': No such file or directory`
-  * `ERROR: kicad-cli not found - cannot run DRC. Install KiCad 9 snap.`
-* **MANDATORY FOR AGENTS (KiCad Only)**: Any command that runs `make` (`make check`, `make all`, etc.) or calls `kicad.kicad-cli` **must be executed with `BypassSandbox: true`** (unsandboxed host context). On the host, `/snap/bin` is populated, in `$PATH`, and `/snap/bin/kicad.kicad-cli` runs normally.
-* **RESTRICT `BypassSandbox: true` TO KICAD ONLY**: Do NOT set `BypassSandbox: true` for general file inspections, git operations, or local helper scripts. Running non-KiCad commands with sandbox bypass triggers unnecessary interactive approval prompts for the user. Keep all other commands sandboxed (`BypassSandbox: false`).
-
-### 3.3 Strict Snap Confinement Restrictions (AppArmor)
-Even when running on the host outside the agent sandbox, the KiCad snap itself executes inside an Ubuntu AppArmor-enforced security sandbox with `strict` confinement:
-1. **No Access to System `/tmp` or Root Paths**:
-   * The KiCad snap **cannot access** `/tmp`, `/var/tmp`, `/run`, or arbitrary directories outside `$HOME`.
-   * Passing paths such as `/tmp/drc_report.txt` or `/tmp/gerbers/` to `kicad.kicad-cli` will fail immediately with permission-denied or file-not-found errors.
-2. **No Access to Hidden Dot-Directories**:
-   * The KiCad snap is restricted from accessing hidden directories within `$HOME` (e.g., `~/.gemini/`, `~/.tmp/`, `~/.local/`, or `.workshop/`).
-3. **Allowed Paths**:
-   * The snap can **only** read and write files located within standard, unhidden user directories inside `$HOME` (e.g., the workspace `tmp/` directory or `/home/<username>/projects/...`).
-
-### 3.4 Staging Protocol & Project-Local `tmp/` Directory
-* **Never invoke `kicad.kicad-cli` targeting system `/tmp` or hidden dot-directories.**
-* **Use the Project-Local `tmp/` Subdirectory**:
-  * Temporary and staging files are kept inside the project tree in **`tmp/`** (`$(CURDIR)/tmp` in the `Makefile`).
-  * `tmp/` is ignored by git in `.gitignore`.
-  * Because `tmp/` is located inside the user's project workspace within `$HOME` and is not a hidden dot-directory, it satisfies all AppArmor snap confinement rules while keeping all ephemeral files neatly scoped to the project instead of littering `$HOME`.
-* The repository's **[`Makefile`](Makefile)** automatically implements this staging protocol:
-  * Creates the staging directory: `$(CURDIR)/tmp`
-  * Copies the required `.kicad_pcb` or `.kicad_sch` files into `tmp/`.
-  * Executes `kicad.kicad-cli` within `tmp/`.
-  * Copies generated production artifacts into `build/`.
-  * Cleans up `tmp/` during packaging and `make clean`.
-* When executing custom KiCad automation, always use `make` targets or replicate this `$(CURDIR)/tmp` staging protocol.
-
-### 3.5 CLI Binary Resolution in `Makefile`
-The `Makefile` resolves the `kicad-cli` binary across environments in this prioritized sequence:
-```makefile
-KICAD_CLI ?= $(shell \
-	if command -v kicad-cli >/dev/null 2>&1; then echo kicad-cli; \
-	elif command -v kicad.kicad-cli >/dev/null 2>&1; then echo kicad.kicad-cli; \
-	elif [ -x /snap/bin/kicad.kicad-cli ]; then echo /snap/bin/kicad.kicad-cli; \
-	elif [ -x /snap/kicad/current/usr/bin/kicad-cli ]; then echo /snap/kicad/current/usr/bin/kicad-cli; \
-	elif command -v flatpak >/dev/null 2>&1 && flatpak info org.kicad.KiCad >/dev/null 2>&1; then echo "flatpak run --command=kicad-cli org.kicad.KiCad"; \
-	else echo kicad-cli; fi)
-```
-
-### 3.6 Direct CLI Invocation Cheatsheet
-If you need to invoke KiCad CLI directly without `make`, always run with `BypassSandbox: true`, use `kicad.kicad-cli` (or `/snap/bin/kicad.kicad-cli`), and stage files in `tmp/`:
-
-* **Check Version**:
-  ```bash
-  /snap/bin/kicad.kicad-cli --version
-  # Output: 9.0.7
-  ```
-
-* **Run Inline Design Rule Check (DRC)**:
-  ```bash
-  mkdir -p tmp build
-  cp -f pcb/pcb.kicad_pcb tmp/pcb.kicad_pcb
-  kicad.kicad-cli pcb drc --format report --severity-error --exit-code-violations --output tmp/drc_report.txt tmp/pcb.kicad_pcb
-  cp -f tmp/drc_report.txt build/drc_report.txt
-  ```
-
-* **Export Gerber Layers**:
-  ```bash
-  mkdir -p tmp/gerbers build/gerbers
-  cp -f pcb/pcb.kicad_pcb tmp/pcb.kicad_pcb
-  kicad.kicad-cli pcb export gerbers \
-    --output tmp/gerbers/ \
-    --layers F.Cu,B.Cu,F.SilkS,B.SilkS,F.Mask,B.Mask,Edge.Cuts \
-    --subtract-soldermask \
-    --no-protel-ext \
-    tmp/pcb.kicad_pcb
-  cp -f tmp/gerbers/*.gbr build/gerbers/
-  ```
-
-* **Export Excellon Drill Files (PTH & NPTH)**:
-  ```bash
-  mkdir -p tmp/gerbers build/gerbers
-  cp -f pcb/pcb.kicad_pcb tmp/pcb.kicad_pcb
-  kicad.kicad-cli pcb export drill \
-    --output tmp/gerbers/ \
-    --format excellon \
-    --drill-origin absolute \
-    --excellon-units mm \
-    --excellon-zeros-format decimal \
-    --excellon-separate-th \
-    tmp/pcb.kicad_pcb
-  cp -f tmp/gerbers/*.drl build/gerbers/
-  ```
-
-### 3.7 Agent Troubleshooting & Diagnostic Matrix
-
-| Symptom / Error | Root Cause | Exact Remedy |
-| :--- | :--- | :--- |
-| `ls: cannot access '/snap/bin': No such file or directory`<br>`ERROR: kicad-cli not found - cannot run DRC` | Command executed inside the agent container sandbox (`BypassSandbox: false`). The sandbox does not mount `/snap/bin`. | Re-run the command with **`BypassSandbox: true`** (unsandboxed host execution). |
-| `bash: kicad-cli: command not found` | Using bare `kicad-cli` instead of the snap-namespaced command `kicad.kicad-cli`. | Use **`kicad.kicad-cli`** or explicit path `/snap/bin/kicad.kicad-cli`. |
-| `kicad.kicad-cli: command not found` (even with bypass sandbox) | Non-login subshell does not have `/snap/bin` in `$PATH`. | Run `/snap/bin/kicad.kicad-cli` directly or prepend `export PATH="/snap/bin:$PATH"`. |
-| `Permission denied` or `Failed to open file` | File path is in system `/tmp/` or a hidden dot-directory (`~/.gemini/`, etc.), violating AppArmor snap confinement. | Stage all files in project-local **`tmp/`** (`$(CURDIR)/tmp`). |
-| DRC reported violations and blocked build | Clearance, trace spacing, or component courtyards violate design rules. | Inspect `tmp/drc_report.txt` or `build/drc_report.txt` and resolve PCB layout violations. |
-
----
-
-## 4. Build, DRC, and Verification Workflow
-
-### Mandatory Inline DRC Gate (`make check`)
-Whenever any modification is made to the PCB layout (`pcb/pcb.kicad_pcb`) or schematic (`pcb/pcb.kicad_sch`), the changes **must be validated** by running:
 ```bash
 make check
 ```
-*(Always execute with `BypassSandbox: true` in agent environments.)*
-* The DRC gate runs `kicad.kicad-cli pcb drc --format report --severity-error --exit-code-violations`.
-* **Zero violations rule**: If any DRC error or courtyard violation is detected, the command exits with non-zero status and halts the export.
-* The resulting report is written to `build/drc_report.txt`.
 
-### Turnkey Manufacturing Package (`make all` / `make package`)
-To build the complete turnkey package ready for JLCPCB or PCBWay upload:
+The complete snapshot is staged under `tmp/manufacturing/runs/attempt-*/project`:
+PCB, schematic, settings/rules, local libraries/tables, BOM, `verification.json`
+and controlled assembly/electrical notes. Build helpers are also snapshotted
+and inputs are hashed before and after verification. Changed/missing inputs fail.
+
+`make check` performs project-aware native DRC, ERC, schematic parity, geometric
+guardrails, and private native netlist/IPC/position/Gerber/drill/assembly exports.
+It checks complete terminal membership, BOM identities/population, signed-Y CPL,
+fabrication geometry, drill classification and archive contents. Unsupported
+geometry fails closed; extend and test the validator rather than ignore it.
+
+- Readable and JSON DRC/ERC reports are retained at `build/drc_report.*` and
+  `build/erc_report.*` on success and failure. Additional logs, geometry and
+  verification results are in `build/reports/`; `build/status.json` identifies
+  the attempt. Failed native execution is not an empty successful report.
+- All electrical/DFM errors and unreviewed warnings block. Project severity
+  ignores and DRC/ERC exclusions are forbidden. The **only current reviewed
+  DRC/ERC warning exception** is the exact eight single-global-label UUID/name pairs
+  recorded with rationale in `pcb/verification.json`, bound to this revision
+  and a single sheet. Native warnings remain visible in both reports; changed
+  labels, extra sheets, stale reviews and every other warning require review.
+- Native export diagnostics are gated too. The one annotation-warning line
+  from KiCad 9.0.7 XML netlist export is separately reviewed for the ten
+  intentional nonnumeric J_/GDT_ designators, with exact schematic/project/
+  symbol-library/table hashes in `pcb/verification.json`. Numbered-reference
+  controls and duplicate/unassigned-reference probes established its cause.
+  Any changed input, different warning, extra diagnostic or different tool
+  version invalidates that review. Never automatically refresh approval hashes.
+  The exact known KiCad 9.0.7 wxWidgets duplicate-image-handler `Debug` lines
+  from PCB exports are informational, retained and counted in reports; unknown
+  stderr is not silently discarded.
+- `pcb/verification.json` also records engineering release holds. `make check`
+  may pass file checks with those holds explicitly reported, but does not close
+  Gate A or publish an order package. It refreshes `pcb/CPL.csv` only after all
+  file/artifact checks pass. That CSV is a generated draft reference, not an
+  independent source or upload approval; on failure it may remain from an older
+  checked revision.
+- `make all` / `make package` and **every public export alias** (`gerbers`,
+  `drills`, `ipc`, `bom`, `cpl`, `zip-gerbers`, `zip-flytest`) run the same complete
+  transaction. Open engineering holds block publication even if file checks
+  pass. Clearing holds requires an evidence-backed file-release review, not an
+  override flag. There is no bypass export target.
+- One shared Make prerequisite and a filesystem lock serialize production.
+  Gerber and drill scratch directories are separate. `make -j4 all` cannot
+  remove another target's outputs or publish a half-built package.
+- Each new attempt quarantines prior `build/` and the Gerber mirror within its
+  owned run directory. A failure must not present yesterday's package as current.
+  Only a matching `build/manifest.json` with `status=verified` and validated
+  source/artifact hashes identifies a published file-verified release. This
+  never means CAM, prototype-order, field or lightning approval.
+
+When holds are closed, the published filenames remain `build/Gerbers.zip`
+(mirror `pcb/Gerbers.zip`), `build/BOM.csv`, `build/CPL.csv` (generated source
+mirror), `build/pcb.d356` and `build/FlyTest.zip`. The release also contains
+`Assembly.pdf`, `Assembly.txt`, `ViaTreatment.csv`, the controlled notes, reports
+and manifest. Flying-probe inputs describe **bare-board continuity**, not an
+assembled functional or surge test. Never hand-edit generated artifacts.
+
 ```bash
-make all
+make test
+TMPDIR=/tmp/opencode KICAD_TEST_CLI=/snap/bin/kicad.kicad-cli python3 -B -W error -m unittest discover -s tests -v
+python3 -B scripts/analyze_limits.py
+python3 -B scripts/verify_workflow.py --expect-holds C4 C5 W3 W1 W4
 ```
-This target:
-1. Runs `make check` (blocks on any DRC violation).
-2. Exports all 2-layer Gerber files into `build/gerbers/`.
-3. Exports PTH and NPTH Excellon drill files into `build/gerbers/`.
-4. Exports IPC-D-356 electrical test netlist into `build/pcb.d356`.
-5. Packages `pcb/BOM.csv` into `build/BOM.csv`.
-6. Exports pick-and-place centroid coordinates into `build/CPL.csv`.
-7. Compresses Gerbers and drills into `build/Gerbers.zip` (and mirrors to `pcb/Gerbers.zip`).
-8. Packages `build/FlyTest.zip` for JLCPCB electrical probe testing.
 
-To clean generated artifacts:
+The first command runs stdlib tests; native contract probes need
+`KICAD_TEST_CLI`. Those probes use their own Snap-accessible project-local staging,
+not the authoritative PCB or shared release. Non-KiCad temporary fixtures may
+use the runner's approved temporary directory. Tests cover negative inputs and
+the 41-station, seven-cut-combination model, not physical qualification.
+
+`verify_workflow.py` requires exclusive runtime ownership of `build/` and
+`tmp/manufacturing/`. It preserves old runs/reports under `tmp/workflow-validation/`,
+then executes clean/serial and clean/parallel builds separately and compares
+validated fabrication geometry, connectivity and population. `--expect-holds`
+is an assertion, not an override. A workflow PASS with open holds means both
+builds correctly refused publication; it does not mean `make all` succeeded.
+
+`make clean` removes **only `build/`, owned manufacturing runs and the generated
+Gerber mirror**. It preserves unrelated `tmp/` evidence, the lock and the last
+generated CPL reference. Run clean separately, never `make -j clean all`.
+Preserve useful run reports before deliberate cleanup. If native KiCad is
+unavailable, record the actual failed version probe; do not claim DRC passed.
+
+## 4. Libraries And Design Rules
+
+All intentional custom geometry is under `pcb/DogFence.pretty/` with symbols
+in `pcb/DogFence.kicad_sym`. `fp-lib-table` / `sym-lib-table` use `${KIPRJMOD}`.
+Do not replace modified Kefa terminals, the cathode-right diode, or the axial
+overpass with similarly named stock-library objects. Preserve global pad nets,
+positions and the two distinct local LED-terminal mappings.
+
 ```bash
-make clean
+python3 -B pcb/sync_libraries.py --check
 ```
 
----
+This detects drift between reviewed embedded objects and local definitions.
+After deliberately editing/reviewing the source objects, `--write` regenerates
+the definitions. `--sync-metadata` propagates **reviewed BOM** MPN/manufacturer/
+LCSC fields without changing values or footprints; run `--write`, `--check` and
+`make check` afterward. Never use synchronization to conceal an accidental
+geometry or part substitution. Reference/value text placement can differ per
+instance; shared geometry and sourcing metadata must agree.
 
-## 5. Critical Electrical & Physical Invariants (Guardrails)
+The project enforces two-layer/2 oz track width >=0.1651 mm, conservative
+general clearance 0.20 mm, hole clearance 0.25 mm, copper-edge clearance 0.50 mm,
+and legend height/stroke >=1.00/0.15 mm with 0.15 mm pad clearance. These values
+are not all fabricator minima. Component-PTH annular ring >=0.254 mm and EARTH
+separation >=3.0 mm are explicit `.kicad_dru` constraints. Via-ring rules are not
+component-ring or pin-fit evidence. Do not weaken settings to obtain a PASS.
 
-When modifying schematics or PCB layouts, agents must strictly uphold the following hard design constraints:
+## 5. Physical Guardrails
 
-1. **Copper Weight**:
-   * Must remain **2 oz (70 µm)** on both top (`F.Cu`) and bottom (`B.Cu`) layers.
-2. **Tri-Rail Symmetrical Copper Stitching**:
-   * Conductors Wire A, Wire B, and Wire C must maintain **100% full 3.2mm width** across both copper layers.
-   * Dedicated clusters of **3× heavy plated stitching vias** (1.0mm drill, 1.8mm pad) at X=112.5, 114.0, 115.5mm on each rail must never be deleted or shrunk.
-3. **Earth Bus Stitching & Symmetrical Monolithic Fill**:
-   * The Earth bus maintains an identical solid 4.5mm-grid monolithic copper plane on both `F.Cu` and `B.Cu` ($X \in [143.99, 157.25]\text{ mm}$, $Y \in [111.25, 133.75]\text{ mm}$, 4 oz total Cu).
-   * It preserves its column of **5× heavy plated stitching vias** (1.0mm drill, 1.8mm pad) at X=150.0mm, stitching the top and bottom layers into a continuous, slit-free ground plane.
-4. **Line-to-Earth 20kA GDT Pitch (9.0mm)**:
-   * `GDT_A_E` and `GDT_C_E` must remain spaced at Y=113.50mm and Y=131.50mm (**9.00mm center-to-center pitch**).
-   * **Do not compress this pitch**: 9.00mm is required to provide a 1.00mm physical air gap and 0.50mm courtyard clearance between the heavy-duty $\Phi 8.0\text{mm} \times 6\text{mm}$ ceramic bodies of the Ruilon 2R470TD-8 arresters.
-5. **Surge Clearance Invariant (≥3.0mm)**:
-   * The Wire B LED return traces on `B.Cu` run westward at X=135.50mm and turn along Y=107.20mm (North) and Y=137.80mm (South) to provide **8.44mm copper clearance** to the Earth GDT pins and **3.25mm clearance** to the solid Earth bus plane.
-   * Clearance between fence conductors and the Earth ground bus must never drop below 3.0mm.
-6. **Axial Arrester GDT_AC Standoff**:
-   * `GDT_AC` bridges over the top copper trace of Wire B. Axial leads must be formed to maintain a **≥2.0mm vertical air gap standoff** above the board surface.
-7. **Component Matches & Ratings**:
-   * Rectifier Diodes (`D1`, `D2`): **1N4007G** (1000V / 1A glass-passivated DO-41).
-   * Resistors (`R1`, `R2`): **Vishay MBE04140C2201FC100** (2.2kΩ 1W Metal Film 1% DIN 0414, derated to 50% power).
-   * Differential GDTs (`GDT_AB`, `GDT_BC`): **Ruilon SMD5050-470NA** (5kA / 470V SMT).
-   * Differential GDT (`GDT_AC`): **Bencent B5G470L** (5kA / 470V axial $\Phi 5.5\text{mm} \times 6\text{mm}$).
-   * Common-Mode GDTs (`GDT_A_E`, `GDT_B_E`, `GDT_C_E`): **Ruilon 2R470TD-8** (20kA / 470V axial $\Phi 8.0\text{mm} \times 6\text{mm}$).
-   * Input Terminal (`J_IN`): **KF128-7.62-3P** (3-pin 7.62mm pitch, 24A / 300V).
-   * Earth Terminal (`J_EARTH`): **KF128-7.62-3P** (all 3 pins tied in parallel for 72A rating).
-   * LED Terminals (`J_LED_A`, `J_LED_C`): **KF129-5.08-2P** (2-pin 5.08mm pitch, 24A / 250V).
-8. **LED Terminal Outward Vertical Flip & Symmetrical Invariant**:
-   * `J_LED_A` and `J_LED_C` form a vertically mirrored pair across the board horizontal centerline ($Y = 122.50\text{ mm}$):
-     * `J_LED_A` is centered at **(145.50, 103.00)** with rotation **90°** (wire opening faces **UP / North** toward the top board edge, $8.50\text{ mm}$ edge margin, $10.50\text{ mm}$ Earth bus clearance).
-     * `J_LED_C` is centered at **(145.50, 142.00)** with rotation **270°** (wire opening faces **DOWN / South** toward the bottom board edge, $8.50\text{ mm}$ edge margin, $10.50\text{ mm}$ Earth bus clearance).
-   * **Do not reorient or match rotations**: Because the two connectors are vertically flipped $180^\circ$ relative to each other, their local coordinate axes transform to opposite horizontal directions on the board:
-     * `J_LED_A` ($90^\circ$): Pad 1 (`LED_A_POS` / Anode) is at local `(at 0 -2.54 90)`, mapping to the **Left ($X = 142.96\text{ mm}$)**. Pad 2 (`WIRE_B` / Cathode) is at local `(at 0 2.54 90)`, mapping to the **Right ($X = 148.04\text{ mm}$)**.
-     * `J_LED_C` ($270^\circ$): Pad 1 (`LED_C_POS` / Anode) is at local `(at 0 2.54 270)`, mapping to the **Left ($X = 142.96\text{ mm}$)**. Pad 2 (`WIRE_B` / Cathode) is at local `(at 0 -2.54 270)`, mapping to the **Right ($X = 148.04\text{ mm}$)**.
-   * On both channels, Pad 1 (Anode `+`) is consistently on the Left ($X = 142.96\text{ mm}$) and Pad 2 (Cathode `-`) on the Right ($X = 148.04\text{ mm}$). Inadvertently altering either rotation or pad offset breaks DRC by shorting `WIRE_B` with `LED_POS` and reverses outward screw opening geometry.
+Preserve these unless the user approves a reasoned physical design change:
 
----
+| Feature | Protected geometry |
+| :--- | :--- |
+| Board | 63 x 56 mm, (97.00,94.50) to (160.00,150.50). Nominal finished thickness 1.60 mm; the source now totals 1.440 core + 0.070 copper per side + 0.010 mask per side. Supplier thickness convention/tolerances and support fit remain to agree. |
+| Mounting | Four 3.20 mm NPTH at (101.50,99.00), (155.50,99.00), (101.50,146.00), (155.50,146.00), with protected 3.45 mm-radius front/back courtyards and copper keepouts. |
+| Exterior copper | 0.070 mm on both F.Cu and B.Cu. A/B/C rails stay full 3.20 mm width on both layers, not narrowed thermal-relief spokes. |
+| Rail vias | Three per rail at X=112.50,114.00,115.50; Y=114.88 (A),122.50 (B),130.12 (C). All 1.00 mm drill / 1.80 mm copper. Do not delete, shrink or move. |
+| Earth copper/vias | Matching solid 4.50 mm-grid copper on both sides, bounding X=143.99..157.25 and Y=111.25..133.75. Five 1.00/1.80 mm vias at X=150.00, Y=114.88,118.69,122.50,126.31,130.12. Preserve slit-free continuity and geometry. |
+| Earth isolation | >=3.00 mm fence-to-earth copper separation; present minimum 3.25 mm. Preserve B returns at X=135.50, Y=107.20/137.80 unless an approved equivalent maintains constraints. |
+| Earth GDTs | Centres Y=113.50,122.50,131.50; 9.00 mm pitch. Actual maximum bodies/forming must establish the gap, not a nominal 8 mm diameter claim. |
+| Overpass | GDT_AC runs north-south over B, now at X=125.80, with 15.24 mm pitch and >=2.00 mm pre-encapsulation physical gap under the complete raised span. Follow ASSEMBLY.md; gel is not automatically equivalent to an air gap. |
+| LED terminals | J_LED_A=(145.50,103.00),90 degrees, opens north; J_LED_C=(145.50,142.00),270 degrees, opens south. Both pad1 positive X=142.96 and pad2 B return X=148.04. |
 
-## 6. Documentation & Synchronization Protocol
+The LED local pad coordinates intentionally differ: A pad1 `(0,-2.54,90)` and
+pad2 `(0,2.54,90)`; C pad1 `(0,2.54,270)` and pad2 `(0,-2.54,270)`. Do not match
+their rotations or replace them with one generic footprint.
 
-Whenever schematic components, footprint geometry, or layout routing are modified:
-1. Update `pcb/BOM.csv` and `pcb/CPL.csv` to match component designations and centroid coordinates.
-2. Synchronize technical parameters in **[`README.md`](README.md)**.
-3. Update part tracking in **[`MATERIALS.md`](MATERIALS.md)** and fabrication notes in **[`ORDERING.md`](ORDERING.md)**.
-4. If electrical modes or risk profiles change, update **[`RISKS.md`](RISKS.md)**.
-5. If operating environment, tooling, or build scripts change, update this file (**[`AGENTS.md`](AGENTS.md)**).
+The current 14-part BOM contains onsemi 1N4007G (1.10/2.20 mm hole/pad), Vishay
+MBE04140C2201FC100, Ruilon SMD5050-470NA and 2R470TD-8, Bencent B5G470L, and Kefa
+KF128/KF129 terminals. Datasheet 5/20 kA impulse or terminal current ratings are
+**component** ratings, not assembled-board performance. Three paralleled EARTH
+pins remain connected, but are not a 72 A assembly rating. Nominal 0.50 W in a
+1 W power-mode resistor is not proof of cool, continuous or long-life operation.
 
----
+## 6. Functional And Documentation Rules
 
-## 7. Component Sourcing & Web Research Protocol
+- Keep 41 stations / 82 LEDs and the **same-end** six-independent-end TEST
+  matrix from REMEDIATION: Start A/C positive, Start B negative, End A/B/C each
+  isolated. No direction selector, permanent End A/C strap or dual-B return.
+- Preserve WAGO through-splice/PCB-tap wiring. Normal perimeter current does
+  not pass through every PCB. Surge current is a separate design case.
+- Normal TEST must be continuous-safe; do not substitute a timer. TEST/OFF
+  disable containment, and restoring RUN is an operator action. OFF is not
+  demonstrated storm isolation. Do not directly earth a core, switch PE or
+  invent an unbonded-rod/DC-negative bonding design.
+- Synchronize source, local libraries, BOM, native-generated CPL, assembly and
+  electrical notes, README, ORDERING, MATERIALS and affected INSTALL/RISKS/
+  ACCEPTANCE whenever parts/routing/geometry or operation change. Update this
+  guide when tooling changes, and update REMEDIATION with actual evidence.
+- Preserve ORDERED/ON HAND history separately from increased requirements and
+  unapproved candidates. Revision identifiers must agree across PCB, schematic,
+  documents, release review and manifest. Only verified conditions close issues.
 
-When researching component specifications, JLCPCB / LCSC part numbers (C-codes), stock availability, or datasheets:
+## 7. Research And Tool Use
 
-1. **Use Native Agent Tools**:
-   * Use **`search_web`** to query JLCPCB/LCSC part numbers, stock, and component specifications.
-   * Use **`read_url_content`** to fetch product pages, manufacturer specs, or datasheets directly.
-   * Native tools execute directly within the agent runtime and do not trigger interactive terminal permission prompts.
+Use native Read/Glob/Grep for file inspection and apply_patch for manual edits.
+Use persistent project scripts for nontrivial analysis, not inline Python file
+search/edit commands. Use native web fetching for public manufacturer/CAM
+evidence; no terminal `curl`, `wget` or ad-hoc network scraping. A PDF text
+extraction or distributor CAD model is not proof of unreadable drawing details.
+Record manufacturer, exact MPN, drawing revision, limitations and accepted
+supplier response. Public stock is not order allocation. Do not claim a check
+was run, a part approved, or a physical test passed without the corresponding
+result.
 
-2. **Prohibited Terminal Scraping**:
-   * **Do not** run ad-hoc inline Python scripts (`python3 -c "import urllib..."`), `curl`, or `wget` via `run_command` to scrape websites.
-   * Ad-hoc network commands in bash require sandbox bypass (`BypassSandbox: true`) and continuously interrupt the user with interactive approval prompts.
-   * `run_command` in this repository is strictly reserved for KiCad CLI tasks and `make` targets (`make check`, `make all`).
+## 8. Parallel Ownership
 
----
+Give each agent bounded context, named file ownership and exact verification
+expectations. P1 infrastructure and P2 analysis may proceed in parallel. Known
+P3 corrections may proceed without freezing the design; final protection
+placement/BOM needs a supported P2 decision. P4 production follows verified
+geometry. Coordinate shared source/staging changes and run integrated gates
+after edits settle. Independent read-only review and isolated tests are safe
+parallel tasks. Never revert another agent's or the user's work.
 
-## 8. File Inspection & Command Execution Protocol (Prompt Reduction)
+## 9. JLCPCB Via And Component Hole DFM
 
-To prevent interrupting the human user with unnecessary terminal approval prompts during development:
+Apply the [master DFM policy](README.md#via-and-component-hole-dfm). Published
+guidance was reviewed on 2026-09-06; confirm the actual order. These checks
+supplement, not replace, electrical DRC.
 
-1. **Use Native Inspection Tools Over Shell/Python**:
-   * **Do not run ad-hoc Python scripts (`python3 -c "..."`) or shell commands (`grep`, `sed`, `awk`) to search or inspect files.**
-   * Always use native agent tools (**`view_file`**, **`grep_search`**, and **`find_by_name`**) to inspect schematics (`pcb.kicad_sch`), PCB layouts (`pcb.kicad_pcb`), BOMs, and project files.
-   * Native tools execute directly inside the agent runtime without launching a shell process and require **zero** user approval prompts.
-
-2. **Run Workspace Scripts in Standard Sandbox (`BypassSandbox: false`)**:
-   * When running local Python scripts, data processing, or calculations that only read and write within the project directory, always run with **`BypassSandbox: false`**.
-   * Standard sandbox mode allows safe, automatic execution inside the repository without prompting the user.
-
-3. **Avoid Inline `python3 -c "..."` Commands**:
-   * Inline `-c` commands change with every execution (different variables, regexes, comments), preventing user permission whitelists from matching.
-   * If a non-trivial computation or automation script is required, place it in a dedicated file (e.g. under `scripts/`) so that the command invocation remains clean, consistent, and auto-approvable.
-
----
-
-## 9. JLCPCB Via and Component Hole DFM
-
-For PCB, footprint, part-selection, or fabrication changes, apply the [master via and component hole DFM policy](README.md#via-and-component-hole-dfm). The published limits were reviewed on 2026-09-06; verify them again for the actual order. These checks supplement electrical DRC, not replace it.
-
-- **Preserve the surge geometry:** The protected 1.0 mm drill / 1.8 mm pad stitching vias must not be deleted or shrunk to meet a covering-process limit. If the proposed process is incompatible, flag the conflict and seek an approved layout/process solution.
-- **Do not equate covering with filling:** JLCPCB's normal tenting and ink-plugging guidance is for holes at most 0.5 mm. The filled-and-capped guide and capability table give upper limits of 0.5 and 0.55 mm respectively; neither establishes support for reliably filling these 1.0 mm holes. Require written CAM acceptance for exceptions. Do not claim guaranteed sealing from a tenting flag, plugging checkbox, or gel encapsulation.
-- **Check soldering geometry:** Compare drill holes with actual mask and paste apertures and check the mask barrier to adjacent wettable copper. A neighboring SMT pad can expose a nominally tented via. Inspect processed Gerbers/stencil data as well as the source layout.
-- **Specify hole treatment by function:** Distinguish component PTH pads from vias; never use an ordinary via as a component insertion hole. Do not request filling by diameter alone when resistor holes and stitching vias share the same drill size. Provide a coordinate-based identification drawing and confirm CAM has not reduced protected via diameters.
-- **Verify pin fit for the exact part:** Use maximum finished lead dimensions from the selected manufacturer's drawing, including the diagonal of rectangular pins. With the ordinary JLCPCB component-hole tolerance, require `nominal finished hole - 0.08 mm >= maximum pin envelope + assembly allowance`. Start with at least 0.10 mm diametral allowance after tolerance, and account for pin-pitch, hole-position, and forming tolerances. Do not infer fit from pitch, footprint name, nominal pin diameter, or a matching C-code alone.
-- **Recheck copper after drill changes:** Meet the applicable two-layer, 2 oz component PTH annular-ring requirement (at least 0.254 mm nominal design ring), plus hole/copper and edge clearances. Generic via annular-ring rules do not establish component-pad compliance. Do not assume 2 oz surface copper means 70 micrometres of barrel plating; separately agree any required finished barrel-copper minimum.
-- **Keep evidence and outputs synchronized:** Record the manufacturer/MPN, drawing revision, tolerance calculation, and accepted process in the design/assembly documentation. Update affected PCB, BOM, CPL, and ordering notes; run `make check` for PCB/schematic changes and regenerate/inspect production outputs. Documentation or DRC alone does not close an outstanding physical fit or manufacturing-process approval.
+- Preserve all fourteen 1.00/1.80 mm stitching vias and protected copper.
+  An incompatible process needs an approved layout/process solution, not
+  smaller vias or an unreviewed exception.
+- Normal reliable tenting/ink plugging guidance is <=0.5 mm. Filled-and-capped
+  guides/table give 0.5/0.55 mm upper limits; neither establishes reliable
+  filling of 1.00 mm holes. Obtain written CAM acceptance for exceptions.
+  Tenting flags, a filling checkbox, opaque mask or gel do not prove a seal.
+- Compare full drill circles, annuli, copper and actual mask/paste apertures.
+  A neighbouring SMT pad can expose a nominally tented via. Inspect processed
+  Gerbers/stencil data too. The current relocation removes the historical
+  intersection; retained GDT land-pattern/process approval remains open.
+- Identify hole treatment by **function and coordinates**. Ordinary vias are
+  not lead-insertion holes. Resistor holes also use 1.00 mm drills: never request
+  all holes of that diameter be filled. Confirm CAM preserves protected drills.
+- Use maximum finished lead dimensions, including rectangular-pin diagonals.
+  Require `nominal hole - 0.08 mm >= maximum pin envelope + 0.10 mm` as the
+  starting diametral allowance after tolerance, with separate pin-pitch,
+  hole-position and forming allowances. Nominal diameter/pitch or C-code is
+  insufficient. Do not ream plated finished boards to repair insertion fit.
+- Recheck >=0.254 mm nominal component-PTH ring for two-layer/2 oz fabrication,
+  hole/copper/edge spacing and finished registration after resizing. Generic
+  via rules are not component rules. 70 micrometre surface copper is not barrel
+  copper; agree a required finished barrel minimum separately.
+- Record exact MPN/drawing revisions, tolerance calculations and accepted
+  process in assembly evidence; regenerate/inspect artifacts and run `make
+  check` for design changes. Documentation or DRC alone does not close physical
+  fit, manufacturing, enclosure or electrical qualification.

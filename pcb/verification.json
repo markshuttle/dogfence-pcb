@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "hardware_revision": "1.2.0-dev",
+  "single_global_label_review": "2026-09-06: this intentionally single-sheet circuit uses global labels to retain unprefixed manufacturing net names. Each listed label names an already wired network, not a missing inter-sheet connection. Complete terminal membership and native schematic parity remain mandatory. Accept only these exact label UUID/name pairs; new sheets, new labels, other warnings and errors require fresh review.",
+  "reviewed_single_global_labels": {
+    "11110002-0000-0000-0000-000000000001": "WIRE_A",
+    "11110002-0000-0000-0000-000000000002": "WIRE_B",
+    "11110002-0000-0000-0000-000000000003": "WIRE_C",
+    "11110003-0000-0000-0000-000000000001": "EARTH",
+    "22220001-0000-0000-0000-000000000001": "Net-(D1-A)",
+    "22220001-0000-0000-0000-000000000002": "Net-(D2-A)",
+    "11110001-0000-0000-0000-000000000003": "LED_A_POS",
+    "11110001-0000-0000-0000-000000000006": "LED_C_POS"
+  },
+  "reviewed_netlist_annotation": {
+    "tool_version": "9.0.7",
+    "stdout": "Warning: schematic has annotation errors, please use the schematic editor to fix them\n",
+    "reason": "2026-09-07: native controls prove the ten intentional J_/GDT_ references ending in letters trigger this aggregate warning. All 18 source property/instance references are unique and consistent, and all 30 exported terminals match the PCB. Numbering controls remove the warning without changing connectivity. Duplicate/unassigned-reference negative probes show the warning text alone is not safe to accept. This review is locked to the exact schematic/project/library/table hashes below, one kicadxml netlist-export warning on stdout, empty stderr and exit 0. Never refresh these hashes automatically. Evidence: tmp/annotation-review/probe-hzgnve0_/results.json and commands.json; see REMEDIATION.md.",
+    "source_hashes": {
+      "pcb/pcb.kicad_sch": "ce00875fc97b4cde44e5ba677e6c2d40cba1630ac26db13168daa7754be0e41b",
+      "pcb/pcb.kicad_pro": "cb018c8545e0cfa72b4867d7bd1eb36d56b16298f38eb48d0073dbba8234db0e",
+      "pcb/DogFence.kicad_sym": "a1a846c7c485c7c8a429c86cb75555c7278df0dba558eecaceb144c2bb43f75d",
+      "pcb/sym-lib-table": "ea40d83d52d3814721b6121a7103b8dca0e4ab19d8a15ef1e849e6de10a8b532",
+      "pcb/fp-lib-table": "c08ca44337aafcbfe5c6aaa1b940284c330d580e4dab569e97cb3e12212a0a64"
+    }
+  },
+  "release_holds": [
+    {
+      "id": "C4",
+      "reason": "No selected and verified PCB-side LED reversal/forward-pulse protection is implemented. See ELECTRICAL.md."
+    },
+    {
+      "id": "C5",
+      "reason": "Powered GDT follow-current/source shutdown architecture is unresolved; the 2 A fuse is not coordinated for all modeled faults. See ELECTRICAL.md."
+    },
+    {
+      "id": "W3",
+      "reason": "Continuous normal TEST requires a bounded source adjustment and accepted resistor/gel thermal design; the accessible-adjustment bound exceeds the resistor's standard-mode rating. See ELECTRICAL.md."
+    },
+    {
+      "id": "W1",
+      "reason": "Relocation removes the via/aperture intersection, but the retained SMT GDT lands differ from the retrieved recommended-pattern table. Confirm the drawing or obtain written alternative-pattern/solder-process acceptance. See ASSEMBLY.md."
+    },
+    {
+      "id": "W4",
+      "reason": "Maximum finished pin/body dimensions and insertion allowances remain unverified for several THT parts; connector holes were not guessed larger. The provisional earth terminal has a 0.30 mm body overhang. See ASSEMBLY.md."
+    }
+  ],
+  "file_release_review": null
+}

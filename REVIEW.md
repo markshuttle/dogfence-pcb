@@ -1,85 +1,77 @@
-**System Role & Context**
-Act as a Senior Hardware Engineer and PCB Layout Expert specializing in KiCAD. I am preparing to order a PCB from JLCPCB
-and need a rigorous, comprehensive Design for Manufacturing (DFM) and electrical design review before submitting the
-Gerber files.
+# Reusable Engineering Audit Brief
 
-**Project Overview**
+**This is a review prompt/template, not a completed audit, order specification override, or release sign-off.** The issue/evidence record and gate decisions are in [REMEDIATION.md](REMEDIATION.md). Draft hardware revision is **1.2.0-dev**, with **1.1.0** the reviewed baseline; determine what is actually implemented from the current sources and reports.
 
-Please review README.md and associated project documentation.
+## Scope
 
-**Review Requirements**
-Please analyze the provided design data and execute a thorough review across the following domains. Flag issues and
-provide specific, actionable remediation steps.
+Act as a hardware, PCB DFM and procurement reviewer. Read REMEDIATION and [AGENTS.md](AGENTS.md), then the current schematic/PCB, project/rule/library files, reviewed sourcing, build implementation and associated documentation. Include `pcb/ELECTRICAL.md` and `pcb/ASSEMBLY.md` when available; missing evidence is a hold, not permission to assume it exists.
 
-**1. JLCPCB DFM (Design for Manufacturing) Validation**
+Perform a **read-only audit of design/source files** unless changes are separately requested. Use headless tools and build-owned, non-hidden project-local staging; preserve unrelated work and audit evidence. Reports/generated test outputs do not authorize source edits, commits, uploads, part purchases or fabrication. Record the exact revision/hashes and tool versions reviewed; old successful reports are historical evidence only.
 
-* Verify that track widths, clearances, and annular rings meet JLCPCB's minimum capabilities for my specified layer
-  count.
-* Check for potential manufacturing defects like acid traps, acute angle traces, or un-tented vias near SMD pads that
-  could cause solder wicking.
-* Confirm silkscreen placement (no text over bare copper/pads) and check for proper fiducials or tooling holes if
-  required for PCBA.
+## Agreed Baseline
 
-**2. Power Delivery Network (PDN) & Thermal Management**
+| Area | Audit against this requirement, not a forced upgrade |
+| :--- | :--- |
+| Prototype | **Five individual fully assembled JLCPCB boards**, including all SMT/THT work and controlled GDT forming; **no field soldering**. |
+| Fabrication | Readily available **standard FR-4, two layers, 2 oz copper on both F.Cu/B.Cu, ENIG, nominal 1.6 mm finished thickness, green mask quote default**. Do not impose High-Tg 170, 2-microinch gold or filled vias without approved need and supplier acceptance. |
+| Deployment | **41 stations at 0, 100, ..., 4000 m**, including separate shed-end boards: **36 standard + 5 earth-connected**, **82 LEDs, 164 supports, 123 WAGO 221-613 splices**. Reconcile boxes/glands/prototype/spare allocation separately. |
+| Purchases | Preserve MATERIALS records: **80 LEDs remain ORDERED**, with field shortfall **2**; do not invent purchases of required quantities or candidates. |
+| TEST | Nominal 36 V, same-end feed/return, typically one to two hours but **continuous-safe normal TEST** required. No direction selector, automatic core classification or timer-based safety requirement. |
+| Fault requirement | Localize one site affecting any one, two or all three cores to a 100 m span. Repair first fault and repeat for multiple sites; no promise of identical behavior with mixed open/short faults. |
+| Indicators | Purchased **APEM Q10F5SXXSG02E**, no internal resistor, 20 mA family maximum, 5 V reverse maximum. ON/OFF distinguishable at **5 m in full daylight at minimum field current and actual angles**. Q14 and README alternatives are unapproved. |
+| Hub candidates | Purchased PSU believed **LRS-35-36**, confirm nameplate; **LRS-75-36** capacity candidate, not confirmed purchased or a fault fix. **CA10.A362 six-pole** switch candidate needs exact DC/contact/global transfer approval. |
+| Site | Coastal Isle of Man, observed -10 to +30 degrees C with some direct sun, not guaranteed extremes/internal limits. Cattle wire exposure is **at least 0.5 m separation for up to 300 m parallel**, requiring qualification. |
+| Cable | Likely **Oceanflex CM03/05.100 / P01018**, identity unconfirmed; listed tinned 3 x 2.5 mm^2, **60 V maximum, -15 to +70 degrees C complete cable**. Core-only 105-degree data is not a complete-cable rating; colours, resistance, UV/weather, wet-conduit and impulse evidence remain open. |
 
-* Analyze the current-carrying capacity of power traces and vias based on the stated constraints.
-* Review the decoupling capacitor placement (are they close enough to IC power pins with short ground return paths?).
-* Assess thermal relief on large pads and verify that heat-generating components have adequate copper pours or thermal
-  vias for dissipation.
+## 1. Electrical And Hub Review
 
-**3. Signal Integrity & EMI/EMC**
+- Verify the exact six-independent-end functional matrix: **RUN Start A/B/C -> T1, End A/B/C -> T2; OFF all six independently isolated; TEST Start A/C -> positive, Start B -> DC negative, End A/B/C independently isolated**. Required ties must be source-side contacts, not permanent field straps. Reject opposite-end B return, both-B negative ties or an End A/C common that masks a cut. Check transfer globally across all switch poles, not just individual break-before-make claims.
+- Preserve the WAGO through-splice/PCB-tap architecture. Model actual cable-end connections and local board currents; do not route the full perimeter current through every PCB in the calculation. Confirm transmitter/DC separation, OFF limitations, fence-inactive indication and independent containment in TEST/OFF.
+- Reproduce the **forward-only** nominal baseline with documented inputs: 41 stations, ideal 36 V, 27.6 ohms per 4 km core, 2.2 kohm/branch, 2.8 V combined forward drop. Expected healthy result **0.8477 A / 30.52 W**, LEDs **15.09 -> 8.04 mA**; five near-source boards **0.1509 A / 5.43 W**; all 41 near-source **1.2375 A / 44.55 W**. The 40 ohm/core, 4.0 V sensitivity result **6.21 mA far-end** is illustrative, not a cable bound or visibility proof.
+- Test all seven cut-core combinations across the 40 spans, especially the first and 3900-4000 m spans, plus repair/retest sequences, power balance and negative controls for masking connections. Check observability again if protection changes make the rungs bidirectional; the old forward-only model cannot validate a different circuit.
+- Keep **C4** open until the final protection bounds LED reverse voltage for both reversed supply and reversed flying leads, as well as forward pulse current. A series rectifier, darkness, or a single antiparallel diode at the board connector does not establish both reversal protections.
+- Keep **C5** open until the actual PSU/fuse/GDT system is analyzed and appropriately tested for hard/resistive shorts, ignited and failed GDTs, cable-limited current and powered recovery. Use actual DC interrupting/time-current and hiccup data. Do not infer fuse clearing from `>2 A`, extinction from 36 V being below sparkover, or equal transient sharing from parallel conductors.
+- Check transient residual voltage, lead overshoot, RF loading and cable insulation limits. A 470 V DC sparkover rating is not a 470 V transient clamp; component 5/20 kA data does not rate the assembled board, and three parallel earth pins do not establish 72 A capability.
+- Bound continuous normal TEST temperatures at credible supply adjustment/tolerance, cable and solar conditions. Separate MBE0414 1 W power-mode and 0.65 W standard-mode derating. About 0.50 W per source-end resistor is real heat, not proof of cool gel operation or lifetime.
 
-* Evaluate the grounding strategy. Are there unbroken ground planes under high-speed or sensitive analog signals?
-* Check for cross-talk risks between noisy digital/power traces and sensitive analog lines.
-* Review crystal oscillator placement and routing (guard rings, trace length, stray capacitance).
+## 2. Project And Production Verification
 
-**4. Component Placement & Assembly**
+- Inspect the actual [Makefile](Makefile) and exercise the intended strict workflow: complete-project staging with schematic, PCB, project/rules and reproducible local libraries; headless DRC, ERC, schematic/PCB parity, protected geometry and artifact checking. Retain readable/machine-readable reports on success and failure. Block electrical/DFM errors and unreviewed design warnings rather than suppressing missing libraries or courtyards.
+- Verify the resolved KiCad executable by invocation and version. Reviewed tool baseline is **9.0.7**, not untested KiCad 7/8 support. Use Snap-accessible project-local staging and ensure cleanup cannot delete unrelated `tmp/` evidence.
+- Check that every public export/package target is gated, including direct drills, IPC, BOM and CPL. Test serial/parallel builds and failure fixtures so bad current sources cannot leave stale files presented as a verified release. Preserve useful evidence before running cleanup.
+- Compare complete schematic/PCB/IPC terminal membership with documented aliases, coordinates/units and rounding tolerance. Reject empty/unrecognized inputs. Check actual generated Gerber/drill geometry, required layers including top paste, PTH/NPTH classification, BOM/CPL completeness, ZIP contents and source/artifact hashes.
+- Inspect the release manifest defined by the build, with hardware revision, tool version and verification results; do not invent a manifest path or report it present without inspecting it. Verify source/visible board/schematic/docs revisions match. Existing `build/Gerbers.zip`, `build/BOM.csv`, `build/CPL.csv` and `build/FlyTest.zip` are not automatically ready for upload.
 
-* Verify adequate clearance between components for assembly and rework (e.g., no tall capacitors blocking access to
-  fine-pitch ICs).
-* Check that connectors are placed near edges and oriented correctly for the final enclosure.
+## 3. Fabrication And Physical Fit
 
-**Output Format**
-Present your findings grouped by severity:
+- Apply [README's via and component hole DFM policy](README.md#via-and-component-hole-dfm) using current order-specific manufacturer data. Check applicable two-layer/2 oz rules, including at least 0.1651 mm track width, the project's 0.20 mm general copper clearance and **0.254 mm nominal component PTH ring**, plus hole/edge rules. Distinguish manufacturer minima, conservative project rules and generic via-ring limits.
+- Preserve the 63 x 56 mm board, mounting holes/keepouts, dual-layer full-width 3.2 mm rails, matching earth bus, **all 14 protected 1.0 mm drill / 1.8 mm pad vias**, at least 3.0 mm fence/earth clearance, LED connector pad polarity/outward orientations and 9.00 mm earth-GDT pitch. Measure actual geometry rather than assuming a nominal body gap is tolerance-free.
+- Confirm **onsemi 1N4007G / C232439**, not the legacy LGE attribution. Independently verify the implemented **1.10 mm finished holes / 2.20 mm pads** in source and fresh drill data: minimum 1.02 mm hole versus the controlling 0.034-inch / 0.8636 mm maximum lead, 0.1564 mm diametral clearance and 0.55 mm nominal ring. This reusable prompt is not the verification evidence or physical insertion acceptance.
+- For every THT part, obtain exact maximum finished pin dimensions, rectangular-pin diagonals, drawing revision and body/forming envelope. Apply `nominal finished hole - 0.08 mm >= maximum pin envelope + 0.10 mm`, adding allowance where needed for pitch, position and forming. Linked 1.60 mm connector CAD holes are a candidate, not insertion proof. Never ream finished plated boards to fix an unreviewed fit.
+- Compare complete drill circles and annuli with actual mask/paste and adjacent wettable areas. Detect the baseline 0.19 mm SMT aperture intersections; a tenting flag is not proof of coverage. Standard tenting/plugging guidance at <=0.5 mm and filling limits of 0.5/0.55 mm do not approve 1.0 mm filling. Require CAM agreement without reducing protected vias; no blanket treatment by diameter when resistor holes share 1.0 mm drills.
+- Distinguish **70 micrometres exterior copper** from barrel thickness; a published 18-micrometre average is not a minimum for every barrel. Require accepted plating and solder processes where the electrical case depends on them. Do not add narrow thermal spokes to protected surge paths merely to simplify soldering.
+- Use true maximum body/fabrication outlines and honest courtyards, not reduced outlines to hide collisions. Require a controlled GDT_AC side-view/forming drawing and physical **>=2.0 mm** gap above the board over B, with lead pitch/bend/solder acceptance and inspection method.
+- Check nominal 1.6 mm finished thickness against stackup, fabrication tolerance and the actual Essentra supports. Dry-fit COMBI 308, WAGO 221-613s, glands, cable bends, earth wires, lid LEDs and screwdriver/rework access. Correct APEM mounting torque is **0.20-0.25 Nm**, subject to exact model instructions.
+- Check legend height/stroke and pad clearance, useful underside references and revision marking; a font setting does not prove printed minimum stroke. Review manufacturer-added rails, fiducials/tooling and depanelization without invading protected copper. Do not mandate a 73 x 76 mm panel or assume automatic rail removal.
 
-* 🔴 **CRITICAL (Must Fix):** Errors that will cause board failure, smoke, or rejection by JLCPCB.
-* 🟡 **WARNING (Should Fix):** Sub-optimal design choices that degrade performance, risk EMI issues, or complicate assembly.
-* 🟢 **SUGGESTION (Nice to Have):** Best practices for future-proofing or cleaner layout.
+There are no ICs, oscillators or high-speed digital interfaces in the 14-part passive baseline. Do not prescribe generic decoupling, oscillator guard rings or a blanket ground plane. Assess any newly approved circuit additions on their own needs and RF/isolation effects.
 
-Please begin by reviewing the files in this project and confirming you understand the project scope.
+## 4. Sourcing And Assembly Data
 
----
-Suggested prompt:
+- Derive the actual population from the approved schematic/PCB. The baseline is 14 electrical parts, two SMT/twelve THT, all top-side, plus four mechanical hole footprints; it is not a fixed final count if protection changes. Verify exact manufacturer, MPN, footprint and population against BOM and order.
+- Generate CPL natively for **all required SMT/THT**, excluding mechanical/DNP items. Retain native signed Y, common origin and correct handedness; do not use absolute Y values. Normalize rotations modulo 360, so -90 and 270 degrees agree. Confirm footprint origins versus physical assembly centroids and document only evidence-backed part/model corrections.
+- Independently verify outward terminal openings, both LED connectors' left-positive/right-return pad mapping, cathodes-right diodes and GDT_AC's internally vertical geometry. Do not infer polarity/orientation from legacy standard-looking footprint names or move PCB pads to repair an import error.
+- Obtain dated quote-specific stock/allocation, attrition, packaging/minimum loading, Basic/Extended status, prices and schedule. Public stock is not allocated inventory. JLCPCB Economic and Standard both permit THT in principle; verify this exact 2 oz/ENIG mixed assembly, heavy-copper soldering and GDT lead-forming job rather than imposing a universal service restriction.
+- Do not automatically substitute Q14 or README alternatives for stock issues. Require exact electrical, package/pin/body, RF, thermal/pulse, optical, process and procurement review. A larger bezel or higher headline rating is not evidence of system improvement.
+- Separate **processed PCB/stencil CAM approval** from **parts-placement/assembly approval**, including panel/rails/fiducials, protected hole coordinates, accepted solder/forming process and delivery condition. A checkout checkbox or 3D preview does not prove both.
+- Reconcile 41 field boxes/two cable entries each, additional earth/hub hardware and prototype/spare consumption against actual inventory. Preserve ORDERED/ON HAND history, especially the **2 LED / 4 support / 3 WAGO field shortfalls**; do not turn candidates or pending items into purchases.
 
-In preparation for placing a PCBA order at JLCPCB, please conduct a comprehensive, from-scratch pre-flight engineering
-and procurement audit.  Target Order:  5 prototype boards.  Fabrication Spec: 2 Layers, 2 oz Cu, ENIG 2U", High-TG 170
-FR-4, Epoxy-Filled Vias (POFV).  Please DO NOT make any modifications to design files or source code. Conduct a
-read-only audit covering:
-1. Electrical & DFM Rules:
-   - Run a headless DRC check and report any violations or warnings.
-   - Verify minimum trace widths, clearances, and annular rings against fab limits for the specified copper weight (e.g.
-     2 oz rules).
-   - Confirm netlist continuity (Schematic vs. PCB vs. IPC-D-356 netlist).
-2. Geometry & Mechanical Interactions:
-   - Verify all footprint courtyards for zero overlap and measure tightest clearances.
-   - Check mounting hole keepouts, board edge margins, and enclosure/standoff compatibility.
-   - Verify physical component interactions (e.g., axial component standoffs, connector wire entry directions, screw
-     access).
-3. Polarity & Silkscreen:
-   - Audit polarity markings (+ / -, diode cathode bands, pin 1) against schematic nets and physical component
-     orientation.
-   - Cross-check CPL rotation angles against expected pick-and-place orientations.
-4. Live Stock & Sourcing Audit:
-   - Check real-time stock, presale availability, and unit pricing for every BOM component at the fab's Shenzhen
-     warehouse.
-   - Calculate total component quantities required for the target batch size (including assembly overage / least patch
-     numbers).
-   - For any component with low stock (< [e.g. 50] pcs), identify and verify an in-stock, drop-in replacement with
-     identical package and ratings.
-   - Categorize parts by Basic vs. Extended status and calculate total estimated PCBA unit cost.
-5. Deliverable:
-   - Provide a concise executive sign-off checklist (PASS/FAIL) with key findings.
-   - Compile a detailed report artifact in the project workspace with exact measurements and part data.
-   - Confirm that all turnkey fabrication files (Gerbers.zip, BOM.csv, CPL.csv, FlyTest.zip) in build/ are up to date
-     and ready for upload.
+## 5. Qualification And Reporting
 
+Separate file verification, supplier acceptance and physical qualification. Review the actual scope/results for workmanship on all five prototypes, normal function, both reversal cases, continuous potted thermal soak, 5 m minimum-current daylight contrast, full-hub cut behavior, enclosure/material process, RF/site and qualified fault/surge recovery. Retain an unpotted reference; obtain approval for extra/destructive samples if needed. A DMM-open GDT, dark LED or displayed 0.00 mA is not proof of firing capability, safe reverse voltage or sub-microampere leakage.
+
+Require actual cable identity/colours/resistance and UV/wet-conduit evidence, MP0100 formulation/process compatibility, credible coastal/solar conditions, and cattle-energizer off/on qualification in RUN and TEST. Verify the site-specific earthing/bonding design with regional OEM instructions and a qualified installer; do not prescribe arbitrary unbonded rods, direct fence-core earthing or a default DC-negative bond. Do not infer an assembled IP68/hermetic rating, direct-strike protection or multi-decade life from ENIG, gel or component data.
+
+Report **findings first**, ordered by severity, with file/line or measured feature, reproducible evidence, consequence and a specific closure action. Distinguish a demonstrated defect from absent supplier/test evidence and from an optional improvement. Do not describe every unqualified item as certain hardware failure.
+
+Use **PASS, FAIL, HOLD, NOT RUN** only for a named check and inspected revision, not a blanket executive sign-off. Summarize gates A/B/C separately with remaining conditions and owners. State exactly which commands ran, their results and limits, external sources/dates, untested cases and missing evidence. A successful build means verified manufacturing data for that revision; it does not close C4/C5 or grant field/surge approval. Make no claim that files are ready for upload without inspecting the actual gated release and required manufacturer approvals.

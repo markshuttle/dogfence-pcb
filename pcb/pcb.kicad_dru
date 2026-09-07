@@ -1,0 +1,12 @@
+(version 1)
+
+# Two-layer / 2 oz component PTH design ring. This is not a via rule or
+# evidence of finished barrel plating, maximum-pin fit, or CAM acceptance.
+(rule "Component PTH annular ring"
+  (condition "A.Type == 'Pad' && A.Pad_Type == 'Through-hole'")
+  (constraint annular_width (min 0.254mm)))
+
+# Applies to all other copper, including future parts and unassigned copper.
+(rule "Earth isolation"
+  (condition "(A.NetName == 'EARTH' && B.NetName != 'EARTH') || (B.NetName == 'EARTH' && A.NetName != 'EARTH')")
+  (constraint clearance (min 3.0mm)))

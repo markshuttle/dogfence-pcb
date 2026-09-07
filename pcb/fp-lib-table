@@ -1,0 +1,4 @@
+(fp_lib_table
+  (version 7)
+  (lib (name "DogFence")(type "KiCad")(uri "${KIPRJMOD}/DogFence.pretty")(options "")(descr "Reviewed DogFence custom footprints; see ASSEMBLY.md for qualification holds"))
+)
