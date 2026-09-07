@@ -68,10 +68,12 @@ MIN_RULES = {
     "min_copper_edge_clearance": 0.5, "min_via_annular_width": 0.1,
     "min_silk_clearance": 0.15, "min_text_height": 1.0, "min_text_thickness": 0.15,
 }
+ENGINEERING_NOTES = ("ASSEMBLY.md", "ELECTRICAL.md", "DFM_EVIDENCE.md", "ENVIRONMENT_EVIDENCE.md",
+                     "DESIGN_BOUNDS.md", "LED_PROTECTION_RESEARCH.md", "SOURCE_PROTECTION_RESEARCH.md")
 REQUIRED = ("pcb.kicad_pcb", "pcb.kicad_sch", "pcb.kicad_pro", "pcb.kicad_dru",
-            "fp-lib-table", "sym-lib-table", "BOM.csv", "verification.json",
-            "ASSEMBLY.md", "ELECTRICAL.md")
-HELPERS = ("manufacturing.py", "compare_nets.py", "check_geometry.py", "kicad_sexpr.py")
+            "fp-lib-table", "sym-lib-table", "BOM.csv", "verification.json", *ENGINEERING_NOTES)
+HELPERS = ("manufacturing.py", "compare_nets.py", "check_geometry.py", "kicad_sexpr.py",
+           "analyze_limits.py", "design_bounds.py")
 SOURCE_SUFFIXES = {".kicad_pcb", ".kicad_sch", ".kicad_pro", ".kicad_dru", ".kicad_mod",
                    ".kicad_sym", ".kicad_wks", ".step", ".stp", ".wrl"}
 CPL_FIELDS = ["Designator", "Val", "Package", "Mid X", "Mid Y", "Rotation", "Layer"]
@@ -92,6 +94,8 @@ SCOPE = {
     "bom_fields": "Exact MPN and Manufacturer in schematic/PCB; CSV 'LCSC Part #' accepts source 'LCSC' (existing project field) or 'LCSC Part #'; conflicting aliases fail",
     "gerber_tolerance_mm": 0.000002,
     "gerber_coverage": "Copper pads/vias/straight tracks, board outline, mask/paste aperture inventory, sizes and corner radii; unsupported critical-layer source graphics rejected; legend syntax (not rendered glyph equivalence)",
+    "via_masks": "KiCad 9 flat global/per-via tenting flags; absent local flags inherit; absent global flags tent both sides. Via openings use board mask expansion and individual circular flashes at zero minimum mask width. Only source-matched openings of untented, overlapping same-net vias may expose their group holes; component mask/paste exposure is forbidden.",
+    "via_treatment": "ViaTreatment.csv reports resolved source-requested front/back tenting, not physical covering. Both open: standard untented, no fill. No seal, CAM acceptance, finish thickness or barrel-copper limit is inferred.",
     "drill_tolerance_mm": 0.000501,
     "open_acceptance": ["JLCPCB exact-part centroid/rotation and polarity",
                         "processed CAM/stencil and via treatment; pin fit and forming",
@@ -340,14 +344,48 @@ def generate_cpl(native, output, board):
 
 
 def match_geometry(actual, expected, tolerance, label):
-    remaining = list(expected)
+    """Return the one-to-one matched source records in exported order."""
+    remaining, matched = list(expected), []
     for record in actual:
         matches = [i for i, candidate in enumerate(remaining) if len(record) == len(candidate)
                    and all(abs(a - b) <= tolerance if isinstance(a, (int, float)) else a == b
                            for a, b in zip(record, candidate))]
         require(matches, f"Extra/wrong {label}: {record}")
-        remaining.pop(matches[0])
+        matched.append(remaining.pop(matches[0]))
     require(not remaining, f"Missing {label}: {remaining[:3]} ({len(remaining)} total)")
+    return matched
+
+
+def via_mask_settings(board):
+    """Resolve (front tented, back tented, opening radius) by source PCB coordinate."""
+    setup = child(board.tree, "setup")
+    plot = child(setup, "pcbplotparams", False)
+    require(plot is None or child(plot, "viasonmask", False) is None,
+            "Legacy viasonmask needs a tested tenting resolver")
+    margin = numbers([value(setup, "pad_to_mask_clearance", "0")])[0]
+    inherited, result = (True, True), {}
+    for owner in [setup, *children(board.tree, "via")]:
+        field = child(owner, "tenting", False)
+        tented = inherited
+        if field is not None:
+            flags = field[1:]
+            require(all(isinstance(flag, str) and flag in ("front", "back", "none") for flag in flags)
+                    and len(flags) == len(set(flags)) and ("none" not in flags or len(flags) == 1),
+                    "Unsupported/malformed KiCad 9 tenting flags")
+            # A present flat list overrides both sides; an omitted side is open.
+            tented = tuple(side in flags for side in ("front", "back"))
+        if owner is setup:
+            inherited = tented
+            continue
+        require(not any(child(owner, key, False) is not None for key in
+                        ("solder_mask_margin", "padstack", "covering", "plugging", "filling", "capping")),
+                "Unsupported via mask/treatment override; KiCad 9 vias use board mask expansion")
+        point = numbers(child(owner, "at")[1:])
+        require(len(point) == 2 and point not in result, "Malformed/duplicate via mask coordinates")
+        radius = numbers([value(owner, "size")])[0] / 2 + margin
+        require(math.isfinite(radius) and (all(tented) or radius > 0), "Nonpositive/nonfinite via mask aperture")
+        result[point] = (*tented, radius)
+    return result
 
 
 def validate_drill(path, board, plated):
@@ -527,6 +565,8 @@ def validate_gerbers(directory, board):
         require(supported, f"Unsupported source geometry on critical manufacturing layers: {item[0]} {sorted(layers)}")
     require(numbers([value(child(board.tree, "setup"), "solder_mask_min_width", "0")])[0] == 0,
             "Merged/polygonal solder mask needs an export geometry validator")
+    via_masks = via_mask_settings(board)
+    vias = {(pad.x, pad.y): pad for pad in board.pads if pad.kind == "via"}
 
     def pad_aperture(pad, layer):
         require(pad.rotation % 90 == 0 or pad.shape == "circle", "Non-orthogonal pad needs geometry support")
@@ -593,15 +633,27 @@ def validate_gerbers(directory, board):
         elif layer.endswith(("Mask", "Paste")):
             require(not segments, "Non-flashed mask/paste apertures need geometry support")
             expected = []
+            side = 0 if layer == "F.Mask" else 1
             for pad in board.pads:
-                if pad.kind == "via" or not (layer in pad.layers or "*." + layer.split(".")[1] in pad.layers):
+                if pad.kind == "via":
+                    front, back, radius = via_masks[(pad.x, pad.y)]
+                    if layer.endswith("Mask") and not (front, back)[side]:
+                        expected.append((pad.x, -pad.y, 2 * radius, 2 * radius, "C", 0, "", "", ""))
                     continue
-                expected.append((pad.x, -pad.y, *pad_aperture(pad, layer), pad.ref))
-            match_geometry([f[:7] for f in flashes], expected, 0.000002, layer + " aperture inventory/size/corners")
+                if not (layer in pad.layers or "*." + layer.split(".")[1] in pad.layers):
+                    continue
+                expected.append((pad.x, -pad.y, *pad_aperture(pad, layer), pad.ref, "", ""))
+            matched = match_geometry(flashes, expected, 0.000002, layer + " aperture inventory/size/corners")
             # Conservative bounding rectangles cover ordinary circle/oval/roundrect
-            # flashes. A potential overlap is held, never excused as nominal tenting.
-            for via in (pad for pad in board.pads if pad.kind == "via"):
-                for x, y, width, height, shape, radius, ref, pin, net in flashes:
+            # component flashes. Via exceptions require a matched source owner,
+            # both openings requested on this side, and overlapping same-net copper.
+            for via in vias.values():
+                for flash, source in zip(flashes, matched):
+                    x, y, width, height, shape, radius, ref, pin, net = flash
+                    opening = vias.get((source[0], -source[1])) if layer.endswith("Mask") and not ref else None
+                    if (opening is not None and not via_masks[(via.x, via.y)][side] and opening.net == via.net
+                            and math.dist((opening.x, opening.y), (via.x, via.y)) <= (opening.width + via.width) / 2):
+                        continue
                     dx, dy = max(abs(via.x - x) - width / 2, 0), max(abs(-via.y - y) - height / 2, 0)
                     require(math.hypot(dx, dy) > via.drill / 2 + 0.000002,
                             f"Exported {layer} aperture {ref} exposes via hole at ({via.x}, {via.y})")
@@ -809,7 +861,7 @@ class Manufacturing:
         for name in ("pcb.d356", "CPL.csv", "Assembly.pdf"):
             shutil.copy2(scratch / name, release / name)
         shutil.copy2(self.project / "BOM.csv", release / "BOM.csv")
-        for name in ("ASSEMBLY.md", "ELECTRICAL.md", "verification.json"):
+        for name in (*ENGINEERING_NOTES, "verification.json"):
             shutil.copy2(self.project / name, release / name)
         assembly = [f"Dog Fence {self.revision} - native assembly placement reference", SCOPE["placement"],
                     "Not an accepted JLCPCB placement model. Confirm all centroids, rotations and polarity.",
@@ -821,10 +873,15 @@ class Manufacturing:
         (release / "Assembly.txt").write_text("\n".join(assembly) + "\n", encoding="utf-8")
         with (release / "ViaTreatment.csv").open("w", newline="", encoding="utf-8") as stream:
             writer = csv.writer(stream, lineterminator="\n")
-            writer.writerow(["Function", "Net", "PCB X mm", "PCB Y mm", "Drill mm", "Pad mm", "Treatment"])
+            writer.writerow(["Function", "Net", "PCB X mm", "PCB Y mm", "Drill mm", "Pad mm",
+                             "Requested front tented", "Requested back tented", "Treatment"])
+            via_masks = via_mask_settings(board)
             for p in sorted((p for p in board.pads if p.kind == "via"), key=lambda p: (p.x, p.y)):
+                front, back, _ = via_masks[(p.x, p.y)]
+                treatment = "Standard untented" if not front and not back else "Source-requested tenting (not a seal)"
                 writer.writerow(["Stitching via", p.net, p.x, p.y, p.drill, p.width,
-                                 "Preserve diameter; filling/covering requires written CAM acceptance"])
+                                 "yes" if front else "no", "yes" if back else "no",
+                                 treatment + "; no fill; preserve diameters; CAM acceptance not established"])
         members = {name: release / "gerbers" / name for name in FAB_FILES}
         make_zip(release / "Gerbers.zip", members)
         readme = scratch / "README.txt"

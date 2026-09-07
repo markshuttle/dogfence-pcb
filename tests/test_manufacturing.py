@@ -38,7 +38,7 @@ def make_project(root):
     m.write_json(pcb / "verification.json", {
         "schema_version": 1, "hardware_revision": "fixture-1", "reviewed_single_global_labels": {},
         "release_holds": [], "file_release_review": "Synthetic pipeline fixture only; not hardware approval"})
-    for name in ("ASSEMBLY.md", "ELECTRICAL.md"):
+    for name in m.ENGINEERING_NOTES:
         (pcb / name).write_text("Synthetic test fixture, not engineering evidence.\n", encoding="utf-8")
     shutil.copy2(REPO / "pcb" / "pcb.kicad_dru", pcb)
     (pcb / "fp-lib-table").write_text(
@@ -78,6 +78,14 @@ def native_positions(board):
 
 def fake_gerbers(directory, board):
     codes = {node[1]: node[2] for node in nets.children(board.tree, "net")}
+    setup = nets.child(board.tree, "setup")
+    global_tenting = nets.child(setup, "tenting", False)
+    via_flags = {}
+    for node in nets.children(board.tree, "via"):
+        field = nets.child(node, "tenting", False)
+        if field is None:
+            field = global_tenting
+        via_flags[nets.numbers(nets.child(node, "at")[1:])] = field[1:] if field is not None else ["front", "back"]
     for layer, (filename, function) in m.LAYERS.items():
         lines = [f"%TF.FileFunction,{function}*%", "%TF.SameCoordinates,Original*%", "%MOMM*%", "%FSLAX46Y46*%",
                  f"%TF.FilePolarity,{'Negative' if layer.endswith('Mask') else 'Positive'}*%", "%LPD*%", "G01*"]
@@ -88,18 +96,34 @@ def fake_gerbers(directory, board):
                 if pad.kind == "np_thru_hole" or not (layer in pad.layers or "*.Cu" in pad.layers):
                     continue
             elif layer.endswith(("Mask", "Paste")):
-                if pad.kind == "via" or not (layer in pad.layers or "*." + layer.split(".")[1] in pad.layers):
+                if pad.kind == "via":
+                    side = "front" if layer == "F.Mask" else "back"
+                    if not layer.endswith("Mask") or side in via_flags[(pad.x, pad.y)]:
+                        continue
+                elif not (layer in pad.layers or "*." + layer.split(".")[1] in pad.layers):
                     continue
             else:
                 continue
-            w, h = (pad.width, pad.height) if pad.rotation % 180 == 0 else (pad.height, pad.width)
+            w, h = pad.width, pad.height
             shape = {"circle": "C", "rect": "R", "roundrect": "RoundRect"}[pad.shape]
+            radius = 0
+            if layer.endswith(("Mask", "Paste")):
+                margin = (float(nets.value(setup, "pad_to_mask_clearance", "0")) if pad.kind == "via"
+                          else pad.mask_margin if layer.endswith("Mask") else pad.paste_margin)
+                ratio = pad.paste_ratio if layer.endswith("Paste") else 0
+                mx, my = margin + w * ratio, margin + h * ratio
+                w, h = w + 2 * mx, h + 2 * my
+                if pad.shape == "rect" and mx > 0:
+                    shape, radius = "RoundRect", min(mx, w / 2, h / 2)
+            if pad.shape == "roundrect":
+                radius = min(w, h) * pad.roundrect_ratio
+            if pad.rotation % 180:
+                w, h = h, w
             if shape == "RoundRect":
                 if not roundrect_defined:
                     lines += ["%AMRoundRect*", "0 Rounded rectangle*", *m.ROUNDRECT_PRIMITIVES[:-1],
                               m.ROUNDRECT_PRIMITIVES[-1] + "%"]
                     roundrect_defined = True
-                radius = min(w, h) * pad.roundrect_ratio
                 hx, hy = max(w / 2 - radius, .00001), max(h / 2 - radius, .00001)
                 params = "X".join(f"{v:.6f}" for v in (radius, -hx, -hy, hx, -hy, hx, hy, -hx, hy, 0))
             else:
@@ -109,7 +133,7 @@ def fake_gerbers(directory, board):
                 if pad.kind != "via":
                     lines.append(f"%TO.P,{pad.ref},{pad.pin}*%")
                 lines.append(f"%TO.N,{pad.net}*%")
-            else:
+            elif pad.kind != "via":
                 lines.append(f"%TO.C,{pad.ref}*%")
             lines += [f"X{round(pad.x * 1e6)}Y{round(-pad.y * 1e6)}D03*", "%TD*%"]
             aperture += 1
@@ -283,6 +307,11 @@ class ManufacturingTests(unittest.TestCase):
         self.assertIn("pcb/pcb.kicad_dru", manifest["source_hashes"])
         self.assertIn("pcb/Local.pretty/THT.kicad_mod", manifest["source_hashes"])
         self.assertNotIn("pcb/CPL.csv", manifest["source_hashes"])
+        for name in m.ENGINEERING_NOTES:
+            self.assertEqual((build / name).read_bytes(), (self.root / "pcb" / name).read_bytes())
+            self.assertEqual(m.sha256(build / name), manifest["source_hashes"][f"pcb/{name}"])
+        for name in ("analyze_limits.py", "design_bounds.py"):
+            self.assertIn(f"scripts/{name}", manifest["source_hashes"])
         with zipfile.ZipFile(build / "Gerbers.zip") as archive:
             self.assertEqual(set(archive.namelist()), m.FAB_FILES)
         with zipfile.ZipFile(build / "FlyTest.zip") as archive:
@@ -305,7 +334,8 @@ class ManufacturingTests(unittest.TestCase):
         self.assertTrue(any(Path(arg).name == "check_geometry.py" for c in fake.calls for arg in c))
 
     def test_missing_rules_and_project_fail_before_exports(self):
-        for filename in ("pcb.kicad_dru", "pcb.kicad_pro", "fp-lib-table", "sym-lib-table", "verification.json"):
+        for filename in ("pcb.kicad_dru", "pcb.kicad_pro", "fp-lib-table", "sym-lib-table", "verification.json",
+                         *m.ENGINEERING_NOTES):
             path = self.root / "pcb" / filename
             data = path.read_bytes()
             path.unlink()
@@ -632,6 +662,159 @@ class ManufacturingTests(unittest.TestCase):
         with self.assertRaisesRegex(nets.VerificationError, "exposes via hole"):
             m.validate_gerbers(directory, board)
 
+    def test_via_mask_settings_inheritance_and_explicit_both_side_overrides(self):
+        path = self.root / "pcb" / "pcb.kicad_pcb"
+        cases = (("", (True, True)), ("(tenting)", (False, False)), ("(tenting none)", (False, False)),
+                 ("(tenting front)", (True, False)), ("(tenting back)", (False, True)),
+                 ("(tenting front back)", (True, True)))
+        for global_flags, default in cases:
+            for local_flags, override in cases:
+                for margin in (0, .2, -.1):
+                    with self.subTest(global_flags=global_flags, local_flags=local_flags, margin=margin):
+                        source = BOARD.replace('(pad_to_mask_clearance 0) (tenting front back)',
+                                               f'(pad_to_mask_clearance {margin}) {global_flags}')
+                        path.write_text(source.replace('(via (at 30 20)', f'(via {local_flags} (at 30 20)'))
+                        settings = m.via_mask_settings(nets.read_board(path))
+                        self.assertEqual(set(settings), {(30, 20)})
+                        self.assertEqual(settings[(30, 20)][:2], override if local_flags else default)
+                        self.assertAlmostEqual(settings[(30, 20)][2], .9 + margin)
+
+    def test_via_mask_settings_reject_unsupported_or_ambiguous_source(self):
+        path = self.root / "pcb" / "pcb.kicad_pcb"
+        sources = [BOARD.replace('(tenting front back)', flags) for flags in
+                   ('(tenting front front)', '(tenting none front)', '(tenting yes)',
+                    '(tenting (front no))', '(tenting) (tenting front)')]
+        sources += [BOARD.replace('(via (at 30 20)', f'(via {field} (at 30 20)') for field in
+                    ('(tenting (front no) (back yes))', '(tenting front front)', '(tenting unknown)',
+                     '(tenting) (tenting back)', '(solder_mask_margin 0.2)', '(padstack)', '(filling yes)')]
+        sources += [BOARD.replace('(tenting front back)', '(tenting)').replace(
+                        '(pad_to_mask_clearance 0)', f'(pad_to_mask_clearance {margin})')
+                    for margin in ('-0.9', '-1', 'nan', 'inf')]
+        sources += [BOARD.replace('(setup ', '(setup (pcbplotparams (viasonmask true)) '),
+                    BOARD.replace('(via (at 30 20)',
+                                  '(via (at 30 20) (size 1.8) (drill 1) (layers "F.Cu" "B.Cu") (net 1)) '
+                                  '(via (at 30 20)')]
+        for source in sources:
+            path.write_text(source)
+            with self.subTest(source=source), self.assertRaises(nets.VerificationError):
+                m.via_mask_settings(nets.read_board(path))
+
+    def test_open_via_mask_inventory_rejects_missing_extra_shifted_size_shape_and_attributes(self):
+        path = self.root / "pcb" / "pcb.kicad_pcb"
+        path.write_text(BOARD.replace('(tenting front back)', '(tenting)'))
+        board = nets.read_board(path)
+        directory = self.root / "gerbers"
+        directory.mkdir()
+        fake_gerbers(directory, board)
+        m.validate_gerbers(directory, board)
+        flash = "X30000000Y-20000000D03*"
+        for layer in ("F.Mask", "B.Mask"):
+            path = directory / m.LAYERS[layer][0]
+            original = path.read_text()
+            for name, changed in (
+                    ("missing", original.replace(flash + "\n", "")),
+                    ("duplicate", original.replace(flash, flash + "\n" + flash)),
+                    ("extra", original.replace(flash, flash + "\nX50000000Y-10000000D03*")),
+                    ("shifted", original.replace(flash, "X30010000Y-20000000D03*")),
+                    ("radius", original.replace("C,1.800000", "C,2.000000")),
+                    ("shape", original.replace("C,1.800000", "R,1.800000X1.800000")),
+                    ("reference", original.replace(flash, "%TO.C,VIA*%\n" + flash)),
+                    ("pin", original.replace(flash, "%TO.P,R1,1*%\n" + flash)),
+                    ("net", original.replace(flash, "%TO.N,POWER*%\n" + flash))):
+                self.assertNotEqual(changed, original, name)
+                path.write_text(changed)
+                with self.subTest(layer=layer, defect=name), self.assertRaisesRegex(nets.VerificationError, "aperture inventory"):
+                    m.validate_gerbers(directory, board)
+            path.write_text(original)
+        # No unreferenced mask/paste flash is exempt, even at a real but tented via.
+        path = self.root / "pcb" / "pcb.kicad_pcb"
+        path.write_text(BOARD)
+        board = nets.read_board(path)
+        fake_gerbers(directory, board)
+        for layer in ("F.Mask", "B.Mask", "F.Paste"):
+            path = directory / m.LAYERS[layer][0]
+            original = path.read_text()
+            path.write_text(original.replace("M02*", "%TD*%\n%ADD99C,1.800000*%\nD99*\n" + flash + "\nM02*"))
+            with self.subTest(layer=layer), self.assertRaisesRegex(nets.VerificationError, "Extra/wrong"):
+                m.validate_gerbers(directory, board)
+            path.write_text(original)
+
+    def test_via_mask_group_exception_is_source_net_and_layer_bound(self):
+        path = self.root / "pcb" / "pcb.kicad_pcb"
+        directory = self.root / "gerbers"
+        directory.mkdir()
+        cases = ((31.5, 1, "", .2, None), (31.5, 2, "", .2, "F.Mask"),
+                 (31.5, 1, "(tenting front)", .2, "F.Mask"), (31.5, 1, "(tenting back)", .2, "B.Mask"),
+                 (32, 1, "", .7, "F.Mask"))
+        for x, net, flags, margin, failure in cases:
+            with self.subTest(x=x, net=net, flags=flags, margin=margin):
+                source = BOARD.replace('(pad_to_mask_clearance 0) (tenting front back)',
+                                       f'(pad_to_mask_clearance {margin}) (tenting)')
+                extra = f'(via (at {x} 20) (size 1.8) (drill 1) (layers "F.Cu" "B.Cu") (net {net}) {flags})'
+                path.write_text(source.rstrip()[:-1] + extra + ")\n")
+                board = nets.read_board(path)
+                fake_gerbers(directory, board)
+                if failure:
+                    with self.assertRaisesRegex(nets.VerificationError, failure + ".*exposes via hole"):
+                        m.validate_gerbers(directory, board)
+                else:
+                    m.validate_gerbers(directory, board)
+
+    def test_untented_vias_still_reject_component_mask_and_paste_collisions(self):
+        path = self.root / "pcb" / "pcb.kicad_pcb"
+        directory = self.root / "gerbers"
+        directory.mkdir()
+        for flags in ("(tenting)", "(tenting front)", "(tenting back)", "(tenting front back)"):
+            for layer in ("F.Mask", "B.Mask", "F.Paste"):
+                with self.subTest(flags=flags, layer=layer):
+                    source = BOARD.replace('(tenting front back)', flags)
+                    if layer == "B.Mask":
+                        source = source.replace('(via (at 30 20)', '(via (at 8.5 20)')
+                        source = source.replace('(layers "*.Cu" "*.Mask")', '(layers "*.Cu" "B.Mask")', 1)
+                    else:
+                        source = source.replace('(via (at 30 20)', '(via (at 19 30)')
+                        if layer == "F.Paste":
+                            source = source.replace('(layers "F.Cu" "F.Mask" "F.Paste")', '(layers "F.Cu" "F.Paste")', 1)
+                    path.write_text(source)
+                    board = nets.read_board(path)
+                    fake_gerbers(directory, board)
+                    with self.assertRaisesRegex(nets.VerificationError, layer + ".*exposes via hole"):
+                        m.validate_gerbers(directory, board)
+
+    def test_nonzero_mask_minimum_width_remains_unsupported_for_open_vias(self):
+        path = self.root / "pcb" / "pcb.kicad_pcb"
+        path.write_text(BOARD.replace('(tenting front back)', '(tenting) (solder_mask_min_width 0.1)'))
+        board = nets.read_board(path)
+        directory = self.root / "gerbers"
+        directory.mkdir()
+        fake_gerbers(directory, board)
+        with self.assertRaisesRegex(nets.VerificationError, "Merged/polygonal solder mask"):
+            m.validate_gerbers(directory, board)
+
+    def test_via_treatment_csv_reports_source_requested_front_and_back(self):
+        path = self.root / "pcb" / "pcb.kicad_pcb"
+        for global_flags, local_flags, expected in (
+                ("(tenting front back)", "", ("yes", "yes")), ("(tenting)", "", ("no", "no")),
+                ("(tenting front)", "", ("yes", "no")), ("(tenting back)", "", ("no", "yes")),
+                ("(tenting front back)", "(tenting)", ("no", "no")),
+                ("(tenting front back)", "(tenting back)", ("no", "yes")),
+                ("(tenting)", "(tenting front)", ("yes", "no"))):
+            with self.subTest(global_flags=global_flags, local_flags=local_flags):
+                source = BOARD.replace('(tenting front back)', global_flags)
+                path.write_text(source.replace('(via (at 30 20)', f'(via {local_flags} (at 30 20)'))
+                rc, pipeline, _ = self.execute("check")
+                self.assertEqual(rc, 0, pipeline.errors)
+                rows = m.read_csv(pipeline.run / "release" / "ViaTreatment.csv",
+                                  ("Requested front tented", "Requested back tented", "Treatment"))
+                self.assertEqual(len(rows), 1)
+                row = rows[0]
+                self.assertEqual((row["Requested front tented"], row["Requested back tented"]), expected)
+                self.assertEqual((row["Function"], row["Net"]), ("Stitching via", "POWER"))
+                self.assertEqual(tuple(float(row[key]) for key in ("PCB X mm", "PCB Y mm", "Drill mm", "Pad mm")),
+                                 (30, 20, 1, 1.8))
+                self.assertEqual(row["Treatment"].startswith("Standard untented"), expected == ("no", "no"))
+                self.assertIn("no fill; preserve diameters; CAM acceptance not established", row["Treatment"])
+
     def test_malformed_and_incomplete_manufacturing_data_rejected(self):
         path = self.root / "bad.gbr"
         path.write_text("garbage\nM02*\n")
@@ -791,8 +974,127 @@ def m_target_names():
 
 @unittest.skipUnless(os.environ.get("KICAD_TEST_CLI"), "Set KICAD_TEST_CLI for isolated native CLI fixture probes")
 class NativeContractTests(unittest.TestCase):
+    def test_native_current_source_fabrication_inventory(self):
+        parent = REPO / "tmp" / "native-manufacturing-tests"
+        parent.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(prefix="native-current-source-", dir=parent, delete=False) as temporary:
+            root = Path(temporary)
+            project = root / "pcb"
+            project.mkdir()
+            hashes = {}
+            for name in ("pcb.kicad_pcb", "pcb.kicad_pro", "pcb.kicad_dru"):
+                source = REPO / "pcb" / name
+                hashes[name] = m.sha256(source)
+                shutil.copy2(source, project / name)
+                self.assertEqual(m.sha256(project / name), hashes[name])
+            pcb = project / "pcb.kicad_pcb"
+            board = nets.read_board(pcb)
+            gerbers, drills = root / "gerbers", root / "drills"
+            gerbers.mkdir()
+            drills.mkdir()
+            jobs = [
+                ["pcb", "export", "gerbers", "--layers", ",".join(m.LAYERS), "--precision", "6", "--no-protel-ext",
+                 "--subtract-soldermask", "--output", str(gerbers) + "/", str(pcb)],
+                ["pcb", "export", "drill", "--format", "excellon", "--drill-origin", "absolute", "--excellon-units", "mm",
+                 "--excellon-zeros-format", "decimal", "--excellon-separate-th", "--output", str(drills) + "/", str(pcb)],
+            ]
+            for args in jobs:
+                command = [os.environ["KICAD_TEST_CLI"], *args]
+                result = subprocess.run(command, cwd=project, capture_output=True, text=True, timeout=120)
+                m.write_json(root / f"{args[2]}-command.json", {"command": command, "returncode": result.returncode,
+                                                              "stdout": result.stdout, "stderr": result.stderr})
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertEqual(re.sub(m.WX_IMAGE_DEBUG, "", result.stderr), "")
+                self.assertIsNone(re.search(r"(?im)^\s*(?:warning|error)\b", result.stdout))
+            checked = {"source_hashes": hashes, "gerbers": m.validate_gerbers(gerbers, board),
+                       "drills": {name: m.validate_drill(drills / name, board, name == "pcb-PTH.drl")
+                                  for name in sorted(m.DRILLS)}}
+            for name, digest in hashes.items():
+                self.assertEqual(m.sha256(project / name), digest)
+            vias = m.via_mask_settings(board)
+            self.assertEqual(len(vias), 14)
+            self.assertTrue(all(settings == (False, False, .9) for settings in vias.values()))
+            checked["via_mask_openings"] = {}
+            for layer in ("F.Mask", "B.Mask"):
+                flashes = m.parse_gerber(gerbers / m.LAYERS[layer][0], m.LAYERS[layer][1])[0]
+                checked["via_mask_openings"][layer] = [f for f in flashes if not f[6]]
+                self.assertEqual(len(checked["via_mask_openings"][layer]), 14)
+            m.write_json(root / "validated.json", checked)
+
+    def test_native_via_mask_flags_inheritance_margins_and_overlapping_flashes(self):
+        parent = REPO / "tmp" / "native-manufacturing-tests"
+        parent.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(prefix="native-via-mask-", dir=parent, delete=False) as temporary:
+            root = Path(temporary)
+            cases = (("", 0, True, True), ("(tenting)", 0, False, False),
+                     ("(tenting front)", 0, True, False), ("(tenting back)", 0, False, True),
+                     ("(tenting front back)", 0, True, True), ("(tenting none)", 0, False, False),
+                     ("(tenting)", .2, False, False), ("(tenting)", -.1, False, False))
+            for index, (flags, margin, front, back) in enumerate(cases):
+                with self.subTest(flags=flags, margin=margin):
+                    case = root / str(index)
+                    case.mkdir()
+                    make_project(case)
+                    project = case / "pcb"
+                    pcb = project / "pcb.kicad_pcb"
+                    # Three 1.8 mm annuli on 1.5 mm pitch deliberately overlap.
+                    # A local flat flag list overrides BOTH sides, not only named sides.
+                    vias = ((30, "", front, back), (31.5, "", front, back), (33, "", front, back),
+                            (36, "(tenting)", False, False), (39, "(tenting front)", True, False),
+                            (42, "(tenting back)", False, True), (45, "(tenting front back)", True, True),
+                            (48, "(tenting none)", False, False))
+                    source = BOARD.replace('(pad_to_mask_clearance 0) (tenting front back)',
+                                           f'(pad_to_mask_clearance {margin}) (solder_mask_min_width 0) {flags}')
+                    source = source.replace(
+                        '(via (at 30 20) (size 1.8) (drill 1.0) (layers "F.Cu" "B.Cu") (net 1))',
+                        "\n".join(f'(via (at {x} 20) (size 1.8) (drill 1.0) '
+                                  f'(layers "F.Cu" "B.Cu") (net 1) {override})'
+                                  for x, override, _, _ in vias))
+                    pcb.write_text(source, encoding="utf-8")
+                    directory = case / "gerbers"
+                    directory.mkdir()
+                    command = [os.environ["KICAD_TEST_CLI"], "pcb", "export", "gerbers",
+                               "--layers", ",".join(m.LAYERS), "--precision", "6", "--no-protel-ext",
+                               "--subtract-soldermask", "--output", str(directory) + "/", str(pcb)]
+                    result = subprocess.run(command, cwd=project, capture_output=True, text=True, timeout=120)
+                    m.write_json(case / "native-command.json", {"command": command, "returncode": result.returncode,
+                                                               "stdout": result.stdout, "stderr": result.stderr})
+                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                    self.assertEqual(re.sub(m.WX_IMAGE_DEBUG, "", result.stderr), "")
+                    self.assertIsNone(re.search(r"(?im)^\s*(?:warning|error)\b", result.stdout))
+                    for side, layer in enumerate(("F.Mask", "B.Mask"), 2):
+                        filename, function = m.LAYERS[layer]
+                        flashes, segments = m.parse_gerber(directory / filename, function)
+                        actual = [f for f in flashes if not f[6]]
+                        expected = [(v[0], -20, 1.8 + 2 * margin, 1.8 + 2 * margin, "C", 0, "", "", "")
+                                    for v in vias if not v[side]]
+                        self.assertEqual(segments, [])
+                        m.match_geometry(actual, expected, .000002, layer + " native via mask contract")
+                    m.validate_gerbers(directory, nets.read_board(pcb))
+
+    def test_native_via_mask_rejects_non_native_overrides(self):
+        parent = REPO / "tmp" / "native-manufacturing-tests"
+        parent.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(prefix="native-via-syntax-", dir=parent, delete=False) as temporary:
+            root = Path(temporary)
+            cases = (("", 0), ("(tenting (front no) (back yes))", 3), ("(solder_mask_margin 0.2)", 3))
+            for index, (override, status) in enumerate(cases):
+                with self.subTest(override=override):
+                    case = root / str(index)
+                    case.mkdir()
+                    make_project(case)
+                    project = case / "pcb"
+                    pcb = project / "pcb.kicad_pcb"
+                    pcb.write_text(BOARD.replace('(via (at 30 20)', f'(via {override} (at 30 20)'), encoding="utf-8")
+                    command = [os.environ["KICAD_TEST_CLI"], "pcb", "export", "gerbers", "--layers", "F.Mask,B.Mask",
+                               "--output", str(case / "gerbers") + "/", str(pcb)]
+                    result = subprocess.run(command, cwd=project, capture_output=True, text=True, timeout=120)
+                    m.write_json(case / "native-command.json", {"command": command, "returncode": result.returncode,
+                                                               "stdout": result.stdout, "stderr": result.stderr})
+                    self.assertEqual(result.returncode, status, result.stdout + result.stderr)
+
     def test_native_roundrect_and_rect_margins(self):
-        parent = REPO / "tmp" / "manufacturing"
+        parent = REPO / "tmp" / "native-manufacturing-tests"
         parent.mkdir(parents=True, exist_ok=True)
         cases = (
             ("roundrect", .25, .2, .1, .1, ((1, 2, .25), (1.4, 2.4, .35), (1.4, 2.6, .35))),
@@ -802,7 +1104,7 @@ class NativeContractTests(unittest.TestCase):
             ("roundrect", .5, 0, 0, 0, ((1.00002, 2, .5),) * 3),
             ("roundrect", 0, 0, 0, 0, ((1, 2, 0),) * 3),
         )
-        with tempfile.TemporaryDirectory(prefix="native-corners-", dir=parent) as temporary:
+        with tempfile.TemporaryDirectory(prefix="native-corners-", dir=parent, delete=False) as temporary:
             root = Path(temporary)
             make_project(root)
             project = root / "pcb"
@@ -832,9 +1134,9 @@ class NativeContractTests(unittest.TestCase):
                             self.assertAlmostEqual(actual, required, places=6, msg=(layer, flash))
 
     def test_native_annular_constraint_has_no_B_item(self):
-        parent = REPO / "tmp" / "manufacturing"
+        parent = REPO / "tmp" / "native-manufacturing-tests"
         parent.mkdir(parents=True, exist_ok=True)
-        with tempfile.TemporaryDirectory(prefix="native-unary-rule-", dir=parent) as temporary:
+        with tempfile.TemporaryDirectory(prefix="native-unary-rule-", dir=parent, delete=False) as temporary:
             root = Path(temporary)
             make_project(root)
             project = root / "pcb"
@@ -863,9 +1165,9 @@ class NativeContractTests(unittest.TestCase):
     def test_native_export_formats_and_failure_reports(self):
         # This intentionally disconnected synthetic fixture never touches the shared
         # source PCB or build/. It probes KiCad contracts, not design acceptance.
-        parent = REPO / "tmp" / "manufacturing"
+        parent = REPO / "tmp" / "native-manufacturing-tests"
         parent.mkdir(parents=True, exist_ok=True)
-        with tempfile.TemporaryDirectory(prefix="native-contract-", dir=parent) as temporary:
+        with tempfile.TemporaryDirectory(prefix="native-contract-", dir=parent, delete=False) as temporary:
             root = Path(temporary)
             make_project(root)
             project = root / "pcb"

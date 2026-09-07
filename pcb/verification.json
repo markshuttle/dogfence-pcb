@@ -27,7 +27,7 @@
   "release_holds": [
     {
       "id": "C4",
-      "reason": "No selected and verified PCB-side LED reversal/forward-pulse protection is implemented. See ELECTRICAL.md."
+      "reason": "Installation-polarity LED damage is user-accepted, not an immunity pass. The simple negative-voltage clamp is not implemented and the ordinary-operation transient scope/response remains unresolved. See ELECTRICAL.md section 9."
     },
     {
       "id": "C5",
@@ -39,11 +39,11 @@
     },
     {
       "id": "W1",
-      "reason": "Relocation removes the via/aperture intersection, but the retained SMT GDT lands differ from the retrieved recommended-pattern table. Confirm the drawing or obtain written alternative-pattern/solder-process acceptance. See ASSEMBLY.md."
+      "reason": "Metric SMD5050 lands and standard untented vias are implemented. The manufacturer's contradictory inch spacing, actual processed stencil/profile and retained drill/process acceptance remain open. No special 1 mm filling is assumed. See ASSEMBLY.md."
     },
     {
       "id": "W4",
-      "reason": "Maximum finished pin/body dimensions and insertion allowances remain unverified for several THT parts; connector holes were not guessed larger. The provisional earth terminal has a 0.30 mm body overhang. See ASSEMBLY.md."
+      "reason": "Drawing-derived and controlled procurement pin/body/pattern envelopes now drive resized holes and courtyards; allocated-lot acceptance and forming/solder fill remain unverified. Earth-terminal tolerance-budgeted overhang is 1.30 mm. See ASSEMBLY.md."
     }
   ],
   "file_release_review": null

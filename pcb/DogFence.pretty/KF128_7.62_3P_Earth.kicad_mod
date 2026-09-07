@@ -5,8 +5,8 @@
 	(layer "F.Cu")
 	(attr through_hole)
 	(fp_rect
-		(start -5.3 -11.43)
-		(end 5.2 11.43)
+		(start -6 -12.5)
+		(end 5.4 12.5)
 		(stroke
 			(width 0.1)
 			(type solid)
@@ -101,19 +101,36 @@
 			)
 		)
 	)
-	(fp_rect
+	(fp_line
 		(start -4.7 -11.43)
+		(end -4.7 11.43)
+		(stroke
+			(width 0.15)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -4.7 -11.43)
+		(end 5.2 -11.43)
+		(stroke
+			(width 0.15)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -4.7 11.43)
 		(end 5.2 11.43)
 		(stroke
 			(width 0.15)
 			(type solid)
 		)
-		(fill no)
 		(layer "F.SilkS")
 	)
 	(fp_rect
-		(start -5.55 -11.68)
-		(end 5.45 11.68)
+		(start -6.35 -12.85)
+		(end 5.75 12.85)
 		(stroke
 			(width 0.05)
 			(type solid)
@@ -134,7 +151,7 @@
 	(pad "1" thru_hole roundrect
 		(at 0 -7.62 0)
 		(size 3.2 3.2)
-		(drill 1.4)
+		(drill 2)
 		(layers "*.Cu" "*.Mask")
 		(remove_unused_layers no)
 		(roundrect_rratio 0.25)
@@ -142,14 +159,14 @@
 	(pad "2" thru_hole circle
 		(at 0 0 0)
 		(size 3.2 3.2)
-		(drill 1.4)
+		(drill 2)
 		(layers "*.Cu" "*.Mask")
 		(remove_unused_layers no)
 	)
 	(pad "3" thru_hole circle
 		(at 0 7.62 0)
 		(size 3.2 3.2)
-		(drill 1.4)
+		(drill 2)
 		(layers "*.Cu" "*.Mask")
 		(remove_unused_layers no)
 	)

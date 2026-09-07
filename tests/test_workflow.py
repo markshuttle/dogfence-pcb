@@ -7,6 +7,7 @@ import unittest
 from unittest.mock import patch
 
 from scripts import verify_workflow as w
+from test_manufacturing import FakeKiCad, make_project
 
 
 class WorkflowTests(unittest.TestCase):
@@ -14,6 +15,77 @@ class WorkflowTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
+
+    def make_attempt(self, held):
+        root = self.root / ("held" if held else "published")
+        root.mkdir()
+        make_project(root)
+        for name in w.m.ENGINEERING_NOTES:
+            (root / "pcb" / name).write_bytes(f"Synthetic {name}; not engineering evidence.\r\n".encode("ascii"))
+        if held:
+            path = root / "pcb/verification.json"
+            review = w.m.read_json(path)
+            review.update(release_holds=[{"id": "TEST", "reason": "Synthetic hold"}], file_release_review=None)
+            w.m.write_json(path, review)
+        fake = FakeKiCad()
+
+        def invoke(command, **kwargs):
+            result = fake(command, **kwargs)
+            if "--output" not in command:
+                return result
+            output = Path(command[command.index("--output") + 1])
+            # Supply workflow metadata absent from the simpler exporter fixture.
+            if any(Path(arg).name == "check_geometry.py" for arg in command):
+                data = w.m.read_json(output)
+                for key in ("pcb", "project", "rules"):
+                    data["inputs"][key]["path"] = command[command.index("--" + key) + 1]
+                data["measurements"] = {"via_apertures": []}
+                w.m.write_json(output, data)
+            elif "gerbers" in command:
+                for path in output.glob("*.gbr"):
+                    path.write_text("%TF.CreationDate,2026-09-07T01:02:03+01:00*%\n"
+                                    "G04 Created by KiCad (PCBNEW 9.0.7) date 2026-09-07 01:02:03*\n"
+                                    + path.read_text(encoding="utf-8"), encoding="utf-8")
+            elif "drill" in command:
+                for path in output.glob("*.drl"):
+                    path.write_text(path.read_text(encoding="ascii").replace(
+                        "M48\n", "M48\n; DRILL file {KiCad 9.0.7} date 2026-09-07T01:02:03+0100\n"
+                        "; #@! TF.CreationDate,2026-09-07T01:02:03+01:00\n", 1), encoding="ascii")
+            return result
+
+        pipeline = w.m.Manufacturing(root, "fake-kicad")
+        with patch.object(w.m.subprocess, "run", invoke), contextlib.redirect_stdout(io.StringIO()), \
+                contextlib.redirect_stderr(io.StringIO()):
+            self.assertEqual(pipeline.execute("build"), 1 if held else 0, pipeline.errors)
+        return pipeline
+
+    def test_all_release_notes_match_staged_sources_and_compare_exact_bytes(self):
+        for held in (True, False):
+            with self.subTest(held=held):
+                pipeline = self.make_attempt(held)
+                result = w.validate_attempt(pipeline.root, pipeline.sources, pipeline.review, 2 if held else 0)
+                for name in w.m.ENGINEERING_NOTES:
+                    self.assertEqual(result["artifact_comparison_hashes"][name],
+                                     w.m.sha256(pipeline.project / name), name)
+
+    def test_missing_or_changed_release_note_is_rejected_with_holds(self):
+        pipeline = self.make_attempt(True)
+        w.validate_attempt(pipeline.root, pipeline.sources, pipeline.review, 2)
+        for name in w.m.ENGINEERING_NOTES:
+            path = pipeline.run / "release" / name
+            original = path.read_bytes()
+            for missing in (True, False):
+                with self.subTest(note=name, missing=missing):
+                    try:
+                        if missing:
+                            path.unlink()
+                        else:
+                            path.write_bytes(original.replace(b"\r\n", b"\n"))
+                        error = FileNotFoundError if missing else w.m.VerificationError
+                        with self.assertRaisesRegex(error, name):
+                            w.validate_attempt(pipeline.root, pipeline.sources, pipeline.review, 2)
+                    finally:
+                        path.write_bytes(original)
 
     def test_only_recognized_timestamps_are_normalized(self):
         fixtures = {

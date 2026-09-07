@@ -21,8 +21,11 @@ Manufacturing and field release remain held; file checks are not hardware approv
    not completed approval.
 5. [pcb/ELECTRICAL.md](pcb/ELECTRICAL.md) records the implemented DC model and
    unresolved protection architecture. [pcb/ASSEMBLY.md](pcb/ASSEMBLY.md) controls
-   placement, lead forming, nominal geometry, fit evidence and process holds.
+   placement, lead forming, dimensional/lot acceptance and process holds.
    Do not populate a candidate protection part just because it is listed there.
+   `pcb/DFM_EVIDENCE.md`, `pcb/ENVIRONMENT_EVIDENCE.md`, `pcb/DESIGN_BOUNDS.md`
+   and the two `*_PROTECTION_RESEARCH.md` notes preserve source evidence and
+   rejected/unselected circuits; they do not override the release holds.
 
 ## 2. Headless Environment
 
@@ -52,7 +55,9 @@ make check
 
 The complete snapshot is staged under `tmp/manufacturing/runs/attempt-*/project`:
 PCB, schematic, settings/rules, local libraries/tables, BOM, `verification.json`
-and controlled assembly/electrical notes. Build helpers are also snapshotted
+and all seven controlled engineering notes (assembly/electrical, DFM,
+environment, design bounds and both protection research records). Build and
+analysis helpers are also snapshotted
 and inputs are hashed before and after verification. Changed/missing inputs fail.
 
 `make check` performs project-aware native DRC, ERC, schematic parity, geometric
@@ -112,6 +117,7 @@ assembled functional or surge test. Never hand-edit generated artifacts.
 make test
 TMPDIR=/tmp/opencode KICAD_TEST_CLI=/snap/bin/kicad.kicad-cli python3 -B -W error -m unittest discover -s tests -v
 python3 -B scripts/analyze_limits.py
+python3 -B scripts/design_bounds.py
 python3 -B scripts/verify_workflow.py --expect-holds C4 C5 W3 W1 W4
 ```
 
@@ -188,11 +194,33 @@ KF128/KF129 terminals. Datasheet 5/20 kA impulse or terminal current ratings are
 pins remain connected, but are not a 72 A assembly rating. Nominal 0.50 W in a
 1 W power-mode resistor is not proof of cool, continuous or long-life operation.
 
+Selected other hole/pad sizes are KF128 2.00/3.20, KF129 2.00/2.80, MBE0414
+1.40/2.40, B5G470L 1.40/2.80 and earth GDT 1.50/3.00 mm. These depend on the
+controlled pin/body/pattern envelopes in ASSEMBLY, including actual lot and
+forming acceptance. Minimum ring is 0.40. Do not restore smaller legacy holes
+or equate these file checks with insertion/solder approval. J_EARTH has 1.00 mm
+nominal / 1.30 mm tolerance-budgeted body overhang; no courtyard trimming.
+
 ## 6. Functional And Documentation Rules
 
 - Keep 41 stations / 82 LEDs and the **same-end** six-independent-end TEST
   matrix from REMEDIATION: Start A/C positive, Start B negative, End A/B/C each
   isolated. No direction selector, permanent End A/C strap or dual-B return.
+- User now accepts LED damage from accidental low-voltage installation polarity
+  errors, with spare indicators; reversed flying-lead survival is not required.
+  Direct-strike rebuilding is accepted, not all ordinary/nearby transient damage.
+  Continuous-safe normal TEST stays mandatory. Assess the simple 16-part/passive
+  direction in ELECTRICAL section 9; do not reinstate the 40-part investigation
+  as a prerequisite or claim that a candidate diode/resistor is already fitted.
+- User-confirmed source allocation is **two ordered LRS-75-36: one TEST, one
+  disconnected spare**, not interconnected supplies. CA10.A364/current WAA364
+  is provisionally **eight-pole**, with extra poles unassigned and exact DC/
+  global transfer approval open. Reel markings CM03/05.100 and red/black/plain
+  green are confirmed; use the AMC 2026 V.3 evidence, not the older listing.
+- Gel is **WISKA OneGel**, one-component/no mixing, not MP0100. Resolve its
+  conflicting manufacturer cure/temperature fields; do not invent conductivity,
+  compatible materials or completed thermal qualification. The 35-37 V source
+  window in `design_bounds.py` is a declared proposal, not enforced hardware.
 - Preserve WAGO through-splice/PCB-tap wiring. Normal perimeter current does
   not pass through every PCB. Surge current is a separate design case.
 - Normal TEST must be continuous-safe; do not substitute a timer. TEST/OFF
@@ -232,12 +260,17 @@ parallel tasks. Never revert another agent's or the user's work.
 ## 9. JLCPCB Via And Component Hole DFM
 
 Apply the [master DFM policy](README.md#via-and-component-hole-dfm). Published
-guidance was reviewed on 2026-09-06; confirm the actual order. These checks
+guidance was reviewed through 2026-09-07; confirm the actual order. These checks
 supplement, not replace, electrical DRC.
 
 - Preserve all fourteen 1.00/1.80 mm stitching vias and protected copper.
   An incompatible process needs an approved layout/process solution, not
   smaller vias or an unreviewed exception.
+- Selected ordinary process: **untented both sides, no fill/plug/cap, ENIG**,
+  with nominal 1.80 mm circular mask openings and no via paste. Same-net
+  stitching annuli may intentionally overlap; this never excuses a component
+  mask/paste aperture over a hole. KiCad 9.0.7 uses flat `(tenting ...)` flags;
+  nested side booleans and per-via mask-margin clauses fail native parsing.
 - Normal reliable tenting/ink plugging guidance is <=0.5 mm. Filled-and-capped
   guides/table give 0.5/0.55 mm upper limits; neither establishes reliable
   filling of 1.00 mm holes. Obtain written CAM acceptance for exceptions.
@@ -247,8 +280,8 @@ supplement, not replace, electrical DRC.
   Gerbers/stencil data too. The current relocation removes the historical
   intersection; retained GDT land-pattern/process approval remains open.
 - Identify hole treatment by **function and coordinates**. Ordinary vias are
-  not lead-insertion holes. Resistor holes also use 1.00 mm drills: never request
-  all holes of that diameter be filled. Confirm CAM preserves protected drills.
+  not lead-insertion holes. Resistor holes formerly shared 1.00 mm and now use
+  1.40 mm; never request filling by diameter. Confirm protected drills survive CAM.
 - Use maximum finished lead dimensions, including rectangular-pin diagonals.
   Require `nominal hole - 0.08 mm >= maximum pin envelope + 0.10 mm` as the
   starting diametral allowance after tolerance, with separate pin-pitch,

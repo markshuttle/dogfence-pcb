@@ -1,0 +1,365 @@
+#!/usr/bin/env python3
+"""Conditional P2 DC/thermal bounds for the existing 41-station circuit.
+
+Offline, stdlib only; reuses analyze_limits, without changing its defaults.
+All numbers are calculations, not measurements or release approval. The 35 V
+floor / 37 V ceiling are DECLARED interface requirements, not enforced hardware.
+See pcb/DESIGN_BOUNDS.md for sources, assumptions and thermal-interface scope.
+"""
+
+import argparse
+from dataclasses import replace
+import json
+import math
+
+if __package__:
+    from . import analyze_limits as dc
+else:
+    import analyze_limits as dc
+
+
+# IEC 60228:2004, ed. 3, 6.2 / Table 3, printed p. 11, metal-coated column.
+RESISTANCE_SOURCE = (
+    "https://cdn.standards.iteh.ai/samples/12024/"
+    "921fee9a88c24612b68340a7330c2262/IEC-60228-2004.pdf"
+)
+R20_MAX_OHM_PER_KM = 8.21
+STATIONS, SPACING_KM = 41, 0.1
+CONTACT_OHM_PER_SPAN = (0.025, 0.025, 0.025)
+
+
+def _finite(name, *values):
+    try:
+        valid = all(not isinstance(v, bool) and math.isfinite(v) for v in values)
+    except (TypeError, OverflowError):
+        valid = False
+    if not valid:
+        raise ValueError(f"{name} must contain finite numbers")
+
+
+def resistor_bounds(nominal_ohm=2200.0, tolerance_fraction=0.01, tcr_ppm=50.0,
+                    minimum_c=-30.0, maximum_c=125.0):
+    """Initial tolerance plus either TCR sign, relative to 20 C; excludes aging."""
+    _finite("resistor inputs", nominal_ohm, tolerance_fraction, tcr_ppm,
+            minimum_c, maximum_c)
+    if (nominal_ohm <= 0 or not 0 <= tolerance_fraction < 1 or tcr_ppm < 0
+            or not -55 <= minimum_c <= maximum_c <= 125):
+        raise ValueError("invalid resistance/tolerance or MBE standard-mode temperature range")
+    drift = tcr_ppm * 1e-6 * max(abs(minimum_c - 20), abs(maximum_c - 20))
+    if drift >= 1:
+        raise ValueError("TCR envelope permits nonpositive resistance")
+    bounds = (nominal_ohm * (1 - tolerance_fraction) * (1 - drift),
+              nominal_ohm * (1 + tolerance_fraction) * (1 + drift))
+    _finite("calculated resistor bounds", *bounds)
+    if bounds[0] <= 0:
+        raise ValueError("resistance underflow")
+    return bounds
+
+
+def cable_corner(temperature_c=70.0, contact_ohm_per_span=CONTACT_OHM_PER_SPAN):
+    """Each 100 m span has its own A/B/C contact ceiling, not just a total budget.
+
+    Return an equivalent Cable with temperature correction already applied.
+    Its r20 field is an effective series value, NOT the physical cable's R20.
+    Contacts are bounded at service temperature; do not apply copper TCR to them.
+    """
+    if not isinstance(contact_ohm_per_span, (tuple, list)) or len(contact_ohm_per_span) != 3:
+        raise ValueError("three per-span contact budgets required, in A/B/C order")
+    _finite("cable inputs", temperature_c, *contact_ohm_per_span)
+    if not -30 <= temperature_c <= 70 or min(contact_ohm_per_span) < 0:
+        raise ValueError("cable must be within -30..70 C; contact budgets must be nonnegative")
+    wire = dc.Cable((R20_MAX_OHM_PER_KM,) * 3, temperature_c=temperature_c)
+    effective = tuple((r + contact) / SPACING_KM for r, contact in
+                      zip(wire.span_resistances(SPACING_KM), contact_ohm_per_span))
+    _finite("calculated cable corner", *effective)
+    return dc.Cable(effective, alpha_per_c=0.0)
+
+
+def normal_cases(*, source_min_v=35.0, source_max_v=37.0, cable_temperature_c=70.0,
+                 contact_ohm_per_span=CONTACT_OHM_PER_SPAN, high_drop_v=4.4):
+    """Named corners, not an exhaustive joint tolerance optimization.
+
+    high_drop_v is a declared total LED/rectifier Vf screen (3.3 + 1.1 V),
+    NOT a guaranteed full-temperature SG LED limit. All other drops may be zero.
+    The combined knee uses led_v; individual junction heat is not inferred.
+    """
+    _finite("source and forward drop", source_min_v, source_max_v, high_drop_v)
+    if not 0 <= source_min_v <= 36 <= source_max_v <= 60 or not 0 <= high_drop_v <= 60:
+        raise ValueError("require 0 <= source floor <= 36 <= ceiling <= 60 V; Vf in 0..60 V")
+    r_min, r_max = resistor_bounds()
+    cable = cable_corner(cable_temperature_c, contact_ohm_per_span)
+    low = dc.Channel(resistor_ohm=r_min, led_v=0, diode_v=0)
+    high = dc.Channel(resistor_ohm=r_max, led_v=high_drop_v, diode_v=0)
+    base = dict(stations=STATIONS, spacing_km=SPACING_KM, source=dc.Source(36),
+                cable=dc.Cable(), channel_a=dc.Channel(), channel_c=dc.Channel())
+    uniform = base | dict(source=dc.Source(source_min_v), cable=cable,
+                          channel_a=high, channel_c=high)
+    mixed = uniform | dict(channel_a=low, channel_c=low)
+    cases = {
+        "old_6.9_nominal": base,
+        "standard_max_20C_nominal_load": base | {"cable": dc.Cable((R20_MAX_OHM_PER_KM,) * 3)},
+        "declared_cable_nominal_load": base | {"cable": cable},
+        "uniform_high_vf_rmax": uniform,
+        "nonuniform_vf_only_A40": uniform | dict(
+            channel_a=replace(high, led_v=0), channel_c=replace(high, led_v=0),
+            channel_overrides={("A", 40): high}),
+    }
+    for core, other in (("A", "C"), ("C", "A")):
+        options = mixed | {"channel_overrides": {(core, 40): high}}
+        cases[f"nonuniform_{core}40"] = options
+        rails = list(cable.r20_ohm_per_km)
+        rails[dc.CORES.index(other)] = 0.0
+        cases[f"nonuniform_{core}40_other_rail_zero"] = options | {
+            "cable": dc.Cable(tuple(rails), alpha_per_c=0.0)}
+    cases["zero_cable_upper"] = mixed | dict(
+        source=dc.Source(source_max_v), cable=dc.Cable((0.0,) * 3))
+    return cases
+
+
+def thermal_envelope(voltage_v, local_ambient_c):
+    """MBE standard-mode rating arithmetic, conditional on adequate heat flow.
+
+    Fixed-current ceiling uses Rmax; a voltage-fed power bound uses Rmin.
+    The required nominal R is an arithmetic envelope, not a replacement MPN.
+    """
+    _finite("thermal inputs", voltage_v, local_ambient_c)
+    if voltage_v < 0 or not -55 <= local_ambient_c <= 125:
+        raise ValueError("nonnegative voltage and -55..125 C local ambient required")
+    r_min, r_max = resistor_bounds()
+    allowance = dc.resistor_allowance(local_ambient_c)
+    upper_w = voltage_v * voltage_v / r_min
+    required_r = (voltage_v * voltage_v / allowance / (r_min / 2200)
+                  if allowance else (0.0 if voltage_v == 0 else None))
+    _finite("calculated thermal power", upper_w)
+    if voltage_v > 0 and upper_w == 0:
+        raise ValueError("thermal power underflow")
+    if required_r is not None:
+        _finite("calculated required resistance", required_r)
+    return {
+        "local_ambient_c": local_ambient_c, "allowed_resistor_w": allowance,
+        "zero_drop_resistor_upper_w": upper_w, "power_margin_w": allowance - upper_w,
+        "fixed_current_ceiling_a_rmax": math.sqrt(allowance / r_max),
+        "source_ceiling_v_zero_drop": math.sqrt(allowance * r_min),
+        "required_nominal_r_min_ohm_zero_drop": required_r,
+        "within_power_allowance_only": upper_w <= allowance,
+    }
+
+
+def effective_rtheta_limit(power_w, ambient_c, target_c):
+    """Allowable effective K/W, not a material property or predicted temperature.
+
+    None means no heating constraint at zero power, not infinite measured Rtheta.
+    """
+    _finite("thermal interface", power_w, ambient_c, target_c)
+    if power_w < 0 or not -273.15 <= ambient_c <= target_c:
+        raise ValueError("require nonnegative heat and physical ambient <= target")
+    if power_w == 0:
+        return None
+    limit = (target_c - ambient_c) / power_w
+    _finite("calculated effective Rtheta", limit)
+    return limit
+
+
+def analyze(**options):
+    cases = normal_cases(**options)
+    results = {name: dc.simulate(**inputs) for name, inputs in cases.items()}
+    corner = cases["nonuniform_A40"]
+    floor_v = corner["source"].voltage()
+    ceiling_v = cases["zero_cable_upper"]["source"].voltage()
+    high_drop = corner["channel_overrides"]["A", 40].values()[1]
+    r_min, r_max = resistor_bounds()
+    effective_rails = corner["cable"].r20_ohm_per_km
+    low = corner["channel_a"]
+
+    # Independent comparison bounds: ground B for the lowest positive rail;
+    # ideal A/C feeds at the ceiling maximize B. Zero-Vf/Rmin over-loads both
+    # comparisons, without assuming identical voltages at the two feed contacts.
+    comparison = dict(source=dc.Source(floor_v), channel_a=low, channel_c=low,
+                      stations=STATIONS, spacing_km=SPACING_KM)
+    b_upper = dc.simulate(**(comparison | {"source": dc.Source(ceiling_v)}),
+                          cable=dc.Cable((0, effective_rails[1], 0)))
+    positive_lower = {}
+    for core in dc.CHANNELS:
+        rails = tuple(r if c == core else 0 for c, r in zip(dc.CORES, effective_rails))
+        result = dc.simulate(**comparison, cable=dc.Cable(rails))
+        positive_lower[core] = result.voltages[core, 40]
+    differential_lower = min(positive_lower.values()) - b_upper.voltages["B", 40]
+    current_lower = max(0.0, differential_lower - high_drop) / r_max
+
+    rows = {}
+    for name, result in results.items():
+        row = result.summary()
+        row["cable_and_contact_loss_w"] = row.pop("cable_loss_w")
+        row.update({f"{c}40_ma": 1000 * result.led_currents_a[c, 40] for c in dc.CHANNELS})
+        rows[name] = row
+    branch_rows = []
+    adjustment_v = dc.Source(39.6, error_fraction=0.01, temperature_c=50,
+                             tempco_per_c=0.0003, ripple_peak_v=0.1).voltage()
+    for name, voltage, channel in (
+            ("36V_nominal", 36.0, dc.Channel()), ("36V_zero_drop_rmin", 36.0, low),
+            ("proposed_ceiling_zero_drop_rmin", ceiling_v, low),
+            ("unenforced_adjustment_screen", adjustment_v, low)):
+        budget = dc.branch_budget(voltage, channel)
+        watts = budget["resistor_w"]
+        branch_rows.append({
+            "case": name, "voltage_v": voltage, "branch_a": budget["branch_a"],
+            "resistor_w": watts, "two_resistors_w": 2 * watts,
+            "two_resistors_and_rectifiers_w": 2 * (watts + budget["diode_w"]),
+            "two_branch_electrical_input_w": 2 * voltage * budget["branch_a"],
+            "standard_p70_margin_w": 0.65 - watts,
+            "rating_local_ambient_ceiling_c": 125 - 55 * watts / 0.65 if watts <= 0.65 else None,
+        })
+
+    upper = rows["zero_cable_upper"]
+    watts = upper["resistor_max_w"]
+    board_heat = 2 * watts
+    faults = []
+    for profile, case, voltage in (("old_6.9_nominal", "old_6.9_nominal", 36.0),
+                                   ("declared_ceiling_zero_drop_rmin", "nonuniform_A40", ceiling_v)):
+        inputs = cases[case] | {"source": dc.Source(voltage, series_ohm=0.25)}
+        inputs = {k: v for k, v in inputs.items() if k != "channel_overrides"}
+        for core in dc.CHANNELS:
+            for station, resistance, arc in ((0, 0.0, 0.0), (0, 100.0, 0.0), (40, 0.1, 10.0)):
+                result = dc.simulate(**inputs, faults=(
+                    dc.Fault("fault", (core, station), ("B", station), resistance, arc),))
+                current = result.element_currents_a["fault"]
+                path_v = abs(result.voltages[core, station] - result.voltages["B", station])
+                k12_a = max(0.0, (135 - path_v) / 1300)
+                faults.append({
+                    "profile": profile, "path": f"{core}B@{station}",
+                    "path_ohm": resistance, "conditional_arc_v": arc,
+                    "source_a": result.supply_current_a, "path_a": current,
+                    "path_v": path_v, "path_w": result.element_power_w["fault"],
+                    "psu": dc.assess_psu(result, rated_a=2.1, rated_w=75.6),
+                    "k12_dc_feed_a_at_same_path_v": k12_a if arc else None,
+                    "k12_current_ratio": abs(current) / k12_a if arc else None,
+                })
+
+    return {
+        "revision": dc.REVISION, "conditional_only": True,
+        "stations": STATIONS, "spacing_km": SPACING_KM,
+        "source": {"model": "one LRS-75-36 for TEST; second is spare (user confirmed)",
+                   "nominal_v": 36.0, "declared_floor_v": floor_v,
+                   "proposed_ceiling_v": ceiling_v, "enforced": False,
+                   "minimum_capacity_fraction": max(upper["source_a"] / 2.1,
+                                                    upper["source_w"] / 75.6),
+                   "unallocated_capacity_a": 2.1 - upper["source_a"],
+                   "unallocated_capacity_w": 75.6 - upper["source_w"]},
+        "cable": {"reel": "CM03/05.100: 3 CORE (3 x 35/0.30) TINNED BLACK 100 MTR",
+                  "r20_max_ohm_per_km_conditional": R20_MAX_OHM_PER_KM,
+                  "resistance_source": RESISTANCE_SOURCE,
+                  "temperature_c": options.get("cable_temperature_c", 70.0),
+                  "copper_alpha_per_c": 0.00393,
+                  "contact_ohm_per_span_ABC": options.get("contact_ohm_per_span", CONTACT_OHM_PER_SPAN),
+                  "effective_4km_core_ohm_ABC": [r * 4 for r in effective_rails]},
+        "resistor": {"mpn": "MBE04140C2201FC100", "r_min_ohm": r_min, "r_max_ohm": r_max,
+                     "temperature_range_c": [-30, 125], "tolerance_fraction": 0.01,
+                     "tcr_abs_ppm_per_c": 50, "aging_included": False},
+        "current_bounds": {"scope": "healthy uncut network, not fault states or visibility",
+                           "high_total_vf_screen_v": high_drop, "low_total_vf_bound_v": 0.0,
+                           "comparison_positive_rail_lower_v": positive_lower,
+                           "comparison_B_rail_upper_v": b_upper.voltages["B", 40],
+                           "conditional_all_station_led_min_ma": 1000 * current_lower,
+                           "conditional_all_station_led_max_ma": upper["led_max_ma"],
+                           "conditional_total_current_upper_a": upper["source_a"],
+                           "local_B_tap_current_upper_a": 2 * ceiling_v / r_min,
+                           "uniform_vf_optimism_A40_ma": rows["uniform_high_vf_rmax"]["A40_ma"]
+                           - rows["nonuniform_vf_only_A40"]["A40_ma"],
+                           "additional_R_spread_reduction_A40_ma": rows["nonuniform_vf_only_A40"]["A40_ma"]
+                           - rows["nonuniform_A40"]["A40_ma"]},
+        "normal_cases": rows, "source_end_branches": branch_rows,
+        "thermal_envelope": [thermal_envelope(ceiling_v, t) for t in (30, 60, 70, 75, 85, 100, 125)],
+        "thermal_interfaces": {
+            "two_branch_heat_upper_w": board_heat, "outside_example_c": 30.0,
+            "bulk_and_local_ambient_target_c": 60.0, "film_target_c": 110.0,
+            "cable_temperature_margin_k": 10.0, "standard_film_margin_k": 15.0,
+            "bulk_to_outside_effective_rtheta_max_k_per_w": effective_rtheta_limit(board_heat, 30, 60),
+            "film_to_local_effective_rtheta_max_k_per_w": effective_rtheta_limit(watts, 60, 110),
+            "onegel_thermal_property_assumed": False,
+        },
+        "faults_cv_demand_only": faults,
+        "fault_comparison": {"illustrative_source_series_ohm": 0.25,
+                             "k12_test_source_v": 135, "k12_dc_feed_ohm": 1300,
+                             "sufficient_dc_dominance_series_ohm": 1300 * ceiling_v / 135,
+                             "proposed_not_enforced_current_ceiling_a": 1.6,
+                             "conditional_0.1ohm_failed_short_heat_upper_w": 1.6 * 1.6 * 0.1},
+        "limitations": [
+            "Reel identity is confirmed, not measured R. Class 5 Table 3 permits 0.26 mm wires; "
+            "AMC's representative/reel 0.30 mm construction needs reconciliation, not an invented R column.",
+            "Each 100 m span must meet its own service-temperature contact budget. A 4 km total alone "
+            "does not bound concentrated bad joints. Start A/C-to-B source floor includes hub losses.",
+            "Current floor needs the declared Vf/R/cable/contact envelope, negligible unbudgeted tap "
+            "losses and no extra shunt loads. Vf screen is not an SG guarantee or daylight test.",
+            "Comparison floor is deliberately loose; named nonuniform cases are not an exhaustive "
+            "tolerance optimization. Cuts use the existing cut_sweep in focused tests, not this CLI.",
+            "Heat budgets exclude added circuitry, contact heat and solar input. Rtheta values are "
+            "requirements with both branches powered, not OneGel properties or temperature predictions.",
+            "Require local ambient within derating, film <=125 C (example target 110 C), and cable "
+            "interfaces <=70 C. Verify gel, adhesives, LED junction and connector limits separately.",
+            "PSU capacity needs actual input/temperature derating and auxiliary/interface-loss budget. "
+            "Neither the proposed voltage/current limits nor the example 30 C outside ambient is guaranteed.",
+            "Faults are prospective CV demands, not actual LRS current or GDT holding/extinction. "
+            "K.12 DC dominance alone does not establish dynamic recovery or a safe fault duration.",
+            "No new protection circuit, aging/lifetime, reverse/pulse safety, or hardware approval is modeled. "
+            "C4/C5/W3 and all release gates remain open; continuous normal TEST requires no timer.",
+        ],
+    }
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--source-min-v", type=float, default=35.0, help="declared terminal floor, not nominal")
+    parser.add_argument("--source-max-v", type=float, default=37.0, help="proposed ceiling INCLUDING ripple")
+    parser.add_argument("--cable-temperature-c", type=float, default=70.0)
+    parser.add_argument("--contact-ohm-per-span", nargs=3, type=float, default=CONTACT_OHM_PER_SPAN,
+                        metavar=("A", "B", "C"), help="maximum per core per 100 m span at service temperature")
+    parser.add_argument("--high-drop-v", type=float, default=4.4, help="declared total Vf screen, not SG data")
+    parser.add_argument("--json", action="store_true")
+    args = vars(parser.parse_args(argv))
+    json_output = args.pop("json")
+    try:
+        report = analyze(**args)
+        serialized = json.dumps(report, indent=2, allow_nan=False)
+    except (ValueError, ArithmeticError) as exc:
+        parser.exit(2, f"Analysis failed: {exc}\n")
+    if json_output:
+        print(serialized)
+        return
+    print(f"Dog Fence {dc.REVISION}: CONDITIONAL BOUNDS, not measurements or approval")
+    print("41 stations / 82 LEDs; one LRS-75-36 TEST source, second spare; same-end feed/return")
+    print("Source: " + json.dumps(report["source"]))
+    print("Cable: " + json.dumps(report["cable"]))
+    print("Resistor: " + json.dumps(report["resistor"]))
+    print("\nNormal cases | source A | LED min..max mA | A40 / C40 mA | max resistor W")
+    for name, row in report["normal_cases"].items():
+        print(f"{name} | {row['source_a']:.6f} | {row['led_min_ma']:.4f}..{row['led_max_ma']:.4f}"
+              f" | {row['A40_ma']:.4f} / {row['C40_ma']:.4f} | {row['resistor_max_w']:.6f}")
+    print("\nConditional current bounds: " + json.dumps(report["current_bounds"]))
+    print("\nSource-end case | branch mA | resistor W | two resistors W | rating local ceiling C")
+    for row in report["source_end_branches"]:
+        local = row["rating_local_ambient_ceiling_c"]
+        text = f"{local:.3f}" if local is not None else "NONE (above standard P70)"
+        print(f"{row['case']} | {1000 * row['branch_a']:.4f} | {row['resistor_w']:.6f}"
+              f" | {row['two_resistors_w']:.6f} | {text}")
+    print("\nLocal C | allowed W | margin W | fixed-current ceiling mA | zero-drop source ceiling V | nominal R min ohm")
+    for row in report["thermal_envelope"]:
+        required = row["required_nominal_r_min_ohm_zero_drop"]
+        text = f"{required:.2f}" if required is not None else "no finite R"
+        print(f"{row['local_ambient_c']:g} | {row['allowed_resistor_w']:.6f} | {row['power_margin_w']:.6f}"
+              f" | {1000 * row['fixed_current_ceiling_a_rmax']:.4f}"
+              f" | {row['source_ceiling_v_zero_drop']:.4f} | {text}")
+    print("\nThermal interface REQUIREMENTS (K/W), not predictions: " + json.dumps(report["thermal_interfaces"]))
+    print("\nFault CV DEMAND ONLY | source A | path A | path W | LRS-75 envelope | K.12 ratio (arc only)")
+    for row in report["faults_cv_demand_only"]:
+        ratio = row["k12_current_ratio"]
+        text = f"{ratio:.3f}" if ratio is not None else "-"
+        print(f"{row['profile']} {row['path']} R={row['path_ohm']:g} arc={row['conditional_arc_v']:g}"
+              f" | {row['source_a']:.6f} | {row['path_a']:.6f} | {row['path_w']:.6f}"
+              f" | {row['psu']['status']} | {text}")
+    print("\nK.12 / failed-short conditional comparison: " + json.dumps(report["fault_comparison"]))
+    for limitation in report["limitations"]:
+        print("NOTE: " + limitation)
+
+
+if __name__ == "__main__":
+    main()

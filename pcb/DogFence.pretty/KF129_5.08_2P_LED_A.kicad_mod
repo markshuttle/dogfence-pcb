@@ -4,6 +4,16 @@
 	(generator_version "9.0")
 	(layer "F.Cu")
 	(attr through_hole)
+	(fp_rect
+		(start -5.1 -6.1)
+		(end 6.4 6.1)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(fill no)
+		(layer "F.Fab")
+	)
 	(fp_text user "${REFERENCE}"
 		(at -3 0 270)
 		(layer "F.Fab")
@@ -139,8 +149,8 @@
 		(layer "F.SilkS")
 	)
 	(fp_rect
-		(start -5.15 -5.88)
-		(end 5.95 5.88)
+		(start -5.45 -6.45)
+		(end 6.75 6.45)
 		(stroke
 			(width 0.05)
 			(type solid)
@@ -151,7 +161,7 @@
 	(pad "1" thru_hole roundrect
 		(at 0 -2.54 0)
 		(size 2.8 2.8)
-		(drill 1.3)
+		(drill 2)
 		(layers "*.Cu" "*.Mask")
 		(remove_unused_layers no)
 		(roundrect_rratio 0.25)
@@ -159,7 +169,7 @@
 	(pad "2" thru_hole circle
 		(at 0 2.54 0)
 		(size 2.8 2.8)
-		(drill 1.3)
+		(drill 2)
 		(layers "*.Cu" "*.Mask")
 		(remove_unused_layers no)
 	)

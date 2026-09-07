@@ -41,6 +41,12 @@ PROTECTED_VIAS = {
 }
 MOUNTS = {"H1": (101.5, 99.0), "H2": (155.5, 99.0),
           "H3": (101.5, 146.0), "H4": (155.5, 146.0)}
+# Selected nominal holes, conditional on ASSEMBLY.md's separate lot/forming limits.
+COMPONENT_HOLE_MINIMA = {
+    "D1": 1.1, "D2": 1.1, "R1": 1.4, "R2": 1.4, "GDT_AC": 1.4,
+    "GDT_A_E": 1.5, "GDT_B_E": 1.5, "GDT_C_E": 1.5,
+    "J_IN": 2.0, "J_EARTH": 2.0, "J_LED_A": 2.0, "J_LED_C": 2.0,
+}
 MIN_MASK_BARRIER = 0.10
 PROJECT_MINIMA = {
     "min_track_width": 0.1651, "min_clearance": 0.20,
@@ -80,8 +86,8 @@ LIMITATIONS = [
     "parentheses and boolean operators; unsupported relevant conditions fail closed. "
     "Annular_width is unary (A only): B-dependent conditions are rejected, not evaluated with B=A. "
     "Clearance is binary. Other custom constraints require native KiCad validation.",
-    "Diode drill >=1.10 mm and nominal component ring >=0.254 mm do not qualify other maximum "
-    "pin dimensions, fabrication/registration tolerances, barrel plating, lead forming, "
+    "Selected component-hole minima and nominal ring >=0.254 mm enforce the saved design, not "
+    "actual lot pin/body/pattern acceptance, fabrication/registration, barrel plating, lead forming, "
     "GDT_AC's >=2.0 mm physical standoff, thermal/surge performance or assembly process.",
 ]
 
@@ -692,14 +698,11 @@ class GeometryCheck:
             if field is None:
                 continue
             if field.children():
-                schema(field, {"front", "back"})
-                if field.one(side, required=False) is not None:
-                    return boolean(field, side)
-            else:
-                values = field.atoms()
-                if len(values) != len(set(values)) or any(v not in ("front", "back") for v in values):
-                    field.fail("invalid tenting flags")
-                return side in values
+                raise Unsupported("KiCad 9.0.7 requires flat tenting flags, not nested side booleans", field)
+            values = field.atoms()
+            if len(values) != len(set(values)) or any(v not in ("front", "back") for v in values):
+                field.fail("invalid tenting flags")
+            return side in values
         raise Unsupported(f"cannot resolve {side} via tenting from source settings", via)
 
     def read_via(self, node):
@@ -719,9 +722,10 @@ class GeometryCheck:
         self.copper.append(item)
         self.expect((size - drill) / 2 >= 0.1 - EPS, "VIA_RING", f"{item.label}: via nominal ring below 0.10 mm", node)
         for side, layer in (("front", "F.Mask"), ("back", "B.Mask")):
+            if node.one("solder_mask_margin", required=False) is not None:
+                raise Unsupported("KiCad 9.0.7 does not support a per-via solder_mask_margin", node)
             if not self.tented(node, side):
-                field = node.one("solder_mask_margin", required=False)
-                margin = numeric(field.atoms(1)[0], field) if field else number(self.setup, "pad_to_mask_clearance", 0.0)
+                margin = number(self.setup, "pad_to_mask_clearance", 0.0)
                 if size / 2 + margin <= 0:
                     raise Unsupported("nonpositive untented via mask aperture", node)
                 self.apertures.append(Item(node, item.label, Shape((center,), size / 2 + margin),
@@ -932,14 +936,19 @@ class GeometryCheck:
                 if item:
                     self.expect(item.kind == "smd" and item.net == net and item.layers & CU == {"F.Cu"},
                                 "SMT_GDT_PAD", f"{ref}.{num}: top SMT pad on {net} required", item.node)
-        for ref in ("D1", "D2"):
-            for num in ("1", "2"):
+        holes = []
+        for ref, minimum in COMPONENT_HOLE_MINIMA.items():
+            for num in (("1", "2", "3") if ref in ("J_IN", "J_EARTH") else ("1", "2")):
                 pad = self.required_pad(ref, num)
                 if pad:
                     drill = 2 * pad.hole.radius if pad.hole else 0
-                    self.expect(pad.kind == "thru_hole" and drill >= 1.1 - EPS, "C1_DIODE_DRILL",
-                                f"{ref}.{num}: diode hole must be >=1.10 mm", pad.node,
-                                issue="C1", measured_mm=round(drill, 6), required_mm=1.1)
+                    diode = ref in ("D1", "D2")
+                    self.expect(pad.kind == "thru_hole" and drill >= minimum - EPS,
+                                "C1_DIODE_DRILL" if diode else "COMPONENT_FIT_DRILL",
+                                f"{ref}.{num}: selected component hole must be >={minimum:.2f} mm", pad.node,
+                                issue="C1" if diode else "W4", measured_mm=round(drill, 6), required_mm=minimum)
+                    holes.append({"pad": pad.label, "drill_mm": round(drill, 6), "required_mm": minimum})
+        self.measurements["component_hole_design"] = holes
         rings = []
         for item in self.pads:
             if item.kind == "thru_hole" and item.hole:
@@ -1014,6 +1023,11 @@ class GeometryCheck:
                     related = [p for p in self.pads if p.node is opening.node and p.layers & CU]
                     copper_gap = min((p.shape.signed_distance(via.center) - via.hole.radius for p in related), default=None)
                     own = next((p for p in self.apertures if p.node is via.node and layer in p.layers), None)
+                    # Same-net open stitching annuli may intentionally merge. This
+                    # exception never applies to a component/stencil aperture.
+                    if opening.kind == "via" and own and via.net and opening.net == via.net \
+                            and own.shape.overlaps(aperture):
+                        continue
                     barrier = hole_gap
                     if layer in MASK and own:
                         barrier = min(hole_gap, own.shape.inflate(merge / 2).gap(aperture))

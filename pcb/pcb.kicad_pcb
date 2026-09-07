@@ -78,7 +78,7 @@
 		)
 		(pad_to_mask_clearance 0)
 		(allow_soldermask_bridges_in_footprints no)
-		(tenting front back)
+		(tenting)
 		(pcbplotparams
 			(layerselection 0x00000000_00000000_5555555d_ffffffff)
 			(plot_on_all_layers_selection 0x00000000_00000000_00000000_00000000)
@@ -135,8 +135,8 @@
 		(path "/800a33dc-5627-4901-abfd-b5d6707cf2b1/e10b0ca2-b73b-45c7-ae0a-bc4a8d939601")
 		(attr through_hole)
 		(fp_rect
-			(start -5.3 -11.43)
-			(end 5.2 11.43)
+			(start -6 -12.5)
+			(end 5.4 12.5)
 			(stroke
 				(width 0.1)
 				(type solid)
@@ -238,20 +238,37 @@
 				)
 			)
 		)
-		(fp_rect
+		(fp_line
 			(start -4.7 -11.43)
+			(end -4.7 11.43)
+			(stroke
+				(width 0.15)
+				(type solid)
+			)
+			(layer "F.SilkS")
+			(uuid "c2b52e7a-a002-4562-8b87-0a8d94525bb9")
+		)
+		(fp_line
+			(start -4.7 -11.43)
+			(end 5.2 -11.43)
+			(stroke
+				(width 0.15)
+				(type solid)
+			)
+			(layer "F.SilkS")
+		)
+		(fp_line
+			(start -4.7 11.43)
 			(end 5.2 11.43)
 			(stroke
 				(width 0.15)
 				(type solid)
 			)
-			(fill no)
 			(layer "F.SilkS")
-			(uuid "c2b52e7a-a002-4562-8b87-0a8d94525bb9")
 		)
 		(fp_rect
-			(start -5.55 -11.68)
-			(end 5.45 11.68)
+			(start -6.35 -12.85)
+			(end 5.75 12.85)
 			(stroke
 				(width 0.05)
 				(type solid)
@@ -274,7 +291,7 @@
 		(pad "1" thru_hole roundrect
 			(at 0 -7.62 180)
 			(size 3.2 3.2)
-			(drill 1.4)
+			(drill 2)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
 			(roundrect_rratio 0.25)
@@ -284,7 +301,7 @@
 		(pad "2" thru_hole circle
 			(at 0 0 180)
 			(size 3.2 3.2)
-			(drill 1.4)
+			(drill 2)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
 			(net 4 "EARTH")
@@ -293,7 +310,7 @@
 		(pad "3" thru_hole circle
 			(at 0 7.62 180)
 			(size 3.2 3.2)
-			(drill 1.4)
+			(drill 2)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
 			(net 4 "EARTH")
@@ -626,8 +643,8 @@
 		(path "/800a33dc-5627-4901-abfd-b5d6707cf2b1/ad6228bd-fcb9-4743-8610-3033fcef6975")
 		(attr smd)
 		(fp_rect
-			(start -2.6 -2.6)
-			(end 2.6 2.6)
+			(start -2.605 -2.25)
+			(end 2.605 2.25)
 			(stroke
 				(width 0.1)
 				(type solid)
@@ -760,8 +777,8 @@
 			(uuid "f533ae92-ecbc-40e2-8b4d-3d11a799356c")
 		)
 		(fp_rect
-			(start -2.85 -3.75)
-			(end 2.85 3.75)
+			(start -3 -3.75)
+			(end 3 3.75)
 			(stroke
 				(width 0.05)
 				(type solid)
@@ -771,15 +788,15 @@
 			(uuid "d13d0b08-b99a-4e11-bcc2-7179dcd51b10")
 		)
 		(pad "1" smd rect
-			(at 0 -2.5)
-			(size 5.2 2)
+			(at 0 -2)
+			(size 5.5 1.2)
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(net 1 "WIRE_A")
 			(uuid "a1d9ea1e-4de8-4337-b573-ddec29038a5b")
 		)
 		(pad "2" smd rect
-			(at 0 2.5)
-			(size 5.2 2)
+			(at 0 2)
+			(size 5.5 1.2)
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(net 2 "WIRE_B")
 			(uuid "81d32af3-b38b-4990-bcc4-70a7fa48ca1a")
@@ -793,8 +810,8 @@
 		(path "/800a33dc-5627-4901-abfd-b5d6707cf2b1/907e80f8-81e0-430b-a27c-158308022a01")
 		(attr through_hole)
 		(fp_rect
-			(start -3 -4)
-			(end 3 4)
+			(start -3.15 -4.105)
+			(end 3.15 4.105)
 			(stroke
 				(width 0.1)
 				(type solid)
@@ -804,7 +821,7 @@
 		)
 		(fp_line
 			(start -7.62 0)
-			(end -3 0)
+			(end -3.15 0)
 			(stroke
 				(width 0.1)
 				(type solid)
@@ -812,7 +829,7 @@
 			(layer "F.Fab")
 		)
 		(fp_line
-			(start 3 0)
+			(start 3.15 0)
 			(end 7.62 0)
 			(stroke
 				(width 0.1)
@@ -956,8 +973,8 @@
 			(uuid "d1e8c1bb-c60d-48dd-9825-8abc2b09c2a2")
 		)
 		(fp_rect
-			(start -9.4 -4.25)
-			(end 9.4 4.25)
+			(start -9.4 -4.46)
+			(end 9.4 4.46)
 			(stroke
 				(width 0.05)
 				(type solid)
@@ -969,7 +986,7 @@
 		(pad "1" thru_hole circle
 			(at -7.62 0)
 			(size 3 3)
-			(drill 1.2)
+			(drill 1.5)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
 			(net 3 "WIRE_C")
@@ -978,7 +995,7 @@
 		(pad "2" thru_hole circle
 			(at 7.62 0)
 			(size 3 3)
-			(drill 1.2)
+			(drill 1.5)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
 			(net 4 "EARTH")
@@ -1261,8 +1278,8 @@
 			(uuid "1374cb75-ed6a-48b1-83c0-e14f5d99889a")
 		)
 		(fp_rect
-			(start -6.45 -1.6)
-			(end 6.45 1.6)
+			(start -6.45 -1.7)
+			(end 6.45 1.7)
 			(stroke
 				(width 0.05)
 				(type solid)
@@ -1297,6 +1314,16 @@
 		(at 145.5 103 90)
 		(path "/800a33dc-5627-4901-abfd-b5d6707cf2b1/4a86fcc7-716b-4ee5-97dc-72df3a3b52e8")
 		(attr through_hole)
+		(fp_rect
+			(start -5.1 -6.1)
+			(end 6.4 6.1)
+			(stroke
+				(width 0.1)
+				(type solid)
+			)
+			(fill no)
+			(layer "F.Fab")
+		)
 		(fp_text user "${REFERENCE}"
 			(at -3 0 0)
 			(layer "F.Fab")
@@ -1440,8 +1467,8 @@
 			(uuid "4475d4db-fde9-4396-a954-79f17908ff4d")
 		)
 		(fp_rect
-			(start -5.15 -5.88)
-			(end 5.95 5.88)
+			(start -5.45 -6.45)
+			(end 6.75 6.45)
 			(stroke
 				(width 0.05)
 				(type solid)
@@ -1453,7 +1480,7 @@
 		(pad "1" thru_hole roundrect
 			(at 0 -2.54 90)
 			(size 2.8 2.8)
-			(drill 1.3)
+			(drill 2)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
 			(roundrect_rratio 0.25)
@@ -1463,7 +1490,7 @@
 		(pad "2" thru_hole circle
 			(at 0 2.54 90)
 			(size 2.8 2.8)
-			(drill 1.3)
+			(drill 2)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
 			(net 2 "WIRE_B")
@@ -1478,8 +1505,8 @@
 		(path "/800a33dc-5627-4901-abfd-b5d6707cf2b1/2ffaad67-9852-4be9-b708-624e9ae472e5")
 		(attr through_hole)
 		(fp_rect
-			(start -5.3 -11.43)
-			(end 5.2 11.43)
+			(start -6 -12.5)
+			(end 5.4 12.5)
 			(stroke
 				(width 0.1)
 				(type solid)
@@ -1593,8 +1620,8 @@
 			(uuid "e0b829e9-8fb1-49d8-a94e-3aa270940526")
 		)
 		(fp_rect
-			(start -5.55 -11.68)
-			(end 5.45 11.68)
+			(start -6.35 -12.85)
+			(end 5.75 12.85)
 			(stroke
 				(width 0.05)
 				(type solid)
@@ -1639,7 +1666,7 @@
 		(pad "1" thru_hole roundrect
 			(at 0 -7.62)
 			(size 3.2 3.2)
-			(drill 1.4)
+			(drill 2)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
 			(roundrect_rratio 0.25)
@@ -1649,7 +1676,7 @@
 		(pad "2" thru_hole circle
 			(at 0 0)
 			(size 3.2 3.2)
-			(drill 1.4)
+			(drill 2)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
 			(net 2 "WIRE_B")
@@ -1658,7 +1685,7 @@
 		(pad "3" thru_hole circle
 			(at 0 7.62)
 			(size 3.2 3.2)
-			(drill 1.4)
+			(drill 2)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
 			(net 3 "WIRE_C")
@@ -1673,8 +1700,8 @@
 		(path "/800a33dc-5627-4901-abfd-b5d6707cf2b1/5eac110c-00b8-40d4-9c97-f232f7ae3dbc")
 		(attr through_hole)
 		(fp_rect
-			(start -3 -4)
-			(end 3 4)
+			(start -3.15 -4.105)
+			(end 3.15 4.105)
 			(stroke
 				(width 0.1)
 				(type solid)
@@ -1684,7 +1711,7 @@
 		)
 		(fp_line
 			(start -7.62 0)
-			(end -3 0)
+			(end -3.15 0)
 			(stroke
 				(width 0.1)
 				(type solid)
@@ -1692,7 +1719,7 @@
 			(layer "F.Fab")
 		)
 		(fp_line
-			(start 3 0)
+			(start 3.15 0)
 			(end 7.62 0)
 			(stroke
 				(width 0.1)
@@ -1836,8 +1863,8 @@
 			(uuid "d698cc86-7a42-438a-b09d-ec8ba721d085")
 		)
 		(fp_rect
-			(start -9.4 -4.25)
-			(end 9.4 4.25)
+			(start -9.4 -4.46)
+			(end 9.4 4.46)
 			(stroke
 				(width 0.05)
 				(type solid)
@@ -1849,7 +1876,7 @@
 		(pad "1" thru_hole circle
 			(at -7.62 0)
 			(size 3 3)
-			(drill 1.2)
+			(drill 1.5)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
 			(net 2 "WIRE_B")
@@ -1858,7 +1885,7 @@
 		(pad "2" thru_hole circle
 			(at 7.62 0)
 			(size 3 3)
-			(drill 1.2)
+			(drill 1.5)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
 			(net 4 "EARTH")
@@ -2029,7 +2056,7 @@
 		(pad "1" thru_hole circle
 			(at -7.62 0)
 			(size 2.4 2.4)
-			(drill 1)
+			(drill 1.4)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
 			(net 3 "WIRE_C")
@@ -2038,7 +2065,7 @@
 		(pad "2" thru_hole circle
 			(at 7.62 0)
 			(size 2.4 2.4)
-			(drill 1)
+			(drill 1.4)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
 			(net 7 "Net-(D2-A)")
@@ -2053,8 +2080,8 @@
 		(path "/800a33dc-5627-4901-abfd-b5d6707cf2b1/62814837-b119-44ae-8f69-c2239ebf05f0")
 		(attr through_hole)
 		(fp_rect
-			(start -2.85 -3.1)
-			(end 2.85 3.1)
+			(start -2.86 -3.1)
+			(end 2.86 3.1)
 			(stroke
 				(width 0.1)
 				(type solid)
@@ -2216,8 +2243,8 @@
 			(uuid "235f12d0-693f-476d-bd69-ae2073d7a14f")
 		)
 		(fp_rect
-			(start -3.1 -9.3)
-			(end 3.1 9.3)
+			(start -3.25 -9.3)
+			(end 3.25 9.3)
 			(stroke
 				(width 0.05)
 				(type solid)
@@ -2229,7 +2256,7 @@
 		(pad "1" thru_hole circle
 			(at 0 -7.62)
 			(size 2.8 2.8)
-			(drill 1.2)
+			(drill 1.4)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
 			(net 1 "WIRE_A")
@@ -2238,7 +2265,7 @@
 		(pad "2" thru_hole circle
 			(at 0 7.62)
 			(size 2.8 2.8)
-			(drill 1.2)
+			(drill 1.4)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
 			(net 3 "WIRE_C")
@@ -2409,7 +2436,7 @@
 		(pad "1" thru_hole circle
 			(at -7.62 0)
 			(size 2.4 2.4)
-			(drill 1)
+			(drill 1.4)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
 			(net 1 "WIRE_A")
@@ -2418,7 +2445,7 @@
 		(pad "2" thru_hole circle
 			(at 7.62 0)
 			(size 2.4 2.4)
-			(drill 1)
+			(drill 1.4)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
 			(net 5 "Net-(D1-A)")
@@ -2432,6 +2459,16 @@
 		(at 145.5 142 -90)
 		(path "/800a33dc-5627-4901-abfd-b5d6707cf2b1/042bfd42-7fca-4d61-8824-5007ba270904")
 		(attr through_hole)
+		(fp_rect
+			(start -5.1 -6.1)
+			(end 6.4 6.1)
+			(stroke
+				(width 0.1)
+				(type solid)
+			)
+			(fill no)
+			(layer "F.Fab")
+		)
 		(fp_text user "${REFERENCE}"
 			(at -3 0 0)
 			(layer "F.Fab")
@@ -2575,8 +2612,8 @@
 			(uuid "d8d3ee4c-8d92-4dc3-9b67-4fee52e9b756")
 		)
 		(fp_rect
-			(start -5.15 -5.88)
-			(end 5.95 5.88)
+			(start -5.45 -6.45)
+			(end 6.75 6.45)
 			(stroke
 				(width 0.05)
 				(type solid)
@@ -2588,7 +2625,7 @@
 		(pad "1" thru_hole roundrect
 			(at 0 2.54 270)
 			(size 2.8 2.8)
-			(drill 1.3)
+			(drill 2)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
 			(roundrect_rratio 0.25)
@@ -2598,7 +2635,7 @@
 		(pad "2" thru_hole circle
 			(at 0 -2.54 270)
 			(size 2.8 2.8)
-			(drill 1.3)
+			(drill 2)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
 			(net 2 "WIRE_B")
@@ -2613,8 +2650,8 @@
 		(path "/800a33dc-5627-4901-abfd-b5d6707cf2b1/c44253b2-2ca9-4f5e-839a-a15faac68e9d")
 		(attr smd)
 		(fp_rect
-			(start -2.6 -2.6)
-			(end 2.6 2.6)
+			(start -2.605 -2.25)
+			(end 2.605 2.25)
 			(stroke
 				(width 0.1)
 				(type solid)
@@ -2747,8 +2784,8 @@
 			(uuid "89c00de4-d5b0-4a76-a5e3-6cde0521f6dc")
 		)
 		(fp_rect
-			(start -2.85 -3.75)
-			(end 2.85 3.75)
+			(start -3 -3.75)
+			(end 3 3.75)
 			(stroke
 				(width 0.05)
 				(type solid)
@@ -2758,15 +2795,15 @@
 			(uuid "c2139fe5-d1d7-442c-aabd-52f76c36da05")
 		)
 		(pad "1" smd rect
-			(at 0 -2.5)
-			(size 5.2 2)
+			(at 0 -2)
+			(size 5.5 1.2)
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(net 2 "WIRE_B")
 			(uuid "ec1b88bc-5cc9-4e0f-afc1-ea81b838ba76")
 		)
 		(pad "2" smd rect
-			(at 0 2.5)
-			(size 5.2 2)
+			(at 0 2)
+			(size 5.5 1.2)
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(net 3 "WIRE_C")
 			(uuid "5701cd49-7514-4ded-8020-25ddf8b9063c")
@@ -2942,8 +2979,8 @@
 			(uuid "09969bcc-1e4a-4113-8e31-ed06ab463e02")
 		)
 		(fp_rect
-			(start -6.45 -1.6)
-			(end 6.45 1.6)
+			(start -6.45 -1.7)
+			(end 6.45 1.7)
 			(stroke
 				(width 0.05)
 				(type solid)
@@ -2979,8 +3016,8 @@
 		(path "/800a33dc-5627-4901-abfd-b5d6707cf2b1/5f394865-69d5-4a05-8529-3b75afb6eda4")
 		(attr through_hole)
 		(fp_rect
-			(start -3 -4)
-			(end 3 4)
+			(start -3.15 -4.105)
+			(end 3.15 4.105)
 			(stroke
 				(width 0.1)
 				(type solid)
@@ -2990,7 +3027,7 @@
 		)
 		(fp_line
 			(start -7.62 0)
-			(end -3 0)
+			(end -3.15 0)
 			(stroke
 				(width 0.1)
 				(type solid)
@@ -2998,7 +3035,7 @@
 			(layer "F.Fab")
 		)
 		(fp_line
-			(start 3 0)
+			(start 3.15 0)
 			(end 7.62 0)
 			(stroke
 				(width 0.1)
@@ -3142,8 +3179,8 @@
 			(uuid "13b9e91f-87bf-4691-aa37-f78cdc05dc7f")
 		)
 		(fp_rect
-			(start -9.4 -4.25)
-			(end 9.4 4.25)
+			(start -9.4 -4.46)
+			(end 9.4 4.46)
 			(stroke
 				(width 0.05)
 				(type solid)
@@ -3155,7 +3192,7 @@
 		(pad "1" thru_hole circle
 			(at -7.62 0)
 			(size 3 3)
-			(drill 1.2)
+			(drill 1.5)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
 			(net 1 "WIRE_A")
@@ -3164,7 +3201,7 @@
 		(pad "2" thru_hole circle
 			(at 7.62 0)
 			(size 3 3)
-			(drill 1.2)
+			(drill 1.5)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
 			(net 4 "EARTH")

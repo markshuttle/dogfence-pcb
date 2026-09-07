@@ -17,7 +17,9 @@ The purchased Q10 indicator is the **no-internal-resistor** option, selected to 
 
 Baseline board wiring is LED anode to `J_LED_A`/`J_LED_C` pad 1 (`+`) and cathode to pad 2 (WIRE_B return). Both connectors have positive on the left and return on the right in board coordinates despite their opposite outward-facing rotations. Verify flying-lead identity from the actual part rather than assuming colours.
 
-**C4 remains open:** Reversing the supply and reversing an indicator's flying leads are distinct faults. Darkness under either condition does not prove a safe reverse voltage. A single antiparallel diode at the PCB connector does not protect against both mistakes. The final PCB-side solution must preserve the no-field-soldering requirement and be checked for forward pulse current, normal brightness and cut observability; no protection change is approved by this document.
+**Updated user risk decision, 2026-09-07:** LED damage from accidental low-voltage installation polarity errors is accepted, with spare indicators for replacement. Reversed flying-lead survival is no longer mandatory. Check polarity before power and correct mistakes while isolated; darkness is not a safety test. Spare quantity is not yet allocated or newly ordered.
+
+**C4's remaining scope:** assess the simple 16-part candidate with one antiparallel clamp diode per connector, cathode to LED positive/anode to B, downstream of the existing series diode. This clamps negative connector voltage, not forward pulse current or reversed flying leads. Normal brightness, one-way cut behavior and ordinary RUN/TEST/switching/cattle-fence exposure still need assessment. Direct-strike damage is accepted; other transient risks are not waived wholesale. [ELECTRICAL section 9](pcb/ELECTRICAL.md#9-simplified-indicator-direction) records the candidate, not an implemented or qualified board.
 
 ## Current And Visibility
 

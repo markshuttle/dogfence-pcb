@@ -169,8 +169,10 @@ def validate_attempt(saved, sources, review, returncode):
     for name in ("pcb.d356", "Assembly.pdf"):
         m.require(m.sha256(release / name) == m.sha256(exports / name), f"Release copy differs: {name}")
     m.require(m.sha256(release / "BOM.csv") == m.sha256(project / "BOM.csv"), "Release BOM differs")
+    for name in m.ENGINEERING_NOTES:
+        m.require(m.sha256(release / name) == m.sha256(project / name), f"Release engineering note differs: {name}")
     files.update({name: release / name for name in ("BOM.csv", "CPL.csv", "pcb.d356", "Assembly.txt", "ViaTreatment.csv",
-                                                   "ASSEMBLY.md", "ELECTRICAL.md", "verification.json")})
+                                                   *m.ENGINEERING_NOTES, "verification.json")})
     files.update({name: exports / name for name in ("native-pos.csv", "README.txt")})
     result["artifact_comparison_hashes"] = {name: comparison_hash(path) for name, path in files.items()}
     if holds:

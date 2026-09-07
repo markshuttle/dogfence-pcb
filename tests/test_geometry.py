@@ -19,7 +19,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from scripts.check_geometry import (  # noqa: E402
-    CU, GeometryCheck, MIN_MASK_BARRIER, PROJECT_MINIMA, PROTECTED_VIAS,
+    COMPONENT_HOLE_MINIMA, CU, GeometryCheck, MIN_MASK_BARRIER, PROJECT_MINIMA, PROTECTED_VIAS,
     REQUIRED_ERROR_RULES, REQUIRED_VISIBLE_RULES, Shape, check_sources,
     condition, matches, move, pad_shape,
 )
@@ -73,6 +73,7 @@ def set_net(board, node, name):
 
 def historical_smt(board):
     setup = board.one("setup")
+    replace(setup, "(tenting front back)")
     for key in ("pad_to_mask_clearance", "pad_to_paste_clearance", "pad_to_paste_clearance_ratio"):
         replace(setup, f"({key} 0)")
     replace(setup, "(solder_mask_min_width 0)")
@@ -180,6 +181,51 @@ class GeometryTests(unittest.TestCase):
         self.assertEqual(report["qualification"]["physical_fit"], "not_verified")
         self.assertEqual(report["qualification"]["via_covering_cam"], "not_verified")
 
+    def test_adopted_dfm_holes_lands_and_untented_vias(self):
+        report = self.assert_pass(self.report(self.authoritative))
+        self.assertEqual(len(report["measurements"]["component_hole_design"]), 26)
+        checker = GeometryCheck(self.authoritative)
+        checker.read_board()
+        for via in checker.vias:
+            self.assertFalse(checker.tented(via.node, "front"))
+            self.assertFalse(checker.tented(via.node, "back"))
+        for ref in ("GDT_AB", "GDT_BC"):
+            for num, y in (("1", -2.0), ("2", 2.0)):
+                item = pad(self.authoritative, ref, num)
+                self.assertEqual(list(map(float, item.one("size").atoms())), [5.5, 1.2])
+                self.assertEqual(list(map(float, item.one("at").atoms())), [0.0, y])
+        smt = [row for row in report["measurements"]["via_apertures"]
+               if row["aperture"].startswith(("GDT_AB.", "GDT_BC."))]
+        self.assertAlmostEqual(min(row["hole_gap_mm"] for row in smt), 1.239713)
+        self.assertAlmostEqual(min(row["annulus_gap_mm"] for row in smt), 0.839713)
+
+    def test_selected_fit_holes_cannot_revert_to_unsupported_sizes(self):
+        for ref, minimum in COMPONENT_HOLE_MINIMA.items():
+            with self.subTest(ref=ref):
+                board = deepcopy(self.positive)
+                replace(pad(board, ref, "1"), f"(drill {minimum - 0.1:.2f})")
+                self.assert_defect("C1_DIODE_DRILL" if ref in ("D1", "D2") else "COMPONENT_FIT_DRILL",
+                                   self.report(board))
+
+    def test_body_courtyards_include_declared_pose_and_assembly_margin(self):
+        for ref in (*COMPONENT_HOLE_MINIMA, "GDT_AB", "GDT_BC"):
+            with self.subTest(ref=ref):
+                fp = footprint(self.authoritative, ref)
+                boxes = {rect.one("layer").atoms()[0]: rect for rect in fp.children("fp_rect")}
+                body, courtyard = boxes["F.Fab"], boxes["F.CrtYd"]
+                for edge, direction in (("start", -1), ("end", 1)):
+                    for b, c in zip(body.one(edge).atoms(), courtyard.one(edge).atoms()):
+                        self.assertGreaterEqual(direction * (float(c) - float(b)) + 1e-9, 0.10 + 0.25)
+
+    def test_adopted_pin_envelopes_include_independent_pattern_allowance(self):
+        position_budget = 2 * (math.hypot(0.05, 0.05) + 0.05)
+        envelopes = {"J_IN": math.hypot(1.1, 1.0), "J_LED_A": math.hypot(1.15, 1.0),
+                     "R1": 0.9, "GDT_AC": 0.9, "GDT_A_E": 1.05}
+        for ref, maximum in envelopes.items():
+            with self.subTest(ref=ref):
+                hole = float(pad(self.authoritative, ref, "1").one("drill").atoms()[0])
+                self.assertGreaterEqual(hole - 0.08 - maximum - position_budget, 0.1)
+
     def test_reviewed_c1_w1_defects_remain_reproducible_after_layout_fixes(self):
         historical_smt(self.board)
         for ref in ("D1", "D2"):
@@ -210,10 +256,10 @@ class GeometryTests(unittest.TestCase):
         p = pad(self.board, "R1", "2")
         p.values[2] = Atom("oval")
         replace(p, "(size 2.8 2.4)")
-        replace(p, "(drill oval 1.4 1.0)")
+        replace(p, "(drill oval 1.6 1.4)")
         replace(p, "(at 7.62 0 37)")
         self.assert_pass()
-        replace(p, "(drill oval 2.4 1.0)")
+        replace(p, "(drill oval 2.4 1.4)")
         self.assert_defect("COMPONENT_RING")
 
     def test_earth_encroachment_on_both_copper_layers(self):
@@ -291,8 +337,23 @@ class GeometryTests(unittest.TestCase):
         self.assert_defect("W1_MASK_BARRIER")
         remove(p, "solder_mask_margin")
         via = next(v for v in self.board.children("via") if v.one("at").atoms() == ["114", "114.88"])
-        replace(via, "(tenting (front no) (back yes))")
+        replace(via, "(tenting back)")
         self.assert_defect("W1_MASK_BARRIER")  # Only 0.01 mm between open annulus and land.
+
+    def test_same_net_open_vias_do_not_waive_component_or_other_net_collisions(self):
+        board = deepcopy(self.authoritative)
+        replace(pad(board, "GDT_AB", "1"), "(solder_mask_margin 1.3)")
+        self.assert_defect("W1_VIA_MASK", self.report(board))
+        board = deepcopy(self.authoritative)
+        set_net(board, board.children("via")[0], "WIRE_B")
+        self.assert_defect("W1_MASK_BARRIER", self.report(board))
+
+    def test_native_unsupported_via_tenting_and_margin_fail_closed(self):
+        for text in ("(tenting (front no) (back yes))", "(solder_mask_margin 0.1)"):
+            with self.subTest(text=text):
+                board = deepcopy(self.authoritative)
+                replace(board.children("via")[0], text)
+                self.assert_defect("UNSUPPORTED_GEOMETRY", self.report(board))
 
     def test_mask_minimum_width_cannot_silently_merge_a_barrier(self):
         replace(self.board.one("setup"), "(solder_mask_min_width 0.7)")
