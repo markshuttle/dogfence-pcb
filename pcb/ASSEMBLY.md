@@ -34,6 +34,18 @@ fit, continuous thermal safety, or surge performance.
   coordinates. Rotations -90 and 270 degrees are equivalent. The assembler must
   approve its actual model origin, orientation and any centroid correction.
 
+`make check` now generates a native **Assembly.pdf** overlay of F.Fab, pad
+outlines, F.SilkS, F.CrtYd and Edge.Cuts. **Assembly.txt** lists all sixteen
+footprint anchors with exact MPN/footprint identity and all **34 electrical
+terminal centres**, in both PCB and signed-Y fabrication coordinates. Use these
+together to compare every supplier-model pin, not just its displayed centre.
+Neither a courtyard midpoint nor a body-envelope midpoint is an approved
+pick-and-place centroid. No centroid correction has been applied to the CPL.
+Use the text's explicit pin numbers/nets: the tested KiCad 9.0.7 PDF
+`--sketch-pads-on-fab-layers` output draws pad outlines but did not render pad
+numbers, despite the CLI help wording. Saved plot-number toggles did not change
+that native export, so no ineffective PCB plot-setting change is retained.
+
 ## Placement And Polarity
 
 | References | Origin / rotation | Required placement and inspection |
@@ -92,6 +104,68 @@ The source BOM deliberately leaves R1/R2's LCSC codes empty with
 retired C1368610 or a 220-ohm near-match. JLCPCB procurement/private-part mapping
 and allocated lot remain open; file checks do not approve external allocation,
 and unresolved external rows independently block publication.
+
+### Axial Forming Approval
+
+The missing PR02 forming decision is bounded below, without moving its existing
+pads or borrowing the retired resistor's mounting rules. Side view along Y of
+R1/R2, **not to scale**; Z=0 is the finished top PCB surface. The 12.00 length
+is the conservative L2 envelope, not permission to bend inside the coating.
+
+```text
+                 PR02000202201FA100, D <=3.90
+                    |<-- L2 <=12.00 -->|
+                    +-----------------+
+          .---------|      body       |---------.
+          |         +-----------------+         |
+          |              ^ g >=1.00             |
+ Z=0 =====|==============v======================|===== PCB top
+          |                                     |
+          |<--------- P =15.24 nominal --------->|
+       X=108.38                               X=123.62
+          R1: Y=104.50; R2: Y=140.50; origin X=116.00
+          Both holes 1.40; pads 2.40; wire d <=0.83
+
+ One end, simple 90-degree bend:
+ body-envelope edge -- straight setback s -- bend tangent
+ bend centreline radius Rc = inside radius Ri + d/2
+ required horizontal room = s + Rc
+```
+
+The nominal PR02 room is `(15.24 - 12.00)/2 = 1.62` per end. Reserving
+0.050 inward insertion-leg pattern error and 0.10 body projection/offset gives
+**1.47**. With d=0.83, the remaining bound is **s + Ri <=1.055**. This is a
+geometric ceiling, **not an approved minimum setback or bend radius**, and
+does not demonstrate that a permissible PR02 bend fits. Hole-position error
+and insertion allowance are accounted for separately in the hole-fit table.
+
+| Formed part | Nominal pitch | Axial body/envelope maximum | Finished wire limit | Available `s + Rc` after 0.050 leg / 0.10 body allowance | Corresponding `s + Ri` ceiling |
+| :--- | ---: | ---: | ---: | ---: | ---: |
+| R1/R2 PR02 | 15.24 | 12.00 | 0.83 | **1.47** | **1.055** |
+| GDT_AC B5G470L | 15.24 | 6.20 | 0.90 E | **4.37** | **3.920** |
+| Earth 2R470TD-8 GDTs | 15.24 | 6.30 | 1.05 | **4.32** | **3.795** |
+
+Obtain one dimensioned, accepted forming drawing for each family. It must state
+the straight-setback datum/minimum, inside-radius minimum and achieved maximum,
+body centring, complete pin-pattern tolerance, standoff range, maximum assembled
+height, bottom lead protrusion and trimming/soldering sequence. PR02's **>=1.00
+minimum gap does not define a maximum height**: at exactly 1.00 gap the largest
+body reaches 4.90, but 4.90 is not an upper assembly limit. The existing GDT_AC
+2.50 +/-0.25 underside / 8.50 complete-height development envelope remains below.
+No new height, lead-cut length or acceptable seal/coating stress is invented.
+
+Vishay 28729, **08-Jul-2025 p2**, lists the selected **axial Cu/A1** wire at
+0.78 with formed pitch **n/a**. Its separate factory radial Cu/L1 option is
+17.8 pitch; the 15 mm B1 option uses FeCu. Page 3's A1 packaging **5 mm pitch
+is tape feed spacing**, not PCB pitch. Those tables were visually rechecked;
+none approves the present 15.24 forming. The existing outline maxima above
+come from the prior controlled drawing review, not a new outline-page inspection.
+
+**First supplier decision for this board:** can the exact Cu/A1 PR02 be formed
+and soldered at the retained 15.24 pitch within these bounds? If not, return the
+minimum supported profile for design review. Do not silently substitute FeCu,
+force the leads, move the protected takeoffs, or assume increased height cures
+an unsupported bend. This remains W4 process/fit acceptance, not a DRC failure.
 
 ## GDT_AC Forming Drawing
 
@@ -238,6 +312,23 @@ pose increases this to **161.10**. Allow **1.30 overhang** against a routed edge
 as far inward as X=159.80. The courtyard reaches **161.35**. Approve panel,
 depanelization, COMBI and wire/tool access for that envelope, not the former
 nominal 0.30 figure. Do not trim the body/courtyard or move earth copper.
+
+Use these **top-view PCB-coordinate** extents on the supplier's panel drawing:
+
+| J_EARTH feature | X minimum..maximum | Y minimum..maximum |
+| :--- | :--- | :--- |
+| Controlled body envelope | 149.60..161.00 | 110.00..135.00 |
+| Body including 0.10 projected pose | 149.50..161.10 | 109.90..135.10 |
+| Retained F.CrtYd assembly envelope | 149.25..161.35 | 109.65..135.35 |
+
+The nominal east board edge is X=160.00. Show the full courtyard outside that
+edge in the panel, clamping and depanelization review; the native assembly PDF
+now exposes it. A rail, adjacent board, clamp or cutter sweep must not occupy
+the envelope during the relevant assembly/depanelization operation. The
+assembler must specify any larger tool/wire/screwdriver clearance; the courtyard
+alone is not a machining clearance or an approved panel design. Preserve the
+four mounting keepouts and all functional copper. Five individual boards, not
+five panels, remain the quantity requirement.
 
 Earth-GDT maximum projected gap is bounded below by
 `9.00 - 8.21 - 2*0.10 = 0.59`; courtyard gap is 0.08. This is a dimensional

@@ -452,6 +452,31 @@ class GeometryTests(unittest.TestCase):
                     for b, c in zip(body.one(edge).atoms(), courtyard.one(edge).atoms()):
                         self.assertGreaterEqual(direction * (float(c) - float(b)) + 1e-9, 0.10 + 0.25)
 
+        earth = footprint(self.authoritative, "J_EARTH")
+        x, y, angle = map(float, earth.one("at").atoms())
+        for layer, bounds in (("F.Fab", (149.6, 110.0, 161.0, 135.0)),
+                              ("F.CrtYd", (149.25, 109.65, 161.35, 135.35))):
+            rect = next(item for item in earth.children("fp_rect") if item.one("layer").atoms() == [layer])
+            points = [move(tuple(map(float, rect.one(edge).atoms())), (x, y), angle) for edge in ("start", "end")]
+            actual = (*map(min, zip(*points)), *map(max, zip(*points)))
+            for coordinate, expected in zip(actual, bounds):
+                self.assertAlmostEqual(coordinate, expected)
+
+    def test_axial_forming_room_is_a_geometric_ceiling_not_bend_approval(self):
+        for ref, axis, wire, room in (("R1", 0, .83, 1.47), ("R2", 0, .83, 1.47),
+                                     ("GDT_AC", 1, .90, 4.37), ("GDT_A_E", 0, 1.05, 4.32),
+                                     ("GDT_B_E", 0, 1.05, 4.32), ("GDT_C_E", 0, 1.05, 4.32)):
+            with self.subTest(ref=ref):
+                fp = footprint(self.authoritative, ref)
+                body = next(rect for rect in fp.children("fp_rect") if rect.one("layer").atoms() == ["F.Fab"])
+                low, high = (float(body.one(edge).atoms()[axis]) for edge in ("start", "end"))
+                pins = sorted(float(p.one("at").atoms()[axis]) for p in fp.children("pad"))
+                self.assertAlmostEqual(pins[1] - pins[0], 15.24)
+                available = min(low - pins[0], pins[1] - high) - .05 - .10
+                self.assertAlmostEqual(available, room)
+                self.assertAlmostEqual(available - wire / 2,
+                                       1.055 if ref.startswith("R") else 3.92 if ref == "GDT_AC" else 3.795)
+
     def test_adopted_pin_envelopes_include_independent_pattern_allowance(self):
         position_budget = 2 * (math.hypot(0.05, 0.05) + 0.05)
         envelopes = {"J_IN": math.hypot(1.1, 1.0), "J_LED_A": math.hypot(1.15, 1.0),

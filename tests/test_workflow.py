@@ -87,6 +87,16 @@ class WorkflowTests(unittest.TestCase):
                     finally:
                         path.write_bytes(original)
 
+    def test_changed_assembly_terminal_datum_is_rejected(self):
+        pipeline = self.make_attempt(True)
+        path = pipeline.run / "release" / "Assembly.txt"
+        text = path.read_text()
+        changed = text.replace("8.500000 | -20.000000 | 1.000000", "8.500000 | 20.000000 | 1.000000", 1)
+        self.assertNotEqual(changed, text)
+        path.write_text(changed)
+        with self.assertRaisesRegex(w.m.VerificationError, "Assembly datum reference differs"):
+            w.validate_attempt(pipeline.root, pipeline.sources, pipeline.review, 2)
+
     def test_only_recognized_timestamps_are_normalized(self):
         fixtures = {
             "test.gbr": "%TF.CreationDate,2026-09-07T01:02:03+01:00*%\n"

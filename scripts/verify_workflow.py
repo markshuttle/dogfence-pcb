@@ -155,6 +155,8 @@ def validate_attempt(saved, sources, review, returncode):
         m.require(m.check_placement(m.read_csv(path, m.CPL_FIELDS), board) == positions
                   and m.sha256(path) == m.sha256(exports / "CPL.csv"), "Generated signed-Y CPL differs")
     m.require(set(positions) == set(result["bom"]) == set(checks["population"]["references"]), "Population differs")
+    m.require((release / "Assembly.txt").read_text(encoding="utf-8") ==
+              m.assembly_reference(board, result["bom"], positions, revision), "Assembly datum reference differs")
     m.require(m.validate_gerbers(exports / "gerbers", board) == checks["gerbers"], "Gerber validation differs")
     m.require({p.name for p in (exports / "drills").iterdir()} == m.DRILLS, "Drill inventory differs")
     for name in m.DRILLS:

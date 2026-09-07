@@ -26,6 +26,11 @@ Manufacturing and field release remain held; file checks are not hardware approv
    `pcb/DFM_EVIDENCE.md`, `pcb/ENVIRONMENT_EVIDENCE.md`, `pcb/DESIGN_BOUNDS.md`
    and the two `*_PROTECTION_RESEARCH.md` notes preserve source evidence and
    rejected/unselected circuits; they do not override the release holds.
+6. For a **board/prototype-only request**, work the P3/P4 board-finalization
+   queue in ORDERING/REMEDIATION, not the first unchecked switch or environmental
+   item. Preserve those independent holds without restarting their research.
+   The 16-part protection placement is already implemented; do not add a new
+   circuit or move sound geometry just to produce a PCB diff.
 
 ## 2. Headless Environment
 
@@ -116,8 +121,12 @@ When holds are closed, the published filenames remain `build/Gerbers.zip`
 (mirror `pcb/Gerbers.zip`), `build/BOM.csv`, `build/CPL.csv` (generated source
 mirror), `build/pcb.d356` and `build/FlyTest.zip`. The release also contains
 `Assembly.pdf`, `Assembly.txt`, `ViaTreatment.csv`, the controlled notes, reports
-and manifest. Flying-probe inputs describe **bare-board continuity**, not an
-assembled functional or surge test. Never hand-edit generated artifacts.
+and manifest. The native assembly PDF includes pad outlines and courtyards;
+the text gives exact footprint anchors and all electrical terminal datums with
+pin numbers/nets in PCB and signed-Y fabrication coordinates. These aid supplier-model
+review, not approved centroid corrections. Flying-probe inputs describe
+**bare-board continuity**, not an assembled functional or surge test. Never
+hand-edit generated artifacts.
 
 ```bash
 make test

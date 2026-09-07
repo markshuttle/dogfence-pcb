@@ -382,6 +382,37 @@ def generate_cpl(native, output, board):
     return positions
 
 
+def assembly_reference(board, bom, positions, revision):
+    """Source datums for supplier review, not guessed package-centroid offsets."""
+    lines = [f"Dog Fence {revision} - assembly datum reference", SCOPE["placement"],
+             "DRAFT: not an accepted JLCPCB placement model or production approval.",
+             "PCB coordinates: top view, X east/right, Y south/down.",
+             "CPL/fabrication coordinates: X=PCB X, Y=-PCB Y; no origin shift or mirroring.",
+             "Footprint anchors and terminal centres are NOT measured package centroids.",
+             "Confirm exact-part model origins, rotations and polarity with the assembler.",
+             "ASSEMBLY.md controls body envelopes, PR02/GDT forming, standoff and panel overhang.", "",
+             "PLACEMENT ANCHORS",
+             "Reference | MPN | Footprint | PCB X mm | PCB Y mm | CPL X mm | CPL Y mm | Rotation deg | Side"]
+    for ref in sorted(positions):
+        fp, row = board.footprints[ref], positions[ref]
+        lines.append(" | ".join([ref, bom[ref]["MPN"], fp.name, f"{fp.x:.6f}", f"{fp.y:.6f}", *row[3:]]))
+    lines += ["", "TERMINAL DATUMS",
+              "Compare ALL pins with the supplier model; a nonpolar part can still have the wrong physical axis.",
+              "Hole diameter is nominal finished component PTH; zero means an undrilled terminal.",
+              "Mechanical holes, DNP parts and stitching vias are not assembly terminals.",
+              "Reference | Pin | Net | Type | PCB X mm | PCB Y mm | Fabrication X mm | Fabrication Y mm | Hole mm"]
+    for ref in sorted(positions):
+        for pad in sorted(board.footprints[ref].pads, key=lambda item: item.pin):
+            if pad.kind == "np_thru_hole":
+                continue
+            lines.append(" | ".join([ref, pad.pin, pad.net, pad.kind,
+                                     *(f"{v:.6f}" for v in (pad.x, pad.y, pad.x, -pad.y, pad.drill))]))
+    lines += ["", "Assembly.pdf: native top-view body, pad-outline, courtyard and board-outline overlay.",
+              "Courtyards are assembly envelopes, not copper or approved panel/tooling geometry.",
+              "Use ViaTreatment.csv separately for stitching-via function and coordinates."]
+    return "\n".join(lines) + "\n"
+
+
 def match_geometry(actual, expected, tolerance, label):
     """Return the one-to-one matched source records in exported order."""
     remaining, matched = list(expected), []
@@ -839,7 +870,8 @@ class Manufacturing:
               "--subtract-soldermask", "--output", str(gerbers) + "/", pcb], "gerbers"),
             (["pcb", "export", "drill", "--format", "excellon", "--drill-origin", "absolute", "--excellon-units", "mm",
               "--excellon-zeros-format", "decimal", "--excellon-separate-th", "--output", str(drills) + "/", pcb], "drills"),
-            (["pcb", "export", "pdf", "--layers", "F.Fab,F.SilkS,Edge.Cuts", "--mode-single", "--black-and-white",
+            (["pcb", "export", "pdf", "--layers", "F.Fab,F.SilkS,F.CrtYd,Edge.Cuts", "--mode-single", "--black-and-white",
+              "--sketch-pads-on-fab-layers",
               "--output", scratch / "Assembly.pdf", pcb], "assembly"),
         ]
         annotation = self.review.get("reviewed_netlist_annotation")
@@ -907,14 +939,7 @@ class Manufacturing:
         shutil.copy2(self.project / "BOM.csv", release / "BOM.csv")
         for name in (*ENGINEERING_NOTES, "verification.json"):
             shutil.copy2(self.project / name, release / name)
-        assembly = [f"Dog Fence {self.revision} - native assembly placement reference", SCOPE["placement"],
-                    "Not an accepted JLCPCB placement model. Confirm all centroids, rotations and polarity.",
-                    "GDT_AC forming/standoff and exact pin fit require controlled assembly acceptance.", "",
-                    "Reference | MPN | X mm | Y mm | Rotation deg | Side"]
-        for ref in sorted(positions):
-            row = positions[ref]
-            assembly.append(" | ".join([ref, bom[ref]["MPN"], *row[3:]]))
-        (release / "Assembly.txt").write_text("\n".join(assembly) + "\n", encoding="utf-8")
+        (release / "Assembly.txt").write_text(assembly_reference(board, bom, positions, self.revision), encoding="utf-8")
         with (release / "ViaTreatment.csv").open("w", newline="", encoding="utf-8") as stream:
             writer = csv.writer(stream, lineterminator="\n")
             writer.writerow(["Function", "Net", "PCB X mm", "PCB Y mm", "Drill mm", "Pad mm",

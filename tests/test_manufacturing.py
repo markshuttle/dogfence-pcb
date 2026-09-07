@@ -1157,6 +1157,54 @@ class ManufacturingTests(unittest.TestCase):
         with self.assertRaisesRegex(nets.VerificationError, "Merged/polygonal solder mask"):
             m.validate_gerbers(directory, board)
 
+    def test_assembly_reference_excludes_nonpopulated_parts_and_requests_native_pad_overlay(self):
+        rc, pipeline, fake = self.execute("check")
+        self.assertEqual(rc, 0, pipeline.errors)
+        text = (pipeline.run / "release" / "Assembly.txt").read_text()
+        self.assertIn("DRAFT: not an accepted JLCPCB placement model or production approval.", text)
+        self.assertIn("R1 | R1K | Local:THT | 10.000000 | 20.000000 | 10.000000 | -20.000000 | 0.000000 | top", text)
+        self.assertIn("R1 | 1 | POWER | thru_hole | 8.500000 | 20.000000 | 8.500000 | -20.000000 | 1.000000", text)
+        for ref in ("H1", "R_DNP", "VIA"):
+            self.assertNotRegex(text, rf"(?m)^{ref} \|")
+        command = next(command for command in fake.calls if "pdf" in command)
+        self.assertEqual(command[command.index("--layers") + 1], "F.Fab,F.SilkS,F.CrtYd,Edge.Cuts")
+        self.assertIn("--sketch-pads-on-fab-layers", command)
+
+    def test_real_assembly_datums_preserve_all_hybrid_terminals_and_unusual_axes(self):
+        board = nets.read_board(REPO / "pcb" / "pcb.kicad_pcb")
+        path = self.root / "native-pos.csv"
+        path.write_text(native_positions(board))
+        positions = m.check_placement(m.read_csv(path, m.POSITION_FIELDS), board, native=True)
+        bom = m.read_bom(REPO / "pcb" / "BOM.csv")
+        text = m.assembly_reference(board, bom, positions, "1.2.0-dev")
+        anchors, terminals = text.split("TERMINAL DATUMS\n")
+        self.assertEqual(sum(line.startswith(tuple(ref + " | " for ref in bom)) for line in anchors.splitlines()), 16)
+        rows = [line.split(" | ") for line in terminals.splitlines() if " | " in line][1:]
+        self.assertEqual(len(rows), 34)
+        self.assertEqual({(row[0], row[1], row[2]) for row in rows},
+                         {(ref, pin, net) for net, pins in board.nets.items() for ref, pin in pins})
+        expected = {
+            ("J_LED_A", "1"): ("LED_A_POS", 142.96, 103.0, 2.0),
+            ("J_LED_C", "1"): ("LED_C_POS", 142.96, 142.0, 2.0),
+            ("J_LED_A", "2"): ("WIRE_B", 148.04, 103.0, 2.0),
+            ("J_LED_C", "2"): ("WIRE_B", 148.04, 142.0, 2.0),
+            ("D1", "1"): ("LED_A_POS", 134.6, 104.5, 0),
+            ("D2", "1"): ("LED_C_POS", 134.6, 140.5, 0),
+            ("D3", "1"): ("LED_A_POS", 132.9, 99.0, 0),
+            ("D4", "1"): ("LED_C_POS", 132.9, 146.0, 0),
+            ("GDT_AC", "1"): ("WIRE_A", 125.8, 114.88, 1.4),
+            ("GDT_AC", "2"): ("WIRE_C", 125.8, 130.12, 1.4),
+        }
+        for row in rows:
+            key = (row[0], row[1])
+            if key in expected:
+                with self.subTest(terminal=key):
+                    net, x, y, drill = expected[key]
+                    self.assertEqual(row[2], net)
+                    self.assertEqual(tuple(map(float, row[4:])), (x, y, x, -y, drill))
+        self.assertIn("PR02000202201FA100", anchors)
+        self.assertIn("Footprint anchors and terminal centres are NOT measured package centroids.", text)
+
     def test_via_treatment_csv_reports_source_requested_front_and_back(self):
         path = self.root / "pcb" / "pcb.kicad_pcb"
         for global_flags, local_flags, expected in (
@@ -1558,7 +1606,8 @@ class NativeContractTests(unittest.TestCase):
                  "--excellon-zeros-format", "decimal", "--excellon-separate-th", "--output", str(drills) + "/", pcb],
                 ["pcb", "export", "gerbers", "--layers", ",".join(m.LAYERS), "--precision", "6", "--no-protel-ext", "--subtract-soldermask",
                  "--output", str(gerbers) + "/", pcb],
-                ["pcb", "export", "pdf", "--layers", "F.Fab,F.SilkS,Edge.Cuts", "--mode-single", "--black-and-white",
+                ["pcb", "export", "pdf", "--layers", "F.Fab,F.SilkS,F.CrtYd,Edge.Cuts", "--mode-single", "--black-and-white",
+                 "--sketch-pads-on-fab-layers",
                  "--output", root / "Assembly.pdf", pcb],
             ]
             for args in jobs:

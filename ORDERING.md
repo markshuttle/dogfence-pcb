@@ -6,6 +6,29 @@ The agreed first order is **five individual, fully assembled boards**, with no f
 
 The field requirement is **41 stations, 36 standard + 5 earth-connected, and 82 LEDs**, including both shed-end boards. Future production quantity depends on qualified prototype reuse, retained/destructive test units, and explicitly approved spares. Do not turn a five-board prototype order into five multi-up panels or automatically reorder the old production quantity. [MATERIALS.md](MATERIALS.md) controls purchase history and allocation.
 
+## Board Finalization Queue
+
+For the current **board-only** work, finish P3's assembly/fit handoff and then
+P4's actual five-board supplier review. Do not restart switch, cable or
+environmental research to work this queue. The circuit/layout is the implemented
+16-part hybrid; unresolved performance holds remain recorded, not silently
+closed or evidence that a different circuit is already required.
+
+| Next board decision | Exact response/evidence needed |
+| :--- | :--- |
+| **PR02 sourcing and forming** | Ten fitted PR02000202201FA100 plus supplier-specified attrition; accepted procurement/private-part mapping and a drawing proving 15.24 pitch, >=1.00 body gap and safe bends. The bounded **1.47 mm per-end forming room** is in [ASSEMBLY](pcb/ASSEMBLY.md#axial-forming-approval). Do not buy a FeCu, 220-ohm or guessed-code substitute. |
+| **Remaining part/fit acceptance** | Exact KF129 variant and allocated Kefa/GDT pin/body/pattern limits; accepted GDT forming drawings. The selected hole/body envelopes are already implemented, not still awaiting a CAD resize. |
+| **SMT and THT process** | Accept the selected metric Ruilon/SMA lands, resolve Ruilon's 4.00 mm/0.165-inch conflict, and approve the processed stencil and heavy-copper solder/inspection process. |
+| **Panel and drill preservation** | Drawing for five finished individual boards, retaining all fourteen 1.00/1.80 untented vias, four mounts, outline and protected copper; account for J_EARTH's courtyard through X=161.35 and 1.30 budgeted body overhang. |
+| **Placement approval** | Compare all sixteen anchors and 34 terminal datums in generated Assembly.txt with exact supplier models, using the pad-outline/courtyard Assembly.pdf. Pin numbers/nets are explicit in the text; native PDF pad numbering is not assumed. Record any supported model transform; do not hand-edit CPL or PCB pads to fix import conventions. |
+
+This is a **supplier-response checklist, not a new order authorization or a
+claim that responses have been received**. Public upload/package holds remain
+unchanged. Gate B can precede explicitly deferred prototype-dependent tests as
+already stated in REMEDIATION; such a release still needs a deliberate reviewed
+disposition, not fictitious test passes. No switch or environmental approval is
+being attempted in this board-finalization package.
+
 External cable, OneGel, enclosure and switch manufacturer sources and unresolved discrepancies are recorded in [pcb/ENVIRONMENT_EVIDENCE.md](pcb/ENVIRONMENT_EVIDENCE.md); use MATERIALS for the latest confirmed reel labels and TEST-PSU/disconnected-spare allocation.
 
 ## 1. Before Upload
@@ -40,7 +63,7 @@ Use headless KiCad 9 (tested baseline 9.0.7). `make check` retains evidence and 
 | `build/pcb.d356` | IPC-D-356 connectivity for bare-board test/CAM comparison. |
 | `build/FlyTest.zip` | Netlist and fabrication package for bare-board electrical testing, not an assembled functional/surge test. |
 
-Inspect fresh exported geometry, layer/drill classification, schematic/PCB/IPC connectivity, BOM/CPL completeness, and archive members. Check `build/status.json`, `build/reports/verification.json`, readable/JSON DRC/ERC reports, and the published `build/manifest.json` source/artifact hashes. **No verified manifest means no current upload package.** Assembly outputs include `Assembly.pdf`, `Assembly.txt`, `ViaTreatment.csv` and all seven controlled engineering notes. Never hand-edit generated Gerbers, drills or ZIPs to bypass a failed check.
+Inspect fresh exported geometry, layer/drill classification, schematic/PCB/IPC connectivity, BOM/CPL completeness, and archive members. Check `build/status.json`, `build/reports/verification.json`, readable/JSON DRC/ERC reports, and the published `build/manifest.json` source/artifact hashes. **No verified manifest means no current upload package.** Assembly outputs include native pad outlines and courtyards in `Assembly.pdf`, exact footprint/terminal datums with pin numbers/nets in both coordinate conventions in `Assembly.txt`, `ViaTreatment.csv` and all seven controlled engineering notes. These are supplier-review aids, not accepted centroid corrections. Never hand-edit generated Gerbers, drills or ZIPs to bypass a failed check.
 
 The current **design inventory expected during integrated native verification** is **eight nets, 34 terminals, 36 PTH hits (22 component + 14 via), four NPTH and 52 IPC records**, with **16 electrical parts / six SMT / ten THT** plus four mounting footprints. The source has twelve component paste apertures: four Ruilon and eight BYG23T. These are design counts, **not a claim that the current native exports have passed**; use revision-specific reports.
 

@@ -3,7 +3,7 @@
 Prepared: 2026-09-06. Reviewed hardware baseline: v1.1.0.
 Implementation handoff: **2026-09-07, hardware 1.2.0-dev**.
 
-**Status: the minimal-change 16-part PR02/BYG23T hybrid is implemented in checkpoint 6ba2a07 after ad282e3; integrated verification results are recorded in the handoff. The P2 continuation resolves the standard WAA364 catalogue contact/link schedule, not supplied-switch or DC/global-transfer approval. Powered-GDT/source protection, actual thermal/transient performance and part/process acceptance are NOT complete. Manufacturing and field release remain on hold.**
+**Current priority: finish the PCB and the five-board JLCPCB prototype handoff through P3/P4, not more switch or environmental research. The minimal-change 16-part PR02/BYG23T hybrid is already implemented in 6ba2a07; its placement is not an unfinished circuit-design task. Part/fit/forming, sourcing, placement-model and CAM acceptance remain open. Independent electrical/thermal/hub/field holds are preserved; manufacturing and field release remain on hold.**
 
 This is the starting context and implementation checklist for subsequent sessions. It consolidates the review and the user's later decisions, including changes to the originally proposed TEST wiring. It is not manufacturing approval, a completed hardware test report, or a board-level lightning certification.
 
@@ -13,7 +13,7 @@ This is the starting context and implementation checklist for subsequent session
 2. Inspect `git status` and the existing diff. Preserve all work already present. At the user's request the prior remediation/scope state was committed as **ad282e3**, before hybrid implementation. The hybrid is now recorded in **6ba2a07**; the earlier session's uncommitted description is historical. The P2 continuation made no commit. Historical preparation edits/archives and unrelated `tmp/` evidence must not be reverted or cleaned indiscriminately. See the current handoff for preserved build evidence.
 3. Treat the working `pcb/pcb.kicad_sch`, `pcb/pcb.kicad_pcb`, project settings, and reviewed sourcing data as the design sources. `build/*` contains Makefile-generated production outputs. Backups, archives, and `tmp/` copies are not authoritative designs.
 4. Use the agreed requirements and TEST matrix below. Documents are synchronized to the current development source; `pcb/ELECTRICAL.md` and `pcb/ASSEMBLY.md` record the remaining design/evidence limitations. `REVIEW.md` remains an audit template, not completed approval.
-5. P1's checking infrastructure is implemented. The next bounded tasks are **P2 protection/continuous-duty decisions** and **P3 maximum-pin/land-pattern evidence**, which can proceed independently. Do not freeze the final layout/BOM before the protection architecture is settled.
+5. P1's checking infrastructure and the selected hybrid placement are implemented. For the current **board-only request**, work **P3 assembly/fit finalization, then P4 five-board supplier review**, following [ORDERING's focused queue](ORDERING.md#board-finalization-queue). Do not choose the first unchecked P2 switch or environmental item instead. Preserve those holds without restarting research; any later approved circuit change requires renewed layout/BOM checks.
 6. The unsafe whole-`tmp/` cleanup is replaced. `make clean` removes only `build/`, owned manufacturing runs and the generated Gerber mirror; it retains unrelated evidence and the last generated CPL reference. Preserve wanted run reports first, or use the evidence-preserving P6 workflow below. Run clean separately, never parallel with a build.
 7. Update checkboxes, issue status, evidence, and the session log as work is actually verified. Do not mark hardware qualification complete because documentation was corrected or DRC passed. Commit, order parts, upload designs, or place fabrication orders only when requested.
 
@@ -31,10 +31,10 @@ Preparation already completed:
 | :--- | :--- | :--- |
 | P1 | Complete-project staging, strict native checks, fail-closed geometry/net/artifact validation, warning reviews, locked transactions and negative fixtures. | Maintain the checks for future supported geometry/tool changes; no broad warning suppression. |
 | P2 | **16-part PR02/BYG23T circuit implemented**, preserving one-way rungs, six-end TEST and the original GDTs. Selected-part TCR, diode/drop/leakage screens and explicit procurement data are in the source/model. Standard WAA364 catalogue contact/link schedule visually verified. Cattle fencing is prohibited near the whole boundary. | Actual negative-clamp/RF/ordinary-transient response, C5 powered recovery/fault containment, the accepted source/thermal envelope and exact A364 configuration/DC/global-transfer approval remain open. No physical hub terminal assignment; the 40-part active candidate is not a prerequisite. |
-| P3 | Original part figures read; metric SMT lands, untented vias, resized PTHs and honest body/courtyard envelopes implemented; minimum-pin and native open-via checks added without disturbing guardrails. | Allocated-lot E/pattern acceptance, KF129 variant, SMT metric/inch clarification and actual forming/solder/stencil approval, 1.30 mm tolerance-budgeted earth-terminal overhang, enclosure/support fit and final P2 placement. |
-| P4 | Reproducible, validated private draft exports; native signed-Y mixed-assembly CPL; population/net/drill/archive checks; manifest implementation and release holds. | No current published release. Exact assembler centroids/rotations, CAM/stencil, quote/allocation, panel and process approvals remain open. |
+| P3 | Original part figures read; metric SMT lands, untented vias, resized PTHs and honest body/courtyard envelopes implemented. **All selected hybrid parts are placed/routed.** Board-side forming and panel-envelope handoff now supplements the protected-geometry checks. | Allocated-lot E/pattern acceptance, KF129 variant, SMT metric/inch clarification, PR02/GDT forming and actual solder/stencil approval, 1.30 mm budgeted earth-terminal overhang and enclosure/support fit. No accepted PR02 bend profile at the retained 15.24 pitch is recorded. |
+| P4 | Reproducible private draft exports; native signed-Y mixed-assembly CPL; **16 anchors/34 terminal datums and native pad/courtyard assembly overlay**; population/net/drill/archive checks; manifest implementation and release holds. | No current published release. Exact assembler centroids/rotations, CAM/stencil, PR02 sourcing/quote/allocation, panel and process approvals remain open. Source datums are not supplier-model approval. |
 | P5 | All nine main guides updated for the actual 1.2.0-dev draft, truthful claims, preserved purchases and separate acceptance categories. | Resynchronize after any future circuit/part/process decision; documents are not approval. |
-| P6 | **198 tests PASS including native probes**, hybrid `make check` PASS, manually reviewed fresh annotation evidence, clean serial/parallel comparison and schematic/assembly render inspection. See Hybrid Implementation below; earlier 130/159-test results are historical. | Actual processed CAM, allocated parts, assembled-prototype acceptance, selected protection/recovery, thermal/visibility/RF/site tests and earthing approval are **not performed**. |
+| P6 | **202 tests PASS including native probes**, final `make check` PASS and clean serial/parallel refusal/comparison PASS; current assembly PDF/datums inspected. See **Board Finalization** below. Earlier annotation/schematic reviews remain applicable to unchanged inputs, not newly performed reviews. | Actual processed CAM, allocated parts, assembled-prototype acceptance, selected protection/recovery, thermal/visibility/RF/site tests and earthing approval are **not performed**. |
 
 ## Agreed Requirements
 
@@ -195,7 +195,7 @@ and manufacturer-added panel rails/fiducials/tooling still require acceptance.
 
 ## Implementation Sequence
 
-**P1 is implemented; maintain it only for actual geometry/tool changes. Remaining P2/P3 evidence can proceed in parallel. P3 final placement/BOM needs a supported P2 decision. P4 follows the final layout, P5 accompanies changes, and P6 verifies the resulting release.**
+**P1 and the selected 16-part placement are implemented. Current scope is P3/P4 board finalization for five prototypes; P5 accompanies those changes and P6 verifies them. P2 hub/performance and environmental work remain independently held, not this session's research queue. A future supported circuit/part change would reopen the affected layout/BOM checks, not justify speculative redesign now.**
 
 Prefer small, coherent changes and reuse the implemented Python/Make tooling.
 Helpers, libraries and tests described below now exist; unchecked items denote
@@ -270,11 +270,12 @@ Files: `pcb/pcb.kicad_pcb`, schematic footprint assignments, project-local libra
 - [x] Retain the collision-removing GDT_AB/BC X=119.50 and GDT_AC X=125.80 relocation, all nine rail vias and full-width copper. The continuation replaces the former lands with **5.50 x 1.20 mm, 4.00 mm centres**; full drill-circle/annulus/mask/paste separation is checked.
 - [ ] Follow the selected GDT land pattern and obtain solder-volume/thermal-process acceptance. If no compliant solution preserves the protected geometry, obtain explicit design/process approval rather than shrinking vias or assuming 1 mm resin filling is standard.
 - [x] Implement the visually resolved metric SMD5050 pattern (5.50 x 1.20, 4.00 centres) and standard untented 1.80 mask openings on both sides. Keep the inch discrepancy and actual solder/CAM acceptance open; no fill exception or guardrail change is needed.
-- [ ] Place/route the selected protection parts, then revalidate all nets, surge clearances, symmetry requirements, and component-fit evidence. Do not narrow surge connections with generic thermal-relief spokes simply to ease soldering; agree a suitable heavy-copper soldering process.
+- [x] Place/route the selected **16-part PR02/BYG23T hybrid** and revalidate native nets, protected clearances, polarity and drawing envelopes. This was implemented in 6ba2a07 and rechecked in the board-finalization session; no additional protection placement is pending. Actual fit/forming/solder and performance approvals stay open. No thermal-relief narrowing, fold, new via or direction selector is introduced.
 - [x] Correct legend height/stroke/clipping using native 1.00 / 0.15 mm text. Retain polarity, cathode and A/B/C/EARTH labels; add underside references, F.Fab aids and 1.2.0-dev identification. Native DRC and rendered drawings checked.
 - [x] Reconcile the source stackup sum to 1.600 mm while retaining 0.070 mm copper on both sides.
 - [ ] Agree finished-thickness convention/tolerance in the actual quote and verify Essentra hole/panel-thickness engagement, including fabrication tolerance.
 - [x] Add the controlled assembly drawing/notes, including GDT_AC's whole-span >=2.00 mm gap, 15.24 mm pitch, orientation and uncertainty-aware inspection method.
+- [x] Bound the existing PR02/GDT forming room and J_EARTH panel envelope against source geometry, with regressions. PR02 has **1.47 mm budgeted room per end** for straight setback plus bend centreline radius, not a manufacturer-approved bend profile. Required supplier drawing fields remain explicit.
 - [ ] Approve detailed forming tolerances/process and perform full COMBI 308 dry-fit with actual WAGOs, cable bends/glands, earth wires, supports, lid LEDs and screwdriver access. CAD/drawings do not replace physical fit.
 
 **Exit:** Layout and library checks pass with genuine geometry. Part-fit evidence and the chosen via/solder process are either accepted or explicitly held for CAM, never assumed from DRC.
@@ -285,7 +286,8 @@ are selected, and source/library hole/body envelopes are explicit. Unknown
 guaranteed maxima are controlled by declared E/pattern lot limits, not guessed
 to be manufacturer specifications. Actual lot acceptance, forming/solder fill,
 metric/inch clarification, processed CAM and COMBI/support fit remain W1/W4/W5
-evidence. Final protection placement still depends on P2.
+evidence. The selected hybrid placement is already implemented and file-checked;
+only a later approved circuit/part change would require another placement step.
 
 ### P4: Production Data
 
@@ -294,6 +296,7 @@ Files: `Makefile`, `pcb/BOM.csv`, `pcb/CPL.csv`, small export/validation helpers
 - [x] Keep `pcb/BOM.csv` as reviewed sourcing data and validate the **16-part** population and exact identities. PR02 uses explicit `Sourcing=External`, empty C-code and source-matched HTTPS reference. File metadata checks do not verify allocation; unresolved external rows independently block publication even if engineering holds are closed.
 - [x] Generate CPL from native KiCad mm positions for all SMT/THT parts, excluding mechanical/DNP items. `pcb/CPL.csv` is a generated reference, refreshed only after complete file checks, never a second placement input.
 - [x] Retain absolute Gerber/drill origin and native signed-Y placement; validate common coordinates and rotations modulo 360 without taking absolute Y.
+- [x] Generate exact-part/footprint anchors and all 34 electrical terminal datums in both PCB and signed-Y fabrication coordinates, with native pad outlines/courtyards for review. Do not infer a centroid from a body/courtyard midpoint; actual supplier transforms remain the separate next item.
 - [ ] Verify every selected JLCPCB model's centroid and rotation. Native position output describes footprint placement origins, which must be checked against intended assembly centroids; document any anchor-to-centroid correction. Record only evidence-backed corrections, keyed clearly to the actual part/footprint. GDT_AC's internally vertical geometry and D1/D2's cathodes-right mapping must not be inferred from their old standard-looking footprint names. Do not move/rotate PCB pads to compensate for an import mistake.
 - [x] Export copper, mask, legend, top paste, outline, separate PTH/NPTH drills and IPC-D-356 to fresh private scratch outputs. Customer F.Paste does not approve the assembler's processed stencil.
 - [x] Validate actual exported geometry, drills, BOM/CPL, connectivity and ZIP payloads before publication. Quarantine stale outputs, preserve documented filenames, and block publication for any failure or open engineering hold.
@@ -410,6 +413,7 @@ At the end of each implementation session, record the work-package IDs touched, 
 | 2026-09-07, user simplification decision | User accepts installation-polarity LED damage and direct-strike rebuilding, but reaffirms continuous-safe normal TEST and has not waived ordinary/nearby transient damage. Narrowed C4 records and removed mandatory reversed-flying-lead immunity. Read-only agents assessed 16-part placement/folded routing and real 2 W axial/SMT resistor options; the blocked resistor agent resumed after the user resolved credits. **No PCB/schematic/BOM/library change in this step.** `TMPDIR=/tmp/opencode make test`: 159 discovered, 153 pass/six native skips; `make check` PASS with the same five holds; whitespace checks PASS. | Develop the simple candidate in ELECTRICAL section 9, not the historical 40-part circuit. Exact clamps/resistor and thermal/pulse scope remain to select. Existing geometry remains file-checked, not a fitted 16-part or thermally qualified design. |
 | 2026-09-07, authorized hybrid implementation | **Committed checkpoint ad282e3 first**, covering all 36 relevant prior files, then implemented the PR02/BYG23T 16-part hybrid with focused ownership. User confirmed energized-cattle fencing is prohibited near the entire cable/stations/hub. **198 tests PASS including native, `make check` PASS, clean serial/parallel refusal/comparison PASS**. Reviewed fresh numbering/invalid-reference probes and deliberately updated only the changed schematic approval hash/rationale; no automatic refresh or hardware approval. All five holds and unresolved PR02 external allocation remain. Hybrid changes are **uncommitted**; no push/upload/order. | Qualify the implemented simple circuit and actual continuous thermal/recovery behavior, resolve PR02 allocation and order-specific fit/process/CAM. Do not restart P1, reintroduce the withdrawn cattle-fence test or require the historical 40-part circuit. |
 | 2026-09-07, P2 switch evidence continuation | Worked the first unfinished package's switch item. Visually verified the full standard WAA364 contact/link graphic and recorded catalogue-only connectivity; synchronized INSTALL/ACCEPTANCE without assigning field terminals. During read-only research the prior hybrid was committed externally as **6ba2a07**; this continuation made no commit. **192 tests PASS/six native skips, library check PASS, `make check` PASS** with all existing holds. No CAD/BOM, approval-hash or hardware change. | Obtain the complete offered/supplied switch code and manufacturer drawing, plus actual-application DC/global-transfer approval before physical terminal assignment. C4/C5/W3 physical evidence, source design and existing part/process holds remain open; do not repeat the now-resolved catalogue transcription. |
+| 2026-09-07, board-only finalization from aca11eb | Worked **P3 assembly/fit handoff and P4 placement evidence**, not switch/environmental research. Reconciled the stale unchecked hybrid-placement item; added conditional axial-forming/panel bounds, native pad/courtyard overlay and exact sixteen-anchor/34-terminal datums. **202 tests PASS including native, final `make check` PASS, serial/parallel refusal/comparison PASS**. Final CAD/BOM/CPL/libraries and all release/approval fields are unchanged. No commit, upload or order. | Obtain **PR02 exact sourcing and accepted 15.24-pitch forming**, then allocated-part/process and actual supplier-model/panel/CAM acceptance for five individual assembled boards. Follow the board queue below; independent hub/qualification holds remain outside this scope. |
 
 Plan-creation validation: `git diff --check` and `git diff --no-index --check /dev/null REMEDIATION.md` passed. These are documentation checks; the KiCad and model results above are prior review evidence, not newly performed hardware qualification.
 
@@ -720,7 +724,95 @@ no numerical model or public catalogue can substitute for them. C3 and all
 engineering/release holds remain open. No order, upload, commit, approval-hash
 refresh or physical qualification occurred in this continuation.
 
+### Board Finalization
+
+Started with clean tracked/staged diffs on **aca11eb**. The first unfinished
+board-focused package was P3's actual assembly/fit handoff, followed by P4's
+placement review. A bounded source audit found no demonstrated layout defect
+requiring another circuit, relocated part or changed guardrail. The stale
+"place/route selected protection" checkbox now acknowledges the already
+implemented and rechecked 16-part hybrid, not new placement work.
+
+Changed files: `pcb/ASSEMBLY.md`, `ORDERING.md`, `AGENTS.md`, this plan,
+`scripts/manufacturing.py`, `scripts/verify_workflow.py`,
+`tests/test_geometry.py`, `tests/test_manufacturing.py`, `tests/test_workflow.py`.
+
+- PR02/GDT drawing-space ceilings and J_EARTH's full panel-coordinate envelope
+  are explicit and checked against the source. **1.62 nominal / 1.47 budgeted
+  PR02 room per end** does not approve a bend; supplier radius/setback, upper
+  height and protrusion are still needed. Vishay 28729 p2/p3 wire/packaging
+  tables were visually rechecked, not the outline pages or an allocated lot.
+- Native Assembly.pdf adds **pad outlines and courtyards**. The CLI's help
+  claimed pad numbers, but the actual PDF did not render them even in a
+  saved-plot-toggle trial. Those ineffective source toggles were removed.
+  Generated Assembly.txt instead states **all sixteen exact-part/footprint
+  anchors and 34 pin-number/net datums**, in both coordinate conventions.
+- The source-derived datum text is reconstructed during workflow validation;
+  changed terminal Y is a negative fixture. Actual unusual LED/diode/overpass
+  mappings and geometry budgets have regression checks. No supplier centroid
+  correction, lot acceptance or new publication path was introduced.
+- Independent review corrected a duplicated board task under the out-of-scope
+  list and aligned the existing native PDF probe with the production arguments.
+  No arithmetic/coordinate defect was found. Final render inspection confirms
+  pad/courtyard outlines and the exposed east overhang, not supplier approval.
+
+| Command / evidence | Actual result |
+| :--- | :--- |
+| `TMPDIR=/tmp/opencode KICAD_TEST_CLI=/snap/bin/kicad.kicad-cli python3 -B -W error -m unittest discover -s tests -v` | **202 PASS, no skips**, including the six native contracts and existing settled-topology regressions. |
+| `TMPDIR=/tmp/opencode KICAD_TEST_CLI=/snap/bin/kicad.kicad-cli python3 -B -W error -m unittest discover -s tests -p test_manufacturing.py -k native_export_formats_and_failure_reports -v` | **1 PASS**, rerun after aligning the native PDF probe with the new pad/courtyard arguments. |
+| `python3 -B pcb/sync_libraries.py --check` | **PASS**, ten footprints/six symbols, unchanged. |
+| `python3 -B scripts/verify_workflow.py --expect-holds C4 C5 W3 W1 W4` | **PASS**. Separate clean (0), serial `make all` (2), clean (0), parallel `make -j4 all` (2); checked geometry, population, connectivity, assembly datums and notes match. Both builds correctly refuse publication; unrelated evidence preserved. |
+| Final `make check` | **PASS, KiCad 9.0.7**: DRC/unconnected/parity 0; ERC 0 errors/eight existing reviewed warnings; geometry clean; eight nets/34 terminals/52 IPC records; 16 populated parts; 36 PTH (22 component +14 via), four NPTH; eight Gerber layers, twelve paste apertures and archives checked. |
+| Final source/artifact review | CAD, schematic, rules, BOM, regenerated CPL, libraries and `pcb/verification.json` have **no diff**. Existing approval hashes and all five holds remain unchanged. Final native Assembly.pdf and terminal/polarity datums inspected; `git diff --check` PASS. |
+
+Preserved workflow evidence: **`tmp/workflow-validation/run-xrxhsuyd/report.json`**.
+Its `before/` tree retains the initial checks and ineffective plot-toggle trial;
+serial/parallel source and artifact snapshots are preserved separately.
+Final current check: **`tmp/manufacturing/runs/attempt-r40jqkoe`**,
+`build/status.json=checked`, with the reviewed `exports/Assembly.pdf` and
+`release/Assembly.txt`. The final assembly-note SHA-256 in the verification
+record is **`87e5c11c994d643a84c5d633004ec87ed11529099f005140444fa005e2263f9c`**.
+
+**Exit: board-side handoff improved and file-verified; P3/P4 supplier acceptance
+still partial.** PR02 sourcing/forming is the first concrete response needed.
+Allocated-lot fit, GDT/Kefa variants/forming, SMT/THT process, placement-model,
+panel and CAM acceptance are still absent. C4/C5/W3/W1/W4 remain held; no public
+manifest/package, order, upload, commit or hardware qualification is claimed.
+No switch/environmental research or additional protection circuit was undertaken.
+
 ### Next Bounded Work
+
+**Current scope: board design/finalization only, for five fully assembled
+JLCPCB prototypes.** The following queue supersedes the old instruction to start
+with the first unchecked P2 item. Preserve the independent holds below without
+spending this board package on their research.
+
+1. **P3/P4, PR02:** obtain accepted procurement/private-part allocation for exact
+   PR02000202201FA100 and its dimensioned forming profile at **15.24 pitch**.
+   ASSEMBLY now gives the nominal 1.62 / tolerance-budgeted **1.47 per-end
+   room**, not an approved bend radius. Ask for exact setback/radius, complete
+   pin pattern, >=1.00 gap, upper height and lead protrusion. Do not make an
+   unapproved substitution or alter sound routing to hide a missing response.
+2. **P3, W1/W4/W5:** accept actual Kefa/GDT lot/body/pin patterns, KF129 variant,
+   GDT forming, Ruilon metric/inch clarification and heavy-copper SMT/THT solder
+   process against the already implemented holes/lands. Board-side geometry is
+   explicit; supplier and physical acceptance remain unperformed.
+3. **P4, C2/W1/W4:** review actual supplier models against the generated sixteen
+   anchors / 34 pin datums, then the panel, processed PCB/stencil and protected
+   drills. Use J_EARTH's **X=161.35 courtyard** and **1.30 budgeted body
+   overhang**; do not default to five panels or insert tooling into functional
+   geometry. Obtain the exact five-individual-board quote, including attrition.
+4. Record accepted responses and make only supported source/process corrections,
+   then rerun affected gates. A deliberate controlled prototype-release review
+   is still required before publication; tests needing these prototypes must
+   remain explicitly deferred, not marked passed. No order/upload/commit is
+   authorized by this handoff.
+
+### Independent Held Work
+
+These tasks remain valid for their respective release scopes, **outside the
+current board-only package**. They are not a reason to restart switch or
+environmental research while waiting for a PCB supplier response.
 
 1. **P2/C3 switch:** obtain the complete offered/supplied article and K&N
    link/contact development, then application-specific DC and global-transfer
@@ -748,26 +840,24 @@ refresh or physical qualification occurred in this continuation.
    design covering the normal source range is an alternative to a new cutoff.
    Resolve OneGel process/temperature conflicts; healthy TEST cannot use a timer
    as its baseline safeguard. A364's exact DC/global-transfer approval stays open.
-5. **P3/P4, W1/W4/W5:** resolve **PR02000202201FA100 external sourcing/private
-   inventory**, without guessed C-codes. Retain adopted SMA/metric GDT lands,
-   untented process and hole/body envelopes. Obtain allocated-lot E/pattern and
-   KF129-variant acceptance, Ruilon's metric/inch clarification, actual stencil/
-   solder/PR02-and-GDT forming/CAM evidence and COMBI/support/access fit for
-   **1.00 nominal / 1.30 budgeted earth-terminal overhang**.
-   No special 1.00 mm filling or repeat question about confirmed reel colours
-   is needed. Cable lot/standard, UV/wet-conduit and bend/impulse applicability
-   remain independent evidence, not a guessed resistor-model change.
+5. **Cable/environment applicability:** cable lot/standard, UV/wet-conduit and
+   bend/impulse applicability remain independent evidence, not a guessed
+   resistor-model change. Do not repeat questions about confirmed reel colours.
+   P3/P4 sourcing, forming, placement and CAM tasks belong to the active board
+   queue above, not this independent research list.
 6. After a reviewed circuit/part/process decision, update actual source/BOM/
    libraries/notes, regenerate/check CPL and fabrication data, repeat the
    relevant automated/native checks and controlled supplier/hardware tests,
    and close only evidence-backed issues/gates. No order/upload/commit is
    authorized by this handoff.
 
-Suggested instruction for a new implementation session:
+Suggested instruction for the next board-finalization session:
 
 ```text
-Read AGENTS.md and REMEDIATION.md, inspect the current worktree, and implement
-the first unfinished work package (or the package I specify). Preserve existing
+Focus ONLY on PCB finalization for five fully assembled JLCPCB prototypes.
+Read AGENTS.md and REMEDIATION.md, inspect the current worktree, and work the
+next P3/P4 board item in Next Bounded Work (or the package I specify). Do not
+restart switch or environmental research; preserve their holds. Preserve existing
 changes and physical guardrails. Use the settled 41-station, same-end-return,
 continuous-safe TEST baseline; do not add a direction selector. Verify the work,
 update the plan/session log with evidence and remaining blockers, and do not
