@@ -1,11 +1,13 @@
 # Environment And Hub Evidence
 
-**Hardware 1.2.0-dev; original research at checkpoint 97e202d on 2026-09-07; updated for the user-authorized implementation after checkpoint ad282e3.**
+**Hardware 1.2.0-dev; original research at checkpoint 97e202d on 2026-09-07; hybrid checkpoint 6ba2a07; catalogue-switch evidence updated 2026-09-07.**
 
 Controlled environment/hub evidence. The original bounded research edited only
 this file; the later documentation synchronization records the user's clarified
 site scope and implemented PR02/BYG23T circuit using the design BOM and
-[DESIGN_BOUNDS.md](DESIGN_BOUNDS.md), without new web research or source edits.
+[DESIGN_BOUNDS.md](DESIGN_BOUNDS.md). The subsequent P2 switch continuation
+visually reads the manufacturer's catalogue contact graphic and rechecks its
+application restrictions; it does not change the circuit or assign hub wiring.
 No supplier acceptance, procurement allocation or physical qualification is
 recorded. **C4, C5, W3, W1 and W4 remain open.**
 
@@ -219,9 +221,49 @@ Thus the requested **CA10.A364 remains a provisional eight-pole-family
 candidate**, not a verified six-pole purchase. Obtain the complete offered
 order/article code, mounting/handle suffix and contact development, including
 factory links, and confirm correspondence to current WAA364. The catalogue
-identifies the standard static function; its flattened text is not an approved
-physical terminal drawing for the actual switch. No terminal numbers or roles
-for the extra two poles are assigned here.
+identifies the standard static function, now transcribed from its graphic below,
+not an approved physical terminal drawing for the actual switch. No DogFence
+terminal assignments or roles for the extra two poles are defined here.
+
+### Catalogue Contact Schedule
+
+The original **2025 catalogue page 23 graphic [S2a]**, top-middle panel headed
+`A362, WAA364`, was visually inspected on 2026-09-07. The full **32-terminal
+WAA364** programme has eight changeover poles, comprising **16 switched contact
+pairs and eight fixed common links**. The shorter A362 boundary in that same
+panel is the six-pole programme; do not truncate WAA364 to it or mistake eight
+poles for eight terminals.
+
+**Catalogue evidence only, not an installation pinout:** numbers below reproduce
+the manufacturer drawing. Row numbers merely enumerate its independent poles;
+none is assigned to a cable end, source or auxiliary function. Positions `1`
+and `2` are the catalogue detents, not approved RUN/TEST labels or handle poses.
+
+| Catalogue pole | Fixed common link | Contact closed at `1` | Contact closed at `2` |
+| :--- | :--- | :--- | :--- |
+| 1 | 2-6 | 5-6 | 1-2 |
+| 2 | 4-8 | 7-8 | 3-4 |
+| 3 | 10-14 | 13-14 | 9-10 |
+| 4 | 12-16 | 15-16 | 11-12 |
+| 5 | 18-22 | 21-22 | 17-18 |
+| 6 | 20-24 | 23-24 | 19-20 |
+| 7 | 26-30 | 29-30 | 25-26 |
+| 8 | 28-32 | 31-32 | 27-28 |
+
+At `0`, all 16 switched contacts are open, but **the eight fixed common links
+remain connected**. The separately drawn links are not a common bus; crossings
+do not add connections. For example, the first pole connects the linked `2/6`
+common to `5` at `1`, to `1` at `2`, and to neither throw at `0`. Different
+field ends must never share a common link. Empty TEST throws would not undo
+such a permanent tie, which is the original C3 defect.
+
+This resolves the catalogue's static connectivity, not correspondence to the
+offered/supplied article, maximum transfer timing, loaded arc extinction or DC
+application approval. Catalogue page 13 [S2] separates switch type, programme
+and mounting in its ordering examples and warns that not every function is
+standardized for every type. `CA10.A364` alone is not the missing complete code.
+
+### Six-End And Transfer Requirements
 
 Eight available poles can in principle accommodate six independent cable ends,
 but that observation does not approve the actual program or link arrangement.
@@ -260,6 +302,12 @@ switches cannot have 60-degree detents.
 | General DC table: CA10, one series contact, 48 V: DC-21A 14 A (L/R <=1 ms), DC-22A 13 A (<=2.5 ms), DC-23A 12 A (<=15 ms), DC-13 1.7 A (<=100 ms) [S4] | Conditional family reference points, not a 36 V A364 rating. No interpolation, automatic contact-series credit or substitution of CA10S data. |
 | Icw 140 A for 1 s and maximum 25 A gG fuse [S3] | Withstand/protection-selection data, not a short-circuit breaking rating or coordination with the project's 2 A 217-series fuse. |
 | Ui 690 V and conditioned Uimp 6 kV as switch / 4 kV as switch-disconnector [S3] | The stated supply-system/category/pollution conditions apply. Not outdoor lightning isolation or a rating for the completed hub. |
+| Terminal-screw torque 0.60 Nm [S3, page 2] | Family wiring datum, to confirm against the exact supplied assembly/instructions, not an approved hub assembly result. |
+
+The same datasheet [S3, page 3] requires preserving factory-fitted jumper links
+when opening terminal clamps, checking that connections are seated, and
+tightening **all** terminal screws after wiring. Those instructions do not
+authorize adding, removing or relocating links to guess a DogFence pinout.
 
 The manufacturer-specific decision is whether the exact changeover program
 can **make and break the actual nominal 36 V DC circuit over its accepted
@@ -274,7 +322,12 @@ No such application approval was found or requested in this research.
 Kraus & Naimer's custom-switch service [S5] explicitly offers DC switching
 **on request**. A written approval tied to the exact contact development,
 global transfer and fault envelope is still needed before physical numbering
-or hub energization. OFF remains ordinary disconnection, not storm isolation.
+or hub energization. Its custom-function form [S6] warns that a customer's
+requested contact order may not be technically possible: the effective contact
+positions are those in the cam diagram drawn by K&N. A proposed customer matrix
+is therefore not the manufacturer's accepted contact development. No supplier
+response or physical switch test is recorded. OFF remains ordinary disconnection,
+not storm isolation.
 
 ## Sources And Retrieval Limits
 
@@ -297,15 +350,19 @@ that is not an identified formulation revision.
 - **[M3] WAGO Gelbox chemistry/system scope and current 4/6 mm^2 families:** <https://www.wago.com/de/verbindungstechnik/installationsklemmen-entdecken/gelbox-von-wago>; English description: <https://www.wago.com/gb/products/electrical-interconnections/discover-installation-terminal-blocks-and-connectors/gelbox-from-wago>. The English page contains inconsistent size/series text; use the exact current connector/box allocation, not a general 221-family claim.
 - **[S1] K&N Switch Wiring Diagrams Pocketbook, pp. 5/57; edition on p. 92 (10/2025):** <https://flippingbook.krausnaimer.com/Switch_wiring_diagrams_pocketbook/5/>, <https://flippingbook.krausnaimer.com/Switch_wiring_diagrams_pocketbook/57/>, <https://flippingbook.krausnaimer.com/Switch_wiring_diagrams_pocketbook/92/>
 - **[S2] K&N UK Control & Load Switch Catalogue 2025, pp. 2/13/23:** <https://flippingbook.krausnaimer.com/Control_Load_Switch_Catalogue/2/>, <https://flippingbook.krausnaimer.com/Control_Load_Switch_Catalogue/13/>, <https://flippingbook.krausnaimer.com/Control_Load_Switch_Catalogue/23/>. Edition identified by manufacturer's catalogue directory: <https://www.krausnaimer.com/gb_en/catalogues>.
+- **[S2a] Original manufacturer-hosted page 23 graphic, visually reviewed; full WAA364 programme in the top-middle panel:** <https://flippingbook.krausnaimer.com/Control_Load_Switch_Catalogue/Publication/assets/common/page-html5-substrates/page0023_4.jpg>. This resolves the contact/link transcription above, not an order-specific drawing or approval.
 - **[S3] K&N CA10 dynamic datasheet v4.2, 2026-08-15:** <https://www.krausnaimer.com/fileadmin/user_upload/Kraus_u_Naimer/PDFs/ElecData/Switches/Dynamic/english/CA10_EN.pdf>
 - **[S4] K&N Catalogue 100, p. 46, DC categories/contact-series conditions:** <https://flippingbook.krausnaimer.com/KN100GB/46/>; corroborating 2025 UK table on p. 11: <https://flippingbook.krausnaimer.com/Control_Load_Switch_Catalogue/11/>.
 - **[S5] K&N custom-switch/DC-on-request service:** <https://www.krausnaimer.com/gb_en/products/customized-switches>
+- **[S6] K&N custom switching-function form, one page, no printed revision identified:** <https://www.krausnaimer.com/fileadmin/user_upload/Kraus_u_Naimer/PDFs/Order_template/Form_for_customized_switch.pdf>. Retrieved 2026-09-07; the extractor's 2020-04-23 server timestamp is not a drawing revision or application approval.
 
 The native reader returned [C1] as raw PDF data. As already documented in
 ASSEMBLY.md, public PDF text extraction through `https://r.jina.ai/` prefixed
-to the exact manufacturer URL was used for [C1], [S3] and [M2]. [C3] additionally
-allowed visual checking of the cable table and pictograms. No unreadable
-switch drawing details are claimed as verified.
+to the exact manufacturer URL was used for [C1], [S3], [S6] and [M2]. [C3]
+additionally allowed visual checking of the cable table and pictograms. The
+switch continuation uses the directly viewed [S2a] graphic, not flattened PDF
+text, for contact pairs and links. No unreadable drawing details or quantitative
+all-pole transfer tolerances are claimed as verified.
 
 The generated OneGel PDF at
 <https://www.wiska.co.uk/en/pdf/10108963/ONEGEL.pdf> was reachable as raw PDF,

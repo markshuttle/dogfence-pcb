@@ -84,6 +84,12 @@ The transmitter must be isolated from the TEST source in TEST, and the TEST sour
 4. Verify the specified **Littelfuse 0217002.MXP, 2 A 217-series fuse**, and **Phoenix Contact UK 5-HESILED 60 / 3004139** holder against supplied items and the final source design. The fuse has published DC interrupting data; its unresolved issue here is clearing coordination with cable-limited faults and PSU hiccup behavior. Do not assume every short clears it, or change its value without analysis. The ordered LRS-75-36 does not resolve C5.
 5. With sources and field disconnected, verify the accepted wiring against every cell of the functional matrix. Check that no source, protector connection, test lead, jumper or label creates an unintended field-end tie. Static continuity checks supplement, but do not prove, rated DC breaking or transfer timing. Record the accepted terminal drawing separately once the exact hardware is confirmed.
 
+The [WAA364 catalogue contact/link schedule](pcb/ENVIRONMENT_EVIDENCE.md#catalogue-contact-schedule)
+is now recorded as design-review evidence, **not the supplied-switch pinout**.
+Its eight separate fixed common links remain connected in `0`; do not mistake
+them for a common bus or assign two field ends to one link. No catalogue pole
+or `1`/`2` detent has been assigned a DogFence wiring or RUN/TEST role.
+
 The [current electrical analysis](pcb/ELECTRICAL.md) and [conditional design bounds](pcb/DESIGN_BOUNDS.md) use **nominal 36 V, a declared 35 V feed floor and a 40.39597 V upper screening value**. These are not hardware-enforced or approved installed limits; the floor must include hub/interface losses, and actual adjustment, tolerance, ripple and startup still need evidence. The earlier **35-37 V proposal was never enforced**, and PSU OVP is not a 37 V limiter. Qualifying the real normal source range is an alternative to imposing a new precision cutoff; it does not settle source-malfunction or GDT recovery safety.
 
 Label the actual detents only after their function is verified; do not assume a particular UP/DOWN orientation:
