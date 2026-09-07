@@ -6,8 +6,10 @@ KICAD_CLI ?=
 export KICAD_CLI
 
 EXPORT_TARGETS := all package gerbers drills ipc bom cpl zip-gerbers zip-flytest
+PRODUCTION_TARGETS := release production
+PROTOTYPE_TARGETS := prototype
 .DEFAULT_GOAL := all
-.PHONY: $(EXPORT_TARGETS) check _manufacturing clean help test
+.PHONY: $(EXPORT_TARGETS) $(PRODUCTION_TARGETS) $(PROTOTYPE_TARGETS) check _manufacturing clean help test
 
 ifneq ($(filter clean,$(MAKECMDGOALS)),)
 ifneq ($(filter-out clean,$(MAKECMDGOALS)),)
@@ -17,10 +19,16 @@ endif
 
 # The single shared prerequisite runs once even for make -j4 all gerbers drills.
 # Direct exports deliberately verify and publish the complete coherent package.
-$(EXPORT_TARGETS) check: _manufacturing
+# 'all', 'release', 'production' enforce holds for production file publication.
+# 'gerbers' and 'prototype' publish prototype packages when holds are open.
+$(EXPORT_TARGETS) $(PRODUCTION_TARGETS) $(PROTOTYPE_TARGETS) check: _manufacturing
+
+_MODE := $(if $(filter $(PRODUCTION_TARGETS) all,$(or $(MAKECMDGOALS),all)),build,\
+         $(if $(filter $(PROTOTYPE_TARGETS) gerbers,$(MAKECMDGOALS)),prototype,\
+         $(if $(filter $(EXPORT_TARGETS),$(MAKECMDGOALS)),build,check)))
 
 _manufacturing:
-	@$(PYTHON) -B scripts/manufacturing.py $(if $(filter $(EXPORT_TARGETS),$(or $(MAKECMDGOALS),all)),build,check)
+	@$(PYTHON) -B scripts/manufacturing.py $(_MODE)
 
 clean:
 	@$(PYTHON) -B scripts/manufacturing.py clean

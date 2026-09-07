@@ -1188,8 +1188,8 @@ class ManufacturingTests(unittest.TestCase):
             ("J_LED_C", "1"): ("LED_C_POS", 142.96, 142.0, 2.0),
             ("J_LED_A", "2"): ("WIRE_B", 148.04, 103.0, 2.0),
             ("J_LED_C", "2"): ("WIRE_B", 148.04, 142.0, 2.0),
-            ("D1", "1"): ("LED_A_POS", 134.6, 104.5, 0),
-            ("D2", "1"): ("LED_C_POS", 134.6, 140.5, 0),
+            ("D1", "1"): ("LED_A_POS", 132.9, 104.5, 0),
+            ("D2", "1"): ("LED_C_POS", 132.9, 140.5, 0),
             ("D3", "1"): ("LED_A_POS", 132.9, 99.0, 0),
             ("D4", "1"): ("LED_C_POS", 132.9, 146.0, 0),
             ("GDT_AC", "1"): ("WIRE_A", 125.8, 114.88, 1.4),
@@ -1202,7 +1202,7 @@ class ManufacturingTests(unittest.TestCase):
                     net, x, y, drill = expected[key]
                     self.assertEqual(row[2], net)
                     self.assertEqual(tuple(map(float, row[4:])), (x, y, x, -y, drill))
-        self.assertIn("PR02000202201FA100", anchors)
+        self.assertIn("HP122WF2201T4E", anchors)
         self.assertIn("Footprint anchors and terminal centres are NOT measured package centroids.", text)
 
     def test_via_treatment_csv_reports_source_requested_front_and_back(self):

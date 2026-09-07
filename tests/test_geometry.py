@@ -183,19 +183,19 @@ class GeometryTests(unittest.TestCase):
 
     def test_adopted_dfm_holes_lands_and_untented_vias(self):
         report = self.assert_pass(self.report(self.authoritative))
-        self.assertEqual(len(report["measurements"]["component_hole_design"]), 22)
-        self.assertEqual(len(report["measurements"]["component_rings"]), 22)
+        self.assertEqual(len(report["measurements"]["component_hole_design"]), 18)
+        self.assertEqual(len(report["measurements"]["component_rings"]), 18)
         self.assertAlmostEqual(min(row["nominal_ring_mm"] for row in report["measurements"]["component_rings"]), 0.4)
         self.assertEqual(report["measurements"]["via_count"], 14)
         checker = GeometryCheck(self.authoritative)
         checker.read_board()
         parts = [fp for fp in checker.footprints.values() if fp.one("attr").atoms() in (["smd"], ["through_hole"])]
         self.assertEqual(len(parts), 16)
-        self.assertEqual(sum(fp.one("attr").atoms() == ["smd"] for fp in parts), 6)
-        self.assertEqual(sum(p.kind == "thru_hole" for p in checker.pads), 22)
+        self.assertEqual(sum(fp.one("attr").atoms() == ["smd"] for fp in parts), 8)
+        self.assertEqual(sum(p.kind == "thru_hole" for p in checker.pads), 18)
         self.assertEqual(sum(p.kind == "np_thru_hole" for p in checker.pads), 4)
-        self.assertEqual(sum(p.kind == "smd" for p in checker.pads), 12)
-        for layer, count in (("F.Mask", 52), ("B.Mask", 40), ("F.Paste", 12)):
+        self.assertEqual(sum(p.kind == "smd" for p in checker.pads), 16)
+        for layer, count in (("F.Mask", 52), ("B.Mask", 36), ("F.Paste", 16)):
             self.assertEqual(sum(layer in a.layers for a in checker.apertures), count)
         for via in checker.vias:
             self.assertFalse(checker.tented(via.node, "front"))
@@ -214,8 +214,8 @@ class GeometryTests(unittest.TestCase):
         report = self.assert_pass()
         rows = {row["reference"]: row for row in report["measurements"]["sma_diodes"]}
         expected = {
-            "D1": (132.5, 104.5, 0, 134.6, 130.4, "LED_A_POS", "Net-(D1-A)"),
-            "D2": (132.5, 140.5, 0, 134.6, 130.4, "LED_C_POS", "Net-(D2-A)"),
+            "D1": (130.8, 104.5, 0, 132.9, 128.7, "LED_A_POS", "Net-(D1-A)"),
+            "D2": (130.8, 140.5, 0, 132.9, 128.7, "LED_C_POS", "Net-(D2-A)"),
             "D3": (135.0, 99.0, 180, 132.9, 137.1, "LED_A_POS", "WIRE_B"),
             "D4": (135.0, 146.0, 180, 132.9, 137.1, "LED_C_POS", "WIRE_B"),
         }
@@ -404,14 +404,12 @@ class GeometryTests(unittest.TestCase):
                             (fill solid) (layer "{change}"))'''))
                     self.assert_defect("SMA_DIODE_APERTURE", self.report(board))
 
-    def test_pr02_footprint_and_retained_hole_pitch_are_required(self):
+    def test_resistor_footprint_and_pads_are_required(self):
         for ref, y in (("R1", 104.5), ("R2", 140.5)):
-            self.assertEqual(COMPONENT_HOLE_MINIMA[ref], 1.4)
-            for num, x in (("1", -7.62), ("2", 7.62)):
+            for num, x in (("1", -2.8), ("2", 2.8)):
                 p = pad(self.authoritative, ref, num)
                 self.assertEqual(list(map(float, p.one("at").atoms()[:2])), [x, 0.0])
-                self.assertEqual(list(map(float, p.one("size").atoms())), [2.4, 2.4])
-                self.assertEqual(float(p.one("drill").atoms()[0]), 1.4)
+                self.assertEqual(list(map(float, p.one("size").atoms())), [1.8, 3.4])
             for change in ("library", "origin", "pitch", "pad", "net"):
                 with self.subTest(ref=ref, change=change):
                     board = deepcopy(self.positive)
@@ -419,9 +417,9 @@ class GeometryTests(unittest.TestCase):
                     if change == "library":
                         fp.values[0] = Atom("DogFence:MBE0414_P15.24mm", quoted=True)
                     elif change == "origin":
-                        replace(fp, f"(at 116.1 {y})")
+                        replace(fp, f"(at 120.1 {y})")
                     elif change == "pitch":
-                        replace(p, "(at 7.5 0)")
+                        replace(p, "(at 2.5 0)")
                     elif change == "pad":
                         replace(p, "(size 2.5 2.5)")
                     else:
@@ -443,7 +441,7 @@ class GeometryTests(unittest.TestCase):
                 boxes = {rect.one("layer").atoms()[0]: rect for rect in fp.children("fp_rect")}
                 body, courtyard = boxes["F.Fab"], boxes["F.CrtYd"]
                 if ref in ("R1", "R2", "D1", "D2", "D3", "D4"):
-                    half_body, half_courtyard = ((6.0, 2.1), (9.1, 2.5)) if ref.startswith("R") \
+                    half_body, half_courtyard = ((3.15, 1.6), (3.95, 1.95)) if ref.startswith("R") \
                         else ((2.25, 1.4), (3.6, 1.8))
                     for rect, half in ((body, half_body), (courtyard, half_courtyard)):
                         self.assertEqual(tuple(map(float, rect.one("start").atoms())), tuple(-v for v in half))
@@ -463,8 +461,7 @@ class GeometryTests(unittest.TestCase):
                 self.assertAlmostEqual(coordinate, expected)
 
     def test_axial_forming_room_is_a_geometric_ceiling_not_bend_approval(self):
-        for ref, axis, wire, room in (("R1", 0, .83, 1.47), ("R2", 0, .83, 1.47),
-                                     ("GDT_AC", 1, .90, 4.37), ("GDT_A_E", 0, 1.05, 4.32),
+        for ref, axis, wire, room in (("GDT_AC", 1, .90, 4.37), ("GDT_A_E", 0, 1.05, 4.32),
                                      ("GDT_B_E", 0, 1.05, 4.32), ("GDT_C_E", 0, 1.05, 4.32)):
             with self.subTest(ref=ref):
                 fp = footprint(self.authoritative, ref)
@@ -475,18 +472,16 @@ class GeometryTests(unittest.TestCase):
                 available = min(low - pins[0], pins[1] - high) - .05 - .10
                 self.assertAlmostEqual(available, room)
                 self.assertAlmostEqual(available - wire / 2,
-                                       1.055 if ref.startswith("R") else 3.92 if ref == "GDT_AC" else 3.795)
+                                       3.92 if ref == "GDT_AC" else 3.795)
 
     def test_adopted_pin_envelopes_include_independent_pattern_allowance(self):
         position_budget = 2 * (math.hypot(0.05, 0.05) + 0.05)
         envelopes = {"J_IN": math.hypot(1.1, 1.0), "J_LED_A": math.hypot(1.15, 1.0),
-                     "R1": 0.83, "R2": 0.83, "GDT_AC": 0.9, "GDT_A_E": 1.05}
+                     "GDT_AC": 0.9, "GDT_A_E": 1.05}
         for ref, maximum in envelopes.items():
             with self.subTest(ref=ref):
                 hole = float(pad(self.authoritative, ref, "1").one("drill").atoms()[0])
                 self.assertGreaterEqual(hole - 0.08 - maximum - position_budget, 0.1)
-                if ref in ("R1", "R2"):
-                    self.assertAlmostEqual(hole - 0.08 - maximum - position_budget, 0.248578644)
 
     def test_historical_w1_collision_remains_reproducible_after_layout_fixes(self):
         historical_smt(self.board)
@@ -500,18 +495,19 @@ class GeometryTests(unittest.TestCase):
         self.assertTrue(all(abs(d["measured_mm"] + 0.19) < 1e-6 for d in mask + paste))
 
     def test_component_fit_drill_and_ring_are_independent(self):
-        replace(pad(self.board, "R1", "2"), "(drill 1.3)")
+        replace(pad(self.board, "GDT_AC", "2"), "(drill 1.3)")
         report = self.report()
         self.assert_defect("COMPONENT_FIT_DRILL", report)
         self.assertNotIn("COMPONENT_RING", {d["code"] for d in report["diagnostics"]})
-        replace(pad(self.board, "R1", "2"), "(drill 1.4)")
-        replace(pad(self.board, "R1", "2"), "(size 1.8 1.8)")
+        replace(pad(self.board, "GDT_AC", "2"), "(drill 1.4)")
+        replace(pad(self.board, "GDT_AC", "2"), "(size 1.8 1.8)")
         report = self.report()
         self.assert_defect("COMPONENT_RING", report)
         self.assertNotIn("COMPONENT_FIT_DRILL", {d["code"] for d in report["diagnostics"]})
 
     def test_offset_hole_uses_true_ring_not_min_size_only(self):
-        replace(pad(self.board, "R1", "1"), "(drill 1.4 (offset 0.35 0))")
+        replace(pad(self.board, "GDT_AC", "1"), "(size 2.4 2.4)")
+        replace(pad(self.board, "GDT_AC", "1"), "(drill 1.4 (offset 0.35 0))")
         self.assertAlmostEqual(self.assert_defect("COMPONENT_RING")[0]["measured_mm"], 0.15)
 
     def test_slot_ring_and_arbitrary_pad_rotation(self):
@@ -933,7 +929,7 @@ class GeometryTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             report = json.loads(output.read_text())
             self.assertTrue(report["ok"])
-            self.assertEqual(len(report["measurements"]["component_hole_design"]), 22)
+            self.assertEqual(len(report["measurements"]["component_hole_design"]), 18)
             self.assertEqual(len(report["measurements"]["sma_diodes"]), 4)
             nodes = parse_many(RULES)
             replace(nodes[1], '(condition "B.Type == \'Pad\' && B.Pad_Type == \'Through-hole\'")')

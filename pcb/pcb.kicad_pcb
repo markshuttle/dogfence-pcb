@@ -1184,7 +1184,7 @@
 	(footprint "DogFence:BYG23T_SMA_K_Right"
 		(layer "F.Cu")
 		(uuid "4d819f06-bf5f-4bda-b5f5-99f45fa0d8df")
-		(at 132.5 104.5)
+		(at 130.8 104.5)
 		(path "/800a33dc-5627-4901-abfd-b5d6707cf2b1/62e260b4-5050-4ddd-8d6d-60ea4101485c")
 		(attr smd)
 		(solder_mask_margin 0)
@@ -2051,38 +2051,23 @@
 		)
 		(embedded_fonts no)
 	)
-	(footprint "DogFence:PR02_Cu_P15.24mm"
+	(footprint "DogFence:R_2512_6332Metric"
 		(layer "F.Cu")
 		(uuid "6693b213-2cfd-4c60-b189-1980615b9810")
-		(at 116 140.5)
+		(at 120 140.5)
 		(path "/800a33dc-5627-4901-abfd-b5d6707cf2b1/cbad46de-c457-4097-8aff-31384d68c4f6")
-		(attr through_hole)
+		(attr smd)
+		(solder_mask_margin 0)
+		(solder_paste_margin 0)
+		(solder_paste_ratio 0)
 		(fp_rect
-			(start -6 -2.1)
-			(end 6 2.1)
+			(start -3.15 -1.6)
+			(end 3.15 1.6)
 			(stroke
 				(width 0.1)
 				(type solid)
 			)
 			(fill no)
-			(layer "F.Fab")
-		)
-		(fp_line
-			(start -7.62 0)
-			(end -6 0)
-			(stroke
-				(width 0.1)
-				(type solid)
-			)
-			(layer "F.Fab")
-		)
-		(fp_line
-			(start 6 0)
-			(end 7.62 0)
-			(stroke
-				(width 0.1)
-				(type solid)
-			)
 			(layer "F.Fab")
 		)
 		(fp_text user "${REFERENCE}"
@@ -2107,7 +2092,7 @@
 			)
 		)
 		(property "Reference" "R2"
-			(at 0 -3.5 0)
+			(at 0 -3.2 0)
 			(layer "F.SilkS")
 			(uuid "0eb87341-5dd4-4237-b349-4a5a38d2bf53")
 			(effects
@@ -2118,7 +2103,7 @@
 			)
 		)
 		(property "Value" "2.2k 2W"
-			(at 0 0 0)
+			(at 0 2.5 0)
 			(layer "F.Fab")
 			(hide yes)
 			(uuid "00f55448-59cd-46e0-ba6f-c1883d11b756")
@@ -2129,7 +2114,19 @@
 				)
 			)
 		)
-		(property "LCSC" ""
+		(property "Footprint" "DogFence:R_2512_6332Metric"
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "d68aa4a0-fe24-4fd8-a052-e6a2ae4a8e75")
+			(effects
+				(font
+					(size 1.27 1.27)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "LCSC" "C2791283"
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
@@ -2141,7 +2138,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "Vishay BCcomponents"
+		(property "Manufacturer" "Uni-Royal"
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
@@ -2153,7 +2150,7 @@
 				)
 			)
 		)
-		(property "MPN" "PR02000202201FA100"
+		(property "MPN" "HP122WF2201T4E"
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
@@ -2165,7 +2162,7 @@
 				)
 			)
 		)
-		(property "Datasheet" "https://www.vishay.com/docs/28729/pr010203.pdf"
+		(property "Datasheet" "https://www.lcsc.com"
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
@@ -2177,7 +2174,7 @@
 				)
 			)
 		)
-		(property "Description" "Vishay PR02000202201FA100; 2.2k 2W 1%, +/-250ppm/K; Cu lead 0.78 +/-0.05mm, body L2 <=12.0mm D <=3.9mm; require >=1.00mm body-to-PCB standoff; forming/process and continuous TEST thermal qualification held"
+		(property "Description" "Uni-Royal HP122WF2201T4E; 2.2k 2W 1% 2512 SMD chip resistor"
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
@@ -2189,7 +2186,7 @@
 				)
 			)
 		)
-		(property "Sourcing" "External"
+		(property "Sourcing" "LCSC"
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
@@ -2201,7 +2198,7 @@
 				)
 			)
 		)
-		(property "Sourcing Reference" "https://www.vishay.com/search?type=inv&query=PR02000202201FA100"
+		(property "Sourcing Reference" ""
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
@@ -2213,43 +2210,47 @@
 				)
 			)
 		)
-		(fp_rect
-			(start -6 -2.25)
-			(end 6 2.25)
+		(fp_line
+			(start -1.7 -1.75)
+			(end 1.7 -1.75)
 			(stroke
 				(width 0.15)
 				(type solid)
 			)
-			(fill no)
 			(layer "F.SilkS")
-			(uuid "d4f22cb6-3803-4a62-89a3-3e1e8267d981")
+		)
+		(fp_line
+			(start -1.7 1.75)
+			(end 1.7 1.75)
+			(stroke
+				(width 0.15)
+				(type solid)
+			)
+			(layer "F.SilkS")
 		)
 		(fp_rect
-			(start -9.1 -2.5)
-			(end 9.1 2.5)
+			(start -3.95 -1.95)
+			(end 3.95 1.95)
 			(stroke
 				(width 0.05)
 				(type solid)
 			)
 			(fill no)
 			(layer "F.CrtYd")
-			(uuid "f95ef3c2-099c-48b9-a043-089ab5986eac")
 		)
-		(pad "1" thru_hole circle
-			(at -7.62 0)
-			(size 2.4 2.4)
-			(drill 1.4)
-			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
+		(pad "1" smd roundrect
+			(at -2.8 0 0)
+			(size 1.8 3.4)
+			(layers "F.Cu" "F.Mask" "F.Paste")
+			(roundrect_rratio 0.25)
 			(net 3 "WIRE_C")
 			(uuid "69e80db5-9ddb-43ec-abd0-bad2aa58c164")
 		)
-		(pad "2" thru_hole circle
-			(at 7.62 0)
-			(size 2.4 2.4)
-			(drill 1.4)
-			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
+		(pad "2" smd roundrect
+			(at 2.8 0 0)
+			(size 1.8 3.4)
+			(layers "F.Cu" "F.Mask" "F.Paste")
+			(roundrect_rratio 0.25)
 			(net 7 "Net-(D2-A)")
 			(uuid "5ac0c940-05f0-4b73-bf38-27964ebb1fe4")
 		)
@@ -2479,38 +2480,23 @@
 		)
 		(embedded_fonts no)
 	)
-	(footprint "DogFence:PR02_Cu_P15.24mm"
+	(footprint "DogFence:R_2512_6332Metric"
 		(layer "F.Cu")
 		(uuid "82807699-f5fb-48c9-998c-bd1077d51cc7")
-		(at 116 104.5)
+		(at 120 104.5)
 		(path "/800a33dc-5627-4901-abfd-b5d6707cf2b1/4c2b1171-b167-4da1-94d7-af63b80f999d")
-		(attr through_hole)
+		(attr smd)
+		(solder_mask_margin 0)
+		(solder_paste_margin 0)
+		(solder_paste_ratio 0)
 		(fp_rect
-			(start -6 -2.1)
-			(end 6 2.1)
+			(start -3.15 -1.6)
+			(end 3.15 1.6)
 			(stroke
 				(width 0.1)
 				(type solid)
 			)
 			(fill no)
-			(layer "F.Fab")
-		)
-		(fp_line
-			(start -7.62 0)
-			(end -6 0)
-			(stroke
-				(width 0.1)
-				(type solid)
-			)
-			(layer "F.Fab")
-		)
-		(fp_line
-			(start 6 0)
-			(end 7.62 0)
-			(stroke
-				(width 0.1)
-				(type solid)
-			)
 			(layer "F.Fab")
 		)
 		(fp_text user "${REFERENCE}"
@@ -2535,7 +2521,7 @@
 			)
 		)
 		(property "Reference" "R1"
-			(at 0 3.5 0)
+			(at 0 3.2 0)
 			(layer "F.SilkS")
 			(uuid "c7ac737a-a738-4467-9ef9-a72aafd8644f")
 			(effects
@@ -2546,7 +2532,7 @@
 			)
 		)
 		(property "Value" "2.2k 2W"
-			(at 0 0 0)
+			(at 0 -2.5 0)
 			(layer "F.Fab")
 			(hide yes)
 			(uuid "1f894474-eeaa-41c8-9463-e8979cec1947")
@@ -2557,7 +2543,19 @@
 				)
 			)
 		)
-		(property "LCSC" ""
+		(property "Footprint" "DogFence:R_2512_6332Metric"
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "d68aa4a0-fe24-4fd8-a052-e6a2ae4a8e74")
+			(effects
+				(font
+					(size 1.27 1.27)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "LCSC" "C2791283"
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
@@ -2569,7 +2567,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "Vishay BCcomponents"
+		(property "Manufacturer" "Uni-Royal"
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
@@ -2581,7 +2579,7 @@
 				)
 			)
 		)
-		(property "MPN" "PR02000202201FA100"
+		(property "MPN" "HP122WF2201T4E"
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
@@ -2593,7 +2591,7 @@
 				)
 			)
 		)
-		(property "Datasheet" "https://www.vishay.com/docs/28729/pr010203.pdf"
+		(property "Datasheet" "https://www.lcsc.com"
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
@@ -2605,7 +2603,7 @@
 				)
 			)
 		)
-		(property "Description" "Vishay PR02000202201FA100; 2.2k 2W 1%, +/-250ppm/K; Cu lead 0.78 +/-0.05mm, body L2 <=12.0mm D <=3.9mm; require >=1.00mm body-to-PCB standoff; forming/process and continuous TEST thermal qualification held"
+		(property "Description" "Uni-Royal HP122WF2201T4E; 2.2k 2W 1% 2512 SMD chip resistor"
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
@@ -2617,7 +2615,7 @@
 				)
 			)
 		)
-		(property "Sourcing" "External"
+		(property "Sourcing" "LCSC"
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
@@ -2629,7 +2627,7 @@
 				)
 			)
 		)
-		(property "Sourcing Reference" "https://www.vishay.com/search?type=inv&query=PR02000202201FA100"
+		(property "Sourcing Reference" ""
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
@@ -2641,43 +2639,47 @@
 				)
 			)
 		)
-		(fp_rect
-			(start -6 -2.25)
-			(end 6 2.25)
+		(fp_line
+			(start -1.7 -1.75)
+			(end 1.7 -1.75)
 			(stroke
 				(width 0.15)
 				(type solid)
 			)
-			(fill no)
 			(layer "F.SilkS")
-			(uuid "3fced8ea-784d-4fc4-a0f7-acd2bd6ecc63")
+		)
+		(fp_line
+			(start -1.7 1.75)
+			(end 1.7 1.75)
+			(stroke
+				(width 0.15)
+				(type solid)
+			)
+			(layer "F.SilkS")
 		)
 		(fp_rect
-			(start -9.1 -2.5)
-			(end 9.1 2.5)
+			(start -3.95 -1.95)
+			(end 3.95 1.95)
 			(stroke
 				(width 0.05)
 				(type solid)
 			)
 			(fill no)
 			(layer "F.CrtYd")
-			(uuid "4a1a867d-c9d5-46fd-a915-a949956235d0")
 		)
-		(pad "1" thru_hole circle
-			(at -7.62 0)
-			(size 2.4 2.4)
-			(drill 1.4)
-			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
+		(pad "1" smd roundrect
+			(at -2.8 0 0)
+			(size 1.8 3.4)
+			(layers "F.Cu" "F.Mask" "F.Paste")
+			(roundrect_rratio 0.25)
 			(net 1 "WIRE_A")
 			(uuid "6242ea90-ae26-422d-9636-750508d7c1f9")
 		)
-		(pad "2" thru_hole circle
-			(at 7.62 0)
-			(size 2.4 2.4)
-			(drill 1.4)
-			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
+		(pad "2" smd roundrect
+			(at 2.8 0 0)
+			(size 1.8 3.4)
+			(layers "F.Cu" "F.Mask" "F.Paste")
+			(roundrect_rratio 0.25)
 			(net 5 "Net-(D1-A)")
 			(uuid "02aa19ac-92f0-4c91-899f-fe22e5b8906b")
 		)
@@ -3091,7 +3093,7 @@
 	(footprint "DogFence:BYG23T_SMA_K_Right"
 		(layer "F.Cu")
 		(uuid "e5ad470a-323f-4ed0-8a97-315b69e4b39f")
-		(at 132.5 140.5)
+		(at 130.8 140.5)
 		(path "/800a33dc-5627-4901-abfd-b5d6707cf2b1/b411479d-1e88-4aa8-9d1f-a358d4a34a75")
 		(attr smd)
 		(solder_mask_margin 0)
@@ -4453,15 +4455,23 @@
 		(uuid "bdf951bd-8c32-42f1-bcb8-4d7775d0161b")
 	)
 	(segment
-		(start 123.62 104.5)
-		(end 130.4 104.5)
+		(start 108.38 104.5)
+		(end 117.2 104.5)
+		(width 1.8)
+		(layer "F.Cu")
+		(net 1)
+		(uuid "11111111-0001-4000-8000-000000000001")
+	)
+	(segment
+		(start 122.8 104.5)
+		(end 128.7 104.5)
 		(width 1.8)
 		(layer "F.Cu")
 		(net 5)
 		(uuid "24fd050b-bcb7-4956-9f8f-5aeb2aae3eb7")
 	)
 	(segment
-		(start 134.6 104.5)
+		(start 132.9 104.5)
 		(end 140.96 104.5)
 		(width 1.8)
 		(layer "F.Cu")
@@ -4477,52 +4487,12 @@
 		(uuid "7047ba7b-1c5e-48f8-831e-d3867bd011f3")
 	)
 	(segment
-		(start 123.62 140.5)
-		(end 130.4 140.5)
-		(width 1.8)
-		(layer "F.Cu")
-		(net 7)
-		(uuid "29a48203-fbd7-4aeb-804e-415c6deaa4d6")
-	)
-	(segment
-		(start 134.6 140.5)
-		(end 140.96 140.5)
-		(width 1.8)
-		(layer "F.Cu")
-		(net 8)
-		(uuid "895929bb-e544-4089-b3b7-17c4c3484a57")
-	)
-	(segment
-		(start 140.96 140.5)
-		(end 142.96 142)
-		(width 1.8)
-		(layer "F.Cu")
-		(net 8)
-		(uuid "e97dae7b-2002-4e8e-af0a-46c9c9ba6852")
-	)
-	(segment
 		(start 132.9 99)
-		(end 132.9 101.2)
-		(width 0.8)
+		(end 132.9 104.5)
+		(width 1.8)
 		(layer "F.Cu")
 		(net 6)
 		(uuid "eeeed103-2000-4000-8000-000000000001")
-	)
-	(segment
-		(start 132.9 101.2)
-		(end 134.6 101.2)
-		(width 0.8)
-		(layer "F.Cu")
-		(net 6)
-		(uuid "eeeed103-2000-4000-8000-000000000002")
-	)
-	(segment
-		(start 134.6 101.2)
-		(end 134.6 104.5)
-		(width 0.8)
-		(layer "F.Cu")
-		(net 6)
-		(uuid "eeeed103-2000-4000-8000-000000000003")
 	)
 	(segment
 		(start 137.1 99)
@@ -4541,28 +4511,44 @@
 		(uuid "eeeed103-2000-4000-8000-000000000005")
 	)
 	(segment
-		(start 132.9 146)
-		(end 132.9 143.8)
-		(width 0.8)
+		(start 108.38 140.5)
+		(end 117.2 140.5)
+		(width 1.8)
+		(layer "F.Cu")
+		(net 3)
+		(uuid "33333333-0001-4000-8000-000000000001")
+	)
+	(segment
+		(start 122.8 140.5)
+		(end 128.7 140.5)
+		(width 1.8)
+		(layer "F.Cu")
+		(net 7)
+		(uuid "29a48203-fbd7-4aeb-804e-415c6deaa4d6")
+	)
+	(segment
+		(start 132.9 140.5)
+		(end 140.96 140.5)
+		(width 1.8)
+		(layer "F.Cu")
+		(net 8)
+		(uuid "895929bb-e544-4089-b3b7-17c4c3484a57")
+	)
+	(segment
+		(start 140.96 140.5)
+		(end 142.96 142)
+		(width 1.8)
+		(layer "F.Cu")
+		(net 8)
+		(uuid "e97dae7b-2002-4e8e-af0a-46c9c9ba6852")
+	)
+	(segment
+		(start 132.9 140.5)
+		(end 132.9 146)
+		(width 1.8)
 		(layer "F.Cu")
 		(net 8)
 		(uuid "eeeed104-2000-4000-8000-000000000001")
-	)
-	(segment
-		(start 132.9 143.8)
-		(end 134.6 143.8)
-		(width 0.8)
-		(layer "F.Cu")
-		(net 8)
-		(uuid "eeeed104-2000-4000-8000-000000000002")
-	)
-	(segment
-		(start 134.6 143.8)
-		(end 134.6 140.5)
-		(width 0.8)
-		(layer "F.Cu")
-		(net 8)
-		(uuid "eeeed104-2000-4000-8000-000000000003")
 	)
 	(segment
 		(start 137.1 146)

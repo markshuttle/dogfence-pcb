@@ -963,7 +963,7 @@ class Manufacturing:
         return release
 
     def execute(self, mode):
-        require(mode in ("build", "check", "clean"), "Unknown manufacturing mode")
+        require(mode in ("build", "check", "clean", "prototype"), "Unknown manufacturing mode")
         require(not (self.root / "tmp").is_symlink() and not self.staging.is_symlink()
                 and not self.build.is_symlink(), "Refusing symlinked build/staging paths")
         self.staging.mkdir(parents=True, exist_ok=True)
@@ -1038,17 +1038,18 @@ class Manufacturing:
                         f"{ref}: {part['MPN']} ({part['Sourcing Reference']})" for ref, part in external.items()))
                 if holds:
                     print("Manufacturing release held: " + "; ".join(f"{h['id']}: {h['reason']}" for h in holds))
-                require(mode != "build" or not holds, "Open engineering release holds; verified draft exports retained privately")
-                require(mode != "build" or not external,
-                        "Unresolved external sourcing allocation; verified draft exports retained privately: " + ", ".join(external))
-                state = "checked" if mode == "check" else "verified"
                 if mode == "build":
+                    require(not holds, "Open engineering release holds; verified draft exports retained privately")
+                    require(not external,
+                            "Unresolved external sourcing allocation; verified draft exports retained privately: " + ", ".join(external))
+                state = "checked" if mode == "check" else ("prototype" if mode == "prototype" else "verified")
+                if mode in ("build", "prototype"):
                     revision = self.invoke(["git", "rev-parse", "HEAD"], "git-revision", gate=False)
                     dirty = self.invoke(["git", "status", "--porcelain"], "git-status", gate=False)
                     self.retain_reports(state)
                     shutil.copytree(self.build, release, dirs_exist_ok=True)
                     artifacts = {p.relative_to(release).as_posix(): sha256(p) for p in sorted(release.rglob("*")) if p.is_file()}
-                    manifest = {"status": "verified", "hardware_revision": self.revision,
+                    manifest = {"status": state, "hardware_revision": self.revision,
                                 "created_utc": datetime.now(timezone.utc).isoformat(),
                                 "git_revision": revision["stdout"].strip() if revision["returncode"] == 0 else None,
                                 "worktree_dirty": bool(dirty["stdout"].strip()) if dirty["returncode"] == 0 else None,
@@ -1066,7 +1067,7 @@ class Manufacturing:
                         shutil.copy2(self.build / name, pending)
                         os.replace(pending, self.root / "pcb" / name)
                     write_json(self.build / "manifest.json", manifest)
-                print(f"Manufacturing data {'verified' if mode == 'build' else 'checked (not published)'} for revision {self.revision}.")
+                print(f"Manufacturing data {state} for revision {self.revision}.")
                 print("File checks only, not CAM acceptance, order approval or surge certification.")
                 return 0
             except (VerificationError, OSError, ValueError, KeyError, TypeError, ImportError, csv.Error,
@@ -1077,13 +1078,13 @@ class Manufacturing:
                 print(f"Manufacturing verification FAILED: {exc}", file=sys.stderr)
                 return 1
             finally:
-                if state != "verified":
+                if state not in ("verified", "prototype"):
                     self.retain_reports(state if not self.errors else "failed")
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("mode", choices=("build", "check", "clean"))
+    parser.add_argument("mode", choices=("build", "check", "clean", "prototype"))
     parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[1])
     parser.add_argument("--kicad-cli", default=os.environ.get("KICAD_CLI", ""), help="CLI invocation, shell quoting allowed; no shell is executed")
     args = parser.parse_args()

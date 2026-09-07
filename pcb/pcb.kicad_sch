@@ -2463,7 +2463,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "Vishay BCcomponents"
+		(property "Manufacturer" "Uni-Royal"
 			(at 205.74 62.23 0)
 			(effects
 				(font
@@ -2472,7 +2472,7 @@
 				(hide yes)
 			)
 		)
-		(property "Footprint" "DogFence:PR02_Cu_P15.24mm"
+		(property "Footprint" "DogFence:R_2512_6332Metric"
 			(at 205.74 62.23 90)
 			(effects
 				(font
@@ -2481,7 +2481,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "https://www.vishay.com/docs/28729/pr010203.pdf"
+		(property "Datasheet" "https://www.lcsc.com"
 			(at 205.74 62.23 0)
 			(effects
 				(font
@@ -2490,7 +2490,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" "Vishay PR02000202201FA100; 2.2k 2W 1%, +/-250ppm/K; Cu lead 0.78 +/-0.05mm, body L2 <=12.0mm D <=3.9mm; require >=1.00mm body-to-PCB standoff; forming/process and continuous TEST thermal qualification held"
+		(property "Description" "Uni-Royal HP122WF2201T4E; 2.2k 2W 1% 2512 SMD chip resistor"
 			(at 205.74 62.23 0)
 			(effects
 				(font
@@ -2499,7 +2499,7 @@
 				(hide yes)
 			)
 		)
-		(property "MPN" "PR02000202201FA100"
+		(property "MPN" "HP122WF2201T4E"
 			(at 205.74 62.23 0)
 			(effects
 				(font
@@ -2508,7 +2508,7 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC" ""
+		(property "LCSC" "C2791283"
 			(at 205.74 62.23 0)
 			(effects
 				(font
@@ -2517,7 +2517,7 @@
 				(hide yes)
 			)
 		)
-		(property "Sourcing" "External"
+		(property "Sourcing" "LCSC"
 			(at 205.74 62.23 0)
 			(effects
 				(font
@@ -2526,7 +2526,7 @@
 				(hide yes)
 			)
 		)
-		(property "Sourcing Reference" "https://www.vishay.com/search?type=inv&query=PR02000202201FA100"
+		(property "Sourcing Reference" ""
 			(at 205.74 62.23 0)
 			(effects
 				(font
@@ -3546,7 +3546,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "Vishay BCcomponents"
+		(property "Manufacturer" "Uni-Royal"
 			(at 205.74 123.19 0)
 			(effects
 				(font
@@ -3555,7 +3555,7 @@
 				(hide yes)
 			)
 		)
-		(property "Footprint" "DogFence:PR02_Cu_P15.24mm"
+		(property "Footprint" "DogFence:R_2512_6332Metric"
 			(at 205.74 123.19 90)
 			(effects
 				(font
@@ -3564,7 +3564,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "https://www.vishay.com/docs/28729/pr010203.pdf"
+		(property "Datasheet" "https://www.lcsc.com"
 			(at 205.74 123.19 0)
 			(effects
 				(font
@@ -3573,7 +3573,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" "Vishay PR02000202201FA100; 2.2k 2W 1%, +/-250ppm/K; Cu lead 0.78 +/-0.05mm, body L2 <=12.0mm D <=3.9mm; require >=1.00mm body-to-PCB standoff; forming/process and continuous TEST thermal qualification held"
+		(property "Description" "Uni-Royal HP122WF2201T4E; 2.2k 2W 1% 2512 SMD chip resistor"
 			(at 205.74 123.19 0)
 			(effects
 				(font
@@ -3582,7 +3582,7 @@
 				(hide yes)
 			)
 		)
-		(property "MPN" "PR02000202201FA100"
+		(property "MPN" "HP122WF2201T4E"
 			(at 205.74 123.19 0)
 			(effects
 				(font
@@ -3591,7 +3591,7 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC" ""
+		(property "LCSC" "C2791283"
 			(at 205.74 123.19 0)
 			(effects
 				(font
@@ -3600,7 +3600,7 @@
 				(hide yes)
 			)
 		)
-		(property "Sourcing" "External"
+		(property "Sourcing" "LCSC"
 			(at 205.74 123.19 0)
 			(effects
 				(font
@@ -3609,7 +3609,7 @@
 				(hide yes)
 			)
 		)
-		(property "Sourcing Reference" "https://www.vishay.com/search?type=inv&query=PR02000202201FA100"
+		(property "Sourcing Reference" ""
 			(at 205.74 123.19 0)
 			(effects
 				(font

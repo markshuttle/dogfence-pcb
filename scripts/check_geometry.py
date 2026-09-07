@@ -43,13 +43,13 @@ MOUNTS = {"H1": (101.5, 99.0), "H2": (155.5, 99.0),
           "H3": (101.5, 146.0), "H4": (155.5, 146.0)}
 # Selected nominal holes, conditional on ASSEMBLY.md's separate lot/forming limits.
 COMPONENT_HOLE_MINIMA = {
-    "R1": 1.4, "R2": 1.4, "GDT_AC": 1.4,
+    "GDT_AC": 1.4,
     "GDT_A_E": 1.5, "GDT_B_E": 1.5, "GDT_C_E": 1.5,
     "J_IN": 2.0, "J_EARTH": 2.0, "J_LED_A": 2.0, "J_LED_C": 2.0,
 }
 SMA_DIODES = {
-    "D1": ((132.5, 104.5), 0, "LED_A_POS", "Net-(D1-A)"),
-    "D2": ((132.5, 140.5), 0, "LED_C_POS", "Net-(D2-A)"),
+    "D1": ((130.8, 104.5), 0, "LED_A_POS", "Net-(D1-A)"),
+    "D2": ((130.8, 140.5), 0, "LED_C_POS", "Net-(D2-A)"),
     "D3": ((135.0, 99.0), 180, "LED_A_POS", "WIRE_B"),
     "D4": ((135.0, 146.0), 180, "LED_C_POS", "WIRE_B"),
 }
@@ -1011,19 +1011,21 @@ class GeometryCheck:
                                      ("R2", 140.5, "WIRE_C", "Net-(D2-A)")):
             fp = self.footprints.get(ref)
             attr = fp.one("attr", required=False) if fp else None
-            self.expect(fp is not None and fp.values[0] == "DogFence:PR02_Cu_P15.24mm"
-                        and attr is not None and attr.atoms() == ["through_hole"],
-                        "RESISTOR_FOOTPRINT", f"{ref}: populated PR02_Cu_P15.24mm through-hole footprint required", fp)
+            self.expect(fp is not None and fp.values[0] == "DogFence:R_2512_6332Metric"
+                        and attr is not None and attr.atoms() == ["smd"],
+                        "RESISTOR_FOOTPRINT", f"{ref}: populated R_2512_6332Metric SMD footprint required", fp)
             if fp:
                 xy, rotation = position(fp)
-                self.expect(math.dist(xy, (116.0, y)) <= EPS and abs(rotation) <= EPS,
-                            "RESISTOR_GEOMETRY", f"{ref}: preserve origin (116, {y}) and zero rotation", fp)
-            for num, x, net in (("1", 108.38, rail), ("2", 123.62, anode)):
-                pad = self.pad_at_net(ref, num, (x, y), net, "RESISTOR_GEOMETRY")
+                self.expect(math.dist(xy, (120.0, y)) <= EPS and abs(rotation) <= EPS,
+                            "RESISTOR_GEOMETRY", f"{ref}: preserve origin (120, {y}) and zero rotation", fp)
+            for num, x, net in (("1", 117.2, rail), ("2", 122.8, anode)):
+                pad = self.required_pad(ref, num)
                 if pad:
-                    self.expect(pad.node.values[2] == "circle" and math.dist(point(pad.node, "size"), (2.4, 2.4)) <= EPS
-                                and pad.layers == CU | MASK,
-                                "RESISTOR_GEOMETRY", f"{pad.label}: preserve 2.40 mm circular PTH pad and layers", pad.node)
+                    self.expect(math.dist(pad.center, (x, y)) <= EPS and pad.net == net and pad.kind == "smd"
+                                and pad.hole is None and pad.node.values[2] == "roundrect"
+                                and math.dist(point(pad.node, "size"), (1.8, 3.4)) <= EPS
+                                and pad.layers == {"F.Cu", "F.Mask", "F.Paste"},
+                                "RESISTOR_GEOMETRY", f"{pad.label}: preserve 1.80 x 3.40 mm SMD pad on {net}", pad.node)
         holes = []
         for ref, minimum in COMPONENT_HOLE_MINIMA.items():
             for num in (("1", "2", "3") if ref in ("J_IN", "J_EARTH") else ("1", "2")):
