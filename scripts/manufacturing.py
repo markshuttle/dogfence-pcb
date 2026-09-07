@@ -38,6 +38,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+from urllib.parse import urlsplit
 import zipfile
 
 if __package__:
@@ -91,7 +92,8 @@ SCOPE = {
     "placement": "mm; absolute (0,0); X=PCB X, Y=-PCB Y; angles modulo 360; no centroid corrections",
     "placement_tolerance_mm": 0.00001,
     "rotation_tolerance_degrees": 0.00001,
-    "bom_fields": "Exact MPN and Manufacturer in schematic/PCB; CSV 'LCSC Part #' accepts source 'LCSC' (existing project field) or 'LCSC Part #'; conflicting aliases fail",
+    "bom_fields": "Exact MPN, Manufacturer and sourcing in schematic/PCB; CSV 'LCSC Part #' accepts source 'LCSC' or 'LCSC Part #'; conflicting aliases fail. Absent Sourcing defaults to LCSC, not External. Only External XML may omit an empty LCSC field.",
+    "sourcing": "External requires an empty LCSC code and an exact HTTPS Sourcing Reference. File metadata parity and a catalogue reference do not verify procurement allocation. External allocation remains pending and blocks publication independently of engineering holds; no network lookup or upload authorization is implied.",
     "gerber_tolerance_mm": 0.000002,
     "gerber_coverage": "Copper pads/vias/straight tracks, board outline, mask/paste aperture inventory, sizes and corner radii; unsupported critical-layer source graphics rejected; legend syntax (not rendered glyph equivalence)",
     "via_masks": "KiCad 9 flat global/per-via tenting flags; absent local flags inherit; absent global flags tent both sides. Via openings use board mask expansion and individual circular flashes at zero minimum mask width. Only source-matched openings of untented, overlapping same-net vias may expose their group holes; component mask/paste exposure is forbidden.",
@@ -265,12 +267,49 @@ def read_csv(path, required_fields):
     return rows
 
 
+def read_bom(path):
+    """Validate reviewed rows without rewriting them or inferring allocation."""
+    bom = {}
+    for row in read_csv(path, ("Comment", "Designator", "Footprint", "LCSC Part #", "MPN", "Manufacturer")):
+        require(all(row[key].strip() for key in ("Comment", "Designator", "Footprint", "MPN", "Manufacturer")),
+                "BOM has empty sourcing data")
+        sourcing = row.get("Sourcing", "LCSC")
+        reference = row.get("Sourcing Reference", "")
+        require(sourcing in ("LCSC", "External"), f"Unknown BOM Sourcing: {sourcing!r}")
+        code = row["LCSC Part #"]
+        require(row.get("LCSC", code) == code, "Conflicting BOM LCSC aliases")
+        if sourcing == "External":
+            require(code == "", "External BOM must have an empty LCSC part number")
+            try:
+                url = urlsplit(reference)
+                valid = (url.scheme == "https" and url.hostname and url.username is None
+                         and url.password is None and (url.port is None or url.port > 0)
+                         and not any(c.isspace() or ord(c) < 32 or c == "\\" for c in reference))
+            except ValueError:
+                valid = False
+            require(valid, "External BOM requires a traceable HTTPS Sourcing Reference")
+        else:
+            require(re.fullmatch(r"C[1-9]\d*", code), "BOM has invalid LCSC part number")
+            require(reference == "", "LCSC BOM Sourcing Reference must be empty")
+        refs = [ref.strip() for ref in row["Designator"].split(",")]
+        if "Quantity" in row:
+            require(row["Quantity"].isdigit() and int(row["Quantity"]) == len(refs), "BOM quantity mismatch")
+        for ref in refs:
+            require(ref and ref not in bom, f"Empty/duplicate BOM designator: {ref}")
+            bom[ref] = row
+    return bom
+
+
 def validate_bom(path, xml_path, board):
     components = {}
     for comp in read_xml(xml_path).findall("components/comp"):
         ref = comp.get("ref")
         require(ref and ref not in components, "Duplicate/empty XML component")
-        fields = {item.get("name"): item.text or "" for item in comp.findall("fields/field")}
+        fields = {}
+        for item in comp.findall("fields/field"):
+            name = item.get("name")
+            require(name and name not in fields, f"Empty/duplicate XML component field: {ref}")
+            fields[name] = item.text or ""
         flags = {item.get("name") for item in comp.findall("property")}
         if "exclude_from_board" not in flags:
             components[ref] = (comp.findtext("value"), comp.findtext("footprint"), fields, flags)
@@ -284,26 +323,26 @@ def validate_bom(path, xml_path, board):
                 {"exclude_from_bom", "exclude_from_pos_files"}), f"Populated part excluded from assembly: {ref}")
     expected = {ref for ref, fp in board.footprints.items() if fp.populated}
     require(expected, "No populated electrical components")
-    bom = {}
-    for row in read_csv(path, ("Comment", "Designator", "Footprint", "LCSC Part #", "MPN", "Manufacturer")):
-        require(all(row[key].strip() for key in ("Comment", "Designator", "Footprint", "MPN", "Manufacturer")),
-                "BOM has empty sourcing data")
-        require(re.fullmatch(r"C[1-9]\d*", row["LCSC Part #"]), "BOM has invalid LCSC part number")
-        refs = [ref.strip() for ref in row["Designator"].split(",")]
-        if "Quantity" in row:
-            require(row["Quantity"].isdigit() and int(row["Quantity"]) == len(refs), "BOM quantity mismatch")
-        for ref in refs:
-            require(ref in expected and ref not in bom, f"Extra/duplicate/non-populated BOM designator: {ref}")
-            fp = board.footprints[ref]
-            require(row["Comment"] == fp.properties["Value"] and row["Footprint"] == fp.name,
-                    f"BOM value/qualified footprint mismatch: {ref}")
+    bom = read_bom(path)
+    for ref, row in bom.items():
+        require(ref in expected, f"Extra/non-populated BOM designator: {ref}")
+        fp = board.footprints[ref]
+        require(row["Comment"] == fp.properties["Value"] and row["Footprint"] == fp.name,
+                f"BOM value/qualified footprint mismatch: {ref}")
+        sourcing = row.get("Sourcing", "LCSC")
+        for fields in (components[ref][2], fp.properties):
+            require(fields.get("Sourcing", "LCSC") == sourcing,
+                    f"BOM Sourcing missing/different in schematic or PCB: {ref}")
+            require(fields.get("Sourcing Reference", "") == row.get("Sourcing Reference", ""),
+                    f"BOM Sourcing Reference missing/different in schematic or PCB: {ref}")
             for name in ("MPN", "Manufacturer", "LCSC Part #"):
                 aliases = ("LCSC Part #", "LCSC") if name == "LCSC Part #" else (name,)
-                for fields in (components[ref][2], fp.properties):
-                    present = [fields[key] for key in aliases if key in fields]
-                    require(present and all(item == row[name] for item in present),
-                            f"BOM {name} missing/different in schematic or PCB: {ref}")
-            bom[ref] = row
+                present = [fields[key] for key in aliases if key in fields]
+                # Native XML can omit empty custom fields; the PCB must retain one.
+                if not present and name == "LCSC Part #" and sourcing == "External" and fields is components[ref][2]:
+                    present = [""]
+                require(present and all(item == row[name] for item in present),
+                        f"BOM {name} missing/different in schematic or PCB: {ref}")
     require(set(bom) == expected, f"Missing BOM designators: {sorted(expected - bom.keys())}")
     return bom
 
@@ -844,6 +883,11 @@ class Manufacturing:
         self.verification["nets"] = {"verified": True, "nets": len(nets), "terminals": sum(map(len, nets.values())),
                                      "ipc": compare_ipc(ipc, board)}
         bom = validate_bom(self.project / "BOM.csv", xml, board)
+        self.verification["sourcing"] = {
+            "file_metadata_verified": True, "allocation_verified": False,
+            "pending_external": {ref: {key: row[key] for key in ("MPN", "Manufacturer", "Sourcing Reference")}
+                                 for ref, row in sorted(bom.items()) if row.get("Sourcing") == "External"},
+        }
         positions = generate_cpl(native_pos, scratch / "CPL.csv", board)
         require(set(positions) == set(bom), "BOM/CPL population differs")
         self.verification["population"] = {"verified": True, "count": len(bom), "references": sorted(bom)}
@@ -963,9 +1007,15 @@ class Manufacturing:
                 pending_cpl = self.run / "mirror-CPL.csv"
                 shutil.copy2(release / "CPL.csv", pending_cpl)
                 os.replace(pending_cpl, self.root / "pcb" / "CPL.csv")
+                external = self.verification["sourcing"]["pending_external"]
+                if external:
+                    print("External sourcing pending allocation (not verified): " + "; ".join(
+                        f"{ref}: {part['MPN']} ({part['Sourcing Reference']})" for ref, part in external.items()))
                 if holds:
                     print("Manufacturing release held: " + "; ".join(f"{h['id']}: {h['reason']}" for h in holds))
                 require(mode != "build" or not holds, "Open engineering release holds; verified draft exports retained privately")
+                require(mode != "build" or not external,
+                        "Unresolved external sourcing allocation; verified draft exports retained privately: " + ", ".join(external))
                 state = "checked" if mode == "check" else "verified"
                 if mode == "build":
                     revision = self.invoke(["git", "rev-parse", "HEAD"], "git-revision", gate=False)

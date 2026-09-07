@@ -8,6 +8,17 @@ does not supersede `ELECTRICAL.md`, `ASSEMBLY.md`, or the release gates.
 Only this research file is owned by this work. Switch research is delegated
 to the environment workstream and is not a deliverable here.
 
+**Current integration after checkpoint ad282e3:** the PCB now has the simple
+16-part PR02/BYG23T indicator hybrid, not any GDT/source replacement proposed
+below. All six original GDTs remain. The user prohibits energized cattle fencing
+near the whole boundary cable, stations and hub; the old parallel exposure is
+withdrawn. This does not establish GDT recovery or remove nearby-lightning/RF/
+switching and earthing questions. The 37 V / 1.6 A hub proposals below remain
+**unimplemented historical targets**. Recalculate them before use: the new
+PR02/40.39597 V normal-load screen can reach 1.561876 A, above the minimum
+limit of the old proposed 8-kohm TPS26600 setting. See current ELECTRICAL and
+DESIGN_BOUNDS, not the older hub circuit as a ready-to-populate design.
+
 ## Decision
 
 There is a credible bounded prototype path, but **no retrieved small bare-GDT
@@ -61,8 +72,10 @@ electrical, fit and process gates.
   63 x 56 mm board, 9.00 mm earth-tube centre pitch, and north-south AC overpass
   with 15.24 mm formed pitch and >=2.00 mm whole-span pre-gel clearance.
 - No direct core/PE or DC-negative/PE bond is proposed. PE is never switched.
-  External earth-potential rise and mains/cattle-fence induction are not energy
-  supplied by the 36 V source and need their own qualification envelope.
+  External earth-potential rise and coupled mains/switching transients are not
+  energy supplied by the 36 V source and need their own applicable envelope.
+  Cattle-fence exposure is now excluded by the user-confirmed whole-boundary
+  prohibition; inspect/maintain it rather than qualify the withdrawn setup.
 
 ## 2. What Holdover Actually Specifies
 
@@ -609,8 +622,10 @@ more; there is no justified all-inclusive procurement maximum yet.
   tests with independent fixture containment.
 - Continuous normal/reversal/output-short potted thermal testing, with solar/
   internal-temperature bounds and the accepted resistor mode.
-- Complete-path surge/cattle-fence/RF recovery, cable dielectric/impulse,
-  environmental and site/earthing qualification before field reliance.
+- Complete-path surge/RF/switching recovery, cable dielectric/impulse,
+  environmental and site/earthing qualification before field reliance. Inspect
+  and maintain the whole-boundary cattle-fence prohibition; reassess if violated
+  or a future land-use change reintroduces that exposure.
 
 These are not performed. Manufacturer component ratings and a few basic board
 passes do not establish a 20 kA assembly, equal surge sharing or field approval.

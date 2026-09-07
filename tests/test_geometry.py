@@ -1,8 +1,8 @@
 """Controlled mutations of the authoritative PCB, never tmp/ or backup fixtures.
 
-The positive fixture corrects only known nominal C1/W1/rule defects in memory.
-These artificial land changes are test data, not proposed manufacturing artwork.
-Historical defects are restored explicitly so the tests survive their real fixes.
+Full-board positives use the current 16-part CAD. Historical W1 geometry is
+restored explicitly; aperture-only fixtures exercise the parser/distance model,
+not an exemption from the current untented-via or SMA design guards.
 Run: python3 -B -m unittest discover -s tests -p test_geometry.py -v
 """
 
@@ -71,7 +71,7 @@ def set_net(board, node, name):
     replace(node, f'(net {code} "{name}")')
 
 
-def historical_smt(board):
+def historical_smt(board, *, land_height=2):
     setup = board.one("setup")
     replace(setup, "(tenting front back)")
     for key in ("pad_to_mask_clearance", "pad_to_paste_clearance", "pad_to_paste_clearance_ratio"):
@@ -86,7 +86,7 @@ def historical_smt(board):
             p = pad(board, ref, number)
             p.values[2] = Atom("rect")
             replace(p, f"(at 0 {y})")
-            replace(p, "(size 5.2 2)")
+            replace(p, f"(size 5.2 {land_height})")
             replace(p, '(layers "F.Cu" "F.Mask" "F.Paste")')
             for key in ("solder_mask_margin", "solder_paste_margin", "solder_paste_margin_ratio"):
                 remove(p, key)
@@ -135,14 +135,6 @@ class GeometryTests(unittest.TestCase):
     def setUpClass(cls):
         cls.authoritative = parse((ROOT / "pcb/pcb.kicad_pcb").read_text(), root="kicad_pcb")
         cls.positive = deepcopy(cls.authoritative)
-        historical_smt(cls.positive)
-        for ref in ("D1", "D2"):
-            for num in ("1", "2"):
-                replace(pad(cls.positive, ref, num), "(drill 1.1)")
-        for ref in ("GDT_AB", "GDT_BC"):
-            for num in ("1", "2"):
-                # A simple nominal fixture with positive hole and annulus separation.
-                replace(pad(cls.positive, ref, num), "(size 5.2 0.8)")
         cls.project = json.loads((ROOT / "pcb/pcb.kicad_pro").read_text())
         settings = cls.project["board"]["design_settings"]
         settings["rules"].update(PROJECT_MINIMA)
@@ -159,6 +151,14 @@ class GeometryTests(unittest.TestCase):
         return check_sources(dump(board if board is not None else self.board),
                              json.dumps(project if project is not None else self.settings),
                              rules if rules is not None else self.rules)
+
+    def aperture_report(self, board=None):
+        checker = GeometryCheck(board if board is not None else self.board)
+        checker.attempt(checker.read_board)
+        checker.attempt(checker.check_apertures)
+        ok = not any(d["severity"] == "error" for d in checker.diagnostics)
+        return {"ok": ok, "status": "pass" if ok else "fail", "diagnostics": checker.diagnostics,
+                "measurements": checker.measurements}
 
     def assert_pass(self, report=None):
         report = report if report is not None else self.report()
@@ -183,9 +183,20 @@ class GeometryTests(unittest.TestCase):
 
     def test_adopted_dfm_holes_lands_and_untented_vias(self):
         report = self.assert_pass(self.report(self.authoritative))
-        self.assertEqual(len(report["measurements"]["component_hole_design"]), 26)
+        self.assertEqual(len(report["measurements"]["component_hole_design"]), 22)
+        self.assertEqual(len(report["measurements"]["component_rings"]), 22)
+        self.assertAlmostEqual(min(row["nominal_ring_mm"] for row in report["measurements"]["component_rings"]), 0.4)
+        self.assertEqual(report["measurements"]["via_count"], 14)
         checker = GeometryCheck(self.authoritative)
         checker.read_board()
+        parts = [fp for fp in checker.footprints.values() if fp.one("attr").atoms() in (["smd"], ["through_hole"])]
+        self.assertEqual(len(parts), 16)
+        self.assertEqual(sum(fp.one("attr").atoms() == ["smd"] for fp in parts), 6)
+        self.assertEqual(sum(p.kind == "thru_hole" for p in checker.pads), 22)
+        self.assertEqual(sum(p.kind == "np_thru_hole" for p in checker.pads), 4)
+        self.assertEqual(sum(p.kind == "smd" for p in checker.pads), 12)
+        for layer, count in (("F.Mask", 52), ("B.Mask", 40), ("F.Paste", 12)):
+            self.assertEqual(sum(layer in a.layers for a in checker.apertures), count)
         for via in checker.vias:
             self.assertFalse(checker.tented(via.node, "front"))
             self.assertFalse(checker.tented(via.node, "back"))
@@ -199,20 +210,244 @@ class GeometryTests(unittest.TestCase):
         self.assertAlmostEqual(min(row["hole_gap_mm"] for row in smt), 1.239713)
         self.assertAlmostEqual(min(row["annulus_gap_mm"] for row in smt), 0.839713)
 
+    def test_sma_series_and_shunt_lands_match_selected_geometry(self):
+        report = self.assert_pass()
+        rows = {row["reference"]: row for row in report["measurements"]["sma_diodes"]}
+        expected = {
+            "D1": (132.5, 104.5, 0, 134.6, 130.4, "LED_A_POS", "Net-(D1-A)"),
+            "D2": (132.5, 140.5, 0, 134.6, 130.4, "LED_C_POS", "Net-(D2-A)"),
+            "D3": (135.0, 99.0, 180, 132.9, 137.1, "LED_A_POS", "WIRE_B"),
+            "D4": (135.0, 146.0, 180, 132.9, 137.1, "LED_C_POS", "WIRE_B"),
+        }
+        self.assertEqual(rows.keys(), expected.keys())
+        checker = GeometryCheck(self.authoritative)
+        checker.read_board()
+        for ref, (x, y, angle, kx, ax, cathode, anode) in expected.items():
+            with self.subTest(ref=ref):
+                row = rows[ref]
+                self.assertNotIn(ref, COMPONENT_HOLE_MINIMA)
+                self.assertEqual(row["position_mm"], [x, y])
+                self.assertEqual(row["rotation_deg"], angle)
+                self.assertAlmostEqual(row["inner_gap_mm"], 1.7)
+                self.assertEqual(row["pads"], [
+                    {"pad": f"{ref}.1", "position_mm": [kx, y], "net": cathode, "size_mm": [2.5, 2.0]},
+                    {"pad": f"{ref}.2", "position_mm": [ax, y], "net": anode, "size_mm": [2.5, 2.0]},
+                ])
+                for num, px in (("1", kx), ("2", ax)):
+                    openings = [a for a in checker.apertures if a.reference == ref and a.pad_number == num]
+                    self.assertEqual(len(openings), 2)
+                    for opening in openings:
+                        for actual, bound in zip(opening.shape.bounds, (px - 1.25, y - 1, px + 1.25, y + 1)):
+                            self.assertAlmostEqual(actual, bound)
+
+    def test_sma_footprints_require_reference_library_and_population(self):
+        for ref in ("D1", "D2", "D3", "D4"):
+            for change in ("missing", "renamed", "library", "type", "dnp", "bottom"):
+                with self.subTest(ref=ref, change=change):
+                    board = deepcopy(self.positive)
+                    fp = footprint(board, ref)
+                    if change == "missing":
+                        board.values.remove(fp)
+                    elif change == "renamed":
+                        reference = next(p for p in fp.children("property") if p.values[0] == "Reference")
+                        reference.values[1] = Atom("D9", quoted=True)
+                    elif change == "library":
+                        fp.values[0] = Atom("Diode_SMD:D_SMA", quoted=True)
+                    else:
+                        replace(fp, {"type": "(attr through_hole)", "dnp": "(attr smd dnp)",
+                                     "bottom": '(layer "B.Cu")'}[change])
+                    self.assert_defect("SMA_DIODE_FOOTPRINT", self.report(board))
+
+    def test_sma_missing_duplicate_and_renumbered_pads_fail(self):
+        for ref in ("D1", "D2", "D3", "D4"):
+            for num in ("1", "2"):
+                for change in ("missing", "duplicate", "renumbered"):
+                    with self.subTest(ref=ref, num=num, change=change):
+                        board = deepcopy(self.positive)
+                        fp, p = footprint(board, ref), pad(board, ref, num)
+                        if change == "missing":
+                            fp.values.remove(p)
+                        elif change == "duplicate":
+                            fp.values.append(deepcopy(p))
+                        else:
+                            p.values[0] = Atom("3", quoted=True)
+                        self.assert_defect("SMA_DIODE_PAD", self.report(board))
+
+    def test_sma_pad_type_and_drill_presence_fail_with_sma_diagnostics(self):
+        for ref in ("D1", "D2", "D3", "D4"):
+            for num in ("1", "2"):
+                for kind, drilled in (("smd", True), ("thru_hole", True),
+                                      ("thru_hole", False), ("connect", False)):
+                    with self.subTest(ref=ref, num=num, kind=kind, drilled=drilled):
+                        board = deepcopy(self.positive)
+                        p = pad(board, ref, num)
+                        p.values[1] = Atom(kind)
+                        if kind == "thru_hole":
+                            replace(p, '(layers "*.Cu" "*.Mask")')
+                        if drilled:
+                            replace(p, "(drill 1.1)")
+                        report = self.report(board)
+                        self.assert_defect("SMA_DIODE_PAD", report)
+                        if (kind == "thru_hole") != drilled:
+                            self.assert_defect("INVALID_STRUCTURE", report)
+                        self.assertNotIn("C1_DIODE_DRILL", {d["code"] for d in report["diagnostics"]})
+
+    def test_retired_c1_tht_diode_is_not_a_supported_sma_substitution(self):
+        # The former 1.10 mm C1 fix was valid for the retired part, not for an SMA.
+        for ref in ("D1", "D2"):
+            for drill in (0.9, 1.1):
+                with self.subTest(ref=ref, drill=drill):
+                    board = deepcopy(self.positive)
+                    fp = footprint(board, ref)
+                    fp.values[0] = Atom("DogFence:1N4007G_P10.16mm_K_Right", quoted=True)
+                    replace(fp, "(attr through_hole)")
+                    for num, x in (("1", 5.08), ("2", -5.08)):
+                        p = pad(board, ref, num)
+                        p.values[1:3] = [Atom("thru_hole"), Atom("circle")]
+                        replace(p, f"(at {x} 0)")
+                        replace(p, "(size 2.2 2.2)")
+                        replace(p, f"(drill {drill})")
+                        replace(p, '(layers "*.Cu" "*.Mask")')
+                    report = self.report(board)
+                    self.assert_defect("SMA_DIODE_FOOTPRINT", report)
+                    self.assert_defect("SMA_DIODE_PAD", report)
+
+    def test_sma_placement_and_pad_geometry_cannot_drift(self):
+        for ref in ("D1", "D2", "D3", "D4"):
+            for change in ("origin", "rotation"):
+                with self.subTest(ref=ref, change=change):
+                    board = deepcopy(self.positive)
+                    fp = footprint(board, ref)
+                    x, y, *angle = map(float, fp.one("at").atoms())
+                    replace(fp, f"(at {x + (0.1 if change == 'origin' else 0)} {y} "
+                            f"{(angle[0] if angle else 0) + (180 if change == 'rotation' else 0)})")
+                    self.assert_defect("SMA_DIODE_PLACEMENT", self.report(board))
+            for num in ("1", "2"):
+                for change in ("(at 2 0)", "(at 2.1 0 90)", "(size 2.4 2)", "(size 2.5 1.9)", "oval"):
+                    with self.subTest(ref=ref, num=num, change=change):
+                        board = deepcopy(self.positive)
+                        p = pad(board, ref, num)
+                        if change == "oval":
+                            p.values[2] = Atom(change)
+                        else:
+                            replace(p, change)
+                        self.assert_defect("SMA_DIODE_PAD", self.report(board))
+
+    def test_sma_series_and_shunt_polarity_and_wrong_nets(self):
+        for ref in ("D1", "D2", "D3", "D4"):
+            with self.subTest(ref=ref, change="reversed"):
+                board = deepcopy(self.positive)
+                k, a = pad(board, ref, "1"), pad(board, ref, "2")
+                cathode, anode = k.one("net").atoms()[1], a.one("net").atoms()[1]
+                set_net(board, k, anode)
+                set_net(board, a, cathode)
+                self.assertEqual(len(self.assert_defect("SMA_DIODE_POLARITY", self.report(board))), 2)
+            for num in ("1", "2"):
+                for net in ("WIRE_A", ""):
+                    with self.subTest(ref=ref, num=num, net=net):
+                        board = deepcopy(self.positive)
+                        set_net(board, pad(board, ref, num), net)
+                        self.assert_defect("SMA_DIODE_POLARITY", self.report(board))
+
+    def test_sma_mask_paste_layers_and_effective_margins_are_strict(self):
+        for ref in ("D1", "D2", "D3", "D4"):
+            for num in ("1", "2"):
+                for change in ('(layers "F.Cu" "F.Mask")', '(layers "F.Cu" "F.Paste")',
+                               '(layers "B.Cu" "B.Mask" "B.Paste")', "(solder_mask_margin 0.1)",
+                               "(solder_paste_margin -0.1)", "(solder_paste_margin_ratio -0.05)"):
+                    with self.subTest(ref=ref, num=num, change=change):
+                        board = deepcopy(self.positive)
+                        replace(pad(board, ref, num), change)
+                        self.assert_defect("SMA_DIODE_APERTURE", self.report(board))
+            for field in ("solder_mask_margin", "solder_paste_margin", "solder_paste_ratio"):
+                with self.subTest(ref=ref, inherited=field):
+                    board = deepcopy(self.positive)
+                    replace(footprint(board, ref), f"({field} 0.1)")
+                    self.assert_defect("SMA_DIODE_APERTURE", self.report(board))
+
+    def test_sma_explicit_zero_overrides_and_modulo_rotations_remain_valid(self):
+        for ref in ("D1", "D2", "D3", "D4"):
+            fp = footprint(self.board, ref)
+            x, y, *angle = map(float, fp.one("at").atoms())
+            rotation = (angle[0] if angle else 0) - 360
+            replace(fp, f"(at {x} {y} {rotation})")
+            for field in ("solder_mask_margin", "solder_paste_margin", "solder_paste_ratio"):
+                replace(fp, f"({field} 0.2)")
+            for p in fp.children("pad"):
+                px, py = p.one("at").atoms()[:2]
+                replace(p, f"(at {px} {py} {rotation})")
+                for field in ("solder_mask_margin", "solder_paste_margin", "solder_paste_margin_ratio"):
+                    replace(p, f"({field} 0)")
+        self.assert_pass()
+
+    def test_sma_separate_or_extra_apertures_cannot_replace_pad_owned_openings(self):
+        for ref in ("D1", "D2", "D3", "D4"):
+            for change in ("replacement", "extra", "F.Mask", "F.Paste"):
+                with self.subTest(ref=ref, change=change):
+                    board = deepcopy(self.positive)
+                    fp, p = footprint(board, ref), pad(board, ref, "1")
+                    if change == "replacement":
+                        opening = deepcopy(p)
+                        opening.values[0] = Atom("", quoted=True)
+                        remove(opening, "net")
+                        replace(opening, '(layers "F.Mask" "F.Paste")')
+                        replace(p, '(layers "F.Cu")')
+                        fp.values.append(opening)
+                    elif change == "extra":
+                        fp.values.append(parse('''(fp_rect (start -1 -1) (end 1 1)
+                            (stroke (width 0) (type solid)) (fill solid) (layer "F.Paste"))'''))
+                    else:
+                        x, y = map(float, fp.one("at").atoms()[:2])
+                        # Unowned artwork in the inner gap leaves all eight pads unchanged.
+                        board.values.append(parse(f'''(gr_rect (start {x - 0.5} {y - 0.5})
+                            (end {x + 0.5} {y + 0.5}) (stroke (width 0) (type solid))
+                            (fill solid) (layer "{change}"))'''))
+                    self.assert_defect("SMA_DIODE_APERTURE", self.report(board))
+
+    def test_pr02_footprint_and_retained_hole_pitch_are_required(self):
+        for ref, y in (("R1", 104.5), ("R2", 140.5)):
+            self.assertEqual(COMPONENT_HOLE_MINIMA[ref], 1.4)
+            for num, x in (("1", -7.62), ("2", 7.62)):
+                p = pad(self.authoritative, ref, num)
+                self.assertEqual(list(map(float, p.one("at").atoms()[:2])), [x, 0.0])
+                self.assertEqual(list(map(float, p.one("size").atoms())), [2.4, 2.4])
+                self.assertEqual(float(p.one("drill").atoms()[0]), 1.4)
+            for change in ("library", "origin", "pitch", "pad", "net"):
+                with self.subTest(ref=ref, change=change):
+                    board = deepcopy(self.positive)
+                    fp, p = footprint(board, ref), pad(board, ref, "2")
+                    if change == "library":
+                        fp.values[0] = Atom("DogFence:MBE0414_P15.24mm", quoted=True)
+                    elif change == "origin":
+                        replace(fp, f"(at 116.1 {y})")
+                    elif change == "pitch":
+                        replace(p, "(at 7.5 0)")
+                    elif change == "pad":
+                        replace(p, "(size 2.5 2.5)")
+                    else:
+                        set_net(board, p, "WIRE_B")
+                    self.assert_defect("RESISTOR_FOOTPRINT" if change == "library" else "RESISTOR_GEOMETRY",
+                                       self.report(board))
+
     def test_selected_fit_holes_cannot_revert_to_unsupported_sizes(self):
         for ref, minimum in COMPONENT_HOLE_MINIMA.items():
             with self.subTest(ref=ref):
                 board = deepcopy(self.positive)
                 replace(pad(board, ref, "1"), f"(drill {minimum - 0.1:.2f})")
-                self.assert_defect("C1_DIODE_DRILL" if ref in ("D1", "D2") else "COMPONENT_FIT_DRILL",
-                                   self.report(board))
+                self.assert_defect("COMPONENT_FIT_DRILL", self.report(board))
 
     def test_body_courtyards_include_declared_pose_and_assembly_margin(self):
-        for ref in (*COMPONENT_HOLE_MINIMA, "GDT_AB", "GDT_BC"):
+        for ref in (*COMPONENT_HOLE_MINIMA, "GDT_AB", "GDT_BC", "D1", "D2", "D3", "D4"):
             with self.subTest(ref=ref):
                 fp = footprint(self.authoritative, ref)
                 boxes = {rect.one("layer").atoms()[0]: rect for rect in fp.children("fp_rect")}
                 body, courtyard = boxes["F.Fab"], boxes["F.CrtYd"]
+                if ref in ("R1", "R2", "D1", "D2", "D3", "D4"):
+                    half_body, half_courtyard = ((6.0, 2.1), (9.1, 2.5)) if ref.startswith("R") \
+                        else ((2.25, 1.4), (3.6, 1.8))
+                    for rect, half in ((body, half_body), (courtyard, half_courtyard)):
+                        self.assertEqual(tuple(map(float, rect.one("start").atoms())), tuple(-v for v in half))
+                        self.assertEqual(tuple(map(float, rect.one("end").atoms())), half)
                 for edge, direction in (("start", -1), ("end", 1)):
                     for b, c in zip(body.one(edge).atoms(), courtyard.one(edge).atoms()):
                         self.assertGreaterEqual(direction * (float(c) - float(b)) + 1e-9, 0.10 + 0.25)
@@ -220,19 +455,17 @@ class GeometryTests(unittest.TestCase):
     def test_adopted_pin_envelopes_include_independent_pattern_allowance(self):
         position_budget = 2 * (math.hypot(0.05, 0.05) + 0.05)
         envelopes = {"J_IN": math.hypot(1.1, 1.0), "J_LED_A": math.hypot(1.15, 1.0),
-                     "R1": 0.9, "GDT_AC": 0.9, "GDT_A_E": 1.05}
+                     "R1": 0.83, "R2": 0.83, "GDT_AC": 0.9, "GDT_A_E": 1.05}
         for ref, maximum in envelopes.items():
             with self.subTest(ref=ref):
                 hole = float(pad(self.authoritative, ref, "1").one("drill").atoms()[0])
                 self.assertGreaterEqual(hole - 0.08 - maximum - position_budget, 0.1)
+                if ref in ("R1", "R2"):
+                    self.assertAlmostEqual(hole - 0.08 - maximum - position_budget, 0.248578644)
 
-    def test_reviewed_c1_w1_defects_remain_reproducible_after_layout_fixes(self):
+    def test_historical_w1_collision_remains_reproducible_after_layout_fixes(self):
         historical_smt(self.board)
-        for ref in ("D1", "D2"):
-            for num in ("1", "2"):
-                replace(pad(self.board, ref, num), "(drill 0.9)")
         report = self.report()
-        self.assertEqual(len(self.assert_defect("C1_DIODE_DRILL", report)), 4)
         mask = self.assert_defect("W1_VIA_MASK", report)
         paste = self.assert_defect("W1_VIA_PASTE", report)
         self.assertEqual(len(mask), 12)  # B's three vias meet both SMT GDTs.
@@ -241,23 +474,28 @@ class GeometryTests(unittest.TestCase):
         self.assertEqual(len({d["aperture"] for d in mask}), 4)
         self.assertTrue(all(abs(d["measured_mm"] + 0.19) < 1e-6 for d in mask + paste))
 
-    def test_diode_drill_and_component_ring_are_independent(self):
-        replace(pad(self.board, "D1", "2"), "(drill 1.0)")
-        self.assert_defect("C1_DIODE_DRILL")
-        replace(pad(self.board, "D1", "2"), "(drill 1.1)")
-        replace(pad(self.board, "D1", "2"), "(size 1.6 1.6)")
-        self.assert_defect("COMPONENT_RING")
+    def test_component_fit_drill_and_ring_are_independent(self):
+        replace(pad(self.board, "R1", "2"), "(drill 1.3)")
+        report = self.report()
+        self.assert_defect("COMPONENT_FIT_DRILL", report)
+        self.assertNotIn("COMPONENT_RING", {d["code"] for d in report["diagnostics"]})
+        replace(pad(self.board, "R1", "2"), "(drill 1.4)")
+        replace(pad(self.board, "R1", "2"), "(size 1.8 1.8)")
+        report = self.report()
+        self.assert_defect("COMPONENT_RING", report)
+        self.assertNotIn("COMPONENT_FIT_DRILL", {d["code"] for d in report["diagnostics"]})
 
     def test_offset_hole_uses_true_ring_not_min_size_only(self):
-        replace(pad(self.board, "D1", "1"), "(drill 1.1 (offset 0.4 0))")
+        replace(pad(self.board, "R1", "1"), "(drill 1.4 (offset 0.35 0))")
         self.assertAlmostEqual(self.assert_defect("COMPONENT_RING")[0]["measured_mm"], 0.15)
 
     def test_slot_ring_and_arbitrary_pad_rotation(self):
-        p = pad(self.board, "R1", "2")
-        p.values[2] = Atom("oval")
-        replace(p, "(size 2.8 2.4)")
-        replace(p, "(drill oval 1.6 1.4)")
-        replace(p, "(at 7.62 0 37)")
+        extra = parse('''(footprint "slot fixture" (layer "F.Cu") (at 116 99)
+            (property "Reference" "X_PTH")
+            (pad "1" thru_hole oval (at 0 0 37) (size 2.8 2.4) (drill oval 1.6 1.4)
+                (layers "*.Cu" "*.Mask") (net 1 "WIRE_A")))''')
+        self.board.values.append(extra)
+        p = extra.children("pad")[0]
         self.assert_pass()
         replace(p, "(drill oval 2.4 1.4)")
         self.assert_defect("COMPONENT_RING")
@@ -303,42 +541,44 @@ class GeometryTests(unittest.TestCase):
             replace(fp, "(solder_mask_margin -0.35)")
             replace(fp, "(solder_paste_margin -0.05)")
             replace(fp, "(solder_paste_ratio -0.15)")
-        report = self.assert_pass()
+        report = self.assert_pass(self.aperture_report())
         records = report["measurements"]["via_apertures"]
         self.assertTrue(any(r["annulus_exposed"] and r["mask_barrier_mm"] >= MIN_MASK_BARRIER
                             and r["copper_hole_gap_mm"] < 0 for r in records if r["layer"] == "F.Mask"))
         replace(pad(self.board, "GDT_AB", "1"), "(solder_mask_margin 0)")
-        self.assert_defect("W1_VIA_MASK")  # KiCad 9 zero is an override, not inheritance.
+        self.assert_defect("W1_VIA_MASK", self.aperture_report())  # KiCad 9 zero overrides inheritance.
 
     def test_board_margin_inheritance_and_pad_priority(self):
         historical_smt(self.board)
         replace(self.board.one("setup"), "(pad_to_mask_clearance -0.4)")
         replace(self.board.one("setup"), "(pad_to_paste_clearance -0.4)")
-        self.assert_pass()
+        self.assert_pass(self.aperture_report())
         fp = footprint(self.board, "GDT_AB")
         replace(fp, "(solder_mask_margin 0.2)")
         for p in fp.children("pad"):
             replace(p, "(solder_mask_margin -0.4)")
-        self.assert_pass()  # Not the sum of board, footprint and pad overrides.
+        self.assert_pass(self.aperture_report())  # Not the sum of board, footprint and pad overrides.
         remove(fp.children("pad")[0], "solder_mask_margin")
-        self.assert_defect("W1_VIA_MASK")
+        self.assert_defect("W1_VIA_MASK", self.aperture_report())
 
     def test_mask_and_paste_are_independent(self):
         for field, code in (("solder_mask_margin", "W1_VIA_MASK"),
                             ("solder_paste_margin", "W1_VIA_PASTE")):
             with self.subTest(field=field):
                 board = deepcopy(self.positive)
+                historical_smt(board, land_height=0.8)
                 replace(pad(board, "GDT_AB", "1"), f"({field} 0.6)")
-                self.assert_defect(code, self.report(board))
+                self.assert_defect(code, self.aperture_report(board))
 
     def test_mask_barrier_and_untented_annulus(self):
+        historical_smt(self.board, land_height=0.8)
         p = pad(self.board, "GDT_AB", "1")
         replace(p, "(solder_mask_margin 0.36)")  # 0.41 - 0.36 = 0.05 mm, no drill overlap.
-        self.assert_defect("W1_MASK_BARRIER")
+        self.assert_defect("W1_MASK_BARRIER", self.aperture_report())
         remove(p, "solder_mask_margin")
         via = next(v for v in self.board.children("via") if v.one("at").atoms() == ["114", "114.88"])
         replace(via, "(tenting back)")
-        self.assert_defect("W1_MASK_BARRIER")  # Only 0.01 mm between open annulus and land.
+        self.assert_defect("W1_MASK_BARRIER", self.aperture_report())  # Only 0.01 mm between open annulus and land.
 
     def test_same_net_open_vias_do_not_waive_component_or_other_net_collisions(self):
         board = deepcopy(self.authoritative)
@@ -356,8 +596,9 @@ class GeometryTests(unittest.TestCase):
                 self.assert_defect("UNSUPPORTED_GEOMETRY", self.report(board))
 
     def test_mask_minimum_width_cannot_silently_merge_a_barrier(self):
+        historical_smt(self.board, land_height=0.8)
         replace(self.board.one("setup"), "(solder_mask_min_width 0.7)")
-        self.assert_defect("W1_MASK_BARRIER")
+        self.assert_defect("W1_MASK_BARRIER", self.aperture_report())
 
     def test_mask_graphic_and_separate_apertures_are_checked(self):
         self.board.values.append(parse('''(gr_rect (start 113.9 114.8) (end 114.1 115.1)
@@ -377,19 +618,19 @@ class GeometryTests(unittest.TestCase):
         replace(p, '(layers "F.Cu")')
         fp.values.append(opening)
         self.assert_pass()
-        replace(opening, "(at 0 -3.3)")  # Touches the copper only along one edge.
+        replace(opening, "(at 0 -3.2)")  # Touches the copper only along one edge.
         self.assert_defect("MISSING_SMT_APERTURE")
 
     def test_smd_roundrect_corner_and_rotation_at_via(self):
         # The drill misses the rounded corner but intersects the rotated square.
-        delta = move((1.5, 1.5), angle=31)
+        delta = move((1.8, 1.8), angle=31)
         origin = (112.5 - delta[0], 114.88 - delta[1])
         extra = parse(f'''(footprint "corner fixture" (layer "F.Cu") (at {origin[0]} {origin[1]})
             (property "Reference" "X2")
-            (pad "" smd roundrect (at 0 0 31) (size 2.4 2.4) (roundrect_rratio 0.5)
+            (pad "" smd roundrect (at 0 0 31) (size 3 3) (roundrect_rratio 0.5)
                 (layers "F.Mask")))''')
         self.board.values.append(extra)
-        self.assert_pass()  # 1.5*sqrt(2) - 1.2 - 0.5 > 0.1 mm.
+        self.assert_pass()  # Open-annulus mask gap: 1.8*sqrt(2) - 1.5 - 0.9 > 0.1 mm.
         extra.children("pad")[0].values[2] = Atom("rect")
         self.assert_defect("W1_VIA_MASK")
 
@@ -418,6 +659,30 @@ class GeometryTests(unittest.TestCase):
                 self.assert_defect("PROTECTED_VIA", self.report(board))
         self.board.values.append(deepcopy(via))
         self.assert_defect("PROTECTED_VIA")
+
+    def test_no_added_vias_even_with_all_protected_vias_intact(self):
+        extra = deepcopy(self.board.children("via")[0])
+        replace(extra, "(at 117 114.88)")
+        set_net(self.board, extra, "WIRE_A")
+        self.board.values.append(extra)
+        report = self.report()
+        self.assert_defect("VIA_COUNT", report)
+        self.assertEqual(report["measurements"]["via_count"], 15)
+        self.assertTrue(all(v["ok"] for v in report["measurements"]["protected_vias"]))
+
+    def test_untented_via_mask_policy_cannot_be_changed(self):
+        for owner in ("setup", "via"):
+            for flags in ("front", "back", "front back"):
+                with self.subTest(owner=owner, flags=flags):
+                    board = deepcopy(self.positive)
+                    node = board.one("setup") if owner == "setup" else board.children("via")[0]
+                    replace(node, f"(tenting {flags})")
+                    self.assert_defect("VIA_TREATMENT", self.report(board))
+        for margin in (-0.05, 0.05):
+            with self.subTest(margin=margin):
+                board = deepcopy(self.positive)
+                replace(board.one("setup"), f"(pad_to_mask_clearance {margin})")
+                self.assert_defect("VIA_TREATMENT", self.report(board))
 
     def test_rail_width_loss_and_harmless_split(self):
         rail = next(t for t in self.board.children("segment") if t.one("start").atoms() == ["106", "114.88"])
@@ -594,9 +859,9 @@ class GeometryTests(unittest.TestCase):
                 self.assert_defect("UNSUPPORTED_GEOMETRY", self.report(board))
         for change in ("(padstack (mode custom))", "(future_copper 1)"):
             board = deepcopy(self.positive)
-            pad(board, "D1", "1").values.append(parse(change))
+            pad(board, "R1", "1").values.append(parse(change))
             self.assert_defect("UNSUPPORTED_GEOMETRY", self.report(board))
-        pad(self.board, "D1", "1").values[2] = Atom("custom")
+        pad(self.board, "R1", "1").values[2] = Atom("custom")
         self.assert_defect("UNSUPPORTED_GEOMETRY")
 
     def test_malformed_numeric_and_duplicate_geometry_fail_closed(self):
@@ -604,9 +869,9 @@ class GeometryTests(unittest.TestCase):
                        "(drill 1e308)", "(at 0 1e308)", "(solder_mask_margin 1e308)"):
             with self.subTest(change=change):
                 board = deepcopy(self.positive)
-                replace(pad(board, "D1", "1"), change)
+                replace(pad(board, "R1", "1"), change)
                 self.assert_defect("INVALID_STRUCTURE", self.report(board))
-        pad(self.board, "D1", "1").values.append(parse("(size 2.2 2.2)"))
+        pad(self.board, "R1", "1").values.append(parse("(size 2.2 2.2)"))
         self.assert_defect("INVALID_STRUCTURE")
 
     def test_project_numeric_strings_overflow_and_unknown_rule_conditions(self):
@@ -641,7 +906,10 @@ class GeometryTests(unittest.TestCase):
                        "--project", str(project), "--rules", str(rules), "--output", str(output)]
             result = subprocess.run(command, capture_output=True, text=True)
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-            self.assertTrue(json.loads(output.read_text())["ok"])
+            report = json.loads(output.read_text())
+            self.assertTrue(report["ok"])
+            self.assertEqual(len(report["measurements"]["component_hole_design"]), 22)
+            self.assertEqual(len(report["measurements"]["sma_diodes"]), 4)
             nodes = parse_many(RULES)
             replace(nodes[1], '(condition "B.Type == \'Pad\' && B.Pad_Type == \'Through-hole\'")')
             rules.write_text("\n".join(dump(n) for n in nodes))

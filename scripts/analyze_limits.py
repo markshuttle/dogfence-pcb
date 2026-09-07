@@ -3,8 +3,15 @@
 
 Run this file for a reproducible study or use simulate() for individual cases.
 Stations and cut spans are zero based: cut ("A", 0) opens A between stations
-0 and 1. Rungs conduct only A -> B and C -> B. Six boundary ends remain
-independent except for source-side TEST connections. See pcb/ELECTRICAL.md.
+0 and 1. Rungs conduct only A -> B and C -> B. The selected PR02 / BYG23T
+branches retain series isolation: D3/D4 have cathodes at LED_POS and anodes
+at B, AFTER D1/D2. They neither regulate positive voltage nor shunt the inputs.
+Six boundary ends remain independent except for source-side TEST connections.
+See pcb/ELECTRICAL.md section 9 and pcb/DESIGN_BOUNDS.md.
+
+Default 36 V / 2.8 V drop / zero leakage preserves the historical comparison,
+not measured BYG23T Vf at 15 mA. Normal clamp leakage diverts existing branch
+current; it is not an extra PSU path. Series reverse leakage is not solved.
 
 This is NOT an LED reverse-bias, transient, GDT ignition/extinction, thermal,
 visibility, or dynamic PSU model. Fault results are prospective constant-
@@ -22,6 +29,15 @@ REVISION = "1.2.0-dev"
 CORES = "ABC"
 CHANNELS = "AC"
 CUT_SETS = tuple("".join(c) for n in (1, 2, 3) for c in combinations(CORES, n))
+RESISTOR_MPN = "PR02000202201FA100"
+RESISTOR_TCR_PPM = 250.0
+RESISTOR_P70_W = 2.0
+RESISTOR_ZERO_POWER_AMBIENT_C = 155.0
+RESISTOR_HOTSPOT_MAX_C = 220.0
+DIODE_MPN = "BYG23T-M3/TR"
+# Conditional monotone reverse-leakage screen at normal positive LED voltage,
+# within 1300 V / <=125 C. Not a guaranteed 2 V or all-temperature leakage spec.
+CLAMP_LEAKAGE_SCREEN_A = 50e-6
 
 
 def _finite(name, *values):
@@ -48,6 +64,11 @@ class Source:
         voltage = self.voltage_v * (1 + self.error_fraction) * factor + self.ripple_peak_v
         _finite("calculated source voltage", voltage)
         return voltage
+
+
+# Deliberately stacked screen, not a guaranteed combined maximum or hardware OV limit.
+ADJUSTMENT_SCREEN_V = Source(39.6, error_fraction=0.01, temperature_c=50,
+                             tempco_per_c=0.0003, ripple_peak_v=0.1).voltage()
 
 
 @dataclass(frozen=True)
@@ -136,6 +157,8 @@ class IdealSourceShort(ValueError):
 
 @dataclass
 class Result:
+    """Zero-leakage one-way solution; LED fields precede clamp-current diversion."""
+
     voltage_v: float
     supply_current_a: float
     return_current_a: float
@@ -448,19 +471,35 @@ def branch_budget(voltage_v, channel=Channel(), *, connector_v=None, shunt_a=0.0
     if shunt_a > current:
         raise ValueError("shunt takes all available current; solve the actual clamp I/V curve")
     return {"branch_a": current, "led_a": current - shunt_a if connector_v is None else None,
+            "shunt_a": shunt_a, "shunt_w": terminal * shunt_a,
+            "led_w": terminal * (current - shunt_a) if connector_v is None else None,
             "resistor_w": current ** 2 * r, "diode_w": current * diode,
             "terminal_w": terminal * current}
 
 
-def resistor_allowance(local_ambient_c, *, standard_mode=True):
-    """MBE0414 datasheet derating only, conditional on permitted film temperature."""
+def resistor_allowance(local_ambient_c):
+    """PR02 Cu-lead ambient derating only, NOT a film/gel temperature limit.
+
+    Vishay 28729, 08-Jul-2025: 2 W P70, zero at 155 C ambient. The PR02-specific
+    hot-spot limit is 220 C, despite the generic 250 C film entry; adequate heat
+    flow and all assembly/material limits still apply. No below-70 C uprating.
+    """
     _finite("resistor ambient", local_ambient_c)
-    rating, maximum = (0.65, 125.0) if standard_mode else (1.0, 155.0)
-    return rating * max(0.0, min(1.0, (maximum - local_ambient_c) / (maximum - 70)))
+    if local_ambient_c < -55:
+        raise ValueError("PR02 ambient below -55 C category range")
+    return RESISTOR_P70_W * max(0.0, min(
+        1.0, (RESISTOR_ZERO_POWER_AMBIENT_C - local_ambient_c) / (RESISTOR_ZERO_POWER_AMBIENT_C - 70)))
 
 
-def cut_sweep(**options):
-    """Check the clean-cut truth table; do not apply it to mixed open/short faults."""
+def cut_sweep(*, shunt_max_a=0.0, **options):
+    """Ideal one-way cuts plus ON-current diversion margin, not optical darkness.
+
+    Raw OFF branch currents must still be zero; subtraction cannot hide backfeed.
+    A maximum leakage is not a constant current sink on a disconnected branch.
+    """
+    _finite("shunt diversion bound", shunt_max_a)
+    if shunt_max_a < 0:
+        raise ValueError("shunt diversion bound must be nonnegative")
     stations = options.get("stations", 41)
     count, kcl, power = 0, 0.0, 0.0
     for span in range(stations - 1):
@@ -471,10 +510,14 @@ def cut_sweep(**options):
                 expected = (True, True) if station <= span else after
                 if result.state(station) != expected:
                     raise ArithmeticError(f"cut truth table failed: {cores}, span {span}, station {station}")
+                for core, on in zip(CHANNELS, expected):
+                    if on and result.led_currents_a[core, station] - shunt_max_a <= 1e-6:
+                        raise ArithmeticError(f"ON margin lost to shunt diversion: {core}, station {station}")
             kcl = max(kcl, result.kcl_error_a)
             power = max(power, abs(result.power_balance_w))
             count += 1
-    return {"cases": count, "max_kcl_a": kcl, "max_power_error_w": power}
+    return {"cases": count, "max_kcl_a": kcl, "max_power_error_w": power,
+            "shunt_diversion_bound_a": shunt_max_a}
 
 
 def study(options):
@@ -487,20 +530,22 @@ def study(options):
                 "psu": {name: assess_psu(result, rated_a=a, rated_w=w)
                         for name, (a, w) in psus.items()}}
 
-    loads = [row("selected baseline", nominal)]
+    loads = [row("selected inputs (defaults: historical 36 V / 2.8 V, zero leakage)", nominal)]
     zero_cable = Cable(r20_ohm_per_km=(0.0, 0.0, 0.0))
     for n in (5, options["stations"]):
         loads.append(row(f"{n} boards / zero cable R", simulate(
             **(options | {"stations": n, "cable": zero_cable}))))
-    loads.append(row("10 ohm/km/core, LED 3.3 V + diode 0.7 V (sensitivity)", simulate(
+    loads.append(row("historical 10 ohm/km/core, LED 3.3 V + diode 0.7 V sensitivity", simulate(
         **(options | {"cable": Cable(r20_ohm_per_km=(10.0,) * 3),
                       "channel_a": Channel(led_v=3.3), "channel_c": Channel(led_v=3.3)}))))
-    maximum = Source(39.6, error_fraction=0.01, temperature_c=50,
-                     tempco_per_c=0.0003, ripple_peak_v=0.1)
+    loads.append(row("BYG23T high-drop screen: LED 3.3 V + diode 1.9 V, 10 ohm/km/core", simulate(
+        **(options | {"cable": Cable(r20_ohm_per_km=(10.0,) * 3),
+                      "channel_a": Channel(led_v=3.3, diode_v=1.9),
+                      "channel_c": Channel(led_v=3.3, diode_v=1.9)}))))
     minimum_r = Channel(led_v=0, diode_v=0, resistor_error=-0.01,
-                        resistor_tcr_ppm=-50, resistor_temperature_c=125)
-    loads.append(row("max adjust/tolerance, zero drops, R-min, zero cable R (bound)", simulate(
-        **(options | {"source": maximum, "cable": zero_cable,
+                        resistor_tcr_ppm=-RESISTOR_TCR_PPM, resistor_temperature_c=125)
+    loads.append(row("PR02 max-adjustment screen, zero drops, R-min at 125 C, zero cable R", simulate(
+        **(options | {"source": Source(ADJUSTMENT_SCREEN_V), "cable": zero_cable,
                       "channel_a": minimum_r, "channel_c": minimum_r}))))
 
     # Series impedance is explicit and illustrative, NOT an LRS output model.
@@ -530,12 +575,32 @@ def study(options):
                                "tube_a": result.element_currents_a["GDT_A_E"],
                                "tube_w": result.element_power_w["GDT_A_E"]})
     return {"revision": REVISION, "provisional": True,
+            "selected_parts": {"R1_R2": RESISTOR_MPN, "D1_D2_D3_D4": DIODE_MPN},
             "inputs": {k: asdict(v) if hasattr(v, "__dataclass_fields__") else v
                        for k, v in options.items()},
-            "loads": loads, "cut_sweep": cut_sweep(**options),
+            "loads": loads, "cut_sweep": cut_sweep(**options, shunt_max_a=CLAMP_LEAKAGE_SCREEN_A),
             "fault_source_series_ohm": fault_source.series_ohm,
             "faults_cv_demand_only": fault_rows, "earth_paths_cv_demand_only": earth_rows,
-            "maximum_adjustment_branch": branch_budget(maximum.voltage(), minimum_r)}
+            "maximum_adjustment_branch": branch_budget(ADJUSTMENT_SCREEN_V, minimum_r),
+            "negative_clamp_screen": {
+                "normal_positive_diversion_bound_a": CLAMP_LEAKAGE_SCREEN_A,
+                "nominal_36V_2.8V_budget": branch_budget(36, shunt_a=CLAMP_LEAKAGE_SCREEN_A),
+                "scope": "Monotone leakage assumption within 1300 V and <=125 C; datasheet maxima "
+                         "5 uA at 25 C / 50 uA at 125 C, both at 1300 V, not 5 uA at LED voltage. "
+                         "No input shunt or positive regulation. Forward-only cuts omit series reverse "
+                         "leakage; 1 uA classification is not physical darkness or daylight visibility."},
+            "limitations": [
+                "0.7 V diode default preserves comparison, not BYG23T data at 15 mA. Its 1.9 V "
+                "maximum is at 1 A / 25 C, not a minimum or full-temperature low-current bound.",
+                "40.39597 V is an accessible-adjustment screen, not enforced MCOV. The legacy 35..37 V "
+                "proposal is not hardware and does not make TEST automatically safe.",
+                "Negative connector voltage forward-biases D3/D4, but recovery/ringing are not solved. "
+                "Typical 9 V / 620 ns forward recovery at 1.5 A, 12 A/us is NOT <=5 V LED proof.",
+                "Installation lead-reversal LED damage and direct-strike rebuilding are accepted. "
+                "Energized cattle fencing is prohibited near the ENTIRE boundary: 4 km cable, stations, hub.",
+                "RF, ordinary switching, nearby lightning, powered recovery and potted continuous thermal "
+                "behavior remain unqualified. C4/C5/W3 stay open; no timer or active-stage prerequisite.",
+            ]}
 
 
 def main(argv=None):
@@ -580,12 +645,14 @@ def main(argv=None):
     print(f"Dog Fence {REVISION}: PROVISIONAL DC model, not a protection qualification")
     print(f"{args.stations} stations; same-end A/C positive, B negative; all end terminals separate")
     print("Inputs: " + json.dumps(report["inputs"], sort_keys=True))
-    print("\nLoad cases: source A / W; LED min..max mA; max resistor W; LRS-35 / LRS-75")
+    print("Selected parts: " + json.dumps(report["selected_parts"]))
+    print("\nLoad cases: source A / W; branch (= zero-leak LED) min..max mA; max resistor W; LRS-35 / LRS-75")
     for r in report["loads"]:
         states = " / ".join(p["status"] for p in r["psu"].values())
         print(f"{r['case']}: {r['source_a']:.6f} A / {r['source_w']:.4f} W; "
               f"{r['led_min_ma']:.4f}..{r['led_max_ma']:.4f} mA; {r['resistor_max_w']:.6f} W; {states}")
     print("\nClean-cut regression: " + json.dumps(report["cut_sweep"]))
+    print("\nNegative-clamp diversion (no extra PSU load): " + json.dumps(report["negative_clamp_screen"]))
     print(f"\nFaults: CV DEMAND ONLY, illustrative source series R={report['fault_source_series_ohm']:g} ohm")
     print("case | source A | path A | path W | LRS-35 / LRS-75")
     for r in report["faults_cv_demand_only"] + report["earth_paths_cv_demand_only"]:
@@ -597,6 +664,8 @@ def main(argv=None):
     print("\nNo fuse clearing time or GDT extinction follows from these DC solutions.")
     print("217 2 A data: 3 A for >=60 min; 4.2 A <=30 min; 5.5 A 0.05..2 s, under test conditions.")
     print("Hiccup timing/capacitor discharge, LED/clamp I-V, cable bounds and potted temperatures remain unqualified.")
+    for limitation in report["limitations"]:
+        print("NOTE: " + limitation)
 
 
 if __name__ == "__main__":

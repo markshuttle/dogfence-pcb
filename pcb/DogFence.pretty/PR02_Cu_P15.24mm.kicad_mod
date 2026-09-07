@@ -1,12 +1,12 @@
-(footprint "MBE0414_P15.24mm"
+(footprint "PR02_Cu_P15.24mm"
 	(version 20241229)
 	(generator "pcbnew")
 	(generator_version "9.0")
 	(layer "F.Cu")
 	(attr through_hole)
 	(fp_rect
-		(start -5.95 -2.1)
-		(end 5.95 2.1)
+		(start -6 -2.1)
+		(end 6 2.1)
 		(stroke
 			(width 0.1)
 			(type solid)
@@ -16,7 +16,7 @@
 	)
 	(fp_line
 		(start -7.62 0)
-		(end -5.95 0)
+		(end -6 0)
 		(stroke
 			(width 0.1)
 			(type solid)
@@ -24,7 +24,7 @@
 		(layer "F.Fab")
 	)
 	(fp_line
-		(start 5.95 0)
+		(start 6 0)
 		(end 7.62 0)
 		(stroke
 			(width 0.1)
@@ -63,7 +63,7 @@
 			)
 		)
 	)
-	(property "Value" "2.2k 1W"
+	(property "Value" "2.2k 2W"
 		(at 0 0 0)
 		(layer "F.Fab")
 		(hide yes)
@@ -74,7 +74,7 @@
 			)
 		)
 	)
-	(property "LCSC" "C1368610"
+	(property "LCSC" ""
 		(at 0 0 0)
 		(layer "F.Fab")
 		(hide yes)
@@ -85,7 +85,7 @@
 			)
 		)
 	)
-	(property "Manufacturer" "Vishay Intertech"
+	(property "Manufacturer" "Vishay BCcomponents"
 		(at 0 0 0)
 		(layer "F.Fab")
 		(hide yes)
@@ -96,7 +96,7 @@
 			)
 		)
 	)
-	(property "MPN" "MBE04140C2201FC100"
+	(property "MPN" "PR02000202201FA100"
 		(at 0 0 0)
 		(layer "F.Fab")
 		(hide yes)
@@ -107,7 +107,7 @@
 			)
 		)
 	)
-	(property "Datasheet" "https://www.vishay.com/docs/28766/mbxsma.pdf"
+	(property "Datasheet" "https://www.vishay.com/docs/28729/pr010203.pdf"
 		(at 0 0 0)
 		(layer "F.Fab")
 		(hide yes)
@@ -118,7 +118,29 @@
 			)
 		)
 	)
-	(property "Description" "Vishay MBE04140C2201FC100; lead maximum/formed fit and continuous thermal qualification held"
+	(property "Description" "Vishay PR02000202201FA100; 2.2k 2W 1%, +/-250ppm/K; Cu lead 0.78 +/-0.05mm, body L2 <=12.0mm D <=3.9mm; require >=1.00mm body-to-PCB standoff; forming/process and continuous TEST thermal qualification held"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Sourcing" "External"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Sourcing Reference" "https://www.vishay.com/search?type=inv&query=PR02000202201FA100"
 		(at 0 0 0)
 		(layer "F.Fab")
 		(hide yes)

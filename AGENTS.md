@@ -92,6 +92,12 @@ geometry fails closed; extend and test the validator rather than ignore it.
   file/artifact checks pass. That CSV is a generated draft reference, not an
   independent source or upload approval; on failure it may remain from an older
   checked revision.
+- The 16-part hybrid uses **PR02000202201FA100** with no verified LCSC code.
+  BOM `Sourcing=External` requires an empty code and an exact HTTPS
+  `Sourcing Reference` matched to PCB/schematic metadata. This is explicit
+  pending procurement, not a guessed C-code or allocation approval. Unresolved
+  external rows block publication independently even after engineering holds
+  are closed. Ordinary LCSC rows still require valid C-codes.
 - `make all` / `make package` and **every public export alias** (`gerbers`,
   `drills`, `ipc`, `bom`, `cpl`, `zip-gerbers`, `zip-flytest`) run the same complete
   transaction. Open engineering holds block publication even if file checks
@@ -118,6 +124,7 @@ make test
 TMPDIR=/tmp/opencode KICAD_TEST_CLI=/snap/bin/kicad.kicad-cli python3 -B -W error -m unittest discover -s tests -v
 python3 -B scripts/analyze_limits.py
 python3 -B scripts/design_bounds.py
+python3 -B scripts/review_annotation.py --cli /snap/bin/kicad.kicad-cli
 python3 -B scripts/verify_workflow.py --expect-holds C4 C5 W3 W1 W4
 ```
 
@@ -126,6 +133,14 @@ The first command runs stdlib tests; native contract probes need
 not the authoritative PCB or shared release. Non-KiCad temporary fixtures may
 use the runner's approved temporary directory. Tests cover negative inputs and
 the 41-station, seven-cut-combination model, not physical qualification.
+
+`review_annotation.py` collects fresh XML numbering and malformed-reference
+probe evidence in complete private projects under `tmp/annotation-review/`.
+It verifies reference/property/instance consistency, inverse-renamed component
+contents and terminal membership. Its PASS is evidence for **manual review**;
+the helper never updates approval hashes or qualifies the circuit. Rerun after
+any changed netlist-review input, inspect the result, then deliberately update
+only the justified review fields if accepted. No automatic hash refresh.
 
 `verify_workflow.py` requires exclusive runtime ownership of `build/` and
 `tmp/manufacturing/`. It preserves old runs/reports under `tmp/workflow-validation/`,
@@ -144,7 +159,7 @@ unavailable, record the actual failed version probe; do not claim DRC passed.
 
 All intentional custom geometry is under `pcb/DogFence.pretty/` with symbols
 in `pcb/DogFence.kicad_sym`. `fp-lib-table` / `sym-lib-table` use `${KIPRJMOD}`.
-Do not replace modified Kefa terminals, the cathode-right diode, or the axial
+Do not replace modified Kefa terminals, the cathode-right SMA diode, or the axial
 overpass with similarly named stock-library objects. Preserve global pad nets,
 positions and the two distinct local LED-terminal mappings.
 
@@ -187,19 +202,28 @@ The LED local pad coordinates intentionally differ: A pad1 `(0,-2.54,90)` and
 pad2 `(0,2.54,90)`; C pad1 `(0,2.54,270)` and pad2 `(0,-2.54,270)`. Do not match
 their rotations or replace them with one generic footprint.
 
-The current 14-part BOM contains onsemi 1N4007G (1.10/2.20 mm hole/pad), Vishay
-MBE04140C2201FC100, Ruilon SMD5050-470NA and 2R470TD-8, Bencent B5G470L, and Kefa
-KF128/KF129 terminals. Datasheet 5/20 kA impulse or terminal current ratings are
+The current **16-part BOM (six SMT, ten THT)** uses Vishay **BYG23T-M3/TR /
+C145454** for D1-D4 and **PR02000202201FA100** copper-lead 2 W / 1% resistors
+for R1/R2, plus the retained Ruilon/Bencent GDTs and Kefa terminals. D1/D2
+remain at (132.50,104.50)/(132.50,140.50), rotation 0, cathodes east. D3/D4
+are at (135.00,99.00)/(135.00,146.00), rotation 180, cathodes west to LED positive,
+anodes east to B. SMA pads are 2.50 x 2.00 at local X=+/-2.10; no diode holes.
+The initial takeoffs and resistor centres remain; no fold or new vias.
+Datasheet 5/20 kA impulse or terminal current ratings are
 **component** ratings, not assembled-board performance. Three paralleled EARTH
-pins remain connected, but are not a 72 A assembly rating. Nominal 0.50 W in a
-1 W power-mode resistor is not proof of cool, continuous or long-life operation.
+pins remain connected, but are not a 72 A assembly rating. The 2 W resistor
+still dissipates about 0.50 W nominal; a wattage label is not cool-body or
+continuous potted qualification. PR02 ambient derating, its hot-spot limit and
+actual gel/cable interface temperatures are different constraints.
 
-Selected other hole/pad sizes are KF128 2.00/3.20, KF129 2.00/2.80, MBE0414
+Selected hole/pad sizes are KF128 2.00/3.20, KF129 2.00/2.80, PR02
 1.40/2.40, B5G470L 1.40/2.80 and earth GDT 1.50/3.00 mm. These depend on the
 controlled pin/body/pattern envelopes in ASSEMBLY, including actual lot and
 forming acceptance. Minimum ring is 0.40. Do not restore smaller legacy holes
 or equate these file checks with insertion/solder approval. J_EARTH has 1.00 mm
 nominal / 1.30 mm tolerance-budgeted body overhang; no courtyard trimming.
+PR02 uses a 0.83 mm maximum lead and requires >=1.00 mm body-to-PCB standoff
+with controlled forming. Old onsemi/MBE footprints are retired, not substitutes.
 
 ## 6. Functional And Documentation Rules
 
@@ -209,9 +233,16 @@ nominal / 1.30 mm tolerance-budgeted body overhang; no courtyard trimming.
 - User now accepts LED damage from accidental low-voltage installation polarity
   errors, with spare indicators; reversed flying-lead survival is not required.
   Direct-strike rebuilding is accepted, not all ordinary/nearby transient damage.
-  Continuous-safe normal TEST stays mandatory. Assess the simple 16-part/passive
-  direction in ELECTRICAL section 9; do not reinstate the 40-part investigation
-  as a prerequisite or claim that a candidate diode/resistor is already fitted.
+  Continuous-safe normal TEST stays mandatory. The simple 16-part hybrid is now
+  implemented in the source, not thermally/surge qualified. Do not reinstate the
+  40-part investigation as a prerequisite or confuse reverse recovery with
+  forward-clamp response. See ELECTRICAL section 9 and ASSEMBLY.
+- Energized cattle fencing is **prohibited near the entire 4 km boundary,
+  stations and hub**, as explicitly confirmed by the user. The earlier 0.5 m /
+  300 m parallel scenario is withdrawn; do not require testing a prohibited
+  configuration or invent a safe separation distance. Verify and maintain the
+  restriction, reassessing if land use changes. Ordinary RF/switching and
+  nearby-lightning exposure, source recovery and site earthing remain relevant.
 - User-confirmed source allocation is **two ordered LRS-75-36: one TEST, one
   disconnected spare**, not interconnected supplies. CA10.A364/current WAA364
   is provisionally **eight-pole**, with extra poles unassigned and exact DC/
@@ -220,7 +251,9 @@ nominal / 1.30 mm tolerance-budgeted body overhang; no courtyard trimming.
 - Gel is **WISKA OneGel**, one-component/no mixing, not MP0100. Resolve its
   conflicting manufacturer cure/temperature fields; do not invent conductivity,
   compatible materials or completed thermal qualification. The 35-37 V source
-  window in `design_bounds.py` is a declared proposal, not enforced hardware.
+  window is an unimplemented historical proposal. `design_bounds.py` now uses
+  a declared 35 V floor / 40.39597 V upper screen, not a guaranteed or enforced
+  window. The selected PR02's +/-250 ppm/K replaces the old MBE 50 ppm/K screen.
 - Preserve WAGO through-splice/PCB-tap wiring. Normal perimeter current does
   not pass through every PCB. Surge current is a separate design case.
 - Normal TEST must be continuous-safe; do not substitute a timer. TEST/OFF

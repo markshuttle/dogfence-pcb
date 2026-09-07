@@ -3,10 +3,11 @@
 Document: DF-ASM-1.2.0-dev. Updated 2026-09-07 for hardware **1.2.0-dev**.
 
 **DEVELOPMENT / MANUFACTURING HOLD.** These instructions control the present
-14-part baseline, not a released protection design. There are two top-side SMT
-parts and twelve top-side THT parts, plus four unpopulated mechanical holes.
-No additional LED protection or powered-GDT shutdown circuit is approved or
-implemented. See [REMEDIATION.md](../REMEDIATION.md), [ELECTRICAL.md](ELECTRICAL.md)
+**16-part hybrid**, not a qualified field protection design. There are six
+top-side SMT and ten top-side THT parts, plus four mechanical hole footprints.
+The two negative-voltage shunts and 2 W resistors are implemented in the files;
+powered-GDT recovery/source protection and thermal qualification remain open.
+See [REMEDIATION.md](../REMEDIATION.md), [ELECTRICAL.md](ELECTRICAL.md)
 and the controlled `verification.json` for release decisions. A DRC or
 geometry-check pass does not establish insertion fit, solderability, enclosure
 fit, continuous thermal safety, or surge performance.
@@ -41,8 +42,9 @@ fit, continuous thermal safety, or surge performance.
 | J_EARTH | (155.00, 122.50), 180 deg | Wire openings east. Pin 1 at Y=130.12, pin 2 at Y=122.50, pin 3 at Y=114.88; all X=155.00 and all on EARTH. This does not establish a 72 A assembled rating or equal impulse sharing. |
 | J_LED_A | (145.50, 103.00), 90 deg | Openings north. Pin 1 positive at (142.96, 103.00); pin 2 WIRE_B return at (148.04, 103.00). |
 | J_LED_C | (145.50, 142.00), 270 deg | Openings south. Pin 1 positive at (142.96, 142.00); pin 2 WIRE_B return at (148.04, 142.00). |
-| D1, D2 | (132.50, 104.50) / (132.50, 140.50), 0 deg | **Cathode band east/right**, pin 1 at X=137.58. Anode pin 2 west/left at X=127.42. Formed pitch 10.16. Inspect actual band, pin mapping and nets, not a stock-footprint orientation convention. |
-| R1, R2 | (116.00, 104.50) / (116.00, 140.50), 0 deg | Vishay MBE04140C2201FC100, 2.2 kohm, 1%. Formed pitch 15.24; pads X=108.38 and 123.62. Nonpolar. Do not substitute a higher-wattage part without new fit/thermal review. |
+| D1, D2 | (132.50, 104.50) / (132.50, 140.50), 0 deg | **Vishay BYG23T-M3/TR, C145454**, SMA series diodes. Cathode band east/right, K1 at X=134.60 to LED positive; A2 at X=130.40 to resistor output. No diode insertion holes remain. |
+| D3, D4 | (135.00, 99.00) / (135.00, 146.00), 180 deg | Same BYG23T-M3/TR SMA, **negative shunts**, not series parts. Cathode band west/left, K1 at X=132.90 to LED_A_POS/LED_C_POS; A2 at X=137.10 to WIRE_B. No EARTH connection. |
+| R1, R2 | (116.00, 104.50) / (116.00, 140.50), 0 deg | **Vishay BCcomponents PR02000202201FA100**, 2.2 kohm, 2 W copper-lead version, 1%, +/-250 ppm/K. Formed pitch 15.24; pads X=108.38 and 123.62. Nonpolar; require **>=1.00 body-to-PCB standoff** and controlled forming. External sourcing/allocation remains pending. |
 | GDT_AB, GDT_BC | (119.50, 118.69) / (119.50, 126.31), 0 deg | Ruilon SMD5050-470NA. Pad 1 north, pad 2 south. AB connects A/B; BC connects B/C. Nonpolar tube, but preserve the specified footprint/net mapping. |
 | GDT_AC | (125.80, 122.50), 0 deg | Bencent B5G470L, internally north-south geometry despite 0-degree footprint rotation. Pad 1 A at (125.80, 114.88); pad 2 C at (125.80, 130.12). Apply the overpass drawing below. |
 | GDT_A_E, GDT_B_E, GDT_C_E | (138.62, 113.50), (138.62, 122.50), (138.62, 131.50), 0 deg | Ruilon 2R470TD-8, horizontal formed pitch 15.24. Pin 1 west at X=131.00 on A/B/C respectively; pin 2 east at X=146.24 on EARTH. Preserve 9.00 body-centre pitch; do not bend bodies together to ease insertion. |
@@ -53,6 +55,43 @@ Use `DogFence:KF129_5.08_2P_LED_A` and `DogFence:KF129_5.08_2P_LED_C` respective
 never replace both with the same stock-library footprint. The local diode symbol
 also explicitly names its anode-left/cathode-right mapping. Underside reference
 text is mirrored for reading from below; it does not change electrical polarity.
+
+## Indicator SMA And Resistor Assembly
+
+All four diodes use the reviewed local **BYG23T_SMA_K_Right** footprint. The
+original Vishay **89429, 25-Feb-2020, page 4** figure was visually read for this
+selection: land length >=1.52, transverse width >=1.68, inner gap <=1.88 mm;
+5.28 overall land span is marked **reference**, not a maximum. The selected
+rectangular lands are **2.50 x 2.00 at local X=+/-2.10**, giving **1.70 inner
+gap and 6.70 outside span**. Local pad 1 is +X/K, pad 2 -X/A. Copper/mask/paste
+use zero added margins. Preserve all twelve top paste apertures: eight SMA plus
+four GDT; no via paste. This source selection is not processed-stencil approval.
+
+The diode body envelope is **4.50 x 2.80 x 2.29 high**, with maximum terminal
+span rounded outward to **5.29** from the metric/inch drawing. Courtyard is
+**7.20 x 3.60**, containing body plus 0.10 pose/0.25 assembly clearance and
+lands plus 0.25. Check bands and actual supplier-model rotation. D1/D2 point
+right; D3/D4 point left. A 75 ns **reverse-recovery** rating does not prove
+instantaneous forward clamping below 5 V; electrical qualification is separate.
+
+The PR02's selected **copper leads** give the 2 W P70 rating; a FeCu variant's
+1.3 W rating is not equivalent. Maximum dimensions are L1=10.0, L2=12.0,
+diameter=3.9 and finished lead **0.78 +/-0.05**. F.Fab conservatively bounds
+**12.00 x 4.20** within the retained **18.20 x 5.00** courtyard. Form to the
+15.24 pitch and required pin-pattern envelope, support the leads during forming,
+and fixture **>=1.00 beneath the body** above the finished PCB. Verify free
+insertion, final gap, coating integrity, seating stability and solder fill on
+each prototype. The former MBE0414 mounting data does not set PR02 bend limits.
+
+PR02's catalogue thermal example uses a body standoff; filling that gap with
+OneGel changes heat flow. Neither the standoff nor the 2 W label is a potted
+thermal PASS. Agree forming/cleaning/profile and test the closed assembly.
+
+The source BOM deliberately leaves R1/R2's LCSC codes empty with
+**Sourcing=External** and a manufacturer inventory reference. Do not use the
+retired C1368610 or a 220-ohm near-match. JLCPCB procurement/private-part mapping
+and allocated lot remain open; file checks do not approve external allocation,
+and unresolved external rows independently block publication.
 
 ## GDT_AC Forming Drawing
 
@@ -144,19 +183,16 @@ No qualified yield or assembler acceptance of these limits is yet recorded.
 
 | THT references / exact BOM identity | Nominal hole / pad | Minimum hole | Supported maximum pin envelope / calculation | Status |
 | :--- | :--- | :--- | :--- | :--- |
-| D1, D2: onsemi 1N4007G, C232439 | 1.10 / 2.20 | 1.02 | D max 0.86: `1.02 - 0.86 = 0.16 >= 0.10`. Nominal ring 0.55. | Diameter correction supported. Exact forming and assembled insertion still require acceptance. |
-| R1, R2: Vishay MBE04140C2201FC100, C1368610 | **1.40 / 2.40** | 1.32 | Published d_nom=0.80; adopt **E diameter <=0.90**, including tin/ovality/forming. `1.32 - 0.90 - 0.241421 = 0.178579 >=0.10`. | File envelope selected; actual E/pattern, solder-fill and forming acceptance HELD. |
+| R1, R2: Vishay PR02000202201FA100, external sourcing | **1.40 / 2.40** | 1.32 | Published lead **0.78 +/-0.05**, maximum **0.83**. `1.32 - 0.83 - 0.241421 = 0.248579 >=0.10`. | File fit budget passes; allocated part, forming/standoff and solder-fill acceptance HELD. |
 | GDT_AC: Bencent B5G470L, C5337217 | **1.40 / 2.80** | 1.32 | Original A2 figure labels round 0.80 without tolerance; adopt **E diameter <=0.90**. Residual allowance **0.178579** after position budget. | File envelope selected; actual E/pattern and overpass forming acceptance HELD. |
 | GDT_A_E, GDT_B_E, GDT_C_E: Ruilon 2R470TD-8, C2836978 | **1.50 / 3.00** | 1.42 | A3/A6 TD figures give **1.00 +/-0.05**, max **1.05**. `1.42 - 1.05 - 0.241421 = 0.128579 >=0.10`. | Known undersize corrected. Verify supplied revision, post-forming pin/pattern and nickel-lead process. |
 | J_IN, J_EARTH: Cixi Kefa KF128-7.62-3P, C474957 | **2.00 / 3.20** | 1.92 | Nominal 0.90 x 0.80; **E <=1.10 x 1.00**, diagonal **1.486607**. Residual allowance **0.191972** after position budget. | File envelope selected; finished metal-pin/pattern/body lot acceptance HELD. |
 | J_LED_A, J_LED_C: Cixi Kefa KF129-5.08-2P, C475092 | **2.00 / 2.80** | 1.92 | Same-revision drawings conflict, width 0.90/0.95 x thickness 0.80. **E <=1.15 x 1.00**, diagonal **1.523975**, covers both nominal variants. Residual allowance **0.154604**. | File envelope selected; actual variant and E/pattern/body lot acceptance HELD. |
 
-- The former 0.90 diode hole could finish at 0.82, smaller than the 0.86 maximum
-  lead. It is now 1.10, not a proposal awaiting a source change.
-- The onsemi case drawing makes inches controlling. Its 0.034-inch lead limit
-  is 0.8636 mm before the rounded metric presentation; the stricter calculation
-  is `1.02 - 0.8636 = 0.1564 >= 0.10`, still passing. Its 0.205-inch body length
-  is 5.207 mm; the fabrication outline rounds outward to 5.21 x 2.70.
+- **Historical C1:** the onsemi diode holes were corrected from 0.90 to 1.10
+  against a controlling 0.034-inch / 0.8636 maximum lead. The hybrid now replaces
+  those parts with SMT: there are **no D1-D4 PTHs** and no current onsemi forming
+  requirement. The prior source and evidence remain in checkpoint ad282e3.
 - Kefa's printed small-dimension +/-0.20 general table cites a **plastics**
   tolerance standard. Applying that band to metal cross-sections defines E;
   it does not prove a finished metal-pin guarantee. Its recommended 1.40
@@ -164,20 +200,13 @@ No qualified yield or assembler acceptance of these limits is yet recorded.
   The chosen 2.00 holes trade extra solder volume/fixturing for explicit fit
   margin. Neither stock CAD nor enlargement establishes actual solder fill.
 - Nominal component rings are **0.50 resistor, 0.70 GDT_AC, 0.75 earth GDT,
-  0.60 KF128, 0.40 KF129**, and 0.55 diode. These exceed the 0.254 nominal
+  0.60 KF128, 0.40 KF129**. These exceed the 0.254 nominal
   two-layer/2 oz component-PTH design requirement; finished ring and barrel
   plating still depend on fabrication/registration tolerances and the quote.
-- onsemi case 59-10 does not control lead diameter within dimension F, up to
-  1.27 from the case. Keep that region out of the insertion hole. The 10.16 pitch
-  and 5.207 maximum body length leave about 2.4765 per side before allowing for
-  bends. **D1/D2 retain their reviewed diameter-only 1.10 holes**; the 0.241421
-  fixed-pattern budget above is not claimed for them. Their separate process
-  must form/align the flexible leads to the actual board hole pattern, without
-  force at the seals, and inspect insertion. That forming approval stays open.
-- Vishay specifies M>=15.0. The 0.050 radial part-pattern limit yields at least
-  15.14 formed pitch before assembly; inspect M after seating too. Larger holes
-  must not permit inward collapse below 15.0. Do not spend the same allowance
-  twice or force a rigid connector to meet a nominal gauge.
+- Inspect the PR02 formed pattern and >=1.00 body standoff after seating as
+  well as before insertion. Larger holes must not permit collapse, tilt or
+  unstable assembly. Do not spend the same allowance twice or force a rigid
+  connector to meet a nominal gauge.
 - Do not force insertion, clip rectangular pins to make them fit, or ream
   plated finished boards. Resolve the approved part/hole/process in the source,
   then regenerate and inspect production data.
@@ -186,8 +215,8 @@ No qualified yield or assembler acceptance of these limits is yet recorded.
 
 | Item | Drawing evidence used | Source representation / remaining hold |
 | :--- | :--- | :--- |
-| onsemi 1N4007G | 1N4001/D Rev.18, June 2024; case 59-10 issue U, 15-Feb-2005, document 98ASB42045B. Rounded metric body max 5.20 x 2.70, lead max 0.86; controlling-inch conversion accounted for above. | `F.Fab` bounds 5.21 x 2.70; courtyard **X=+/-6.45, Y=+/-1.70** contains the maximum body plus 0.10 pose and 0.25 assembly margin, and the 2.20 pads. |
-| Vishay MBE0414 | Document 28766 Rev.11-Jul-2018 p13. L max 11.9, D max 4.2; d nominal 0.8, M min 15.0. | `F.Fab` 11.90 x 4.20; existing 18.20 x 5.00 courtyard retained. Lead maximum remains open. |
+| Vishay BYG23T-M3/TR, D1-D4 | Document 89429, 25-Feb-2020 p4, original outline/land figure visually reviewed. Body 4.50 x 2.80, terminal span 5.29 rounded outward; height <=2.29. | `F.Fab` 4.50 x 2.80; courtyard **X=+/-3.60, Y=+/-1.80**. Same local geometry, D1/D2 rotation 0 and D3/D4 180. |
+| Vishay PR02000202201FA100 | Document 28729, 08-Jul-2025, copper-lead PR02. L2 max 12.0, D max 3.9; d=0.78 +/-0.05. | Conservative `F.Fab` **12.00 x 4.20**, retained **18.20 x 5.00** courtyard; actual part has required >=1.00 standoff and pattern/forming acceptance. |
 | Bencent B5G470L | A2, 2018-01-03 p2: length 6 +/-0.2, diameter 5.5 +/-0.2; overall 62 +/-2. | `F.Fab` **5.72 X x 6.20 Y**, rounding the larger inch diameter outward. Courtyard X=+/-3.25, Y=+/-9.30. |
 | Ruilon SMD5050-470NA | SP-GDT-006 A3, 2024-08-19 p3: square **end face** A/B=5.0 +/-0.2; **axial** C=4.2 +/-0.3; electrode D=0.5 +/-0.1. | Corrected `F.Fab` **5.21 X x 4.50 Y**; courtyard X=+/-3.00, Y=+/-3.75. End-face height is not the 4.2 axial dimension. Metric lands selected below. |
 | Ruilon 2R470TD-8 | SP-GDT-017 A3, 2023-11-02 p3 and A6, 2025-10-16 p5, visually read TD figures agree: diameter 8 +/-0.2, length 6 +/-0.3. | `F.Fab` **6.30 X x 8.21 Y**, outward inch rounding; courtyard X=+/-9.40, Y=+/-4.46. Retain 9.00 centre pitch. |
@@ -355,9 +384,10 @@ without changing the protected 3.20 mounting holes.
    nickel/tin lead finishes, heavy solid-copper thermal load and any selective
    solder tooling. SMT reflow followed by controlled THT soldering is a candidate
    sequence, not an approved universal profile.
-3. Establish a compatible profile for **all** installed parts. onsemi permits
-   260 degrees C maximum for 10 seconds at 1/16 inch from the case; the retrieved
-   Ruilon/Bencent wave tables use up to 280 degrees C and 2-5 seconds. Different
+3. Establish a compatible profile for **all** installed parts, including the
+   new SMA BYG23T and PR02. The former onsemi solder limit applies only to the
+   retired diode, not the new assembly. The retrieved Ruilon/Bencent wave tables
+   use up to 280 degrees C and 2-5 seconds. Different
    measurement locations and heat-test limits are not permission to expose
    every part to the most permissive number. Record actual joint/body
    temperatures, time, preheat and the approved alloy/flux/cleaning process.
@@ -412,7 +442,7 @@ rotation approval, support/enclosure dry-fit and measured thermal/electrical
 results. Basic workmanship on five boards is not field or surge qualification.
 
 Open approvals are now specific: allocated Kefa/Vishay/Bencent parts must meet
-the selected E/pattern/body envelopes; actual diode and GDT forming must be
+the selected drawing/E/pattern/body envelopes; actual resistor and GDT forming must be
 accepted; the KF129 drawing variant, metric SMT interpretation, processed
 stencil and solder fill/profile need supplier acceptance; J_EARTH's 1.30
 tolerance-budgeted overhang and full COMBI/support fit need inspection. Untented
@@ -422,11 +452,14 @@ continuous-duty design remain held. No lot, CAM or hardware pass is invented.
 
 ## Evidence Links
 
-Retrieved/reviewed 2026-09-06. Primary PDFs that the native web reader returned
-as binary were also queried through public `r.jina.ai/https://...` text
-extraction. Image-only dimensions and conflicting revisions remain open; this
-is not a claim to have visually verified inaccessible drawing details.
+Initial evidence was retrieved 2026-09-06; original figures were subsequently
+resolved as recorded in DFM_EVIDENCE, with hybrid sources added 2026-09-07.
+PDF text extraction and public PDF-viewer page images are retrieval aids, not
+supplier approval. The BYG23T outline/land figure was visually checked; retired
+onsemi/MBE links below preserve history, not current population instructions.
 
+- [Selected Vishay BYG23T-M3/TR, 89429, 25-Feb-2020](https://www.vishay.com/docs/89429/byg23t.pdf), [C145454 identity](https://www.lcsc.com/product-detail/C145454.html).
+- [Selected copper-lead PR02, 28729, 08-Jul-2025](https://www.vishay.com/docs/28729/pr010203.pdf), [exact PR02000202201FA100 external sourcing reference](https://www.vishay.com/search?type=inv&query=PR02000202201FA100). No allocation is implied.
 - [onsemi 1N4001/D family/case drawing](https://www.onsemi.com/pdf/datasheet/1n4001-d.pdf), [C232439 onsemi identity](https://www.lcsc.com/product-detail/C232439.html).
 - [Vishay document 28766](https://www.vishay.com/docs/28766/mbxsma.pdf).
 - [Bencent B5G470L A2 via LCSC](https://datasheet.lcsc.com/datasheet/pdf/6471acbc3d87a8a4a9e5f7b8a245655d.pdf?productCode=C5337217).

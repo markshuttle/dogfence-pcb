@@ -11,10 +11,10 @@ instances only; it does not select parts, alter values, or change footprints.
 
 import argparse
 import copy
-import csv
 import json
 from pathlib import Path
 import re
+import sys
 import uuid
 
 
@@ -128,22 +128,17 @@ def main():
     if board[0] != "kicad_pcb" or schematic[0] != "kicad_sch":
         raise ValueError("Unexpected design root")
     if args.sync_metadata:
-        with (project / "BOM.csv").open(newline="", encoding="utf-8") as stream:
-            rows = list(csv.DictReader(stream, strict=True))
-        bom = {}
-        for row in rows:
-            for ref in row["Designator"].split(","):
-                ref = ref.strip()
-                if not ref or ref in bom or not all(row.get(key) for key in
-                        ("Comment", "Footprint", "MPN", "Manufacturer", "LCSC Part #")):
-                    raise ValueError("Incomplete or duplicate BOM identity")
-                bom[ref] = row
-        if not bom:
-            raise ValueError("Empty BOM")
+        if not __package__:
+            sys.path.insert(0, str(project.parent))
+        from scripts.manufacturing import read_bom
+
+        bom = read_bom(project / "BOM.csv")
         for design, kind in ((board, "footprint"), (schematic, "symbol")):
             found = set()
             for instance in children(design, kind):
                 props = {json.loads(p[1]): p for p in children(instance, "property")}
+                if len(props) != len(children(instance, "property")):
+                    raise ValueError("Duplicate instance property")
                 ref = json.loads(props["Reference"][2])
                 if ref not in bom:
                     continue
@@ -152,13 +147,17 @@ def main():
                 if ref in found or name != row["Footprint"] or json.loads(props["Value"][2]) != row["Comment"]:
                     raise ValueError(f"BOM value/footprint/inventory mismatch: {ref}")
                 found.add(ref)
-                for key, column in (("MPN", "MPN"), ("Manufacturer", "Manufacturer"), ("LCSC", "LCSC Part #")):
+                metadata = {"MPN": row["MPN"], "Manufacturer": row["Manufacturer"], "LCSC": row["LCSC Part #"],
+                            "Sourcing": row.get("Sourcing", "LCSC"), "Sourcing Reference": row.get("Sourcing Reference", "")}
+                if "LCSC Part #" in props:
+                    metadata["LCSC Part #"] = row["LCSC Part #"]
+                for key, content in metadata.items():
                     if key in props:
-                        props[key][2] = json.dumps(row[column])
+                        props[key][2] = json.dumps(content)
                         continue
                     at = child(instance, "at")
                     coords = ["0", "0", at[3] if len(at) > 3 else "0"] if kind == "footprint" else at[1:3] + ["0"]
-                    prop = ["property", json.dumps(key), json.dumps(row[column]), ["at", *coords]]
+                    prop = ["property", json.dumps(key), json.dumps(content), ["at", *coords]]
                     effects = ["effects", ["font", ["size", "1.27", "1.27"]]]
                     if kind == "footprint":
                         prop += [["layer", '"F.Fab"'], ["hide", "yes"],

@@ -43,9 +43,15 @@ MOUNTS = {"H1": (101.5, 99.0), "H2": (155.5, 99.0),
           "H3": (101.5, 146.0), "H4": (155.5, 146.0)}
 # Selected nominal holes, conditional on ASSEMBLY.md's separate lot/forming limits.
 COMPONENT_HOLE_MINIMA = {
-    "D1": 1.1, "D2": 1.1, "R1": 1.4, "R2": 1.4, "GDT_AC": 1.4,
+    "R1": 1.4, "R2": 1.4, "GDT_AC": 1.4,
     "GDT_A_E": 1.5, "GDT_B_E": 1.5, "GDT_C_E": 1.5,
     "J_IN": 2.0, "J_EARTH": 2.0, "J_LED_A": 2.0, "J_LED_C": 2.0,
+}
+SMA_DIODES = {
+    "D1": ((132.5, 104.5), 0, "LED_A_POS", "Net-(D1-A)"),
+    "D2": ((132.5, 140.5), 0, "LED_C_POS", "Net-(D2-A)"),
+    "D3": ((135.0, 99.0), 180, "LED_A_POS", "WIRE_B"),
+    "D4": ((135.0, 146.0), 180, "LED_C_POS", "WIRE_B"),
 }
 MIN_MASK_BARRIER = 0.10
 PROJECT_MINIMA = {
@@ -86,7 +92,8 @@ LIMITATIONS = [
     "parentheses and boolean operators; unsupported relevant conditions fail closed. "
     "Annular_width is unary (A only): B-dependent conditions are rejected, not evaluated with B=A. "
     "Clearance is binary. Other custom constraints require native KiCad validation.",
-    "Selected component-hole minima and nominal ring >=0.254 mm enforce the saved design, not "
+    "Selected passive footprints/pad polarity, component-hole minima and nominal ring >=0.254 mm "
+    "enforce the saved design, not "
     "actual lot pin/body/pattern acceptance, fabrication/registration, barrel plating, lead forming, "
     "GDT_AC's >=2.0 mm physical standoff, thermal/surge performance or assembly process.",
 ]
@@ -856,6 +863,15 @@ class GeometryCheck:
             protected.append({"position_mm": list(xy), "net": net, "ok": good})
         self.measurements["protected_vias"] = protected
         self.measurements["via_count"] = len(self.vias)
+        self.expect(len(self.vias) == len(self.board.children("via")) == len(PROTECTED_VIAS),
+                    "VIA_COUNT", "exactly fourteen protected stitching vias required; no added vias")
+        for via in self.vias:
+            openings = [a for a in self.apertures if a.node is via.node]
+            self.expect(len(openings) == 2 and {layer for a in openings for layer in a.layers} == MASK
+                        and all(len(a.shape.core) == 1 and math.dist(a.shape.core[0], via.center) <= EPS
+                                and abs(a.shape.radius - 0.9) <= EPS for a in openings),
+                        "VIA_TREATMENT", f"{via.label}: untented both sides with 1.80 mm mask openings required",
+                        via.node)
 
         for net, y in RAILS.items():
             for layer in CU:
@@ -936,17 +952,88 @@ class GeometryCheck:
                 if item:
                     self.expect(item.kind == "smd" and item.net == net and item.layers & CU == {"F.Cu"},
                                 "SMT_GDT_PAD", f"{ref}.{num}: top SMT pad on {net} required", item.node)
+        diodes = []
+        for ref, (origin, angle, cathode, anode) in SMA_DIODES.items():
+            fp = self.footprints.get(ref)
+            if fp is None:
+                self.error("SMA_DIODE_FOOTPRINT", f"{ref}: required SMA diode footprint missing")
+                continue
+            attr = fp.one("attr", required=False)
+            self.expect(fp.values[0] == "DogFence:BYG23T_SMA_K_Right" and scalar(fp, "layer") == "F.Cu"
+                        and attr is not None and attr.atoms() == ["smd"],
+                        "SMA_DIODE_FOOTPRINT", f"{ref}: populated top-side BYG23T_SMA_K_Right required", fp)
+            xy, rotation = position(fp)
+            self.expect(math.dist(xy, origin) <= EPS and abs(rotation - angle) <= EPS,
+                        "SMA_DIODE_PLACEMENT", f"{ref}: require origin {origin}, rotation {angle} degrees", fp)
+            pads = [p for p in self.pads if p.reference == ref]
+            self.expect(len(fp.children("pad")) == 2 and sorted(p.pad_number for p in pads) == ["1", "2"],
+                        "SMA_DIODE_PAD", f"{ref}: exactly two undrilled SMT pads, K1 and A2, required", fp)
+            pad_rows = []
+            for num, x, net in (("1", 2.1, cathode), ("2", -2.1, anode)):
+                pad = next((p for p in pads if p.pad_number == num), None)
+                if pad is None:
+                    continue
+                local, pad_angle = position(pad.node)
+                size = point(pad.node, "size")
+                center = move((x, 0), origin, angle)
+                self.expect(pad.kind == "smd" and pad.hole is None and pad.node.values[2] == "rect"
+                            and pad.layers == {"F.Cu", "F.Mask", "F.Paste"}
+                            and math.dist(size, (2.5, 2.0)) <= EPS and math.dist(local, (x, 0)) <= EPS
+                            and math.dist(pad.center, center) <= EPS and abs(pad_angle - angle) <= EPS,
+                            "SMA_DIODE_PAD", f"{pad.label}: require undrilled 2.50 x 2.00 mm top SMT rectangle "
+                            f"at local ({x}, 0), global {tuple(round(v, 6) for v in center)}", pad.node)
+                self.expect(pad.net == net, "SMA_DIODE_POLARITY",
+                            f"{pad.label}: {'cathode K' if num == '1' else 'anode A'} must connect to {net}",
+                            pad.node, net=pad.net)
+                expected = pad_shape("rect", (2.5, 2.0), center, angle)
+                openings = [a for a in self.apertures if a.node is pad.node]
+                self.expect(len(openings) == 2
+                            and {layer for a in openings for layer in a.layers} == {"F.Mask", "F.Paste"}
+                            and all(expected.contains(a.shape) and a.shape.contains(expected) for a in openings),
+                            "SMA_DIODE_APERTURE", f"{pad.label}: require matching F.Mask/F.Paste rectangles "
+                            "with zero effective mask/paste margins and paste ratio", pad.node)
+                pad_rows.append({"pad": pad.label, "net": pad.net,
+                                 "position_mm": [round(v, 6) for v in pad.center], "size_mm": list(size)})
+            land_region = pad_shape("rect", (6.7, 2.0), origin, angle)
+            openings = [a for a in self.apertures if a.reference == ref
+                        or (a.layers & {"F.Mask", "F.Paste"} and a.shape.overlaps(land_region))]
+            self.expect(len(openings) == 4 and all(a.reference == ref for a in openings),
+                        "SMA_DIODE_APERTURE", f"{ref}: only the four pad-owned mask/paste apertures "
+                        "may cover the lands and inner gap", fp)
+            gap = pads[0].shape.gap(pads[1].shape) if len(pads) == 2 else None
+            self.expect(gap is not None and abs(gap - 1.7) <= EPS, "SMA_DIODE_PAD",
+                        f"{ref}: require 1.70 mm inner land gap", fp, measured_mm=gap)
+            diodes.append({"reference": ref, "position_mm": list(xy), "rotation_deg": rotation,
+                           "inner_gap_mm": round(gap, 6) if gap is not None else None, "pads": pad_rows})
+        self.measurements["sma_diodes"] = diodes
+
+        for ref, y, rail, anode in (("R1", 104.5, "WIRE_A", "Net-(D1-A)"),
+                                     ("R2", 140.5, "WIRE_C", "Net-(D2-A)")):
+            fp = self.footprints.get(ref)
+            attr = fp.one("attr", required=False) if fp else None
+            self.expect(fp is not None and fp.values[0] == "DogFence:PR02_Cu_P15.24mm"
+                        and attr is not None and attr.atoms() == ["through_hole"],
+                        "RESISTOR_FOOTPRINT", f"{ref}: populated PR02_Cu_P15.24mm through-hole footprint required", fp)
+            if fp:
+                xy, rotation = position(fp)
+                self.expect(math.dist(xy, (116.0, y)) <= EPS and abs(rotation) <= EPS,
+                            "RESISTOR_GEOMETRY", f"{ref}: preserve origin (116, {y}) and zero rotation", fp)
+            for num, x, net in (("1", 108.38, rail), ("2", 123.62, anode)):
+                pad = self.pad_at_net(ref, num, (x, y), net, "RESISTOR_GEOMETRY")
+                if pad:
+                    self.expect(pad.node.values[2] == "circle" and math.dist(point(pad.node, "size"), (2.4, 2.4)) <= EPS
+                                and pad.layers == CU | MASK,
+                                "RESISTOR_GEOMETRY", f"{pad.label}: preserve 2.40 mm circular PTH pad and layers", pad.node)
         holes = []
         for ref, minimum in COMPONENT_HOLE_MINIMA.items():
             for num in (("1", "2", "3") if ref in ("J_IN", "J_EARTH") else ("1", "2")):
                 pad = self.required_pad(ref, num)
                 if pad:
                     drill = 2 * pad.hole.radius if pad.hole else 0
-                    diode = ref in ("D1", "D2")
                     self.expect(pad.kind == "thru_hole" and drill >= minimum - EPS,
-                                "C1_DIODE_DRILL" if diode else "COMPONENT_FIT_DRILL",
+                                "COMPONENT_FIT_DRILL",
                                 f"{ref}.{num}: selected component hole must be >={minimum:.2f} mm", pad.node,
-                                issue="C1" if diode else "W4", measured_mm=round(drill, 6), required_mm=minimum)
+                                issue="W4", measured_mm=round(drill, 6), required_mm=minimum)
                     holes.append({"pad": pad.label, "drill_mm": round(drill, 6), "required_mm": minimum})
         self.measurements["component_hole_design"] = holes
         rings = []

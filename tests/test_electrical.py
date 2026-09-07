@@ -8,8 +8,9 @@ import math
 import unittest
 
 from scripts.analyze_limits import (
-    Cable, Channel, CUT_SETS, Fault, IdealSourceShort, Source,
-    assess_psu, branch_budget, main, resistor_allowance, simulate,
+    ADJUSTMENT_SCREEN_V, CLAMP_LEAKAGE_SCREEN_A, DIODE_MPN, RESISTOR_MPN,
+    RESISTOR_TCR_PPM, Cable, Channel, CUT_SETS, Fault, IdealSourceShort, Source,
+    assess_psu, branch_budget, cut_sweep, main, resistor_allowance, simulate,
 )
 
 
@@ -21,7 +22,7 @@ class ElectricalTests(unittest.TestCase):
         self.assertTrue(all(math.isfinite(i) and i >= 0 for i in result.led_currents_a.values()))
         self.assertTrue(all(p >= 0 and math.isfinite(p) for p in result.element_power_w.values()))
 
-    def test_healthy_41_station_baseline(self):
+    def test_historical_36v_2_8v_41_station_comparison_not_diode_characterization(self):
         result = simulate()
         self.assert_balanced(result)
         self.assertEqual(len(result.led_currents_a), 82)
@@ -35,7 +36,7 @@ class ElectricalTests(unittest.TestCase):
         self.assertGreater(result.voltages["B", 40], 0)
         self.assertAlmostEqual(result.voltages["B", 0], 0)
 
-    def test_all_seven_cut_sets_in_all_40_spans(self):
+    def test_all_seven_cut_sets_in_all_40_spans_with_negative_clamp_diversion(self):
         self.assertEqual(set(CUT_SETS), {"A", "B", "C", "AB", "AC", "BC", "ABC"})
         for span in range(40):
             for cores in CUT_SETS:
@@ -47,6 +48,13 @@ class ElectricalTests(unittest.TestCase):
                                     ("A" not in cores and "B" not in cores,
                                      "C" not in cores and "B" not in cores))
                         self.assertEqual(result.state(s), expected)
+                        for core, on in zip("AC", expected):
+                            branch = result.led_currents_a[core, s]
+                            if on:
+                                self.assertGreater(branch - CLAMP_LEAKAGE_SCREEN_A, 1e-6)
+                            else:
+                                # Raw current must be dark; subtraction must not hide backfeed.
+                                self.assertLess(branch, 1e-10)
                     self.assertAlmostEqual(result.supply_current_a, sum(result.led_currents_a.values()), places=8)
 
     def test_disconnected_islands_have_no_numerical_ground(self):
@@ -133,16 +141,17 @@ class ElectricalTests(unittest.TestCase):
     def test_temperature_and_tolerance_inputs(self):
         cable = Cable((6.9, 7, 8), (0.01, -0.01, 0.05), 70)
         self.assertAlmostEqual(cable.span_resistances(0.1)[0], 6.9 * 1.01 * 1.1965 * 0.1)
-        channel = Channel(resistor_error=-0.01, resistor_tcr_ppm=-50,
+        channel = Channel(resistor_error=-0.01, resistor_tcr_ppm=-RESISTOR_TCR_PPM,
                           resistor_temperature_c=125, junction_temperature_c=70,
                           led_tempco_v_per_c=-0.002, diode_tempco_v_per_c=-0.001)
         r, led, diode = channel.values()
-        self.assertAlmostEqual(r, 2200 * 0.99 * (1 - 50e-6 * 105))
+        self.assertAlmostEqual(r, 2120.8275)
         self.assertAlmostEqual(led, 2.0)
         self.assertAlmostEqual(diode, 0.65)
         source = Source(39.6, error_fraction=0.01, temperature_c=50,
                         tempco_per_c=0.0003, ripple_peak_v=0.1)
         self.assertAlmostEqual(source.voltage(), 40.39597)
+        self.assertAlmostEqual(source.voltage(), ADJUSTMENT_SCREEN_V)
         self.assert_balanced(simulate(cable=cable, source=source, channel_a=channel))
         self.assertLess(simulate(cable=Cable(temperature_c=70)).led_currents_a["A", 40],
                         simulate().led_currents_a["A", 40])
@@ -186,6 +195,8 @@ class ElectricalTests(unittest.TestCase):
         far = simulate(source=source, faults=(Fault("tube", ("A", 40), ("B", 40), 0.1, 10),))
         self.assertGreater(near.element_currents_a["tube"], 50)
         self.assertGreater(far.element_currents_a["tube"], 0.01)
+        self.assertAlmostEqual(far.element_currents_a["tube"], 0.259543, places=6)
+        self.assertAlmostEqual(far.element_power_w["tube"], 2.602168, places=6)
         self.assertLess(far.supply_current_a, 2)
         isolated = simulate(source=source, cuts=tuple((c, 20) for c in "ABC"),
                             faults=(Fault("tube", ("A", 40), ("B", 40), 0.1, 10),))
@@ -254,23 +265,65 @@ class ElectricalTests(unittest.TestCase):
         leaky = branch_budget(36, shunt_a=0.001)
         self.assertAlmostEqual(leaky["led_a"], b["led_a"] - 0.001)
         self.assertAlmostEqual(leaky["resistor_w"], b["resistor_w"])
-        clamped = branch_budget(40.39597, connector_v=4.3)
-        self.assertGreater(clamped["branch_a"], 0.015)
-        self.assertIsNone(clamped["led_a"])
+        hypothetical_positive_clamp = branch_budget(40.39597, connector_v=4.3)
+        self.assertGreater(hypothetical_positive_clamp["branch_a"], 0.015)
+        self.assertIsNone(hypothetical_positive_clamp["led_a"])
         surge = branch_budget(950)
         self.assertGreater(surge["led_a"], 0.4)
         self.assertGreater(surge["resistor_w"], 400)
-        minimum_r = Channel(led_v=0, diode_v=0, resistor_error=-0.01,
-                            resistor_tcr_ppm=-50, resistor_temperature_c=125)
-        upper = branch_budget(40.39597, minimum_r)
-        self.assertLess(upper["led_a"], 0.020)
-        self.assertGreater(upper["resistor_w"], resistor_allowance(70))
-        self.assertEqual(resistor_allowance(70), 0.65)
-        self.assertEqual(resistor_allowance(125), 0)
-        self.assertEqual(resistor_allowance(155, standard_mode=False), 0)
-        self.assertAlmostEqual(resistor_allowance(100), 0.65 * 25 / 55)
         with self.assertRaises(ValueError):
             branch_budget(36, shunt_a=0.1)
+
+    def test_selected_pr02_rating_tcr_and_historical_mbe_screen(self):
+        self.assertEqual(RESISTOR_MPN, "PR02000202201FA100")
+        self.assertEqual(RESISTOR_TCR_PPM, 250)
+        minimum_r = Channel(led_v=0, diode_v=0, resistor_error=-0.01,
+                            resistor_tcr_ppm=-250, resistor_temperature_c=125)
+        self.assertAlmostEqual(minimum_r.values()[0], 2120.8275)
+        upper = branch_budget(ADJUSTMENT_SCREEN_V, minimum_r)
+        self.assertAlmostEqual(upper["branch_a"] * 1000, 19.0472681064, places=9)
+        self.assertAlmostEqual(upper["resistor_w"], 0.7694328710095, places=12)
+        self.assertLess(upper["branch_a"], 0.020)
+        self.assertLess(upper["resistor_w"], resistor_allowance(70))
+        self.assertEqual(resistor_allowance(-55), 2)
+        self.assertEqual(resistor_allowance(70), 2)
+        self.assertAlmostEqual(resistor_allowance(100), 2 * 55 / 85)
+        self.assertAlmostEqual(resistor_allowance(125), 2 * 30 / 85)
+        self.assertEqual(resistor_allowance(155), 0)
+        self.assertEqual(resistor_allowance(220), 0)
+        # Old MBE initial/TCR screen is history, not the selected PR02's rating.
+        mbe = replace(minimum_r, resistor_tcr_ppm=-50)
+        self.assertAlmostEqual(mbe.values()[0], 2166.5655)
+        historical = branch_budget(ADJUSTMENT_SCREEN_V, mbe)
+        self.assertAlmostEqual(historical["resistor_w"], 0.753190, places=6)
+        self.assertGreater(historical["resistor_w"], 0.65)
+        self.assertGreater(upper["resistor_w"], historical["resistor_w"])
+
+    def test_negative_clamp_leakage_diverts_led_current_not_resistor_heat_or_psu_load(self):
+        self.assertEqual(DIODE_MPN, "BYG23T-M3/TR")
+        self.assertEqual(CLAMP_LEAKAGE_SCREEN_A, 50e-6)
+        baseline = branch_budget(36)
+        leaky = branch_budget(36, shunt_a=CLAMP_LEAKAGE_SCREEN_A)
+        self.assertAlmostEqual(leaky["led_a"], 0.01504090909090909)
+        for key in ("branch_a", "resistor_w", "diode_w", "terminal_w"):
+            self.assertEqual(leaky[key], baseline[key])
+        self.assertAlmostEqual(leaky["led_w"] + leaky["shunt_w"], leaky["terminal_w"])
+        self.assertAlmostEqual(leaky["resistor_w"] + leaky["diode_w"]
+                               + leaky["led_w"] + leaky["shunt_w"], 36 * leaky["branch_a"])
+        self.assertAlmostEqual(leaky["shunt_w"], 0.000105)
+        self.assertAlmostEqual(2 * leaky["resistor_w"], 1.002036363636)
+        self.assertAlmostEqual(2 * (leaky["resistor_w"] + leaky["diode_w"] + leaky["shunt_w"]),
+                               1.023373636364)
+        # Above the low-current budget a fixed-Vf LED solution is invalid, not automatically safe/dark.
+        with self.assertRaises(ValueError):
+            branch_budget(2.81, shunt_a=CLAMP_LEAKAGE_SCREEN_A)
+        with self.assertRaises(ArithmeticError):
+            cut_sweep(stations=3, shunt_max_a=0.020)
+        with self.assertRaises(ArithmeticError):
+            cut_sweep(stations=3, shunt_max_a=CLAMP_LEAKAGE_SCREEN_A, legacy_end_ac_strap=True)
+        for bound in (-1, math.nan, math.inf):
+            with self.subTest(bound=bound), self.assertRaises(ValueError):
+                cut_sweep(stations=3, shunt_max_a=bound)
 
     def test_fail_closed_on_bad_inputs_or_nonconvergence(self):
         for options in ({"stations": 0}, {"stations": 1.5}, {"spacing_km": 0},
@@ -299,6 +352,11 @@ class ElectricalTests(unittest.TestCase):
         report = json.loads(output.getvalue())
         self.assertTrue(report["provisional"])
         self.assertEqual(report["cut_sweep"]["cases"], 28)
+        self.assertEqual(report["cut_sweep"]["shunt_diversion_bound_a"], CLAMP_LEAKAGE_SCREEN_A)
+        self.assertEqual(report["selected_parts"], {"R1_R2": RESISTOR_MPN, "D1_D2_D3_D4": DIODE_MPN})
+        self.assertAlmostEqual(report["maximum_adjustment_branch"]["resistor_w"], 0.7694328710095)
+        self.assertIn("1.9 V", " ".join(report["limitations"]))
+        self.assertIn("NOT <=5 V", " ".join(report["limitations"]))
         self.assertEqual(report["inputs"]["cable"]["r20_ohm_per_km"], [7, 8, 9])
         self.assertAlmostEqual(report["loads"][0]["voltage_v"], 36.36)
         with redirect_stderr(StringIO()), self.assertRaises(SystemExit) as failure:

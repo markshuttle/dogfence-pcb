@@ -15,9 +15,9 @@
   "reviewed_netlist_annotation": {
     "tool_version": "9.0.7",
     "stdout": "Warning: schematic has annotation errors, please use the schematic editor to fix them\n",
-    "reason": "2026-09-07: native controls prove the ten intentional J_/GDT_ references ending in letters trigger this aggregate warning. All 18 source property/instance references are unique and consistent, and all 30 exported terminals match the PCB. Numbering controls remove the warning without changing connectivity. Duplicate/unassigned-reference negative probes show the warning text alone is not safe to accept. This review is locked to the exact schematic/project/library/table hashes below, one kicadxml netlist-export warning on stdout, empty stderr and exit 0. Never refresh these hashes automatically. Evidence: tmp/annotation-review/probe-hzgnve0_/results.json and commands.json; see REMEDIATION.md.",
+    "reason": "2026-09-07 hybrid re-review: manually inspected tmp/annotation-review/hybrid-10dti06b/report.json, commands.json and the baseline/numbered comparison proofs. All 20 source property/instance references are unique and consistent; 16 populated parts, four mounts, eight nets and all 34 terminals match PCB/BOM. Renaming only the ten intentional J_/GDT_ references removes the warning while preserving all component contents and terminal memberships after inverse renaming. Duplicate, unassigned and property/instance-mismatch probes fail source validation despite producing the same aggregate warning. Accept only this KiCad 9.0.7 kicadxml stdout line, empty stderr and exit 0 with the exact five input hashes below. Only the changed schematic hash was deliberately updated after that review; other approval hashes and hardware release holds are unchanged. This is diagnostic review, not circuit/procurement/thermal/surge approval. Never refresh approval hashes automatically.",
     "source_hashes": {
-      "pcb/pcb.kicad_sch": "ce00875fc97b4cde44e5ba677e6c2d40cba1630ac26db13168daa7754be0e41b",
+      "pcb/pcb.kicad_sch": "63f5e08d4fe6cc145d442fbf6364d7c79a9f455a8f93c960322c8b1c4a9ebfdb",
       "pcb/pcb.kicad_pro": "cb018c8545e0cfa72b4867d7bd1eb36d56b16298f38eb48d0073dbba8234db0e",
       "pcb/DogFence.kicad_sym": "a1a846c7c485c7c8a429c86cb75555c7278df0dba558eecaceb144c2bb43f75d",
       "pcb/sym-lib-table": "ea40d83d52d3814721b6121a7103b8dca0e4ab19d8a15ef1e849e6de10a8b532",
@@ -27,7 +27,7 @@
   "release_holds": [
     {
       "id": "C4",
-      "reason": "Installation-polarity LED damage is user-accepted, not an immunity pass. The simple negative-voltage clamp is not implemented and the ordinary-operation transient scope/response remains unresolved. See ELECTRICAL.md section 9."
+      "reason": "D3/D4 negative-voltage shunts are implemented, but actual RF/ordinary-transient/recovery response and the claimed protection envelope remain unqualified. Installation-polarity LED damage is user-accepted, not an immunity pass. See ELECTRICAL.md."
     },
     {
       "id": "C5",
@@ -35,7 +35,7 @@
     },
     {
       "id": "W3",
-      "reason": "Continuous normal TEST requires a bounded source adjustment and accepted resistor/gel thermal design; the accessible-adjustment bound exceeds the resistor's standard-mode rating. See ELECTRICAL.md."
+      "reason": "PR02 2 W resistors and a >=1 mm body-standoff requirement are implemented; the 0.769433 W screening load is not a measured closed-OneGel temperature or an accepted source/thermal envelope. Continuous normal TEST qualification remains open. See ELECTRICAL.md."
     },
     {
       "id": "W1",
@@ -43,7 +43,7 @@
     },
     {
       "id": "W4",
-      "reason": "Drawing-derived and controlled procurement pin/body/pattern envelopes now drive resized holes and courtyards; allocated-lot acceptance and forming/solder fill remain unverified. Earth-terminal tolerance-budgeted overhang is 1.30 mm. See ASSEMBLY.md."
+      "reason": "Allocated-lot pin/body/pattern acceptance, PR02 standoff/forming, mixed-assembly solder fill and the 1.30 mm earth-terminal overhang remain to accept. R1/R2 external sourcing has no assigned LCSC code or JLCPCB allocation. See ASSEMBLY.md."
     }
   ],
   "file_release_review": null

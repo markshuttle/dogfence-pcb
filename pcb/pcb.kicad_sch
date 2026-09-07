@@ -869,7 +869,7 @@
 		)
 		(uuid "44440001-0000-0000-0000-000000000009")
 	)
-	(text "1. RUN: actual transmitter/cable RF loading requires qualification. The series diodes do not guarantee LED reverse-voltage protection."
+	(text "1. RUN: RF/transient qualification held. D3/D4 clamp negative LED outputs; no reversed flying-lead immunity."
 		(exclude_from_sim no)
 		(at 25.4 186 0)
 		(effects
@@ -880,7 +880,7 @@
 		)
 		(uuid "44440001-0000-0000-0000-000000000010")
 	)
-	(text "2. TEST: isolate transmitter; feed Start A/C +36V and Start B negative. Isolate End A/B/C separately. See REMEDIATION.md."
+	(text "2. TEST: isolate transmitter; Start A/C +36V, Start B negative; End A/B/C separately isolated. Continuous-safe duty required; containment disabled."
 		(exclude_from_sim no)
 		(at 25.4 190.5 0)
 		(effects
@@ -891,7 +891,7 @@
 		)
 		(uuid "44440001-0000-0000-0000-000000000011")
 	)
-	(text "3. HOLD: LED reversal, transient coordination and powered GDT extinction are unresolved. No assembled-board surge rating is assigned."
+	(text "3. HOLD: thermal and powered-GDT recovery unqualified; no board surge rating. Energized cattle fencing prohibited along the entire boundary."
 		(exclude_from_sim no)
 		(at 25.4 195 0)
 		(effects
@@ -1045,6 +1045,18 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "83978fb1-b21c-4a21-88ff-69e2c48c6b74")
+	)
+	(junction
+		(at 254 86.36)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "eeeed203-3000-4000-8000-000000000001")
+	)
+	(junction
+		(at 254 99.06)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "eeeed204-3000-4000-8000-000000000001")
 	)
 	(wire
 		(pts
@@ -1247,7 +1259,7 @@
 	(wire
 		(pts
 			(xy 254 64.77)
-			(xy 254 92.71)
+			(xy 254 86.36)
 		)
 		(stroke
 			(width 0)
@@ -1269,7 +1281,7 @@
 	(wire
 		(pts
 			(xy 254 125.73)
-			(xy 254 92.71)
+			(xy 254 99.06)
 		)
 		(stroke
 			(width 0)
@@ -1706,6 +1718,94 @@
 		)
 		(uuid "e6a8d7cd-483e-4a28-86a6-4ac9989309aa")
 	)
+	(wire
+		(pts
+			(xy 238.76 74.93)
+			(xy 238.76 78.74)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "eeeed203-2000-4000-8000-000000000001")
+	)
+	(wire
+		(pts
+			(xy 238.76 78.74)
+			(xy 241.3 78.74)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "eeeed203-2000-4000-8000-000000000002")
+	)
+	(wire
+		(pts
+			(xy 241.3 86.36)
+			(xy 254 86.36)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "eeeed203-2000-4000-8000-000000000003")
+	)
+	(wire
+		(pts
+			(xy 254 86.36)
+			(xy 254 92.71)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "eeeed203-2000-4000-8000-000000000004")
+	)
+	(wire
+		(pts
+			(xy 238.76 110.49)
+			(xy 238.76 106.68)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "eeeed204-2000-4000-8000-000000000001")
+	)
+	(wire
+		(pts
+			(xy 238.76 106.68)
+			(xy 241.3 106.68)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "eeeed204-2000-4000-8000-000000000002")
+	)
+	(wire
+		(pts
+			(xy 241.3 99.06)
+			(xy 254 99.06)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "eeeed204-2000-4000-8000-000000000003")
+	)
+	(wire
+		(pts
+			(xy 254 99.06)
+			(xy 254 92.71)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "eeeed204-2000-4000-8000-000000000004")
+	)
 	(global_label "LED_A_POS"
 		(shape bidirectional)
 		(at 238.76 74.93 0)
@@ -1898,6 +1998,24 @@
 				(justify left)
 			)
 		)
+		(property "Sourcing Reference" ""
+			(at 264.16 123.19 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Sourcing" "LCSC"
+			(at 264.16 123.19 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(property "Manufacturer" "Cixi Kefa Elec"
 			(at 264.16 123.19 0)
 			(effects
@@ -1992,6 +2110,24 @@
 				(font
 					(size 1.27 1.27)
 				)
+			)
+		)
+		(property "Sourcing Reference" ""
+			(at 30.48 62.23 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Sourcing" "LCSC"
+			(at 30.48 62.23 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
 			)
 		)
 		(property "Manufacturer" "Cixi Kefa Elec"
@@ -2214,6 +2350,24 @@
 				(justify left)
 			)
 		)
+		(property "Sourcing Reference" ""
+			(at 264.16 62.23 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Sourcing" "LCSC"
+			(at 264.16 62.23 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(property "Manufacturer" "Cixi Kefa Elec"
 			(at 264.16 62.23 0)
 			(effects
@@ -2301,7 +2455,7 @@
 				)
 			)
 		)
-		(property "Value" "2.2k 1W"
+		(property "Value" "2.2k 2W"
 			(at 207.01 66.802 270)
 			(effects
 				(font
@@ -2309,7 +2463,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "Vishay Intertech"
+		(property "Manufacturer" "Vishay BCcomponents"
 			(at 205.74 62.23 0)
 			(effects
 				(font
@@ -2318,7 +2472,7 @@
 				(hide yes)
 			)
 		)
-		(property "Footprint" "DogFence:MBE0414_P15.24mm"
+		(property "Footprint" "DogFence:PR02_Cu_P15.24mm"
 			(at 205.74 62.23 90)
 			(effects
 				(font
@@ -2327,7 +2481,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "https://www.vishay.com/docs/28766/mbxsma.pdf"
+		(property "Datasheet" "https://www.vishay.com/docs/28729/pr010203.pdf"
 			(at 205.74 62.23 0)
 			(effects
 				(font
@@ -2336,15 +2490,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
-			(at 205.74 62.23 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "MPN" "MBE04140C2201FC100"
+		(property "Description" "Vishay PR02000202201FA100; 2.2k 2W 1%, +/-250ppm/K; Cu lead 0.78 +/-0.05mm, body L2 <=12.0mm D <=3.9mm; require >=1.00mm body-to-PCB standoff; forming/process and continuous TEST thermal qualification held"
 			(at 205.74 62.23 0)
 			(effects
 				(font
@@ -2353,7 +2499,34 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC" "C1368610"
+		(property "MPN" "PR02000202201FA100"
+			(at 205.74 62.23 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC" ""
+			(at 205.74 62.23 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Sourcing" "External"
+			(at 205.74 62.23 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Sourcing Reference" "https://www.vishay.com/search?type=inv&query=PR02000202201FA100"
 			(at 205.74 62.23 0)
 			(effects
 				(font
@@ -2403,6 +2576,24 @@
 					(size 1.016 1.016)
 				)
 				(justify left)
+			)
+		)
+		(property "Sourcing Reference" ""
+			(at 160.02 140.97 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Sourcing" "LCSC"
+			(at 160.02 140.97 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
 			)
 		)
 		(property "Manufacturer" "Ruilon"
@@ -2501,6 +2692,24 @@
 				(justify left)
 			)
 		)
+		(property "Sourcing Reference" ""
+			(at 139.7 140.97 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Sourcing" "LCSC"
+			(at 139.7 140.97 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(property "Manufacturer" "Ruilon"
 			(at 139.7 140.97 0)
 			(effects
@@ -2597,6 +2806,24 @@
 				(justify left)
 			)
 		)
+		(property "Sourcing Reference" ""
+			(at 114.3 77.47 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Sourcing" "LCSC"
+			(at 114.3 77.47 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(property "Manufacturer" "Bencent"
 			(at 114.3 77.47 0)
 			(effects
@@ -2683,7 +2910,7 @@
 				)
 			)
 		)
-		(property "Value" "1N4007G"
+		(property "Value" "BYG23T-M3"
 			(at 224.79 67.31 0)
 			(effects
 				(font
@@ -2691,7 +2918,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "onsemi"
+		(property "Sourcing Reference" ""
 			(at 224.79 62.23 0)
 			(effects
 				(font
@@ -2700,7 +2927,7 @@
 				(hide yes)
 			)
 		)
-		(property "Footprint" "DogFence:1N4007G_P10.16mm_K_Right"
+		(property "Sourcing" "LCSC"
 			(at 224.79 62.23 0)
 			(effects
 				(font
@@ -2709,7 +2936,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "https://www.onsemi.com/pdf/datasheet/1n4001-d.pdf"
+		(property "Manufacturer" "Vishay General Semiconductor"
 			(at 224.79 62.23 0)
 			(effects
 				(font
@@ -2718,15 +2945,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
-			(at 224.79 62.23 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "MPN" "1N4007G"
+		(property "Footprint" "DogFence:BYG23T_SMA_K_Right"
 			(at 224.79 62.23 0)
 			(effects
 				(font
@@ -2735,7 +2954,34 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC" "C232439"
+		(property "Datasheet" "https://www.vishay.com/docs/89429/byg23t.pdf"
+			(at 224.79 62.23 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Vishay BYG23T-M3/TR C145454; 1300V 1A fast avalanche SMA; body <=4.50x2.80x2.29mm, terminal span <=5.29mm rounded out; local K1 +X/A2 -X; 2.50x2.00mm lands, 1.70mm inner gap; process/transient qualification held"
+			(at 224.79 62.23 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "MPN" "BYG23T-M3/TR"
+			(at 224.79 62.23 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC" "C145454"
 			(at 224.79 62.23 0)
 			(effects
 				(font
@@ -2785,6 +3031,24 @@
 					(size 1.016 1.016)
 				)
 				(justify left)
+			)
+		)
+		(property "Sourcing Reference" ""
+			(at 180.34 140.97 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Sourcing" "LCSC"
+			(at 180.34 140.97 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
 			)
 		)
 		(property "Manufacturer" "Ruilon"
@@ -2943,6 +3207,24 @@
 				(justify left)
 			)
 		)
+		(property "Sourcing Reference" ""
+			(at 73.66 77.47 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Sourcing" "LCSC"
+			(at 73.66 77.47 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(property "Manufacturer" "Ruilon"
 			(at 73.66 77.47 0)
 			(effects
@@ -3029,7 +3311,7 @@
 				)
 			)
 		)
-		(property "Value" "1N4007G"
+		(property "Value" "BYG23T-M3"
 			(at 226.06 128.27 0)
 			(effects
 				(font
@@ -3037,7 +3319,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "onsemi"
+		(property "Sourcing Reference" ""
 			(at 226.06 123.19 0)
 			(effects
 				(font
@@ -3046,7 +3328,7 @@
 				(hide yes)
 			)
 		)
-		(property "Footprint" "DogFence:1N4007G_P10.16mm_K_Right"
+		(property "Sourcing" "LCSC"
 			(at 226.06 123.19 0)
 			(effects
 				(font
@@ -3055,7 +3337,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "https://www.onsemi.com/pdf/datasheet/1n4001-d.pdf"
+		(property "Manufacturer" "Vishay General Semiconductor"
 			(at 226.06 123.19 0)
 			(effects
 				(font
@@ -3064,15 +3346,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
-			(at 226.06 123.19 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "MPN" "1N4007G"
+		(property "Footprint" "DogFence:BYG23T_SMA_K_Right"
 			(at 226.06 123.19 0)
 			(effects
 				(font
@@ -3081,7 +3355,34 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC" "C232439"
+		(property "Datasheet" "https://www.vishay.com/docs/89429/byg23t.pdf"
+			(at 226.06 123.19 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Vishay BYG23T-M3/TR C145454; 1300V 1A fast avalanche SMA; body <=4.50x2.80x2.29mm, terminal span <=5.29mm rounded out; local K1 +X/A2 -X; 2.50x2.00mm lands, 1.70mm inner gap; process/transient qualification held"
+			(at 226.06 123.19 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "MPN" "BYG23T-M3/TR"
+			(at 226.06 123.19 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC" "C145454"
 			(at 226.06 123.19 0)
 			(effects
 				(font
@@ -3131,6 +3432,24 @@
 					(size 1.016 1.016)
 				)
 				(justify left)
+			)
+		)
+		(property "Sourcing Reference" ""
+			(at 86.36 107.95 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Sourcing" "LCSC"
+			(at 86.36 107.95 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
 			)
 		)
 		(property "Manufacturer" "Ruilon"
@@ -3219,7 +3538,7 @@
 				)
 			)
 		)
-		(property "Value" "2.2k 1W"
+		(property "Value" "2.2k 2W"
 			(at 207.01 127.762 270)
 			(effects
 				(font
@@ -3227,7 +3546,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "Vishay Intertech"
+		(property "Manufacturer" "Vishay BCcomponents"
 			(at 205.74 123.19 0)
 			(effects
 				(font
@@ -3236,7 +3555,7 @@
 				(hide yes)
 			)
 		)
-		(property "Footprint" "DogFence:MBE0414_P15.24mm"
+		(property "Footprint" "DogFence:PR02_Cu_P15.24mm"
 			(at 205.74 123.19 90)
 			(effects
 				(font
@@ -3245,7 +3564,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "https://www.vishay.com/docs/28766/mbxsma.pdf"
+		(property "Datasheet" "https://www.vishay.com/docs/28729/pr010203.pdf"
 			(at 205.74 123.19 0)
 			(effects
 				(font
@@ -3254,15 +3573,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
-			(at 205.74 123.19 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "MPN" "MBE04140C2201FC100"
+		(property "Description" "Vishay PR02000202201FA100; 2.2k 2W 1%, +/-250ppm/K; Cu lead 0.78 +/-0.05mm, body L2 <=12.0mm D <=3.9mm; require >=1.00mm body-to-PCB standoff; forming/process and continuous TEST thermal qualification held"
 			(at 205.74 123.19 0)
 			(effects
 				(font
@@ -3271,7 +3582,34 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC" "C1368610"
+		(property "MPN" "PR02000202201FA100"
+			(at 205.74 123.19 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC" ""
+			(at 205.74 123.19 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Sourcing" "External"
+			(at 205.74 123.19 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Sourcing Reference" "https://www.vishay.com/search?type=inv&query=PR02000202201FA100"
 			(at 205.74 123.19 0)
 			(effects
 				(font
@@ -3382,6 +3720,24 @@
 				)
 			)
 		)
+		(property "Sourcing Reference" ""
+			(at 30.48 158.75 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Sourcing" "LCSC"
+			(at 30.48 158.75 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(property "Manufacturer" "Cixi Kefa Elec"
 			(at 30.48 158.75 0)
 			(effects
@@ -3449,6 +3805,236 @@
 			(project "pcb"
 				(path "/800a33dc-5627-4901-abfd-b5d6707cf2b1"
 					(reference "J_EARTH")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "DogFence:D_A_Left_K_Right")
+		(at 241.3 82.55 90)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "eeeed203-1000-4000-8000-000000000001")
+		(property "Reference" "D3"
+			(at 237.49 81.28 270)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(bold yes)
+				)
+				(justify right)
+			)
+		)
+		(property "Value" "BYG23T-M3"
+			(at 237.49 83.82 270)
+			(effects
+				(font
+					(size 1.016 1.016)
+				)
+				(justify right)
+			)
+		)
+		(property "Sourcing Reference" ""
+			(at 241.3 82.55 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Sourcing" "LCSC"
+			(at 241.3 82.55 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Manufacturer" "Vishay General Semiconductor"
+			(at 241.3 82.55 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Footprint" "DogFence:BYG23T_SMA_K_Right"
+			(at 241.3 82.55 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "https://www.vishay.com/docs/89429/byg23t.pdf"
+			(at 241.3 82.55 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Vishay BYG23T-M3/TR C145454; 1300V 1A fast avalanche SMA; body <=4.50x2.80x2.29mm, terminal span <=5.29mm rounded out; local K1 +X/A2 -X; 2.50x2.00mm lands, 1.70mm inner gap; process/transient qualification held"
+			(at 241.3 82.55 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "MPN" "BYG23T-M3/TR"
+			(at 241.3 82.55 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC" "C145454"
+			(at 241.3 82.55 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "eeeed203-1000-4000-8000-000000000002")
+		)
+		(pin "2"
+			(uuid "eeeed203-1000-4000-8000-000000000003")
+		)
+		(instances
+			(project "pcb"
+				(path "/800a33dc-5627-4901-abfd-b5d6707cf2b1"
+					(reference "D3")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "DogFence:D_A_Left_K_Right")
+		(at 241.3 102.87 270)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "eeeed204-1000-4000-8000-000000000001")
+		(property "Reference" "D4"
+			(at 237.49 101.6 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(bold yes)
+				)
+				(justify right)
+			)
+		)
+		(property "Value" "BYG23T-M3"
+			(at 237.49 104.14 90)
+			(effects
+				(font
+					(size 1.016 1.016)
+				)
+				(justify right)
+			)
+		)
+		(property "Sourcing Reference" ""
+			(at 241.3 102.87 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Sourcing" "LCSC"
+			(at 241.3 102.87 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Manufacturer" "Vishay General Semiconductor"
+			(at 241.3 102.87 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Footprint" "DogFence:BYG23T_SMA_K_Right"
+			(at 241.3 102.87 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "https://www.vishay.com/docs/89429/byg23t.pdf"
+			(at 241.3 102.87 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Vishay BYG23T-M3/TR C145454; 1300V 1A fast avalanche SMA; body <=4.50x2.80x2.29mm, terminal span <=5.29mm rounded out; local K1 +X/A2 -X; 2.50x2.00mm lands, 1.70mm inner gap; process/transient qualification held"
+			(at 241.3 102.87 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "MPN" "BYG23T-M3/TR"
+			(at 241.3 102.87 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC" "C145454"
+			(at 241.3 102.87 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "eeeed204-1000-4000-8000-000000000002")
+		)
+		(pin "2"
+			(uuid "eeeed204-1000-4000-8000-000000000003")
+		)
+		(instances
+			(project "pcb"
+				(path "/800a33dc-5627-4901-abfd-b5d6707cf2b1"
+					(reference "D4")
 					(unit 1)
 				)
 			)

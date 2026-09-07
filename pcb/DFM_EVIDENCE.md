@@ -7,6 +7,18 @@ Dimensions are millimetres unless explicitly marked inches. Global coordinates
 use the top-view board convention from ASSEMBLY.md; local coordinates are
 identified separately below.
 
+**Hybrid update after checkpoint ad282e3:** the original six-family research
+below remains historical evidence. Current R1/R2 are copper-lead PR02
+PR02000202201FA100 (0.83 maximum lead, retained 1.40/2.40 holes/pads,
+12.00 x 4.20 conservative body box, >=1.00 standoff). D1-D4 are now
+BYG23T-M3/TR SMA; no onsemi diode PTH remains. ASSEMBLY controls the selected
+2.50 x 2.00 lands / 1.70 inner gap / 7.20 x 3.60 courtyard and exact orientations.
+Parent visually read the original Vishay 89429, 25-Feb-2020 p4 outline/land
+leaders through the public PDF viewer; 1.52/1.68 land minima and 1.88 maximum
+inner gap are resolved, while 5.28 outside span is a reference dimension.
+This is not JLCPCB stencil, part allocation or physical acceptance. All other
+protected geometry and the metric GDT land decision remain unchanged.
+
 **Evidence and original integration recommendations, NOT manufacturing approval.**
 The bounded research wrote only this record. In the subsequent 2026-09-07
 integration, the parent adopted the worked hole/pattern envelopes, body boxes,

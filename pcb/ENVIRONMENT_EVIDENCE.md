@@ -1,12 +1,13 @@
 # Environment And Hub Evidence
 
-**Hardware 1.2.0-dev; checkpoint 97e202d; researched 2026-09-07.**
+**Hardware 1.2.0-dev; original research at checkpoint 97e202d on 2026-09-07; updated for the user-authorized implementation after checkpoint ad282e3.**
 
-Controlled research handoff for the parent documentation owner. This record
-does not change the circuit, procurement allocation, installation instructions
-or release holds. No supplier acceptance or physical qualification is recorded.
-This research edited only this file, not source, staging, build files or
-approval hashes.
+Controlled environment/hub evidence. The original bounded research edited only
+this file; the later documentation synchronization records the user's clarified
+site scope and implemented PR02/BYG23T circuit using the design BOM and
+[DESIGN_BOUNDS.md](DESIGN_BOUNDS.md), without new web research or source edits.
+No supplier acceptance, procurement allocation or physical qualification is
+recorded. **C4, C5, W3, W1 and W4 remain open.**
 
 ## User-Confirmed Corrections
 
@@ -25,6 +26,17 @@ approval hashes.
   receipt, inspection, output settings, or serial-number assignment to those roles.
   No parallel, series, separate-channel or opposite-end supply connection is
   specified. Preserve earlier procurement history separately.
+- **Energized cattle fencing is prohibited near the entire 4 km boundary cable,
+  every station and the hub**, not only the shed. The user explicitly withdrew
+  the former **0.5 m / up to 300 m parallel exposure**; it is historical, not a
+  current mandatory qualification case. Inspect and maintain the prohibition
+  instead of energizer-on/off testing within the accepted installation. If land
+  use changes or the hazard returns, reassess before use. No numerical safe
+  separation, zero induction or zero lightning exposure is established.
+- LED damage from accidental **low-voltage installation polarity errors** is
+  accepted with replacement spares, whose quantity is still unallocated. Direct
+  lightning-strike rebuilding is accepted, not all ordinary/nearby transient
+  damage. **Continuous-safe normal TEST remains mandatory without a timer.**
 
 ## AMC Oceanflex Cable
 
@@ -138,6 +150,36 @@ or unrestricted reuse/top-up of removed or contaminated gel.
   structural-support or continuous-thermal qualification of DogFence. The
   raised GDT's physical gap and W3 thermal hold remain unchanged.
 
+The current **16-part schematic/PCB/BOM** specifies **Vishay BCcomponents
+PR02000202201FA100**, copper-lead **2.2 kohm / 2 W / 1% / +/-250 ppm/K**, not the
+retired MBE0414. Its **0.83 mm maximum lead, 15.24 mm formed pitch and retained
+1.40/2.40 mm holes/pads** do not establish process acceptance; **>=1.00 mm
+body-to-PCB standoff is required**, not measured or qualified mounting. Nominal
+resistor heat is still about **0.50 W each**. The declared **40.39597 V / zero-drop /
+PR02 Rmin = 2120.8275 ohm** screen through 125 C gives **0.769432871 W and
+19.047268 mA per branch**, or **1.561875985 A / 63.0935 W for 82 zero-cable
+branches**. These are analysis inputs/results, not enforced source limits or
+actual hot-spot temperatures; the old 35-37 V window was never implemented.
+
+PR02 is rated **2 W at 70 C local ambient**, derating to zero at **155 C ambient**;
+its specific hot-spot maximum is **220 C**, not an allowed OneGel/cable interface
+temperature. Its typical **75 K/W mounted example** implies about **57.7 K rise**
+at that upper power, not OneGel thermal resistance or a potted prediction. The
+proposed 60 C interface / 110 C film development targets in DESIGN_BOUNDS are
+not measured results or new user-wide limits. **No closed, gel-filled thermal
+test has been performed**; actual local heat flow, solar conditions and all
+material limits still govern W3.
+
+The four implemented **Vishay General Semiconductor BYG23T-M3/TR / C145454**
+diodes replace the old series 1N4007G parts and add D3/D4 negative output shunts
+after D1/D2. They are not forward pulse-current regulators. **75 ns reverse
+recovery is not forward-clamp speed**; typical **9 V / 620 ns forward overshoot
+at 1.5 A, 12 A/us, 25 C** does not prove <=5 V at the LED. The 1300 V repetitive
+reverse rating does not qualify ordinary/nearby-lightning response. D3/D4 do not
+alter the upstream GDT paths; **C5 powered recovery is unresolved, not an
+observed latched failure**. See DESIGN_BOUNDS and ELECTRICAL for conditional
+current/leakage screens, not an inferred environmental qualification.
+
 ### Material Compatibility
 
 | Actual interface | Evidence obtained / precise remaining limit |
@@ -220,8 +262,9 @@ switches cannot have 60-degree detents.
 | Ui 690 V and conditioned Uimp 6 kV as switch / 4 kV as switch-disconnector [S3] | The stated supply-system/category/pollution conditions apply. Not outdoor lightning isolation or a rating for the completed hub. |
 
 The manufacturer-specific decision is whether the exact changeover program
-can **make and break the actual 36 V DC circuit over its enforced voltage
-range**, not whether normal current is below 20 A. Provide the accepted normal
+can **make and break the actual nominal 36 V DC circuit over its accepted
+normal/fault voltage envelope**, not whether normal current is below 20 A.
+No enforced 37 V ceiling exists. Provide the accepted normal
 current and cable/source RLC conditions; include energizing a short, contact
 opening during resistive/cable shorts or GDT follow current, output-capacitor
 inrush, PSU hiccup/retry and turn-off energy. A supply's 2.1 A nameplate and a
@@ -274,9 +317,10 @@ failed text extraction (HTTP 422). No additional OneGel values are inferred
 from those inaccessible contents; "not found" above is bounded to the
 readable sources, not a claim that the manufacturer has no further evidence.
 
-Documentation validation:
+Historical research validation:
 `git diff --no-index --check /dev/null pcb/ENVIRONMENT_EVIDENCE.md` passed.
-No KiCad, manufacturing, electrical-model or physical tests were run, and no
-hold was closed. Parent owns synchronization of REMEDIATION, README, INSTALL,
-RISKS, ACCEPTANCE, MATERIALS, ORDERING and the affected assembly/electrical
-records.
+No KiCad, manufacturing, electrical-model or physical test was part of that
+research. The post-ad282e3 documentation update edits only README, INSTALL,
+RISKS, ACCEPTANCE, MATERIALS, ORDERING, LED, REVIEW and this file; parent owns
+AGENTS, REMEDIATION, ASSEMBLY, ELECTRICAL, the other research records and
+integrated native checks. No hold is closed or approval hash refreshed here.

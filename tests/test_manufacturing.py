@@ -1,5 +1,6 @@
 from concurrent.futures import ThreadPoolExecutor
 import contextlib
+import copy
 import csv
 import io
 import json
@@ -11,14 +12,21 @@ import subprocess
 import tempfile
 import unittest
 from unittest.mock import patch
+import xml.etree.ElementTree as ET
 import zipfile
 
+from pcb import sync_libraries as sync
 from scripts import manufacturing as m
 from scripts import compare_nets as nets
 from test_compare_nets import BOARD, ipc_text, xml_netlist
 
 
 REPO = Path(__file__).resolve().parents[1]
+EXTERNAL_METADATA = {
+    "MPN": "PR02000202201FA100", "Manufacturer": "Vishay BCcomponents", "LCSC": "",
+    "Sourcing": "External",
+    "Sourcing Reference": "https://www.vishay.com/search?type=inv&query=PR02000202201FA100",
+}
 
 
 def make_project(root):
@@ -169,8 +177,9 @@ def fake_drills(directory, board):
 
 class FakeKiCad:
     """Native-format producer for isolated pipeline failure/transaction tests."""
-    def __init__(self, defect=None):
+    def __init__(self, defect=None, netlist=None):
         self.defect = defect
+        self.netlist = xml_netlist() if netlist is None else netlist
         self.calls = []
 
     def __call__(self, command, **kwargs):
@@ -212,7 +221,7 @@ class FakeKiCad:
         else:
             board = nets.read_board(Path(kwargs["cwd"]) / "pcb.kicad_pcb")
             if "netlist" in command:
-                output.write_text(xml_netlist(), encoding="utf-8")
+                output.write_text(self.netlist, encoding="utf-8")
             elif "ipcd356" in command:
                 text = ipc_text(board)
                 if self.defect == "ipc-net":
@@ -267,12 +276,53 @@ class ManufacturingTests(unittest.TestCase):
         self.root = Path(self.temp.name)
         make_project(self.root)
 
-    def execute(self, mode="build", defect=None):
-        fake = FakeKiCad(defect)
+    def execute(self, mode="build", defect=None, netlist=None):
+        fake = FakeKiCad(defect, netlist)
         pipeline = m.Manufacturing(self.root, "fake-kicad")
         with patch.object(m.subprocess, "run", fake), contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
             rc = pipeline.execute(mode)
         return rc, pipeline, fake
+
+    def write_bom(self, rows):
+        with (self.root / "pcb" / "BOM.csv").open("w", newline="", encoding="utf-8") as stream:
+            writer = csv.DictWriter(stream, fieldnames=list(rows[0]), lineterminator="\n")
+            writer.writeheader()
+            writer.writerows(rows)
+
+    def external_project(self):
+        metadata = " ".join(f'(property {json.dumps(key)} {json.dumps(content)})'
+                            for key, content in EXTERNAL_METADATA.items())
+        source = BOARD.replace(
+            '(property "MPN" "R1K") (property "Manufacturer" "Example") (property "LCSC Part #" "C123")', metadata)
+        source = source.replace('(property "Reference" "R_DNP")', '(property "Reference" "R2") ' + metadata)
+        source = source.replace('(attr through_hole dnp)', '(attr through_hole)')
+        source = source.replace('(property "Value" "1k")', '(property "Value" "2k2")')
+        (self.root / "pcb" / "pcb.kicad_pcb").write_text(source, encoding="utf-8")
+        rows = m.read_csv(self.root / "pcb" / "BOM.csv", ("Designator",))
+        for row in rows:
+            row.update(Sourcing="LCSC", **{"Sourcing Reference": ""})
+            if row["Designator"] == "R1":
+                row.update(Comment="2k2", Designator="R1,R2", **{
+                    "LCSC Part #": "", **{key: val for key, val in EXTERNAL_METADATA.items() if key != "LCSC"}})
+        self.write_bom(rows)
+        tree = ET.fromstring(xml_netlist())
+        for comp in tree.findall("components/comp"):
+            if comp.get("ref") == "R_DNP":
+                comp.set("ref", "R2")
+                comp.remove(comp.find("property"))
+            if comp.get("ref") in ("R1", "R2"):
+                comp.find("value").text = "2k2"
+                fields = comp.find("fields")
+                fields.clear()
+                for key, content in EXTERNAL_METADATA.items():
+                    if key != "LCSC":  # Native XML may omit this deliberately empty field.
+                        ET.SubElement(fields, "field", name=key).text = content
+        for node in tree.findall("nets/net/node"):
+            if node.get("ref") == "R_DNP":
+                node.set("ref", "R2")
+        xml = self.root / "schematic.xml"
+        ET.ElementTree(tree).write(xml, encoding="utf-8", xml_declaration=True)
+        return xml
 
     def assert_failed(self, defect=None):
         previous_cpl = (self.root / "pcb" / "CPL.csv").read_bytes()
@@ -529,6 +579,322 @@ class ManufacturingTests(unittest.TestCase):
         board.footprints["R1"].properties["LCSC Part #"] = "C999"
         with self.assertRaisesRegex(nets.VerificationError, "LCSC Part #"):
             m.validate_bom(self.root / "pcb" / "BOM.csv", xml, board)
+
+    def test_lcsc_sourcing_defaults_require_codes_and_explicit_sources_match(self):
+        path = self.root / "pcb" / "BOM.csv"
+        rows = m.read_csv(path, ("Designator",))
+        board = nets.read_board(self.root / "pcb" / "pcb.kicad_pcb")
+        xml = self.root / "schematic.xml"
+        xml.write_text(xml_netlist(), encoding="utf-8")
+        for explicit in (False, True):
+            with self.subTest(explicit=explicit):
+                if explicit:
+                    for row in rows:
+                        row.update(Sourcing="LCSC", **{"Sourcing Reference": ""})
+                self.write_bom(rows)
+                self.assertEqual(len(m.validate_bom(path, xml, board)), 3)
+                rows[0]["LCSC Part #"] = ""
+                self.write_bom(rows)
+                with self.assertRaisesRegex(nets.VerificationError, "invalid LCSC"):
+                    m.validate_bom(path, xml, board)
+                rows[0]["LCSC Part #"] = "C123"
+        self.write_bom(rows)
+        for key, content in (("Sourcing", ""), ("Sourcing", "Unknown"), ("Sourcing", "External"),
+                             ("Sourcing Reference", EXTERNAL_METADATA["Sourcing Reference"])):
+            for owner in ("PCB", "XML"):
+                with self.subTest(owner=owner, key=key, content=content):
+                    fields = {"Sourcing": "LCSC", "Sourcing Reference": "", key: content}
+                    board = nets.read_board(self.root / "pcb" / "pcb.kicad_pcb")
+                    tree = ET.fromstring(xml_netlist())
+                    if owner == "PCB":
+                        board.footprints["R1"].properties.update(fields)
+                    else:
+                        for name, val in fields.items():
+                            ET.SubElement(tree.find("components/comp/fields"), "field", name=name).text = val
+                    ET.ElementTree(tree).write(xml, encoding="utf-8")
+                    with self.assertRaisesRegex(nets.VerificationError, "BOM Sourcing"):
+                        m.validate_bom(path, xml, board)
+
+    def test_external_bom_requires_explicit_source_empty_code_and_https_record(self):
+        self.external_project()
+        path = self.root / "pcb" / "BOM.csv"
+        original = m.read_csv(path, ("Designator",))
+        for key, contents in (
+                ("Sourcing", (None, "", " ", "Unknown", "external", "LCSC")),
+                ("LCSC Part #", (None, "C123", "TBD", " ")),
+                ("Sourcing Reference", (None, "", " ", "TBD", "http://www.vishay.com/part", "https://",
+                                       "https:///part", "https://[invalid", "https://vishay.com:invalid/part",
+                                       "https://user@vishay.com/part", "https://vishay.com/part\n",
+                                       "https://vishay.com/part name", "https://vishay.com\\part")),
+                ("LCSC", ("C123",))):
+            for content in contents:
+                with self.subTest(key=key, content=content):
+                    rows = copy.deepcopy(original)
+                    if content is None:
+                        for row in rows:
+                            row.pop(key, None)
+                    else:
+                        for row in rows:
+                            row.setdefault(key, "")
+                        rows[0][key] = content
+                    self.write_bom(rows)
+                    with self.assertRaises(nets.VerificationError):
+                        m.read_bom(path)
+        for key in ("Comment", "Designator", "Footprint", "MPN", "Manufacturer"):
+            rows = copy.deepcopy(original)
+            rows[0][key] = " "
+            self.write_bom(rows)
+            with self.subTest(key=key), self.assertRaisesRegex(nets.VerificationError, "empty sourcing"):
+                m.read_bom(path)
+        rows = copy.deepcopy(original)
+        rows[1]["Sourcing Reference"] = EXTERNAL_METADATA["Sourcing Reference"]
+        self.write_bom(rows)
+        with self.assertRaisesRegex(nets.VerificationError, "LCSC BOM Sourcing Reference must be empty"):
+            m.read_bom(path)
+
+    def test_external_source_identity_and_reference_parity_are_not_optional(self):
+        xml = self.external_project()
+        original = xml.read_text()
+        path = self.root / "pcb" / "BOM.csv"
+        for owner in ("PCB", "XML"):
+            for key, contents in (
+                    ("MPN", (None, "", "WRONG-MPN")), ("Manufacturer", (None, "", "WRONG-MANUFACTURER")),
+                    ("Sourcing", (None, "", "LCSC", "Unknown")),
+                    ("Sourcing Reference", (None, "", EXTERNAL_METADATA["Sourcing Reference"] + "0"))):
+                for content in contents:
+                    with self.subTest(owner=owner, key=key, content=content):
+                        board = nets.read_board(self.root / "pcb" / "pcb.kicad_pcb")
+                        tree = ET.fromstring(original)
+                        if owner == "PCB":
+                            fields = board.footprints["R1"].properties
+                            if content is None:
+                                fields.pop(key)
+                            else:
+                                fields[key] = content
+                        else:
+                            fields = tree.find("components/comp/fields")
+                            field = fields.find(f"field[@name='{key}']")
+                            if content is None:
+                                fields.remove(field)
+                            else:
+                                field.text = content
+                        ET.ElementTree(tree).write(xml, encoding="utf-8")
+                        with self.assertRaisesRegex(nets.VerificationError, "BOM " + key):
+                            m.validate_bom(path, xml, board)
+
+    def test_external_lcsc_aliases_and_xml_empty_field_omission_are_narrow(self):
+        xml = self.external_project()
+        original = xml.read_text()
+        path = self.root / "pcb" / "BOM.csv"
+        for owner in ("PCB", "XML"):
+            for aliases in ({}, {"LCSC": ""}, {"LCSC Part #": ""}, {"LCSC": "", "LCSC Part #": ""},
+                            {"LCSC": "C123"}, {"LCSC Part #": "C123"},
+                            {"LCSC": "", "LCSC Part #": "C123"}, {"LCSC": "C123", "LCSC Part #": ""}):
+                with self.subTest(owner=owner, aliases=aliases):
+                    board = nets.read_board(self.root / "pcb" / "pcb.kicad_pcb")
+                    tree = ET.fromstring(original)
+                    if owner == "PCB":
+                        board.footprints["R1"].properties.pop("LCSC")
+                        board.footprints["R1"].properties.update(aliases)
+                    else:
+                        for key, content in aliases.items():
+                            ET.SubElement(tree.find("components/comp/fields"), "field", name=key).text = content
+                    ET.ElementTree(tree).write(xml, encoding="utf-8")
+                    if any(aliases.values()) or (owner == "PCB" and not aliases):
+                        with self.assertRaisesRegex(nets.VerificationError, "LCSC Part #"):
+                            m.validate_bom(path, xml, board)
+                    else:
+                        self.assertEqual(len(m.validate_bom(path, xml, board)), 4)
+        for key in ("MPN", "Manufacturer", "Sourcing", "Sourcing Reference", "LCSC"):
+            tree = ET.fromstring(original)
+            fields = tree.find("components/comp/fields")
+            if key == "LCSC":
+                ET.SubElement(fields, "field", name=key).text = "C123"
+            ET.SubElement(fields, "field", name=key).text = EXTERNAL_METADATA[key]
+            ET.ElementTree(tree).write(xml, encoding="utf-8")
+            with self.subTest(key=key), self.assertRaisesRegex(nets.VerificationError, "duplicate XML component field"):
+                m.validate_bom(path, xml, nets.read_board(self.root / "pcb" / "pcb.kicad_pcb"))
+        # Ordinary XML must still contain its code, even when the BOM has one.
+        tree = ET.fromstring(original)
+        fields = tree.find("components/comp[@ref='J_LED_A']/fields")
+        fields.remove(fields.find("field[@name='LCSC Part #']"))
+        ET.ElementTree(tree).write(xml, encoding="utf-8")
+        with self.assertRaisesRegex(nets.VerificationError, "LCSC Part #"):
+            m.validate_bom(path, xml, nets.read_board(self.root / "pcb" / "pcb.kicad_pcb"))
+
+    def test_external_parts_still_require_exact_bom_identity_and_population(self):
+        xml = self.external_project()
+        path = self.root / "pcb" / "BOM.csv"
+        original = m.read_csv(path, ("Designator",))
+        board = nets.read_board(self.root / "pcb" / "pcb.kicad_pcb")
+        for key, content in (("MPN", "WRONG-MPN"), ("Manufacturer", "WRONG-MANUFACTURER"), ("Comment", "1k"),
+                             ("Footprint", "Local:SMT"), ("Designator", "R1"), ("Designator", "R1,R1"),
+                             ("Designator", "R1,UNKNOWN"), ("Designator", "R1,R2,H1"), ("Quantity", "1")):
+            rows = copy.deepcopy(original)
+            if key == "Quantity":
+                for row in rows:
+                    row[key] = str(len(row["Designator"].split(",")))
+            rows[0][key] = content
+            self.write_bom(rows)
+            with self.subTest(key=key, content=content), self.assertRaises(nets.VerificationError):
+                m.validate_bom(path, xml, board)
+        self.write_bom(original)
+        original_xml = xml.read_text()
+        for attribute in ("dnp", "exclude_from_bom", "exclude_from_pos_files"):
+            for schematic_matches in (False, True):
+                with self.subTest(attribute=attribute, schematic_matches=schematic_matches):
+                    board = nets.read_board(self.root / "pcb" / "pcb.kicad_pcb")
+                    board.footprints["R1"].attributes.add(attribute)
+                    tree = ET.fromstring(original_xml)
+                    if schematic_matches:
+                        ET.SubElement(tree.find("components/comp"), "property", name=attribute)
+                    ET.ElementTree(tree).write(xml, encoding="utf-8")
+                    with self.assertRaises(nets.VerificationError):
+                        m.validate_bom(path, xml, board)
+
+    def test_external_check_reports_file_parity_not_allocation_and_keeps_bom_exact(self):
+        xml = self.external_project()
+        with patch("builtins.print") as output:
+            rc, pipeline, fake = self.execute("check", netlist=xml.read_text())
+        self.assertEqual(rc, 0, pipeline.errors)
+        sourcing = pipeline.verification["sourcing"]
+        self.assertEqual(sourcing, {
+            "file_metadata_verified": True, "allocation_verified": False,
+            "pending_external": {ref: {key: EXTERNAL_METADATA[key] for key in
+                                      ("MPN", "Manufacturer", "Sourcing Reference")} for ref in ("R1", "R2")}})
+        printed = "\n".join(call.args[0] for call in output.call_args_list)
+        self.assertIn("pending allocation (not verified)", printed)
+        for ref in ("R1", "R2"):
+            self.assertIn(f"{ref}: {EXTERNAL_METADATA['MPN']} ({EXTERNAL_METADATA['Sourcing Reference']})", printed)
+        report = m.read_json(self.root / "build" / "reports" / "verification.json")
+        self.assertEqual(report["status"], "checked")
+        self.assertEqual(report["checks"]["sourcing"], sourcing)
+        for key in ("population", "nets", "archives", "export_diagnostics"):
+            self.assertTrue(report["checks"][key]["verified"])
+        self.assertEqual(report["checks"]["population"]["references"], ["J_LED_A", "J_LED_C", "R1", "R2"])
+        self.assertEqual((pipeline.run / "release" / "BOM.csv").read_bytes(),
+                         (self.root / "pcb" / "BOM.csv").read_bytes())
+        self.assertTrue((self.root / "pcb" / "CPL.csv").read_text().startswith("Designator,"))
+        self.assertEqual({p.name for p in (self.root / "build").iterdir()},
+                         {"reports", "status.json", "drc_report.txt", "drc_report.json", "erc_report.txt", "erc_report.json"})
+        self.assertFalse((self.root / "pcb" / "Gerbers.zip").exists())
+
+    def test_external_allocation_blocks_publication_even_with_closed_engineering_holds(self):
+        rc, pipeline, fake = self.execute()
+        self.assertEqual(rc, 0, pipeline.errors)
+        self.assertFalse(pipeline.verification["sourcing"]["allocation_verified"])
+        self.assertEqual(pipeline.verification["sourcing"]["pending_external"], {})
+        xml = self.external_project()
+        rc, pipeline, fake = self.execute(netlist=xml.read_text())
+        self.assertEqual(rc, 1)
+        self.assertEqual(pipeline.errors, [
+            "Unresolved external sourcing allocation; verified draft exports retained privately: R1, R2"])
+        self.assertTrue(pipeline.verification["engineering_release"]["verified"])
+        self.assertTrue(pipeline.verification["archives"]["verified"])
+        self.assertEqual(set(pipeline.verification["sourcing"]["pending_external"]), {"R1", "R2"})
+        self.assertTrue((pipeline.run / "previous-build" / "manifest.json").exists())
+        self.assertTrue((pipeline.run / "previous-pcb-Gerbers.zip").exists())
+        self.assertFalse(any(c[0] == "git" for c in fake.calls))
+        self.assertEqual({p.name for p in (self.root / "build").iterdir()},
+                         {"reports", "status.json", "drc_report.txt", "drc_report.json", "erc_report.txt", "erc_report.json"})
+        self.assertFalse((self.root / "pcb" / "Gerbers.zip").exists())
+        self.assertEqual(m.read_json(self.root / "build" / "status.json")["status"], "failed")
+
+    def test_external_allocation_does_not_replace_or_add_to_engineering_hold_error(self):
+        xml = self.external_project()
+        path = self.root / "pcb" / "verification.json"
+        review = m.read_json(path)
+        review.update(release_holds=[{"id": key, "reason": "Synthetic open hold"} for key in ("C4", "C5", "W3", "W1", "W4")],
+                      file_release_review=None)
+        m.write_json(path, review)
+        for mode, expected in (("check", 0), ("build", 1)):
+            with self.subTest(mode=mode):
+                rc, pipeline, fake = self.execute(mode, netlist=xml.read_text())
+                self.assertEqual(rc, expected)
+                self.assertEqual(pipeline.errors, [
+                    "Open engineering release holds; verified draft exports retained privately"] if mode == "build" else [])
+                self.assertEqual(pipeline.verification["engineering_release"]["holds"], review["release_holds"])
+                self.assertEqual(set(pipeline.verification["sourcing"]["pending_external"]), {"R1", "R2"})
+                self.assertEqual({p.name for p in (self.root / "build").iterdir()},
+                                 {"reports", "status.json", "drc_report.txt", "drc_report.json", "erc_report.txt", "erc_report.json"})
+                self.assertFalse((self.root / "pcb" / "Gerbers.zip").exists())
+
+    def test_sync_metadata_validates_external_rows_and_changes_only_reviewed_metadata(self):
+        xml = self.external_project()
+        project = self.root / "pcb"
+        paths = (project / "pcb.kicad_pcb", project / "pcb.kicad_sch")
+        board, schematic = (sync.parse(path.read_text()) for path in paths)
+        bom = m.read_bom(project / "BOM.csv")
+        metadata_keys = {*EXTERNAL_METADATA, "LCSC Part #"}
+        for fp in sync.children(board, "footprint"):
+            props = {json.loads(p[1]): p for p in sync.children(fp, "property")}
+            ref = json.loads(props["Reference"][2])
+            if ref not in bom:
+                continue
+            if ref == "R2":
+                fp[:] = [item for item in fp if not (isinstance(item, list) and item[0] == "property"
+                                                    and json.loads(item[1]) in metadata_keys)]
+            else:
+                stale = {"Sourcing": "LCSC" if ref == "R1" else "External",
+                         "Sourcing Reference": "https://example.com/stale-record"}
+                if ref == "R1":
+                    stale.update(MPN="OLD-MPN", Manufacturer="OLD-MANUFACTURER", LCSC="C999", **{"LCSC Part #": "C888"})
+                for key, content in stale.items():
+                    if key in props:
+                        props[key][2] = json.dumps(content)
+                    else:
+                        fp.append(["property", json.dumps(key), json.dumps(content)])
+            schematic.append(["symbol", ["lib_id", '"Local:THT"'], ["at", "50", "50", "0"],
+                              ["in_bom", "yes"], ["on_board", "yes"], ["dnp", "no"],
+                              *copy.deepcopy(sync.children(fp, "property")), ["property", '"Footprint"', fp[1]]])
+        for path, tree in zip(paths, (board, schematic)):
+            path.write_text(sync.format_node(tree) + "\n", encoding="utf-8")
+        before = [path.read_bytes() for path in paths]
+        rows = m.read_csv(project / "BOM.csv", ("Designator",))
+        with patch.object(sync, "__file__", str(project / "sync_libraries.py")), \
+                patch.object(sync.sys, "argv", ["sync_libraries.py", "--sync-metadata"]), \
+                contextlib.redirect_stdout(io.StringIO()):
+            for key, content in (("Sourcing", ""), ("Sourcing", "Unknown"), ("Sourcing Reference", ""),
+                                 ("Sourcing Reference", "http://example.com/part"), ("LCSC Part #", "C123"),
+                                 ("MPN", ""), ("Manufacturer", ""), ("Comment", "WRONG"),
+                                 ("Footprint", "Local:SMT"), ("Designator", "R1,R2,UNKNOWN"),
+                                 ("Designator", "R1,R1")):
+                changed = copy.deepcopy(rows)
+                changed[0][key] = content
+                self.write_bom(changed)
+                with self.subTest(key=key, content=content), self.assertRaises(ValueError):
+                    sync.main()
+                self.assertEqual([path.read_bytes() for path in paths], before)
+            self.write_bom(rows)
+            sync.main()
+            after = [path.read_bytes() for path in paths]
+            sync.main()
+            self.assertEqual([path.read_bytes() for path in paths], after)
+        for old, new, kind in zip(before, after, ("footprint", "symbol")):
+            original, updated = sync.parse(old.decode()), sync.parse(new.decode())
+            for instance in sync.children(updated, kind):
+                props = {json.loads(p[1]): json.loads(p[2]) for p in sync.children(instance, "property")}
+                ref = props["Reference"]
+                if ref in bom:
+                    row = bom[ref]
+                    expected = {"MPN": row["MPN"], "Manufacturer": row["Manufacturer"], "LCSC": row["LCSC Part #"],
+                                "Sourcing": row["Sourcing"], "Sourcing Reference": row["Sourcing Reference"]}
+                    self.assertEqual({key: props[key] for key in expected}, expected)
+                    if "LCSC Part #" in props:
+                        self.assertEqual(props["LCSC Part #"], row["LCSC Part #"])
+            for tree in (original, updated):
+                for instance in sync.children(tree, kind):
+                    instance[:] = [item for item in instance if not (
+                        isinstance(item, list) and item[0] == "property" and json.loads(item[1]) in metadata_keys)]
+            self.assertEqual(original, updated, "Geometry, values, footprints and non-sourcing fields must not change")
+        self.assertEqual(set(m.validate_bom(project / "BOM.csv", xml, nets.read_board(paths[0]))), set(bom))
+        # The standalone script must resolve the same shared validator from its fixture root.
+        script = project / "sync_libraries.py"
+        shutil.copy2(REPO / "pcb" / "sync_libraries.py", script)
+        result = subprocess.run([sync.sys.executable, "-B", "-W", "error", str(script), "--sync-metadata"],
+                                cwd=self.root, capture_output=True, text=True, timeout=120)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual([path.read_bytes() for path in paths], after)
 
     def test_missing_exported_cpl_file_or_designator_blocks(self):
         for defect in ("missing-cpl", "missing-cpl-ref"):

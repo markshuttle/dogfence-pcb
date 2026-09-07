@@ -74,6 +74,28 @@
 			)
 		)
 	)
+	(property "Sourcing Reference" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Sourcing" "LCSC"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.15)
+			)
+		)
+	)
 	(property "LCSC" "C2836978"
 		(at 0 0 0)
 		(layer "F.Fab")

@@ -19,11 +19,15 @@ absolute limit after a post-resistor fault. **Neither circuit is selected for
 population.** The records preserve calculations and failures, not a completed
 design awaiting field qualification alone.
 
-**Later user scope change:** accidental low-voltage installation polarity damage
-is accepted, so reversed-flying-lead survival is no longer mandatory. Direct-
-strike rebuilding is accepted, not routine or all nearby transient damage.
-ELECTRICAL section 9 now controls the simple 16-part/passive investigation.
-L1/L2 below remain research history, not prerequisites for that direction.
+**Later implementation after checkpoint ad282e3:** installation-polarity LED
+damage and direct-strike rebuilding are accepted, but not all routine/nearby
+transient damage. Energized cattle fencing is prohibited near the entire
+boundary, stations and hub; the old close-parallel exposure is withdrawn.
+ELECTRICAL/ASSEMBLY now control the **implemented 16-part PR02/BYG23T hybrid**:
+two 2 W axial resistors, two SMA series diodes and two SMA negative shunts,
+not L1/L2's active/current-regulating circuits. Their research below remains
+history, not a prerequisite or the current BOM. The new shunts are not a
+guaranteed forward-pulse limiter or an instantaneous <=5 V clamp.
 
 ## 1. Initial L1 Investigation
 

@@ -1,15 +1,17 @@
-Comment,Designator,Footprint,LCSC Part #,MPN,Manufacturer
-"KF128-7.62-3P",J_IN,"DogFence:KF128_7.62_3P_Input",C474957,"KF128-7.62-3P","Cixi Kefa Elec"
-"KF128-7.62-3P",J_EARTH,"DogFence:KF128_7.62_3P_Earth",C474957,"KF128-7.62-3P","Cixi Kefa Elec"
-"KF129-5.08-2P",J_LED_A,"DogFence:KF129_5.08_2P_LED_A",C475092,"KF129-5.08-2P","Cixi Kefa Elec"
-"KF129-5.08-2P",J_LED_C,"DogFence:KF129_5.08_2P_LED_C",C475092,"KF129-5.08-2P","Cixi Kefa Elec"
-"2.2k 1W",R1,"DogFence:MBE0414_P15.24mm",C1368610,"MBE04140C2201FC100","Vishay Intertech"
-"2.2k 1W",R2,"DogFence:MBE0414_P15.24mm",C1368610,"MBE04140C2201FC100","Vishay Intertech"
-"1N4007G",D1,"DogFence:1N4007G_P10.16mm_K_Right",C232439,"1N4007G","onsemi"
-"1N4007G",D2,"DogFence:1N4007G_P10.16mm_K_Right",C232439,"1N4007G","onsemi"
-"SMD5050-470NA",GDT_AB,"DogFence:SMD5050-470NA",C39692533,"SMD5050-470NA","Ruilon"
-"SMD5050-470NA",GDT_BC,"DogFence:SMD5050-470NA",C39692533,"SMD5050-470NA","Ruilon"
-"B5G470L",GDT_AC,"DogFence:B5G470L_P15.24mm_NS_Overpass",C5337217,"B5G470L","Bencent"
-"2R470TD-8",GDT_A_E,"DogFence:2R470TD-8_P15.24mm",C2836978,"2R470TD-8","Ruilon"
-"2R470TD-8",GDT_B_E,"DogFence:2R470TD-8_P15.24mm",C2836978,"2R470TD-8","Ruilon"
-"2R470TD-8",GDT_C_E,"DogFence:2R470TD-8_P15.24mm",C2836978,"2R470TD-8","Ruilon"
+Comment,Designator,Footprint,LCSC Part #,MPN,Manufacturer,Sourcing,Sourcing Reference
+"KF128-7.62-3P",J_IN,"DogFence:KF128_7.62_3P_Input",C474957,"KF128-7.62-3P","Cixi Kefa Elec",LCSC,
+"KF128-7.62-3P",J_EARTH,"DogFence:KF128_7.62_3P_Earth",C474957,"KF128-7.62-3P","Cixi Kefa Elec",LCSC,
+"KF129-5.08-2P",J_LED_A,"DogFence:KF129_5.08_2P_LED_A",C475092,"KF129-5.08-2P","Cixi Kefa Elec",LCSC,
+"KF129-5.08-2P",J_LED_C,"DogFence:KF129_5.08_2P_LED_C",C475092,"KF129-5.08-2P","Cixi Kefa Elec",LCSC,
+"2.2k 2W",R1,"DogFence:PR02_Cu_P15.24mm",,"PR02000202201FA100","Vishay BCcomponents",External,https://www.vishay.com/search?type=inv&query=PR02000202201FA100
+"2.2k 2W",R2,"DogFence:PR02_Cu_P15.24mm",,"PR02000202201FA100","Vishay BCcomponents",External,https://www.vishay.com/search?type=inv&query=PR02000202201FA100
+"BYG23T-M3",D1,"DogFence:BYG23T_SMA_K_Right",C145454,"BYG23T-M3/TR","Vishay General Semiconductor",LCSC,
+"BYG23T-M3",D2,"DogFence:BYG23T_SMA_K_Right",C145454,"BYG23T-M3/TR","Vishay General Semiconductor",LCSC,
+"BYG23T-M3",D3,"DogFence:BYG23T_SMA_K_Right",C145454,"BYG23T-M3/TR","Vishay General Semiconductor",LCSC,
+"BYG23T-M3",D4,"DogFence:BYG23T_SMA_K_Right",C145454,"BYG23T-M3/TR","Vishay General Semiconductor",LCSC,
+"SMD5050-470NA",GDT_AB,"DogFence:SMD5050-470NA",C39692533,"SMD5050-470NA","Ruilon",LCSC,
+"SMD5050-470NA",GDT_BC,"DogFence:SMD5050-470NA",C39692533,"SMD5050-470NA","Ruilon",LCSC,
+"B5G470L",GDT_AC,"DogFence:B5G470L_P15.24mm_NS_Overpass",C5337217,"B5G470L","Bencent",LCSC,
+"2R470TD-8",GDT_A_E,"DogFence:2R470TD-8_P15.24mm",C2836978,"2R470TD-8","Ruilon",LCSC,
+"2R470TD-8",GDT_B_E,"DogFence:2R470TD-8_P15.24mm",C2836978,"2R470TD-8","Ruilon",LCSC,
+"2R470TD-8",GDT_C_E,"DogFence:2R470TD-8_P15.24mm",C2836978,"2R470TD-8","Ruilon",LCSC,

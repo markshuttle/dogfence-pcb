@@ -2,22 +2,24 @@
 
 **Revision: 1.2.0-dev. P2 analysis updated 2026-09-07. Electrical release HOLD.**
 
-This record accompanies `scripts/analyze_limits.py` and `tests/test_electrical.py`. It does not approve a manufacturing BOM or qualify hardware. The model implements the agreed same-end TEST topology; **LED reversal/pulse protection and coordinated source/fault protection are not implemented in the circuit**. C4 and C5 remain design holds, not merely tests awaiting an otherwise approved design. W3 remains a continuous-duty design/thermal qualification hold. Do not remove the controlled `pcb/verification.json` engineering holds because these tests or KiCad file checks pass.
+This record accompanies the implemented **16-part hybrid** and the persistent DC/bounds analyses. R1/R2 are now 2 W PR02 resistors; D1/D2 are SMA series diodes and D3/D4 are negative-voltage shunts. **A shunt is not a universal LED pulse-current limiter, and coordinated powered-GDT/source protection remains unresolved.** C4/C5/W3 and the controlled release holds remain open for their stated scope; file checks do not qualify hardware, external procurement allocation or continuous potted duty.
 
-The circuit and 14-part BOM remain unchanged; the continuation implements P3 hole/body/land/via corrections, not speculative protection additions. **One of the two ordered LRS-75-36 units serves TEST; the other is a disconnected spare**, as the user confirmed. No dual-source wiring or physical switch terminal assignment is made. Section 8 records the bounded analysis; **section 9 supersedes the earlier requirement for installation-polarity immunity** with the user's accepted LED-replacement risk and a simpler design direction. All unimplemented parts below remain **candidates, not substitutions, stock allocations or drop-ins**.
+The hybrid was implemented after checkpoint **ad282e3**, at unchanged development revision **1.2.0-dev**. **One of the two ordered LRS-75-36 units serves TEST; the other is a disconnected spare**. No dual-source wiring, physical switch pinout or powered-GDT shutdown was added. Section 9 records the implemented simple circuit and current user scope. Older active/zener/source investigations below are explicitly historical, not required additions. **Energized cattle fencing is prohibited near the entire boundary cable, stations and hub**; the former close-parallel exposure is withdrawn, not qualified safe.
 
 ## 1. Implemented Model
 
 The inspected indicator circuit is:
 
 ```text
-WIRE_A -> R1 2.2k -> D1 anode(2), cathode(1) -> LED_A_POS -> J_LED_A.1
-WIRE_C -> R2 2.2k -> D2 anode(2), cathode(1) -> LED_C_POS -> J_LED_C.1
+WIRE_A -> R1 PR02 2.2k 2W -> D1 A(2), K(1) -> LED_A_POS -> J_LED_A.1
+WIRE_C -> R2 PR02 2.2k 2W -> D2 A(2), K(1) -> LED_C_POS -> J_LED_C.1
 J_LED_A.2 = J_LED_C.2 = WIRE_B
+D3: anode(2) to WIRE_B, cathode(1) to LED_A_POS
+D4: anode(2) to WIRE_B, cathode(1) to LED_C_POS
 External LED anode goes to terminal 1, cathode to terminal 2.
 ```
 
-GDT_AB, GDT_BC and GDT_AC connect the named core pairs **before** the indicator resistors. GDT_A_E, GDT_B_E and GDT_C_E connect the respective cores to the separate EARTH bus. Thus R1/R2 do not limit a GDT's source follow current. D1/D2 are onsemi `1N4007G`; the current integration BOM has corrected the earlier LGE attribution.
+GDT_AB, GDT_BC and GDT_AC connect the named core pairs **before** the indicator resistors. The three core/EARTH tubes connect to the separate EARTH bus. Thus the 2 W R1/R2 do not limit GDT source follow current. R1/R2 are **Vishay BCcomponents PR02000202201FA100**, copper-lead, 1%, +/-250 ppm/K, externally sourced with allocation pending. D1-D4 are **Vishay General Semiconductor BYG23T-M3/TR / C145454**, 1300 V repetitive reverse, SMA. D3/D4 do not create a forward B-to-A/C path through the intact series diodes. They are not connected before R1/R2 or directly to EARTH.
 
 The functional hub connections used in the calculation are:
 
@@ -34,7 +36,7 @@ Ties belong on the source-side contacts. There is no permanent End A/C strap, op
 
 ### Parameters And Equations
 
-Defaults are **41 stations**, numbered 0 through 40 at 0.1 km spacing, including both shed-end boards; 82 indicator branches; 36 V; and 6.9 ohm/km per core at 20 C, or 27.6 ohm per 4 km core. The default LED drop of 2.1 V and rectifier drop of 0.7 V reproduce the earlier 2.8 V illustrative calculation. **They are not an APEM SG-characterization result.**
+Defaults are **41 stations**, numbered 0 through 40 at 0.1 km spacing; 82 branches; 36 V; and the historical illustrative 6.9 ohm/km per core. The 2.1 V LED / 0.7 V series-diode defaults preserve that comparison, **not characterized APEM/BYG23T I/V data**. `design_bounds.py` now uses PR02 tolerance/TCR, the conditional cable/contact ceiling and a **5.2 V high-drop screen** (3.3 LED + the BYG23T 1.9 V maximum tested at 1 A/25 C). Neither test point is a full-temperature indicator-current guarantee.
 
 For core `c`, station `s`, and span length `dx`:
 
@@ -50,6 +52,13 @@ P_R       = I^2 * R
 P_LED     = I * V_LED
 P_D       = I * V_D
 ```
+
+These are branch/zero-leak LED currents. For a conducting fixed-Vf LED,
+`I_LED = I_branch - I_clamp`; `branch_budget()` and the bounds report separately
+account for up to **50 uA** normal clamp diversion under an explicit monotone
+leakage/temperature assumption. This current is already in the resistor/diode/
+PSU path, not an extra input load. The physical series-diode reverse leakage,
+unpowered-island currents, capacitance and recovery remain outside the solver.
 
 The copper temperature coefficient defaults to 0.00393/C as an engineering approximation. Tolerances and temperature coefficients are **signed selected corners**, not random distributions or automatically combined manufacturer maxima. Per-core cable resistance/errors and per-channel R/LED/diode parameters are independent. `channel_overrides` permits station-specific branches. Temperature correction is an input, not a self-heating iteration; reject negative/nonfinite effective parameters. Contact/splice aging, actual cable maximum resistance, and LED I/V distributions still need data.
 
@@ -84,7 +93,7 @@ Clean-cut sweep maximum KCL residual: **4.34e-14 A**. Maximum source/power-balan
 
 ## 2. Calculated Results
 
-All values in this section are calculations, not measurements. First four rows use the default ideal 36 V source and nominal R; last row is the explicitly constructed upper screening case in section 3.
+All values here are calculations, not measurements. The first four rows retain historical ideal-36 V comparisons; their current is branch current before clamp diversion. The final row is the **current PR02** upper screen in section 3. See DESIGN_BOUNDS for the selected-part/leakage studies.
 
 | Case | Source A | Source W | LED current min/max, mA | Largest resistor W |
 | :--- | ---: | ---: | ---: | ---: |
@@ -92,7 +101,7 @@ All values in this section are calculations, not measurements. First four rows u
 | Five boards, zero cable R | 0.150909 | 5.4327 | 15.0909 / 15.0909 | 0.501018 |
 | All 41 boards, zero cable R | 1.237455 | 44.5484 | 15.0909 / 15.0909 | 0.501018 |
 | 41 boards, 40 ohm/core, 3.3 V LED + 0.7 V diode | 0.727083 | 26.1750 | 6.2096 / 14.5455 | 0.465455 |
-| 40.39597 V, zero drops, minimum R, all 41 boards, zero cable R | 1.528903 | 61.7615 | 18.6452 / 18.6452 | 0.753190 |
+| 40.39597 V, zero drops, PR02 minimum R, all 41 boards, zero cable R | 1.561876 | 63.0935 | 19.0473 / 19.0473 | 0.769433 |
 
 The low-R entire-load case is essential: a five-board demonstration does not establish 41-board capacity. The ordered LRS-75-36 has capacity margin for these declared cases before actual thermal/input derating and added protection/auxiliary load. Inspect the delivered working unit's nameplate and settings; its disconnected spare contributes no current or power. The LRS-35 results remain historical comparisons, not the current source allocation. Neither model is a coordinated fence-fault protective device by itself.
 
@@ -119,25 +128,24 @@ The study deliberately stacks the upper adjustment setting, +1% tolerance, +0.75
 
 ```text
 V_screen = 39.6 * 1.01 * (1 + 0.0003 * (50 - 25)) + 0.1 = 40.39597 V
-R_min    = 2200 * 0.99 * (1 - 50e-6 * (125 - 20))        = 2166.5655 ohm
-I_upper  = V_screen / R_min                            = 18.6452 mA
-P_upper  = V_screen^2 / R_min                           = 0.753190 W
+R_min    = 2200 * 0.99 * (1 - 250e-6 * (125 - 20))       = 2120.8275 ohm
+I_upper  = V_screen / R_min                            = 19.0473 mA
+P_upper  = V_screen^2 / R_min                           = 0.769433 W
 ```
 
 This is a **conservative chosen screening envelope, not Mean Well's guaranteed combined maximum**, a measured accessible-adjustment limit, or a claim that a resistor will operate at 125 C. Adjustment-range/tolerance interaction must be confirmed. Treating a ripple peak as continuous overestimates its steady heating but gives a simple upper screen. Zero LED and diode drops avoid claiming unprovided minimum Vf; they also screen an output short. Supply startup, overshoot, malfunction, external surges, aging, and any voltage above this declared window are not covered. The PSU's 41.4-48.6 V overvoltage shutdown range is **not** enforcement of this 40.39597 V screen.
 
-Vishay [S3] specifies MBE0414 **0.65 W at 70 C in standard mode, 125 C maximum film**, versus **1 W at 70 C in power mode, 155 C maximum film**. Above 70 C, the published derating slopes reach zero at the corresponding film limit. The helper implements:
+The selected **PR02 copper-lead version [S13] is 2 W at 70 C ambient**, derating to zero at 155 C ambient. This is not the 1.3 W FeCu version. The PR02-specific hot-spot example gives **220 C maximum**, distinct from ambient and from the generic 250 C film entry elsewhere in the sheet; neither permits gel/cable/contacts to reach those temperatures. The helper implements:
 
 ```text
-P_standard(T_local) = 0.65 * clamp((125 - T_local)/(125 - 70), 0, 1)
-P_power(T_local)    = 1.00 * clamp((155 - T_local)/(155 - 70), 0, 1)
+P_PR02(T_local) = 2.00 * clamp((155 - T_local)/(155 - 70), 0, 1)
 ```
 
-The data explicitly makes the rating conditional on actual film temperature and heat-flow support. Gel, lead forming, copper, lid LEDs, sun and enclosure temperature change that support. The 0.753190 W screen already exceeds standard-mode P70; being below 1 W is not a continuous-safe potted result. At nominal source-end current, two resistors dissipate **1.0020 W/board**; the two rectifiers add approximately **0.0211 W** at the assumed 0.7 V. The zero-drop upper screen puts **1.5064 W/board in the resistors**. A higher-wattage replacement at the same resistance does not reduce those watts.
+The 0.769433 W screen is below the new 2 W P70, but actual hot-spot temperature and heat flow still control. The **>=1.00 mm resistor body standoff** is implemented as an assembly requirement, not a physical-test result. The mounted 75 K/W example suggests about **57.7 K rise** at the upper screen; that is not OneGel thermal resistance. Nominal resistor heat remains **1.0020 W/board**, with approximately 0.0211 W in D1/D2 at the illustrative 0.7 V and at most 0.000210 W shifted from the external LEDs into the shunts at 2.1 V/50 uA. Upper two-branch input heat is **1.538866 W**. The 2 W rating did not remove those watts.
 
-**Disposition:** do not approve retaining R1/R2 for unrestricted adjustment/solar exposure yet. Prefer a controlled 36 V setting with an enforceable maximum and verify its continuous thermal envelope; alternatively qualify a pulse/thermally suitable resistor or split network while retaining the required effective resistance/current. No substitute MPN is approved here. Measure steady-state potted resistor body/lead and estimated film temperatures, LED junction margin, connectors, gel and enclosure at credible solar/internal temperatures. Use sensors and uncertainty margins, not touch. Include LED open/reversal/clamp-conducting and output-short cases. Normal TEST must be continuous-safe without a timer.
+**Disposition:** the 2 W part is selected in the design, not thermally qualified. Establish the actual allowed source envelope and test steady-state closed/potted temperatures, including both output shorts and credible hot/solar conditions. Rating-only temperature ceilings are not simultaneous electrothermal operating limits; the resistance screen separately assumes resistor temperature <=125 C. The former 35-37 V proposal is not enforced hardware, and a passive design covering the actual normal PSU range is an alternative to a new precision cutoff. The proposed 60 C interfaces / 110 C film targets are conservative development targets, not universal user limits. Meet actual part, cable and material limits with measurement uncertainty. Normal TEST must remain continuous-safe without a timer.
 
-The calculated normal J_IN currents are local branch currents: one branch on A and C, their sum on B, up to **37.2904 mA** for the two zero-drop branches in the declared upper screen. The WAGO through-splices, source wiring and hub carry the distributed perimeter current instead. Connector heating needs actual `I^2 * R_contact` and temperature-rise evidence; a listed contact rating alone is not a temperature result. Surge current takes different PCB paths. There is no 72 A terminal or board current rating in this analysis.
+The calculated J_IN currents are local: one branch on A and C, their sum on B, up to **38.0945 mA** in this screen. WAGO through-splices and the hub carry distributed perimeter current. Contact heating and the distinct surge paths still need their applicable evidence; no 72 A terminal/board rating is assigned. Historical MBE figures (0.65/1 W modes, 0.753190 W upper screen) remain in the checkpoint/research record, not the selected-part calculation.
 
 ## 4. Powered Faults: C5 Open
 
@@ -179,6 +187,18 @@ An ideal short's zero modeled dissipation excludes real contact/arcing resistanc
 
 ### Architecture Decision And Interface Requirements
 
+**Recovery in plain terms:** a GDT normally has very high resistance. A sufficiently
+large surge ionizes its gas and starts conduction; the conducting arc voltage is
+only roughly 10-15 V for the present parts, not their approximately 470 V firing
+voltage. After the surge, the gas must deionize and the tube stop conducting.
+If the DC source keeps enough current flowing, the tube may remain conducting
+or restrike. A 36 V source being below 470 V does not, by itself, prove recovery.
+The modeled 0.26 A / 2.6 W far-end arc with less than 1 A total supply current
+explains why the 2 A fuse need not clear it. **This is a conditional scenario,
+not a measured failure of the selected tubes.** Obtain application-specific
+recovery evidence or perform a protected powered type test; the cattle-fence
+prohibition removes one exposure, not this device/source interaction.
+
 **Bare GDTs plus the existing fuse/hiccup PSU are not an approved protection architecture.** The following are bounded engineering paths, not completed selections:
 
 1. **Retain bare tubes only with explicit DC holdover and fault containment evidence.** Obtain Ruilon/Bencent extinction specifications for the actual source/cable RLC network, temperature, life, pulse polarity and restarting PSU. Bourns `2027-47-BLF` is a concrete alternative to investigate: [S11] specifies 135 V DC holdover with extinction under 150 ms, but expressly says **"network applied"**. Its test network must be obtained and compared with this system; a voltage number alone is insufficient. The current drawing is **8.0 +/-0.4 mm body diameter**, not the previously suggested 6 mm drop-in. It cannot silently replace the overpass or SMT tubes. Its 1 kV/us sparkover figure is a **typical distribution**, not a guaranteed better residual-voltage limit. No substitution is approved.
@@ -188,7 +208,7 @@ An ideal short's zero modeled dissipation excludes real contact/arcing resistanc
 Required TEST interface behavior for the next circuit decision:
 
 - Maintain nominal 36 V and an **enforced** allowed maximum appropriate to the accepted resistor/LED design; detect overvoltage independently of the PSU's higher OVP threshold. Include supply adjustment, tolerance, startup, failed regulation and source-interface drop.
-- Carry the entire healthy low-R load continuously, including tolerances and auxiliary/clamp currents; the present screening demand is 1.528903 A/61.7615 W. Apply actual source/interface derating and margin rather than selecting from the nominal healthy 0.847705 A alone.
+- Carry the entire healthy low-R load continuously, including tolerances and auxiliary/clamp currents; the current screen is **1.561876 A/63.0935 W**. The older proposed 1.6 A nominal limiter settings are not automatically suitable at their minimum tolerance. Apply actual source/interface derating, not only the nominal 0.847705 A load.
 - Coordinate fast current limiting, short-circuit interruption, and **latched** source isolation following detected surge/follow-current, persistent overload or repeated PSU dropout. No automatic retry into a known fault. Operator reset must not automatically restore RUN.
 - Isolate TEST positive before the A/C source split and TEST negative from Start B using appropriately rated, independently reviewed interruption/isolation means. Keep all six mode contacts independent, prevent transmitter/PSU connection during global transfer, and retain protective-earth continuity. Never open PE to extinguish a GDT.
 - Specify the actual maximum fault energy and interruption time from component/path limits, not an arbitrary safe timeout. Measure source output capacitance and current waveforms: `E_cap = C*V^2/2`, `E_GDT = integral(V_GDT(t)*I_GDT(t) dt)`. Include cable stored energy, turn-off overshoot and repeated hiccup pulses. Require sufficient off time and a verified recovery test before re-energization.
@@ -252,9 +272,12 @@ Measure the voltage at the **actual LED terminals**, not only the PCB connector:
 
 Rectifier coordination is also open. onsemi [S2] gives **1000 V repetitive reverse**, 1200 V **nonrepetitive** under the stated half-wave condition, junction range **-65 to +150 C**, and reverse leakage maxima 10 microamp at 25 C / 50 microamp at 100 C at rated DC voltage. The G suffix identifies the Pb-free order option; do not infer a 175 C limit from legacy prose. No specified fast-recovery/ringing bound is supplied here. The reviewed GDT data [S10] gives up to 950 V impulse sparkover for SMD5050-470NA and 1100 V for 2R470TD-8 at 1 kV/us; B5G470L's 850 V covers **99% of measured values**. Account for actual differential/common-mode paths, unequal ignition and lead inductance; do not treat 1200 V nonrepetitive rectifier data as blanket repetitive margin or 470 V as a transient clamp. Cable impulse withstand is unverified.
 
-## 6. P3 Integration Handoff
+## 6. Historical P3 Candidate Handoff
 
-**Released protection MPNs: none. Approved new circuit/BOM delta: none.** Keep C4/C5/W3 open and do not populate a speculative protection footprint merely to make the revision appear complete. Normal/DC model and test implementation is complete for its stated scope; P2's full electrical-design exit is not met.
+This section preserves the earlier unselected zener/active candidate handoff.
+The actual hybrid in sections 1/9 and ASSEMBLY supersedes its population status;
+do not add these candidates to the new 16-part BOM. C4/C5/W3 remain open for
+their documented unresolved qualification/design scope, not because D3/D4 are absent.
 
 The exact **C4-A candidate netlist delta**, solely for evaluation if its evidence closes, is:
 
@@ -295,6 +318,8 @@ Sources were retrieved during this P2 session on 2026-09-06 using **webfetch onl
 | S10 | Manufacturer-authored [Ruilon SMD5050 SP-GDT-006 A3/2024-08-19](https://www.lcsc.com/datasheet/C39692533.pdf), [2RD-8 SP-GDT-017 A3/2023-11-02](https://www.lcsc.com/datasheet/C2836978.pdf), [Bencent B5G470L A2/2018-01-03](https://www.lcsc.com/datasheet/C5337217.pdf), distributed by LCSC | Newly retrieved text via [SMD5050 extraction](https://r.jina.ai/https://www.lcsc.com/datasheet/C39692533.pdf), [2RD-8 extraction](https://r.jina.ai/https://www.lcsc.com/datasheet/C2836978.pdf), [B5G extraction](https://r.jina.ai/https://www.lcsc.com/datasheet/C5337217.pdf): 950/1100 V impulse limits and B5G's 99% figure; typical 15/10/15 V arcs at stated 1 A conditions. No system-specific holdover guarantee. |
 | S11 | [Bourns 2027](https://www.bourns.com/docs/product-datasheets/2027.pdf), rev. E 01/26; [text extraction](https://r.jina.ai/https://www.bourns.com/docs/product-datasheets/2027.pdf) | Network-qualified DC holdover, typical-distribution impulse sparkover and actual 8 mm body/lead variants. |
 | S12 | [Bourns GMOV](https://www.bourns.com/docs/product-datasheets/GMOV.pdf), rev. 01/25; [text extraction](https://r.jina.ai/https://www.bourns.com/docs/product-datasheets/GMOV.pdf) | Series GDT/MOV hybrid for AC/DC, explicit 14D500K data, large physical envelope and still-high transient front voltage. |
+| S13 | [Vishay PR01/02/03, 28729](https://www.vishay.com/docs/28729/pr010203.pdf), 08-Jul-2025; [exact PR02 inventory reference](https://www.vishay.com/search?type=inv&query=PR02000202201FA100) | Selected 2.2k/1% copper-lead 2 W PR02, 250 ppm/K, 0.83 maximum lead, mounting/derating/hot-spot limits. No verified LCSC code or JLCPCB allocation; explicit external sourcing in the BOM. |
+| S14 | [Vishay BYG23T-M3, 89429](https://www.vishay.com/docs/89429/byg23t.pdf), 25-Feb-2020; [C145454 exact identity](https://www.lcsc.com/product-detail/C145454.html) | Selected BYG23T-M3/TR, 1300 V repetitive reverse, SMA. Original p4 outline/land figure visually read through the public PDF viewer. 75 ns reverse recovery is not forward-clamp response; typical 9 V/620 ns forward recovery at 1.5 A/12 A per us is not a <=5 V guarantee. |
 
 ## 8. Continuation Decision, 2026-09-07
 
@@ -413,7 +438,8 @@ recovery experiment may precede field qualification; no such test was performed.
 
 ## 9. Simplified Indicator Direction
 
-User clarification, 2026-09-07, after the continuation above:
+User clarification and subsequent implementation, 2026-09-07, after checkpoint
+**ad282e3**. This is the current design, not an approved order/field release:
 
 - LED damage from **accidental low-voltage installation polarity reversal is
   accepted**, with spare indicators for replacement. This changes the required
@@ -422,31 +448,38 @@ User clarification, 2026-09-07, after the continuation above:
 - **Continuous-safe normal TEST remains a hard requirement.** The indicators
   have exposed front faces in the intended cool environment, but this does not
   measure their junctions or the gel-filled PCB's resistor hot spots.
-- Direct-strike damage, potentially requiring wholesale rebuilding, is accepted.
-  No strike frequency is established. Nearby lightning, repetitive cattle-fence
-  coupling, normal RUN and switching are not automatically included in that
-  acceptance; their actual exposure and claimed performance still need defining.
-- The user is willing to consider **16 parts** and passive resistor/package/
-  routing changes. This is not approval of an exact replacement MPN or completed
-  source layout. The current 14-part schematic/PCB/BOM is unchanged in this step.
+- Direct-strike rebuilding is accepted; no strike frequency is established.
+  **Energized cattle fencing is now prohibited near the whole 4 km boundary,
+  stations and hub**, explicitly confirmed by the user. The earlier 0.5 m /
+  300 m parallel-run scenario is withdrawn; do not require an energizer-on test
+  for the prohibited configuration or invent a universal safe separation.
+  Confirm and maintain the exclusion; reassess if surrounding land use changes.
+  Nearby lightning, ordinary switching and RUN behavior remain relevant.
+- The authorized **16-part hybrid is implemented**: six SMT and ten THT
+  electrical parts, plus four mounting footprints, on the unchanged board.
+  R1/R2 are PR02000202201FA100; D1-D4 are BYG23T-M3/TR. No active current stage,
+  timer, new supply connection or GDT replacement is fitted.
 
 ### Minimal Circuit And Layout
 
-The candidate retains `WIRE_A/C -> 2.2k resistor -> series diode -> LED_POS`.
-Add one ordinary diode per channel with **cathode at LED_POS and anode at
+The implementation retains `WIRE_A/C -> 2.2k resistor -> series diode -> LED_POS`.
+D3/D4 add one diode per channel with **cathode at LED_POS and anode at
 WIRE_B**, downstream of the series diode. It is a **shunt across the external
 LED connection**, not a third series component. This reduces negative connector
 voltage while preserving the one-way core path. It does not regulate forward
 pulse current or protect reversed flying leads; the latter is now an accepted
-installation risk. Exact diode ratings, leakage, placement and the claimed
-transient scope remain to select, without imposing the previous 40-part circuit.
+installation risk. The diodes/placement are selected, but the actual RF,
+recovery/ringing and claimed transient performance still need qualification.
+The previous 40-part circuit is not imposed as a prerequisite.
 
-Read-only coordinate screening found possible front-side shunt locations near
-**(135,99) and (135,146)** using a provisional **7.0 x 3.6 mm complete land/body/
-courtyard reserve** per device. Current takeoffs at X=108.38, R1/R2 origins and
-D1/D2 need not move for that reserve. These are not selected lands or native-DRC
-results for added parts; the actual package/clearance and short clamp loop must
-be checked before implementation.
+D3/D4 are placed at **(135,99) and (135,146), 180 degrees**, with cathodes west
+at X=132.90 and anodes east at X=137.10. D1/D2 retain centres (132.50,104.50) /
+(132.50,140.50), rotation 0, cathodes east at X=134.60. The adopted SMA lands
+are **2.50 x 2.00, local centres +/-2.10**, gap 1.70, with 7.20 x 3.60
+courtyards. R1/R2 and takeoffs at X=108.38 remain; the series routes are 1.80
+wide and new clamp routes 0.80. No added vias or folded branches were needed.
+All protected rails/vias, B returns, earth separation and terminal positions
+remain. ASSEMBLY controls the actual pinning and forming/standoff requirements.
 
 The user's folded route is also plausible: tee farther right around **X=121**
 on each outer rail, feed a resistor right-to-left, and return its output around
@@ -464,11 +497,12 @@ from 1 W to 2 W does **not** remove the approximately 1 W total nominal heat.
 A larger permitted temperature, different mounting or more copper can explain
 a higher rating without making the body cooler.
 
-Focused primary-source research identified these **unselected** examples:
+Focused research selected the copper-lead PR02 for this build; the SMT resistor
+alternatives below remain unselected and are not a combined BOM:
 
 | Exact candidate | Relevant rating / practical limit |
 | :--- | :--- |
-| **Vishay PR02000202201FR500**, or FA100 packaging | Copper-lead PR02, **2.2k, 1%, 2 W at 70 C ambient**, +/-250 ppm/K. Do not substitute the 1.3 W FeCu-lead version. Maximum L2 12.0 and diameter 3.9 mm; lead 0.78 +/-0.05. Plausible at the existing 15.24 pitch/1.40 holes, but the 11.90 F.Fab outline and mounting/standoff need review. Published 75 K/W thermal resistance is a mounting-dependent estimate, not a cool-body guarantee. |
+| **Selected: Vishay PR02000202201FA100** | Copper-lead PR02, **2.2k, 1%, 2 W P70**, +/-250 ppm/K. Not the 1.3 W FeCu version. Maximum L2 12.0, diameter 3.9, lead 0.78 +/-0.05. Existing 15.24 pitch/1.40 holes retained; F.Fab updated to conservative 12.00 x 4.20; >=1.00 body standoff required. External sourcing/allocation pending, not an invented C-code. Mounted 75 K/W is not OneGel thermal resistance. |
 | **TT PWC2512-2K2FI** | 2.2k, 1%, +/-100 ppm/K, body envelope 6.8 x 3.4 x 0.8 mm. **2 W at 70 C requires 500 mm^2 copper per termination**; the 100 mm^2-per-termination arrangement is **1.5 W**, not 2 W. Layout must provide actual thermal copper without consuming isolated EARTH space or assuming a distant narrow-neck rail is an equivalent heatsink. |
 | **Vishay CRCW25122K20FKEGHP** | 2.2k, 1%, +/-100 ppm/K. **1.5 W at 70 C ambient**, or **2 W at 105 C terminal-part temperature**. The latter is not 105 C ambient. Body envelope 6.5 x 3.3 x 0.7 mm; reflow lands 1.25 x 3.35 each with 5.00 inner gap. Those lands alone do not establish heat rejection. |
 
@@ -481,9 +515,9 @@ ceiling, a measured temperature or pulse qualification. The PR02's 75 K/W
 example would imply roughly **58 C rise at 0.769 W**, showing why a 2 W label
 alone cannot settle gel/body temperature.
 
-For a low-change candidate, first compare an axial 2 W resistor with compact
-SMT diodes; full SMT branches remain an option if their heat-spreading copper
-fits. A passive design qualified over the actual normal PSU adjustment range
+The chosen low-change implementation uses the axial 2 W resistor and compact
+SMT diodes. Full SMT resistors remain an alternative, not necessary for space.
+A passive design qualified over the actual normal PSU adjustment range
 is an alternative to enforcing the proposed 37 V ceiling; an active precision
 cutoff is not required merely because the old resistor's standard-mode rating
 was exceeded. Source malfunction and powered-GDT faults remain separate cases.
