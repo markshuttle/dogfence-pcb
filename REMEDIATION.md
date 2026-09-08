@@ -113,7 +113,7 @@ Preserve these unless the user explicitly approves a reasoned design change. Cor
 | LED terminals | J_LED_A at (145.50, 103.00), 90 degrees, opens north; J_LED_C at (145.50, 142.00), 270 degrees, opens south. Pad 1 positive at X = 142.96 and pad 2 B return at X = 148.04 on both. Preserve the intentional pad mapping. |
 | Overpass | GDT_AC north-south over B, now at X=125.80, with 15.24 mm formed pitch and at least 2.0 mm physical gap under the complete raised span. See the controlled forming/inspection drawing in `pcb/ASSEMBLY.md`. |
 | PS12 resistors | R1/R2 origins (120.00,104.50)/(120.00,140.50), rotation 0; 1.35 x 3.70 mm rectangular lands at local X=+/-3.125, global X=116.875/123.125. Maximum body 6.45 x 3.40 x 0.65 high and courtyard 8.10 x 4.20; project-selected zero additional mask/paste margins. PS12 independently matches these retained dimensions. No resistor holes, standoff or forming. |
-| Diode links | D1/D2 origins (130.80,104.50)/(130.80,140.50), rotation 0, cathodes east at X=132.90. D3/D4 remain (135.00,99.00)/(135.00,146.00), rotation 180, cathodes west at X=132.90. Straight cathode links at X=132.90 are 1.80 mm wide and 5.50 mm long. |
+| Diode links | D1/D2 origins (130.80,104.50)/(130.80,140.50), rotation 0, cathodes east at X=132.90. D3/D4 remain (135.00,99.00)/(135.00,146.00), rotation 180, cathodes west at X=132.90. Straight cathode links at X=132.90 are 1.80 mm wide and 5.50 mm long; shunt anode-to-B routes to J_LED_A/C pin 2 are 1.80 mm wide. |
 
 Apply [README's DFM policy](README.md#via-and-component-hole-dfm) and AGENTS section 9. In particular: no ordinary via as a lead-insertion hole, no blanket filling of all 1 mm holes, and no assumption that 2 oz exterior copper means 70-micrometre barrels.
 

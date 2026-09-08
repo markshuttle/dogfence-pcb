@@ -122,7 +122,7 @@ height. The chip is not assigned the retired resistor's axial body standoff.
 R1/R2 remain nonpolar; preserve pad numbering and one-way branch order through
 D1/D2. The cathode links at **X=132.90** run Y=99.00..104.50 and 140.50..146.00:
 each **5.50 mm long and 1.80 mm wide on F.Cu**, with no dogleg. Preserve the
-**X=108.38 takeoffs**, **1.80-mm branch copper**, **0.80-mm shunt anode-to-B
+**X=108.38 takeoffs**, **1.80-mm branch copper**, **1.80-mm shunt anode-to-B
 routes**, **1.60-mm protected B.Cu returns**, full 3.20-mm rails, fourteen
 1.00/1.80-mm vias and the solid isolated EARTH bus. The LED terminals and all
 GDT/Kefa geometry remain unchanged. No folded branch or added via is selected.

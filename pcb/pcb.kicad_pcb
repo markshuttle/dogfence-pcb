@@ -4493,7 +4493,7 @@
 	(segment
 		(start 137.1 99)
 		(end 148.04 99)
-		(width 0.8)
+		(width 1.8)
 		(layer "F.Cu")
 		(net 2)
 		(uuid "eeeed103-2000-4000-8000-000000000004")
@@ -4501,7 +4501,7 @@
 	(segment
 		(start 148.04 99)
 		(end 148.04 103)
-		(width 0.8)
+		(width 1.8)
 		(layer "F.Cu")
 		(net 2)
 		(uuid "eeeed103-2000-4000-8000-000000000005")
@@ -4549,7 +4549,7 @@
 	(segment
 		(start 137.1 146)
 		(end 148.04 146)
-		(width 0.8)
+		(width 1.8)
 		(layer "F.Cu")
 		(net 2)
 		(uuid "eeeed104-2000-4000-8000-000000000004")
@@ -4557,7 +4557,7 @@
 	(segment
 		(start 148.04 146)
 		(end 148.04 142)
-		(width 0.8)
+		(width 1.8)
 		(layer "F.Cu")
 		(net 2)
 		(uuid "eeeed104-2000-4000-8000-000000000005")

@@ -157,7 +157,7 @@ axial-style gap is specified for this SMT part.
 Keep the takeoffs at **X=108.38**, the **1.80-wide** input/series/output routing,
 and the existing straight D1-D3 / D2-D4 cathode connections at **X=132.90**. Each
 cathode link is **5.50 long, 1.80 wide on F.Cu**, at Y=99.00..104.50 and
-140.50..146.00 respectively. Shunt anode-to-B routes remain **0.80 wide**;
+140.50..146.00 respectively. Shunt anode-to-B routes are **1.80 wide**;
 protected B returns remain **1.60 on B.Cu**. No folded branch, new via, narrowed
 3.20 rail or changed EARTH geometry is authorized.
 

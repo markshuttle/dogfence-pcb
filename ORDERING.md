@@ -175,7 +175,7 @@ Use this implemented-design orientation table against the source and supplier mo
 | J_IN | Opens left, baseline rotation 0 degrees; A/B/C pins north-to-south at Y = 114.88 / 122.50 / 130.12 mm. |
 | J_EARTH | Opens right, baseline rotation 180 degrees; all three pins on EARTH, not a multiplied current rating. |
 | D1, D2 | Origins **(130.80,104.50)/(130.80,140.50) mm**, 0 degrees, cathode bands right toward LED positive: **K X=132.90, A X=128.70**. Check actual pad/net mapping and the BYG23T model, not retired through-hole geometry. |
-| D3, D4 | Origins **(135.00,99.00)/(135.00,146.00) mm**, 180 degrees, **cathodes left to LED positive at X=132.90; anodes right to B at X=137.10**. Straight cathode links at X=132.90 are **1.80 mm wide / 5.50 mm long**. They use the local cathode-right footprint rotated, not matching global diode orientations. |
+| D3, D4 | Origins **(135.00,99.00)/(135.00,146.00) mm**, 180 degrees, **cathodes left to LED positive at X=132.90; anodes right to B at X=137.10**. Straight cathode links at X=132.90 are **1.80 mm wide / 5.50 mm long**, and shunt anode-to-B routes to J_LED_A/C pin 2 are **1.80 mm wide**. They use the local cathode-right footprint rotated, not matching global diode orientations. |
 | R1, R2 | Origins **(120.00,104.50)/(120.00,140.50) mm**, 0 degrees; pads at **X=116.875/123.125**. Nonpolar PS12 SMT, using the unchanged manufacturer lands above; no insertion holes, axial standoff or lead forming. |
 | GDT_AC | Body runs north-south over B despite the baseline footprint's 0-degree placement angle; controlled lead forming and >=2.0 mm gap are separate from a top-view render. |
 | GDT_AB, GDT_BC | Centred on the revised SMT land pattern with correct electrode orientation and processed paste volume. |

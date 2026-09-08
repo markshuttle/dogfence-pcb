@@ -507,7 +507,7 @@ to D3/D4 are straight at X=132.90 and **1.80 mm wide**. The adopted SMA lands
 are **2.50 x 2.00, local centres +/-2.10**, gap 1.70, with 7.20 x 3.60
 courtyards. R1/R2 retain origins **(120,104.50) / (120,140.50)**, now SMT with
 **no resistor insertion holes or axial standoff**. Takeoffs at X=108.38 remain;
-series routes are 1.80 wide and the retained shunt B routes 0.80.
+series routes are 1.80 wide and the shunt B routes 1.80.
 No added vias or folded branches are introduced.
 All protected rails/vias, B returns, earth separation and terminal positions
 remain. The supplied independent review found PS12 geometry matches the existing
