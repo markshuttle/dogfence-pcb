@@ -8,7 +8,7 @@ does not supersede `ELECTRICAL.md`, `ASSEMBLY.md`, or the release gates.
 Only this research file is owned by this work. Switch research is delegated
 to the environment workstream and is not a deliverable here.
 
-**Current integration after checkpoint ad282e3:** the PCB now has the simple
+**Historical integration after checkpoint ad282e3:** the PCB then had the simple
 16-part PR02/BYG23T indicator hybrid, not any GDT/source replacement proposed
 below. All six original GDTs remain. The user prohibits energized cattle fencing
 near the whole boundary cable, stations and hub; the old parallel exposure is
@@ -18,6 +18,12 @@ switching and earthing questions. The 37 V / 1.6 A hub proposals below remain
 PR02/40.39597 V normal-load screen can reach 1.561876 A, above the minimum
 limit of the old proposed 8-kohm TPS26600 setting. See current ELECTRICAL and
 DESIGN_BOUNDS, not the older hub circuit as a ready-to-populate design.
+
+**2026-09-08 supersession:** the current unchanged-topology 16-part hybrid uses
+**PS122WF2201T4E / C2793873 SMT** for prototype and production. PR02 figures above
+are historical; current selected-part screens are in ELECTRICAL/DESIGN_BOUNDS.
+No source/GDT replacement below is selected or required to generate Gate P files;
+the separate production/field holds remain open.
 
 ## Decision
 

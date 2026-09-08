@@ -274,8 +274,8 @@ class ElectricalTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             branch_budget(36, shunt_a=0.1)
 
-    def test_selected_hp12_rating_tcr_and_25c_reference(self):
-        self.assertEqual(RESISTOR_MPN, "HP122WF2201T4E")
+    def test_selected_ps12_rating_tcr_and_25c_reference(self):
+        self.assertEqual(RESISTOR_MPN, "PS122WF2201T4E")
         self.assertEqual(RESISTOR_TCR_PPM, 100)
         self.assertEqual(RESISTOR_REFERENCE_C, 25)
         reference = Channel(resistor_tcr_ppm=100)

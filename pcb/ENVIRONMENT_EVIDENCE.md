@@ -11,6 +11,12 @@ application restrictions; it does not change the circuit or assign hub wiring.
 No supplier acceptance, procurement allocation or physical qualification is
 recorded. **C4, C5, W3, W1 and W4 remain open.**
 
+**2026-09-08 resistor supersession:** the current BOM now selects
+**PS122WF2201T4E / C2793873** for prototype and production. The PR02 mounting
+and thermal arithmetic below are historical checkpoint evidence, not PS12
+requirements. Use ELECTRICAL/DESIGN_BOUNDS for the selected SMT part; no new
+environmental or switch research, qualification or prototype-file gate is added.
+
 ## User-Confirmed Corrections
 
 - Cable core colours are **red, black and PLAIN green**, not green/yellow.
@@ -152,7 +158,7 @@ or unrestricted reuse/top-up of removed or contaminated gel.
   structural-support or continuous-thermal qualification of DogFence. The
   raised GDT's physical gap and W3 thermal hold remain unchanged.
 
-The current **16-part schematic/PCB/BOM** specifies **Vishay BCcomponents
+The historical **16-part PR02 checkpoint schematic/PCB/BOM** specified **Vishay BCcomponents
 PR02000202201FA100**, copper-lead **2.2 kohm / 2 W / 1% / +/-250 ppm/K**, not the
 retired MBE0414. Its **0.83 mm maximum lead, 15.24 mm formed pitch and retained
 1.40/2.40 mm holes/pads** do not establish process acceptance; **>=1.00 mm

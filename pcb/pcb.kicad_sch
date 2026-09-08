@@ -2481,7 +2481,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "https://www.uni-royal.cn/en/images/userfile/file/1784806233a2e6d381ea80b5d9.pdf"
+		(property "Datasheet" "https://www.uni-royal.cn/en/images/userfile/file/1784854235b7c79f8d8a205c5d.pdf"
 			(at 205.74 62.23 0)
 			(effects
 				(font
@@ -2490,7 +2490,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" "Uni-Royal HP122WF2201T4E; 2.2k 2W 1% 2512 SMD chip resistor"
+		(property "Description" "Uni-Royal PS122WF2201T4E C2793873; 2.2k 2W 1% PS12/2512 SMD chip resistor; prototype and production"
 			(at 205.74 62.23 0)
 			(effects
 				(font
@@ -2499,7 +2499,7 @@
 				(hide yes)
 			)
 		)
-		(property "MPN" "HP122WF2201T4E"
+		(property "MPN" "PS122WF2201T4E"
 			(at 205.74 62.23 0)
 			(effects
 				(font
@@ -2508,7 +2508,7 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC" ""
+		(property "LCSC" "C2793873"
 			(at 205.74 62.23 0)
 			(effects
 				(font
@@ -2517,7 +2517,7 @@
 				(hide yes)
 			)
 		)
-		(property "Sourcing" "External"
+		(property "Sourcing" "LCSC"
 			(at 205.74 62.23 0)
 			(effects
 				(font
@@ -2526,7 +2526,7 @@
 				(hide yes)
 			)
 		)
-		(property "Sourcing Reference" "https://store.nacsemi.com/products/detail?stock=XSJMZ0000010410"
+		(property "Sourcing Reference" ""
 			(at 205.74 62.23 0)
 			(effects
 				(font
@@ -3564,7 +3564,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "https://www.uni-royal.cn/en/images/userfile/file/1784806233a2e6d381ea80b5d9.pdf"
+		(property "Datasheet" "https://www.uni-royal.cn/en/images/userfile/file/1784854235b7c79f8d8a205c5d.pdf"
 			(at 205.74 123.19 0)
 			(effects
 				(font
@@ -3573,7 +3573,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" "Uni-Royal HP122WF2201T4E; 2.2k 2W 1% 2512 SMD chip resistor"
+		(property "Description" "Uni-Royal PS122WF2201T4E C2793873; 2.2k 2W 1% PS12/2512 SMD chip resistor; prototype and production"
 			(at 205.74 123.19 0)
 			(effects
 				(font
@@ -3582,7 +3582,7 @@
 				(hide yes)
 			)
 		)
-		(property "MPN" "HP122WF2201T4E"
+		(property "MPN" "PS122WF2201T4E"
 			(at 205.74 123.19 0)
 			(effects
 				(font
@@ -3591,7 +3591,7 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC" ""
+		(property "LCSC" "C2793873"
 			(at 205.74 123.19 0)
 			(effects
 				(font
@@ -3600,7 +3600,7 @@
 				(hide yes)
 			)
 		)
-		(property "Sourcing" "External"
+		(property "Sourcing" "LCSC"
 			(at 205.74 123.19 0)
 			(effects
 				(font
@@ -3609,7 +3609,7 @@
 				(hide yes)
 			)
 		)
-		(property "Sourcing Reference" "https://store.nacsemi.com/products/detail?stock=XSJMZ0000010410"
+		(property "Sourcing Reference" ""
 			(at 205.74 123.19 0)
 			(effects
 				(font

@@ -1,19 +1,20 @@
 # Conditional Design Bounds
 
-Hardware **1.2.0-dev**, analysis/evidence 2026-09-07, updated for the authorized
-**16-part HP12 / BYG23T SMT conversion**. This bounded update covers
+Hardware **1.2.0-dev**, PS12 synchronization 2026-09-08, updated for the selected
+**16-part PS12 / BYG23T circuit in both prototype and production**. This bounded update covers
 `scripts/analyze_limits.py`, `scripts/design_bounds.py`, their two focused test
 files, this note and `ELECTRICAL.md`. The nodal solver, topology, cable, source,
 PSU, OneGel and site assumptions are retained. Layout/BOM/sourcing, assembly,
 ordering and production-gate integration belong to the parent/other owners.
-These are calculations, not hardware qualification or closure of C4/C5/W3;
+All normal-model numerical screens are unchanged from the preceding HP12 analysis.
+These are calculations, not hardware qualification or closure of C4/C5/W3/W1/W4;
 they add no physical-test prerequisite to prototype exports.
 
 ## Selected Circuit
 
 ```text
-WIRE_A -> R1 HP122WF2201T4E -> D1 BYG23T-M3/TR -> LED_A_POS -> external LED -> WIRE_B
-WIRE_C -> R2 HP122WF2201T4E -> D2 BYG23T-M3/TR -> LED_C_POS -> external LED -> WIRE_B
+WIRE_A -> R1 PS122WF2201T4E -> D1 BYG23T-M3/TR -> LED_A_POS -> external LED -> WIRE_B
+WIRE_C -> R2 PS122WF2201T4E -> D2 BYG23T-M3/TR -> LED_C_POS -> external LED -> WIRE_B
 D3 BYG23T-M3/TR: cathode LED_A_POS, anode WIRE_B
 D4 BYG23T-M3/TR: cathode LED_C_POS, anode WIRE_B
 ```
@@ -79,9 +80,9 @@ is added. README/REMEDIATION synchronization belongs to the parent.
   This is a declared budget, not a WAGO specification or a measured result.
   It must bound the individual spans, not merely the whole-core sum. The script
   accepts separate A/B/C budgets and does not apply copper TCR to contacts.
-- **R1/R2:** Uni-Royal **HP122WF2201T4E**, HP12 / 2512 SMT, 2200 ohm,
-  +/-1%, **+/-100 ppm/C referenced to 25 C**, **2 W P70** [9]. Use the PDF's
-  100 ppm/C, not the website's tighter 75 ppm/C claim. The unchanged selected
+- **R1/R2:** Uni-Royal **PS122WF2201T4E**, PS12 / 2512 SMT, 2200 ohm,
+  +/-1%, **+/-100 ppm/C referenced to 25 C**, **2 W P70** [10]. The PS product
+  page and PDF agree on 100 ppm/C. The unchanged selected
   -30..125 C resistance-temperature screen gives **2156.22..2244.22 ohm**:
   `Rmin = 2200 * 0.99 * (1 - 100e-6 * (125 - 25))`. The PDF's TCR method
   specifies a +25 C (or specified room-temperature) reference and -55/+125 C
@@ -89,10 +90,13 @@ is added. README/REMEDIATION synchronization belongs to the parent.
   those endpoints; **it does not extend TCR to the separate 155 C operating
   endpoint**. Temperature is an input, not a self-heating result. Aging,
   assembly/solder drift and unbudgeted tap/harness losses are excluded.
-- **Identity/sourcing:** the supplied **C2791283 is a rejected 4.7k/5% identity**,
-  not the selected 2.2k/1% resistor. This model assigns no replacement C-code;
-  corrected sourcing is controlled by the parent and reviewed BOM. No allocation
-  or land-pattern approval follows from the selected electrical model.
+- **Identity/sourcing:** **PS122WF2201T4E / C2793873** is selected for both
+  prototype and production; JLCPCB confirms the exact 2.2k/2 W/1%/100 ppm/2512
+  identity [11]. The user reports **110 ORDERED to the JLCPCB parts library**,
+  not receipt or board-job allocation. The earlier **C2791283 mapping remains
+  rejected: HP122WJ0472T4E, 4.7k/5%**. The supplied independent PS geometry review
+  matches the existing HP12 lands, requiring no layout change. BOM/CAD integration
+  and supplier process/placement acceptance remain with their respective owners.
 - **D1-D4:** Vishay **BYG23T-M3/TR**, 1300 V repetitive reverse, SMA [8].
   Preserve **36 V / 2.1 V LED + 0.7 V diode** as a named zero-leak historical
   comparison, not measured BYG23T Vf at roughly 15 mA. Its **1.9 V maximum at
@@ -110,13 +114,15 @@ is added. README/REMEDIATION synchronization belongs to the parent.
   specification. It does not extend to the 150 C junction maximum, avalanche,
   transients or damaged parts.
 
-Sources [1]-[8] preserve earlier evidence; [6]/[7] concern retired resistors.
-For this SMT conversion, the supplied research review visually confirmed [9],
-pages 1, 2, 4, 5, 6 and 8. This bounded model update reread its TCR reference/test
-temperatures and rating text: direct PDF webfetch returned binary, then text
-was obtained through `https://r.jina.ai/` prefixed to the same manufacturer URL.
-That extraction is not a new visual land-pattern review, archived original or
-vendor reply. No broad protection research or supplier acceptance is claimed.
+Sources [1]-[9] preserve earlier evidence; [6]/[7] concern retired axial resistors
+and [9] the superseded HP12 selection. For that HP12 SMT conversion, the supplied
+research review visually confirmed [9], pages 1, 2, 4, 5, 6 and 8. Its model update
+reread TCR reference/test temperatures and rating text: direct PDF webfetch returned
+binary, then text was obtained through `https://r.jina.ai/` prefixed to the same
+manufacturer URL. That historical extraction was not a new visual land review.
+For the PS12 selection, the supplied research review visually read [10], pages
+1, 2, 4, 5, 6, 7 and 8, and verified the JLCPCB identity [11]. This synchronization
+uses that supplied evidence, not a new research run, vendor reply or physical test.
 
 1. [IEC 60228:2004 public standard preview, including Table 3](https://cdn.standards.iteh.ai/samples/12024/921fee9a88c24612b68340a7330c2262/IEC-60228-2004.pdf), with [IEC edition metadata](https://webstore.iec.ch/en/publication/1065).
 2. [Nexans IEC 60228 classification, February 2021](https://www.nexans.be/en/dam/jcr:efe5d9a2-f346-4047-87b4-99d1e319d768/IEC60228_ENG.pdf).
@@ -124,9 +130,11 @@ vendor reply. No broad protection research or supplier acceptance is claimed.
 4. [BSI BS EN 60228:2005 metadata](https://knowledge.bsigroup.com/products/conductors-of-insulated-cables).
 5. [Mean Well LRS-75 specification, 2025-04-07](https://www.meanwell.com/Upload/PDF/LRS-75/LRS-75-SPEC.PDF).
 6. [Vishay 28766, MBE/SMA 0414, 11-Jul-2018](https://www.vishay.com/docs/28766/mbxsma.pdf), pp. 2-4/8/11: **historical** MBE rating modes and TCR, not the selected resistor.
-7. [Vishay PR01/PR02/PR03, 28729, 08-Jul-2025](https://www.vishay.com/docs/28729/pr010203.pdf): **historical, retired PR02 only**. Cu/FeCu ratings, TCR, mounting/hot-spot examples and PR02-specific 220 C limit do not apply to HP12.
+7. [Vishay PR01/PR02/PR03, 28729, 08-Jul-2025](https://www.vishay.com/docs/28729/pr010203.pdf): **historical, retired PR02 only**. Cu/FeCu ratings, TCR, mounting/hot-spot examples and PR02-specific 220 C limit do not apply to PS12.
 8. [Vishay BYG23T-M3, 89429, 25-Feb-2020](https://www.vishay.com/docs/89429/byg23t.pdf): pp. 1-2 ratings, exact `/TR` ordering, leakage/Vf test conditions and typical forward recovery. Original pulse/thermal curves are not a system qualification.
-9. [Uni-Royal HP Series, SMD-SP-003, V.7, 08-Jan-2026](https://www.uni-royal.cn/en/images/userfile/file/1784806233a2e6d381ea80b5d9.pdf): p. 2 ordering; p. 4 HP12 2512 / 2 W and family voltage/operating range; p. 5 ambient derating and working/overload-voltage formula; p. 6 100 ppm/C for 2.2k, 25 C reference, -55/125 C TCR tests and five-second overload. No HP12 220 C hot-spot or 75 K/W mounted thermal parameter is established by these data; p. 8 soldering guidance is not continuous-duty qualification.
+9. [Uni-Royal HP Series, SMD-SP-003, V.7, 08-Jan-2026](https://www.uni-royal.cn/en/images/userfile/file/1784806233a2e6d381ea80b5d9.pdf): **historical, superseded HP12 selection**. p. 2 ordering; p. 4 HP12 2512 / 2 W and family voltage/operating range; p. 5 ambient derating and working/overload-voltage formula; p. 6 100 ppm/C for 2.2k, 25 C reference, -55/125 C TCR tests and five-second overload. No HP12 220 C hot-spot or 75 K/W mounted thermal parameter is established by these data; p. 8 soldering guidance is not continuous-duty qualification.
+10. [Uni-Royal PS Series, SMD-SP-007, V.7, 08-Jan-2026](https://www.uni-royal.cn/en/images/userfile/file/1784854235b7c79f8d8a205c5d.pdf), via the [PS product page](https://www.uni-royal.cn/en/article.php?id=10109): selected PS122WF2201T4E; PS12 2 W at 70 C ambient, linear derating to zero at 155 C, -55..155 C operating range; +/-100 ppm/C at 25 C reference with -55/+125 C TCR tests. Family working/overload/dielectric maxima are 500/1000/500 V; working/overload formulas still apply. Page 6 has separate **one-pulse power and voltage curves**, not a repetitive or assembled-board qualification.
+11. [JLCPCB C2793873](https://jlcpcb.com/partdetail/C2793873): exact Uni-Royal PS122WF2201T4E, 2.2k/2 W/1%/100 ppm/2512 identity. Public listing is not receipt or allocation to a board job; the 110-part order is user-reported separately.
 
 ## Normal Current
 
@@ -161,11 +169,11 @@ other input studies are not physical OFF-current predictions.
 | Historical 6.9 ohm/km, 20 C, 2.8 V Vf / 2200 ohm | 36 | 8.044804 | 7.994804 | 0.847705 |
 | Standard maximum, 20 C, no contacts, same nominal loads | 36 | 7.300320 | 7.250320 | 0.804701 |
 | Declared 70 C cable/contact corner, same nominal loads | 36 | 6.410705 | 6.360705 | 0.752464 |
-| Uniform 5.2 V high Vf / HP12 Rmax at every branch | 35 | 5.717067 | 5.667067 | 0.666615 |
+| Uniform 5.2 V high Vf / PS12 Rmax at every branch | 35 | 5.717067 | 5.667067 | 0.666615 |
 | Only A40 high Vf; all other Vf zero; Rmax everywhere | 35 | 4.452016 | 4.402016 | 0.781940 |
 | Only A40 high Vf / Rmax; all other Vf zero / Rmin | 35 | 4.277619 | 4.227619 | 0.802694 |
 | Previous case with the other positive rail C at zero ohms | 35 | 3.793669 | 3.743669 | 0.860225 |
-| Zero cable/contact R, zero Vf / HP12 Rmin everywhere | 40.39597 | 18.734624 | 18.684624 | 1.536239 |
+| Zero cable/contact R, zero Vf / PS12 Rmin everywhere | 40.39597 | 18.734624 | 18.684624 | 1.536239 |
 
 The last row is a zero-drop upper stress screen, not a physical LED operating
 point. A real clamp need not draw the full 50 uA, especially at zero bias;
@@ -192,7 +200,7 @@ lower than the coupled-corner currents, not predicted installed brightness.
 
 The old **1.4945906084 mA** floor belonged to **MBE 50 ppm/K, 35..37 V and
 4.4 V high Vf with zero clamp leakage**. It is reproduced by an explicitly
-named historical regression, not silently reused for HP12/BYG23T. Even merely
+named historical regression, not silently reused for PS12/BYG23T. Even merely
 subtracting 50 uA would make that old comparison 1.4445906084 mA; that does not
 account for the changed source/R/Vf inputs and is not the current floor.
 Neither number is an optical dark threshold. The existing **1 uA** cut-state
@@ -212,35 +220,40 @@ still applies; its spare contributes no capacity.
 
 ## Thermal Screens
 
-HP12 is **2 W from -55 to 70 C ambient**, derating linearly to
-**zero at 155 C ambient** [9]:
+PS12 is **2 W from -55 to 70 C ambient**, derating linearly to
+**zero at 155 C ambient** [10]:
 
 `P_allow(T_local) = 2 * clamp((155 - T_local)/(155 - 70), 0, 1)`.
 
 **155 C is the zero-power ambient/operating endpoint, not a demonstrated
-powered-chip or material-interface temperature.** No separate HP12 hot-spot
+powered-chip or material-interface temperature.** No separate PS12 hot-spot
 ceiling or mounted K/W parameter is established in this model. SMT sends heat
 through chip terminations, solder lands and the PCB differently from the retired
 axial parts; it does not remove the dissipated watts or prove a cooler result.
 PR02 body standoff, lead forming and its thermal examples do not apply to the
 selected no-hole SMT resistor. Ambient derating alone is not W3 closure.
 
-The family **300 V maximum working voltage** is also limited by
-`min(300, sqrt(P * R_nominal))`: **66.3324958071 V at 2 W / 2200 ohm**.
+The PS12 family maxima are **500 V working, 1000 V overload and 500 V dielectric
+withstand** [10]. Rated continuous working voltage (RCWV) is limited by
+`min(500, sqrt(P * R_nominal))`: **66.3324958071 V at 2 W / 2200 ohm**.
 The **five-second short-time overload test** uses
-`min(2.5 * rated_working_voltage, 500)` = **165.8312395178 V** at that rating.
-This is a resistance-change test, **not an impulse curve or repetitive surge
-rating**, and neither voltage is permission to expose this system to it.
+`min(2.5 * RCWV, 1000)` = **165.8312395178 V** at that rating.
+Both calculated voltages are unchanged from HP12 because the power/resistance
+limits dominate. The overload resistance-change test is separate from PS's
+**one-pulse power and voltage curves on page 6**. Those curves are not digitized
+or used by this DC model; neither test nor curves establish repetitive surge or
+board-lightning qualification. Dielectric withstand is a component test, not
+assembled insulation approval or permission to expose this system to that voltage.
 
 | Source-end condition | Branch mA | One resistor W | Two resistors W | Rating-only local ambient ceiling C |
 | :--- | ---: | ---: | ---: | ---: |
 | 36 V, nominal R / 2.8 V Vf comparison | 15.090909 | 0.501018 | 1.002036 | 133.707 |
-| 36 V, HP12 Rmin / zero Vf | 16.695884 | 0.601052 | 1.202104 | 129.455 |
-| Legacy 37 V proposal, now HP12 Rmin / zero Vf | 17.159659 | 0.634907 | 1.269815 | 128.016 |
-| Current 40.39597 V screen, HP12 Rmin / zero Vf | 18.734624 | 0.756803 | 1.513607 | 122.836 |
+| 36 V, PS12 Rmin / zero Vf | 16.695884 | 0.601052 | 1.202104 | 129.455 |
+| Legacy 37 V proposal, now PS12 Rmin / zero Vf | 17.159659 | 0.634907 | 1.269815 | 128.016 |
+| Current 40.39597 V screen, PS12 Rmin / zero Vf | 18.734624 | 0.756803 | 1.513607 | 122.836 |
 
 At the current upper screen, **0.7568032911 W/resistor** leaves
-**1.2431967089 W below HP12 P70**. The rating-only local ambient ceiling is
+**1.2431967089 W below PS12 P70**. The rating-only local ambient ceiling is
 **122.8358601301 C**. At 125 C ambient, allowance is only **0.7058823529 W**,
 so this screen exceeds it by **0.0509209381 W**. Do not extrapolate below
 70 C to permit more than 2 W, or treat the arithmetic ambient ceilings as
@@ -286,7 +299,7 @@ Add through-contact/auxiliary heat, mutual heating and solar exposure before
 using the budget for a real enclosure. 30 C observed outdoor ambient is not a
 guaranteed design maximum. No normal TEST timer substitutes for this envelope.
 
-Actual HP12 chip/pad/PCB and adjacent-material temperatures are not calculated
+Actual PS12 chip/pad/PCB and adjacent-material temperatures are not calculated
 from an assumed package K/W. Instrumented steady-state evidence with both
 branches, solar exposure and output-short conditions remains a separate physical
 qualification activity, not a new prerequisite imposed on prototype exports.
@@ -294,11 +307,11 @@ qualification activity, not a new prerequisite imposed on prototype exports.
 **Historical only:** the retired PR02 calculation used +/-250 ppm/K and a 20 C
 reference, giving **2120.8275..2280.3275 ohm** and **0.7694328710 W** at the upper
 source screen. Its **220 C hot-spot limit, typical 75 K/W mounted example and
->=1 mm body standoff** [7] belong to that axial part, not HP12. The old example's
+>=1 mm body standoff** [7] belong to that axial part, not PS12. The old example's
 **57.7074653257 K rise** is not retained as an SMT or OneGel prediction.
 The named historical regression also retains the former MBE **2166.5655 ohm**
 minimum, **0.631876 W at 37 V** and **0.753190 W at 40.39597 V**, rather than
-calling them HP12 limits. Neither retired resistor's analysis was physical qualification;
+calling them PS12 limits. Neither retired resistor's analysis was physical qualification;
 their 20 C arithmetic is explicit in the historical test, not a compatibility
 mode in the selected-part helpers.
 
@@ -306,7 +319,7 @@ mode in the selected-part helpers.
 
 The existing solver supplies only selected AB/CB prospective CV examples,
 with explicitly illustrative **0.25 ohm source series R** and **0.1 ohm arc
-slope**. At 40.39597 V / declared cable / zero-Vf HP12 Rmin loads, a near-source
+slope**. At 40.39597 V / declared cable / zero-Vf PS12 Rmin loads, a near-source
 100 ohm fault dissipates **16.0526650917 W** at **0.4006577728 A in the fault**
 with just **1.3207708739 A total**, below even the healthy upper envelope.
 A hub overcurrent threshold is not complete coverage.
@@ -358,13 +371,20 @@ original **280 nominal cuts and 615 prospective inter-core fault cases** are
 retained, along with repair/retest, floating-island and legacy-topology controls.
 No second network solver, full transient solver or shared-source guard is added.
 
-On **Python 3.14.4**, the SMT-focused runs passed **23 electrical tests and
-13 design-bound tests**. Both normal `--json` CLIs exited 0; human/JSON/error
+On **Python 3.14.4**, the preceding **HP12** SMT-focused runs passed **23 electrical
+tests and 13 design-bound tests**. Both normal `--json` CLIs exited 0; human/JSON/error
 paths were also exercised by the isolated suites. These results concern only
 the bounded analysis, not the concurrent PCB/production integration.
 
-The suites cover selected HP12 rating/TCR/25 C reference and test endpoints,
-working-voltage/five-second-overload arithmetic, historical named values, BYG23T
+For **PS12 synchronization on 2026-09-08**, the four reproduction commands above
+passed on **Python 3.14.4**: **23 electrical and 13 design-bound tests, no skips**,
+and both `--json` CLIs exited 0. Both CLIs also exited 0 without `--json`.
+The focused suites passed before and after the change with all normal numerical
+expectations retained; only selected identity, family-voltage and scope checks changed.
+
+The current suites cover selected PS12 rating/TCR/25 C reference and test endpoints,
+500/1000/500 V family ratings and working-voltage/five-second-overload arithmetic,
+separate one-pulse-curve scope, historical named values, BYG23T
 headroom, clamp diversion/blackout margin, unchanged resistor/PSU power and
 nonzero clamp body heat, finite/invalid inputs, thermal arithmetic and CLI JSON.
 These checks verify declared calculations, not actual LED polarity survival,

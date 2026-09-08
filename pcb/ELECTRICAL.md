@@ -1,25 +1,30 @@
 # Electrical Engineering Record
 
-**Revision: 1.2.0-dev. P2 analysis updated 2026-09-07. Electrical release HOLD.**
+**Revision: 1.2.0-dev. PS12 synchronization 2026-09-08. Electrical release HOLD.**
 
-This record accompanies the authorized **16-part HP12/BYG23T SMT conversion** and the persistent DC/bounds analyses. R1/R2 are now Uni-Royal HP122WF2201T4E 2512 2 W resistors; D1/D2 remain SMA series diodes and D3/D4 negative-voltage shunts. **A shunt is not a universal LED pulse-current limiter, and coordinated powered-GDT/source protection remains unresolved.** C4/C5/W3 performance items remain open for their stated scope. This bounded model synchronization adds no environmental, switch or physical-qualification prerequisite to prototype exports; assembly/ordering and production-gate dispositions are controlled separately.
+This record accompanies the selected **16-part PS12/BYG23T circuit in both prototype and production** and the persistent DC/bounds analyses. R1/R2 are now Uni-Royal PS122WF2201T4E / C2793873, 2512 2 W resistors; D1/D2 remain SMA series diodes and D3/D4 negative-voltage shunts. **A shunt is not a universal LED pulse-current limiter, and coordinated powered-GDT/source protection remains unresolved.** C4/C5/W3 performance items and W1/W4 part/process holds remain open for their stated scope. This bounded model synchronization adds no environmental, switch or physical-qualification prerequisite to prototype exports; assembly/ordering and production-gate dispositions are controlled separately.
 
-The original axial hybrid was implemented after checkpoint **ad282e3**; the later SMT R1/R2 conversion retains development revision **1.2.0-dev** and its topology. **One of the two ordered LRS-75-36 units serves TEST; the other is a disconnected spare**. No dual-source wiring, physical switch pinout or powered-GDT shutdown was added. Section 9 records the selected simple circuit and current user scope. Older PR02/MBE and active/zener/source investigations below are explicitly historical, not required additions. **Energized cattle fencing is prohibited near the entire boundary cable, stations and hub**; the former close-parallel exposure is withdrawn, not qualified safe.
+The original axial hybrid was implemented after checkpoint **ad282e3**; the later HP12 SMT conversion and current PS12 selection retain development revision **1.2.0-dev** and its topology. **One of the two ordered LRS-75-36 units serves TEST; the other is a disconnected spare**. No dual-source wiring, physical switch pinout or powered-GDT shutdown was added. Section 9 records the selected simple circuit and current user scope. Older HP12/PR02/MBE and active/zener/source investigations below are explicitly historical, not required additions. **Energized cattle fencing is prohibited near the entire boundary cable, stations and hub**; the former close-parallel exposure is withdrawn, not qualified safe.
 
 ## 1. Implemented Model
 
 The selected indicator circuit is:
 
 ```text
-WIRE_A -> R1 HP12 2.2k 2W -> D1 A(2), K(1) -> LED_A_POS -> J_LED_A.1
-WIRE_C -> R2 HP12 2.2k 2W -> D2 A(2), K(1) -> LED_C_POS -> J_LED_C.1
+WIRE_A -> R1 PS12 2.2k 2W -> D1 A(2), K(1) -> LED_A_POS -> J_LED_A.1
+WIRE_C -> R2 PS12 2.2k 2W -> D2 A(2), K(1) -> LED_C_POS -> J_LED_C.1
 J_LED_A.2 = J_LED_C.2 = WIRE_B
 D3: anode(2) to WIRE_B, cathode(1) to LED_A_POS
 D4: anode(2) to WIRE_B, cathode(1) to LED_C_POS
 External LED anode goes to terminal 1, cathode to terminal 2.
 ```
 
-GDT_AB, GDT_BC and GDT_AC connect the named core pairs **before** the indicator resistors. The three core/EARTH tubes connect to the separate EARTH bus. Thus the 2 W R1/R2 do not limit GDT source follow current. R1/R2 are **Uni-Royal HP122WF2201T4E**, 2512 SMT, 2.2k, 1%, **+/-100 ppm/C referenced to 25 C** [S15]. The supplied **C2791283 is rejected: it identifies 4.7k/5%, not this resistor**. Corrected sourcing is controlled by the parent and reviewed BOM; no replacement C-code or allocation is invented here. D1-D4 remain **Vishay General Semiconductor BYG23T-M3/TR / C145454**, 1300 V repetitive reverse, SMA. D3/D4 do not create a forward B-to-A/C path through the intact series diodes. They are not connected before R1/R2 or directly to EARTH.
+GDT_AB, GDT_BC and GDT_AC connect the named core pairs **before** the indicator resistors. The three core/EARTH tubes connect to the separate EARTH bus. Thus the 2 W R1/R2 do not limit GDT source follow current. R1/R2 are **Uni-Royal PS122WF2201T4E / C2793873**, 2512 SMT, 2.2k, 1%, **+/-100 ppm/C referenced to 25 C** [S16,S17]. The earlier **C2791283 mapping remains rejected: HP122WJ0472T4E is 4.7k/5%, not this resistor**. D1-D4 remain **Vishay General Semiconductor BYG23T-M3/TR / C145454**, 1300 V repetitive reverse, SMA. D3/D4 do not create a forward B-to-A/C path through the intact series diodes. They are not connected before R1/R2 or directly to EARTH.
+
+The user reports **110 PS122WF2201T4E / C2793873 ORDERED to the JLCPCB parts
+library**, not receipt or board-job allocation. The selection applies to both
+prototype and production. BOM/CAD integration and supplier acceptance remain
+with their respective owners; a public identity listing is not allocation.
 
 The functional hub connections used in the calculation are:
 
@@ -36,7 +41,7 @@ Ties belong on the source-side contacts. There is no permanent End A/C strap, op
 
 ### Parameters And Equations
 
-Defaults are **41 stations**, numbered 0 through 40 at 0.1 km spacing; 82 branches; 36 V; and the historical illustrative 6.9 ohm/km per core. The 2.1 V LED / 0.7 V series-diode defaults preserve that comparison, **not characterized APEM/BYG23T I/V data**. `design_bounds.py` now uses HP12 tolerance/TCR and its 25 C resistance reference, the unchanged conditional cable/contact ceiling and a **5.2 V high-drop screen** (3.3 LED + the BYG23T 1.9 V maximum tested at 1 A/25 C). Neither test point is a full-temperature indicator-current guarantee.
+Defaults are **41 stations**, numbered 0 through 40 at 0.1 km spacing; 82 branches; 36 V; and the historical illustrative 6.9 ohm/km per core. The 2.1 V LED / 0.7 V series-diode defaults preserve that comparison, **not characterized APEM/BYG23T I/V data**. `design_bounds.py` now uses PS12 tolerance/TCR and its 25 C resistance reference, the unchanged conditional cable/contact ceiling and a **5.2 V high-drop screen** (3.3 LED + the BYG23T 1.9 V maximum tested at 1 A/25 C). Neither test point is a full-temperature indicator-current guarantee.
 
 For core `c`, station `s`, and span length `dx`:
 
@@ -87,13 +92,20 @@ TMPDIR=/tmp/opencode python3 -B scripts/design_bounds.py --json
 
 `--json` writes the declared inputs, summaries, cut regression, and prospective fault study to stdout; no scratch evidence or third-party numeric packages are needed. CLI two-value channel arguments are A then C; three-value cable arguments are A, B, C. `--r-core` units are ohm/km at 20 C, not resistance of the whole perimeter. The resistor/TCR reference and default `--resistor-temp` are now **25 C**; default TCR remains zero for the nominal comparison. Cable and junction-drop references stay at 20 C, source at 25 C. The CLI clean-cut sweep is a functional test and fails if selected inputs cannot produce the expected electrically ON states; use `simulate()` directly for undervoltage/reversed-source investigations.
 
-SMT synchronization verified on Python **3.14.4**: **23 electrical and 13 design-bound tests PASS**, including all **280 nominal clean-cut cases** (7 combinations x 40 spans), a second 280-cut sweep at the selected nonuniform corner, **615 inter-core fault cases** (3 pairs x 5 states x 41 stations), all five earth-connected station locations (0/10/20/30/40), repair/retest, floating islands, closed-form solutions, HP12 TCR/reference/rating limits, thermal arithmetic and CLI JSON/error status. Both normal `--json` CLIs exited 0. No native/build/approval operation or physical test was run for this bounded update.
+Previous **HP12** SMT synchronization verified on Python **3.14.4**: **23 electrical and 13 design-bound tests PASS**, including all **280 nominal clean-cut cases** (7 combinations x 40 spans), a second 280-cut sweep at the selected nonuniform corner, **615 inter-core fault cases** (3 pairs x 5 states x 41 stations), all five earth-connected station locations (0/10/20/30/40), repair/retest, floating islands, closed-form solutions, HP12 TCR/reference/rating limits, thermal arithmetic and CLI JSON/error status. Both normal `--json` CLIs exited 0. No native/build/approval operation or physical test was run for that bounded HP12 update.
+
+**PS12 synchronization, 2026-09-08:** all four reproduction commands above passed
+on **Python 3.14.4**, with **23 electrical and 13 design-bound tests, no skips**.
+Both CLIs exited 0 with and without `--json`. Normal numerical expectations remain
+unchanged; tests now check PS12 identity, 500/1000/500 V family ratings and the
+separate one-pulse-curve scope. No native/build/workflow/approval operation,
+commit, upload, order or physical test was performed by this bounded update.
 
 Clean-cut sweep maximum KCL residual: **4.34e-14 A**. Maximum source/power-balance residual: **7.71e-12 W**. These are numerical errors, not measurement uncertainty or model accuracy.
 
 ## 2. Calculated Results
 
-All values here are calculations, not measurements. The first four rows retain historical ideal-36 V comparisons; their current is branch current before clamp diversion. The final row is the **current HP12** upper screen in section 3. See DESIGN_BOUNDS for the selected-part/leakage studies.
+All values here are calculations, not measurements. The first four rows retain historical ideal-36 V comparisons; their current is branch current before clamp diversion. The final row is the **current PS12** upper screen in section 3, numerically unchanged from HP12. See DESIGN_BOUNDS for the selected-part/leakage studies.
 
 | Case | Source A | Source W | LED current min/max, mA | Largest resistor W |
 | :--- | ---: | ---: | ---: | ---: |
@@ -101,7 +113,7 @@ All values here are calculations, not measurements. The first four rows retain h
 | Five boards, zero cable R | 0.150909 | 5.4327 | 15.0909 / 15.0909 | 0.501018 |
 | All 41 boards, zero cable R | 1.237455 | 44.5484 | 15.0909 / 15.0909 | 0.501018 |
 | 41 boards, 40 ohm/core, 3.3 V LED + 0.7 V diode | 0.727083 | 26.1750 | 6.2096 / 14.5455 | 0.465455 |
-| 40.39597 V, zero drops, HP12 minimum R, all 41 boards, zero cable R | 1.536239 | 62.0579 | 18.7346 / 18.7346 | 0.756803 |
+| 40.39597 V, zero drops, PS12 minimum R, all 41 boards, zero cable R | 1.536239 | 62.0579 | 18.7346 / 18.7346 | 0.756803 |
 
 The low-R entire-load case is essential: a five-board demonstration does not establish 41-board capacity. The ordered LRS-75-36 has capacity margin for these declared cases before actual thermal/input derating and added protection/auxiliary load. Inspect the delivered working unit's nameplate and settings; its disconnected spare contributes no current or power. The LRS-35 results remain historical comparisons, not the current source allocation. Neither model is a coordinated fence-fault protective device by itself.
 
@@ -135,21 +147,21 @@ P_upper  = V_screen^2 / R_min                           = 0.756803 W
 
 This is a **conservative chosen screening envelope, not Mean Well's guaranteed combined maximum**, a measured accessible-adjustment limit, or a claim that a resistor will operate at 125 C. Adjustment-range/tolerance interaction must be confirmed. Treating a ripple peak as continuous overestimates its steady heating but gives a simple upper screen. Zero LED and diode drops avoid claiming unprovided minimum Vf; they also screen an output short. Supply startup, overshoot, malfunction, external surges, aging, and any voltage above this declared window are not covered. The PSU's 41.4-48.6 V overvoltage shutdown range is **not** enforcement of this 40.39597 V screen.
 
-The selected **HP12 [S15] is 2 W from -55 to 70 C ambient**, derating linearly to zero at 155 C ambient. The PDF gives **+/-100 ppm/C** for 2.2k, with a 25 C reference and -55/+125 C TCR test temperatures; its website's tighter 75 ppm/C is not used. `resistor_bounds()` retains the selected -30..125 C linear screen, giving **2156.22..2244.22 ohm**, and rejects extrapolation beyond the TCR test endpoints. The separate ambient-derating helper implements:
+The selected **PS12 [S16] is 2 W from -55 to 70 C ambient**, derating linearly to zero at 155 C ambient; the operating range is -55..155 C. The PDF and PS product page agree on **+/-100 ppm/C** for 2.2k; the PDF specifies a 25 C reference and -55/+125 C TCR test temperatures. `resistor_bounds()` retains the selected -30..125 C linear screen, giving **2156.22..2244.22 ohm**, and rejects extrapolation beyond the TCR test endpoints. The separate ambient-derating helper implements:
 
 ```text
-P_HP12(T_local) = 2.00 * clamp((155 - T_local)/(155 - 70), 0, 1)
+P_PS12(T_local) = 2.00 * clamp((155 - T_local)/(155 - 70), 0, 1)
 ```
 
-The **0.756803291056 W** screen is below 2 W P70, but actual chip temperature and heat flow still control. No HP12 hot-spot ceiling or mounted K/W is established by the reviewed data: **the retired PR02's 220 C, 75 K/W and >=1 mm body standoff do not apply**. SMT has no resistor insertion holes or axial forming/standoff requirement; it changes heat flow through terminations, solder lands and PCB, not power loss or a proven cooler result. Nominal resistor heat remains **1.002036363636 W/board**, with approximately 0.021127272727 W in D1/D2 at the illustrative 0.7 V and at most 0.000210 W shifted from the external LEDs into the shunts at 2.1 V/50 uA. Upper two-branch input heat is **1.513606582112 W**. Neither SMT nor the 2 W rating removes those watts.
+The **0.756803291056 W** screen is below 2 W P70, but actual chip temperature and heat flow still control. No PS12 hot-spot ceiling or mounted K/W is established by this model: **the retired PR02's 220 C, 75 K/W and >=1 mm body standoff do not apply**. SMT has no resistor insertion holes or axial forming/standoff requirement; it changes heat flow through terminations, solder lands and PCB, not power loss or a proven cooler result. Nominal resistor heat remains **1.002036363636 W/board**, with approximately 0.021127272727 W in D1/D2 at the illustrative 0.7 V and at most 0.000210 W shifted from the external LEDs into the shunts at 2.1 V/50 uA. Upper two-branch input heat is **1.513606582112 W**. Neither SMT nor the 2 W rating removes those watts.
 
-The family **300 V working maximum** is limited by `sqrt(P * R_nominal)`: **66.3324958071 V at 2 W / 2.2k**. The five-second overload resistance-change test uses `min(2.5 * rated_voltage, 500)` = **165.8312395178 V**, not 500 V at this resistance. This is **not an impulse curve, repetitive surge rating or system voltage approval**.
+The PS12 family maxima are **500 V working, 1000 V overload and 500 V dielectric withstand** [S16]. Rated continuous working voltage (RCWV) is `min(500, sqrt(P * R_nominal))`: **66.3324958071 V at 2 W / 2.2k**. The five-second overload resistance-change test uses `min(2.5 * RCWV, 1000)` = **165.8312395178 V**, not 1000 V at this resistance. Both calculated voltages are unchanged from HP12. **PS has separate one-pulse power and voltage curves on page 6**; these are not digitized or used by this DC model. Neither the overload test nor those curves establish repetitive surge or board-lightning qualification. Dielectric withstand is a component test, not assembled insulation or system voltage approval.
 
 **Disposition:** the 2 W part is selected in the design, not thermally qualified. Establish the actual allowed source envelope and test steady-state closed/potted temperatures, including both output shorts and credible hot/solar conditions. Rating-only temperature ceilings are not simultaneous electrothermal operating limits; the resistance screen separately assumes resistor temperature <=125 C. The former 35-37 V proposal is not enforced hardware, and a passive design covering the actual normal PSU range is an alternative to a new precision cutoff. The proposed 60 C interfaces / 110 C film targets are conservative development targets, not universal user limits. Meet actual part, cable and material limits with measurement uncertainty. Normal TEST must remain continuous-safe without a timer.
 
-The calculated J_IN currents are local: one branch on A and C, their sum on B, up to **37.4692471084 mA** in this screen. WAGO through-splices and the hub carry distributed perimeter current. Contact heating and the distinct surge paths still need their applicable evidence; no 72 A terminal/board rating is assigned. Historical PR02 figures (250 ppm/K, 20 C reference, 2120.8275 ohm minimum / 0.769432871 W upper screen) and MBE figures (0.65/1 W modes, 0.753190 W upper screen) are retained only as history, not HP12 calculations.
+The calculated J_IN currents are local: one branch on A and C, their sum on B, up to **37.4692471084 mA** in this screen. WAGO through-splices and the hub carry distributed perimeter current. Contact heating and the distinct surge paths still need their applicable evidence; no 72 A terminal/board rating is assigned. Historical PR02 figures (250 ppm/K, 20 C reference, 2120.8275 ohm minimum / 0.769432871 W upper screen) and MBE figures (0.65/1 W modes, 0.753190 W upper screen) are retained only as history, not PS12 calculations.
 
-With the unchanged 35 V feed floor, 70 C cable/contact corner and 5.2 V high-drop screen, the selected nonuniform A40 case gives **4.2776194086 mA branch / 4.2276194086 mA LED after 50 uA diversion**. With the other positive rail ideal, these become **3.7936689719 / 3.7436689719 mA**. The deliberately loose independent all-station floor is **0.3891468726 / 0.3391468726 mA**, not predicted daylight visibility. The zero-drop upper load needs **82.0871294532%** of LRS-75 rated current/power capacity before actual derating and extra losses. These recomputed screens change no source, cable, OneGel or site assumption; see DESIGN_BOUNDS for the complete conditional tables.
+With the unchanged 35 V feed floor, 70 C cable/contact corner and 5.2 V high-drop screen, the selected nonuniform A40 case gives **4.2776194086 mA branch / 4.2276194086 mA LED after 50 uA diversion**. With the other positive rail ideal, these become **3.7936689719 / 3.7436689719 mA**. The deliberately loose independent all-station floor is **0.3891468726 / 0.3391468726 mA**, not predicted daylight visibility. The zero-drop upper load needs **82.0871294532%** of LRS-75 rated current/power capacity before actual derating and extra losses. All normal numerical screens are unchanged from the HP12 model; source, cable, OneGel, switch and site assumptions are retained. See DESIGN_BOUNDS for the complete conditional tables.
 
 ## 4. Powered Faults: C5 Open
 
@@ -227,7 +239,7 @@ No time limit on healthy TEST is proposed. A fault-triggered latch is a differen
 ## 5. LED Protection: C4 Open
 
 The candidate calculations in this section are **historical MBE/onsemi-era
-investigations**, not the selected HP12/BYG23T limits. Its original requirement
+investigations**, not the selected PS12/BYG23T limits. Its original requirement
 to survive both installation polarity errors is **superseded by the user decision
 in section 9**. Do not treat the
 historical active/clamp investigations as mandatory circuitry or a specified
@@ -311,13 +323,13 @@ No claim of 5/20 kA assembled performance, 72 A terminal capacity, equal transie
 
 ## 7. Evidence Register
 
-Sources S1-S12 were retrieved during the earlier P2 session on 2026-09-06 using **webfetch only**; S13-S15 record the later part reviews. APEM and TI HTML were readable directly. Where direct PDF fetching produced raw binary or a 403, text was obtained through `https://r.jina.ai/https://...` targeting the manufacturer document (or manufacturer-authored LCSC-hosted GDT document). That is an extraction aid, not a second manufacturer guarantee or proof the served revision is the latest. For this SMT conversion, the supplied research review visually confirmed S15 pages 1, 2, 4, 5, 6 and 8; the bounded model update reread its TCR reference/test temperatures via webfetch text extraction, not a new visual land review. No vendor acceptance or physical qualification follows.
+Sources S1-S12 were retrieved during the earlier P2 session on 2026-09-06 using **webfetch only**; S13-S15 record the later part reviews. APEM and TI HTML were readable directly. Where direct PDF fetching produced raw binary or a 403, text was obtained through `https://r.jina.ai/https://...` targeting the manufacturer document (or manufacturer-authored LCSC-hosted GDT document). That is an extraction aid, not a second manufacturer guarantee or proof the served revision is the latest. For the preceding HP12 SMT conversion, the supplied research review visually confirmed S15 pages 1, 2, 4, 5, 6 and 8; that model update reread its TCR reference/test temperatures via webfetch text extraction, not a new visual land review. For the PS12 selection, the supplied research visually read S16 pages 1, 2, 4, 5, 6, 7 and 8 and verified the exact JLCPCB identity S17. This synchronization uses that supplied evidence, not a new research run, vendor acceptance or physical qualification.
 
 | ID | Primary document / provenance | Relevant evidence |
 | :--- | :--- | :--- |
 | S1 | [APEM Q10F5SXXSG02E live product page](https://www.apem.com/led-indicators/professional-grade-panel-mount-led-indicators/q10/q10f5sxxsg02e) | No-resistor option, 1.8-3.3 V family listing, 20 mA max, 5 V reverse, -40 to +85 C, 20-25 cNm = 0.20-0.25 Nm. Exact SG I/V/pulse bounds absent from retrieved page. |
 | S2 | [onsemi 1N4001/D](https://www.onsemi.com/pdf/datasheet/1n4001-d.pdf), June 2024 rev. 18; [text extraction](https://r.jina.ai/https://www.onsemi.com/pdf/datasheet/1n4001-d.pdf) | **Historical, retired diode.** Pages 2/5/6: blocking/leakage/temperature, ordering suffixes, 0.86 mm lead maximum. |
-| S3 | [Vishay 28766, MBx/SMA](https://www.vishay.com/docs/28766/mbxsma.pdf), 11-Jul-2018; [text extraction](https://r.jina.ai/https://www.vishay.com/docs/28766/mbxsma.pdf) | **Historical, retired MBE.** Pages 1-4/8-10: rating modes, film limits, TCR/tolerance, derating and separate pulse constraints, not HP12 data. |
+| S3 | [Vishay 28766, MBx/SMA](https://www.vishay.com/docs/28766/mbxsma.pdf), 11-Jul-2018; [text extraction](https://r.jina.ai/https://www.vishay.com/docs/28766/mbxsma.pdf) | **Historical, retired MBE.** Pages 1-4/8-10: rating modes, film limits, TCR/tolerance, derating and separate pulse constraints, not PS12 data. |
 | S4 | [Mean Well LRS-35](https://www.meanwell.com/Upload/PDF/LRS-35/LRS-35-SPEC.PDF), [LRS-75](https://www.meanwell.com/Upload/PDF/LRS-75/LRS-75-SPEC.PDF), file revision 2025-04-07; [35 text](https://r.jina.ai/https://www.meanwell.com/Upload/PDF/LRS-35/LRS-35-SPEC.PDF), [75 text](https://r.jina.ai/https://www.meanwell.com/Upload/PDF/LRS-75/LRS-75-SPEC.PDF) | 36 V / 1 A / 36 W and 36 V / 2.1 A / 75.6 W; adjustment/tolerance/ripple/tempco conditions; 110-150% output-power hiccup; higher OVP threshold. |
 | S5 | [Littelfuse 217 datasheet](https://www.littelfuse.com/assetdocs/littelfuse-fuse-217-datasheet?assetguid=af55be94-c42e-41b1-ad43-e070e09443fe), revised 07/17/25; [text extraction](https://r.jina.ai/https://www.littelfuse.com/assetdocs/littelfuse-fuse-217-datasheet?assetguid=af55be94-c42e-41b1-ad43-e070e09443fe) | Pages 1-2: opening-time test conditions, 2 A row DC interruption and nominal I2t. |
 | S6 | [Vishay BZX85, 85607](https://www.vishay.com/docs/85607/bzx85.pdf), rev. 2.9, 17-Sep-2025; [text extraction](https://r.jina.ai/https://www.vishay.com/docs/85607/bzx85.pdf) | Pages 1-3: exact zener test currents, leakage test voltages, coefficients, pulse conditions, conditional 1.3 W thermal rating, DO-41 dimensions and -TR ordering. |
@@ -327,9 +339,11 @@ Sources S1-S12 were retrieved during the earlier P2 session on 2026-09-06 using 
 | S10 | Manufacturer-authored [Ruilon SMD5050 SP-GDT-006 A3/2024-08-19](https://www.lcsc.com/datasheet/C39692533.pdf), [2RD-8 SP-GDT-017 A3/2023-11-02](https://www.lcsc.com/datasheet/C2836978.pdf), [Bencent B5G470L A2/2018-01-03](https://www.lcsc.com/datasheet/C5337217.pdf), distributed by LCSC | Newly retrieved text via [SMD5050 extraction](https://r.jina.ai/https://www.lcsc.com/datasheet/C39692533.pdf), [2RD-8 extraction](https://r.jina.ai/https://www.lcsc.com/datasheet/C2836978.pdf), [B5G extraction](https://r.jina.ai/https://www.lcsc.com/datasheet/C5337217.pdf): 950/1100 V impulse limits and B5G's 99% figure; typical 15/10/15 V arcs at stated 1 A conditions. No system-specific holdover guarantee. |
 | S11 | [Bourns 2027](https://www.bourns.com/docs/product-datasheets/2027.pdf), rev. E 01/26; [text extraction](https://r.jina.ai/https://www.bourns.com/docs/product-datasheets/2027.pdf) | Network-qualified DC holdover, typical-distribution impulse sparkover and actual 8 mm body/lead variants. |
 | S12 | [Bourns GMOV](https://www.bourns.com/docs/product-datasheets/GMOV.pdf), rev. 01/25; [text extraction](https://r.jina.ai/https://www.bourns.com/docs/product-datasheets/GMOV.pdf) | Series GDT/MOV hybrid for AC/DC, explicit 14D500K data, large physical envelope and still-high transient front voltage. |
-| S13 | [Vishay PR01/02/03, 28729](https://www.vishay.com/docs/28729/pr010203.pdf), 08-Jul-2025; [exact PR02 inventory reference](https://www.vishay.com/search?type=inv&query=PR02000202201FA100) | **Historical, retired PR02 selection.** 2.2k/1% copper-lead 2 W, 250 ppm/K, 0.83 maximum lead and axial mounting/hot-spot data. Its 220 C / 75 K/W / body-standoff figures do not apply to HP12. |
+| S13 | [Vishay PR01/02/03, 28729](https://www.vishay.com/docs/28729/pr010203.pdf), 08-Jul-2025; [exact PR02 inventory reference](https://www.vishay.com/search?type=inv&query=PR02000202201FA100) | **Historical, retired PR02 selection.** 2.2k/1% copper-lead 2 W, 250 ppm/K, 0.83 maximum lead and axial mounting/hot-spot data. Its 220 C / 75 K/W / body-standoff figures do not apply to PS12. |
 | S14 | [Vishay BYG23T-M3, 89429](https://www.vishay.com/docs/89429/byg23t.pdf), 25-Feb-2020; [C145454 exact identity](https://www.lcsc.com/product-detail/C145454.html) | Selected BYG23T-M3/TR, 1300 V repetitive reverse, SMA. Original p4 outline/land figure visually read through the public PDF viewer. 75 ns reverse recovery is not forward-clamp response; typical 9 V/620 ns forward recovery at 1.5 A/12 A per us is not a <=5 V guarantee. |
-| S15 | [Uni-Royal HP Series, SMD-SP-003 V.7, 08-Jan-2026](https://www.uni-royal.cn/en/images/userfile/file/1784806233a2e6d381ea80b5d9.pdf) | **Selected HP122WF2201T4E, 2512 2.2k/1%.** HP12 2 W at 70 C ambient, linear derating to zero at 155 C; +/-100 ppm/C referenced to 25 C with -55/125 C TCR tests. Family 300/500 V working/overload maxima are also limited by sqrt(P*R) and 2.5 times that voltage. Five-second overload is not an impulse curve. No PR02 thermal parameter or tighter website TCR is imported. |
+| S15 | [Uni-Royal HP Series, SMD-SP-003 V.7, 08-Jan-2026](https://www.uni-royal.cn/en/images/userfile/file/1784806233a2e6d381ea80b5d9.pdf) | **Historical, superseded HP122WF2201T4E selection, 2512 2.2k/1%.** HP12 2 W at 70 C ambient, linear derating to zero at 155 C; +/-100 ppm/C referenced to 25 C with -55/125 C TCR tests. Family 300/500 V working/overload maxima are also limited by sqrt(P*R) and 2.5 times that voltage. Five-second overload is not an impulse curve. That HP12 analysis did not import PR02 thermal parameters or the tighter website TCR. |
+| S16 | [Uni-Royal PS Series, SMD-SP-007 V.7, 08-Jan-2026](https://www.uni-royal.cn/en/images/userfile/file/1784854235b7c79f8d8a205c5d.pdf), via the [PS product page](https://www.uni-royal.cn/en/article.php?id=10109) | **Selected PS122WF2201T4E, PS12 / 2512 2.2k/1%.** 2 W at 70 C ambient, linear derating to zero at 155 C, -55..155 C operation; +/-100 ppm/C at 25 C reference with -55/+125 C TCR tests. Family working/overload/dielectric maxima 500/1000/500 V; RCWV and five-second overload formulas give 66.3325/165.8312 V at nominal 2.2k/2 W. Page 6 has separate **one-pulse power and voltage curves**; no repetitive surge or board-lightning qualification follows. |
+| S17 | [JLCPCB C2793873](https://jlcpcb.com/partdetail/C2793873) | Exact Uni-Royal PS122WF2201T4E, 2.2k/2 W/1%/100 ppm/2512 identity; not receipt or board-job allocation. The 110-part library order is user-reported separately. |
 
 ## 8. Continuation Decision, 2026-09-07
 
@@ -348,7 +362,7 @@ See [ENVIRONMENT_EVIDENCE.md](ENVIRONMENT_EVIDENCE.md).
 ### Cable And Continuous Duty
 
 The following is the **historical MBE / 20 C reference / 35..37 V / 4.4 V
-screen**, not the current HP12 calculation. `scripts/design_bounds.py` still
+screen**, not the current PS12 calculation. `scripts/design_bounds.py` still
 reuses the same three-core solver; current inputs/results are in sections 1-3
 and [DESIGN_BOUNDS.md](DESIGN_BOUNDS.md):
 
@@ -451,7 +465,8 @@ recovery experiment may precede field qualification; no such test was performed.
 ## 9. Simplified Indicator Direction
 
 User clarification and subsequent implementation, 2026-09-07, after checkpoint
-**ad282e3**. This is the current design, not an approved order/field release:
+**ad282e3**, with PS12 selection synchronized 2026-09-08. This is the current
+design, not an approved order/field release:
 
 - LED damage from **accidental low-voltage installation polarity reversal is
   accepted**, with spare indicators for replacement. This changes the required
@@ -469,7 +484,8 @@ User clarification and subsequent implementation, 2026-09-07, after checkpoint
   Nearby lightning, ordinary switching and RUN behavior remain relevant.
 - The authorized **16-part hybrid now uses SMT R1/R2**: eight SMT and eight THT
   electrical parts, plus four mounting footprints, on the unchanged board.
-  R1/R2 are HP122WF2201T4E; D1-D4 remain BYG23T-M3/TR. No active current stage,
+  R1/R2 are PS122WF2201T4E / C2793873 in both prototype and production;
+  D1-D4 remain BYG23T-M3/TR. No active current stage,
   timer, new supply connection or GDT replacement is fitted.
 
 ### Minimal Circuit And Layout
@@ -494,7 +510,8 @@ courtyards. R1/R2 retain origins **(120,104.50) / (120,140.50)**, now SMT with
 series routes are 1.80 wide and the retained shunt B routes 0.80.
 No added vias or folded branches are introduced.
 All protected rails/vias, B returns, earth separation and terminal positions
-remain. Parent/assembly ownership controls corrected resistor lands/paste and
+remain. The supplied independent review found PS12 geometry matches the existing
+HP12 lands, requiring no layout change. Parent/assembly ownership controls
 process/placement acceptance; these coordinates are not a native geometry check.
 The earlier folded-route and axial options are historical, not pending choices.
 
@@ -507,19 +524,20 @@ from 1 W to 2 W does **not** remove the approximately 1 W total nominal heat.
 A larger permitted temperature, different mounting or more copper can explain
 a higher rating without making the body cooler.
 
-The user authorized **HP122WF2201T4E** for R1/R2. The preceding PR02 selection
-and other investigated options are retained below only as history, not substitutes
-or a combined BOM:
+The user selects **PS122WF2201T4E / C2793873** for R1/R2 in both prototype and
+production. The preceding HP12/PR02 selections and other investigated options
+are retained below only as history, not substitutes or a combined BOM:
 
 | Exact candidate | Relevant rating / practical limit |
 | :--- | :--- |
-| **Selected: Uni-Royal HP122WF2201T4E** | HP12 / 2512 SMT, **2.2k, 1%, 2 W at 70 C ambient**, linear derating to zero at 155 C. Use **+/-100 ppm/C with 25 C reference**, not website 75 ppm/C. Family working voltage is limited to 66.3325 V at nominal 2.2k/2 W; five-second overload is 165.8312 V, not an impulse rating. No HP12 hot-spot/K/W parameter or proven cooler result is assigned. |
-| **Historical, retired: Vishay PR02000202201FA100** | Copper-lead PR02, 2.2k, 1%, 2 W P70, +/-250 ppm/K. Its 15.24 pitch / 1.40 holes, 0.83 maximum lead, >=1 mm body standoff, 220 C hot-spot limit and typical mounted 75 K/W belonged to the previous axial assembly. None applies to HP12. |
-| **Historical, unselected: TT PWC2512-2K2FI** | 2.2k, 1%, +/-100 ppm/K, body envelope 6.8 x 3.4 x 0.8 mm. **2 W at 70 C requires 500 mm^2 copper per termination**; the 100 mm^2-per-termination arrangement is **1.5 W**, not 2 W. Those package-specific copper conditions are not HP12 data. |
+| **Selected: Uni-Royal PS122WF2201T4E / C2793873** | PS12 / 2512 SMT, **2.2k, 1%, 2 W at 70 C ambient**, linear derating to zero at 155 C; **+/-100 ppm/C with 25 C reference** [S16]. Family working/overload/dielectric maxima are 500/1000/500 V; RCWV and five-second overload remain 66.3325/165.8312 V at nominal 2.2k/2 W. Separate one-pulse power and voltage curves on p. 6 are not repetitive or board-lightning qualification. No hot-spot/K/W parameter or proven cooler result is assigned by this model. |
+| **Historical, superseded: Uni-Royal HP122WF2201T4E** | HP12 / 2512 SMT, **2.2k, 1%, 2 W at 70 C ambient**, linear derating to zero at 155 C. Used **+/-100 ppm/C with 25 C reference**, not the historical website's 75 ppm/C. Family working voltage was limited to 66.3325 V at nominal 2.2k/2 W; five-second overload was 165.8312 V, not an impulse rating [S15]. No HP12 hot-spot/K/W parameter or proven cooler result was assigned. |
+| **Historical, retired: Vishay PR02000202201FA100** | Copper-lead PR02, 2.2k, 1%, 2 W P70, +/-250 ppm/K. Its 15.24 pitch / 1.40 holes, 0.83 maximum lead, >=1 mm body standoff, 220 C hot-spot limit and typical mounted 75 K/W belonged to the previous axial assembly. None applies to PS12. |
+| **Historical, unselected: TT PWC2512-2K2FI** | 2.2k, 1%, +/-100 ppm/K, body envelope 6.8 x 3.4 x 0.8 mm. **2 W at 70 C requires 500 mm^2 copper per termination**; the 100 mm^2-per-termination arrangement is **1.5 W**, not 2 W. Those package-specific copper conditions are not PS12 data. |
 | **Historical, unselected: Vishay CRCW25122K20FKEGHP** | 2.2k, 1%, +/-100 ppm/K. **1.5 W at 70 C ambient**, or **2 W at 105 C terminal-part temperature**, not ambient. Body envelope 6.5 x 3.3 x 0.7 mm; reflow lands 1.25 x 3.35 each with 5.00 inner gap. Not the selected package or its heat-flow model. |
 
 For the existing **40.39597 V screening source**, 1% initial tolerance and a
-chosen 125 C resistor temperature, the selected HP12 screen is
+chosen 125 C resistor temperature, the selected PS12 screen is
 `Rmin = 2200 * 0.99 * (1 - 100e-6*(125-25)) = 2156.22 ohm`, giving
 **18.7346235542 mA / 0.7568032911 W** with zero junction drops. These omit
 aging and assembly/solder drift; they are not a guaranteed source ceiling,
@@ -544,6 +562,7 @@ Historical option sources from the earlier focused resistor investigation, 2026-
 [Vishay 28729, 08-Jul-2025](https://www.vishay.com/docs/28729/pr010203.pdf),
 [TT PWC, 07.26](https://www.ttelectronics.com/TTElectronics/media/ProductFiles/Resistors/Datasheets/PWC.pdf),
 [Vishay 20043, 17-Mar-2026](https://www.vishay.com/docs/20043/crcwhpe3.pdf).
-The selected HP12 source is **S15, Uni-Royal SMD-SP-003 V.7, 08-Jan-2026**.
+The selected PS12 source is **S16, Uni-Royal SMD-SP-007 V.7, 08-Jan-2026**;
+S15 preserves the superseded HP12 review.
 These are source/option records, not procurement allocation, a passed physical
-test or permission to apply another resistor family's thermal data to HP12.
+test or permission to apply another resistor family's thermal data to PS12.

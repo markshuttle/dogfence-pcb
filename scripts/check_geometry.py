@@ -1014,7 +1014,7 @@ class GeometryCheck:
             self.expect(fp is not None and fp.values[0] == "DogFence:R_2512_6332Metric"
                         and scalar(fp, "layer") == "F.Cu"
                         and attr is not None and attr.atoms() == ["smd"],
-                        "RESISTOR_FOOTPRINT", f"{ref}: populated top-side HP12 R_2512_6332Metric required", fp)
+                        "RESISTOR_FOOTPRINT", f"{ref}: populated top-side PS12 R_2512_6332Metric required", fp)
             if fp:
                 xy, rotation = position(fp)
                 self.expect(math.dist(xy, (120.0, y)) <= EPS and abs(rotation) <= EPS,
@@ -1027,7 +1027,7 @@ class GeometryCheck:
                     self.expect(len(boxes) == 1
                                 and math.dist(point(boxes[0], "start"), tuple(-v for v in half)) <= EPS
                                 and math.dist(point(boxes[0], "end"), half) <= EPS,
-                                "RESISTOR_ENVELOPE", f"{ref}: require reviewed HP12 {layer} body/assembly envelope", fp)
+                                "RESISTOR_ENVELOPE", f"{ref}: require reviewed PS12 {layer} body/assembly envelope", fp)
             for num, x, net in (("1", 116.875, rail), ("2", 123.125, anode)):
                 pad = self.required_pad(ref, num)
                 if pad:
@@ -1039,13 +1039,13 @@ class GeometryCheck:
                                 and math.dist(local, (x - 120.0, 0)) <= EPS and abs(angle) <= EPS
                                 and pad.layers == {"F.Cu", "F.Mask", "F.Paste"}
                                 and expected.contains(pad.shape) and pad.shape.contains(expected),
-                                "RESISTOR_GEOMETRY", f"{pad.label}: require 1.35 x 3.70 mm HP12 rectangle "
+                                "RESISTOR_GEOMETRY", f"{pad.label}: require 1.35 x 3.70 mm PS12 rectangle "
                                 f"at ({x}, {y}) on {net}", pad.node)
                     openings = [a for a in self.apertures if a.node is pad.node]
                     self.expect(len(openings) == 2
                                 and {layer for a in openings for layer in a.layers} == {"F.Mask", "F.Paste"}
                                 and all(expected.contains(a.shape) and a.shape.contains(expected) for a in openings),
-                                "RESISTOR_APERTURE", f"{pad.label}: require matching HP12 F.Mask/F.Paste rectangles "
+                                "RESISTOR_APERTURE", f"{pad.label}: require matching PS12 F.Mask/F.Paste rectangles "
                                 "with zero effective margins and paste ratio", pad.node)
             land_region = pad_shape("rect", (7.6, 3.7), (120.0, y), 0)
             openings = [a for a in self.apertures if a.reference == ref

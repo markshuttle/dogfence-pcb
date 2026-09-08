@@ -22,6 +22,7 @@ from test_compare_nets import BOARD, ipc_text, xml_netlist
 
 
 REPO = Path(__file__).resolve().parents[1]
+# Superseded HP12 selection retained only as a synthetic pending-sourcing fixture.
 EXTERNAL_METADATA = {
     "MPN": "HP122WF2201T4E", "Manufacturer": "Uni-Royal", "LCSC": "",
     "Sourcing": "External",
@@ -1237,8 +1238,9 @@ class ManufacturingTests(unittest.TestCase):
         positions = m.check_placement(m.read_csv(path, m.POSITION_FIELDS), board, native=True)
         bom = m.read_bom(REPO / "pcb" / "BOM.csv")
         for ref in ("R1", "R2"):
-            self.assertEqual(bom[ref]["MPN"], "HP122WF2201T4E")
-            self.assertNotEqual(bom[ref]["LCSC Part #"], "C2791283")  # Verified 4.7k / 5% part, not 2.2k / 1%.
+            for key, expected in {"MPN": "PS122WF2201T4E", "Manufacturer": "Uni-Royal",
+                                  "LCSC Part #": "C2793873", "Sourcing": "LCSC", "Sourcing Reference": ""}.items():
+                self.assertEqual(bom[ref][key], expected)
         text = m.assembly_reference(board, bom, positions, "1.2.0-dev")
         anchors, terminals = text.split("TERMINAL DATUMS\n")
         self.assertIn("Population: 16 components; 8 SMT / 8 THT.", anchors)
@@ -1268,7 +1270,7 @@ class ManufacturingTests(unittest.TestCase):
                     net, x, y, drill = expected[key]
                     self.assertEqual(row[2], net)
                     self.assertEqual(tuple(map(float, row[4:])), (x, y, x, -y, drill))
-        self.assertIn("HP122WF2201T4E", anchors)
+        self.assertIn("PS122WF2201T4E", anchors)
         self.assertIn("Footprint anchors and terminal centres are NOT measured package centroids.", text)
 
     def test_via_treatment_csv_reports_source_requested_front_and_back(self):

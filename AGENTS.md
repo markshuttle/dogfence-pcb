@@ -30,7 +30,8 @@ Production/field release remains held; file checks are not hardware approval.
 6. For a **board/prototype-only request**, work the P3/P4 board-finalization
    queue in ORDERING/REMEDIATION, not the first unchecked switch or environmental
    item. Preserve those independent holds without restarting their research.
-   The authorized 16-part HP12 SMT conversion preserves the circuit topology;
+   The authorized 16-part hybrid selects PS12 SMT for prototype and production,
+   preserving the existing lands, placement, routing and circuit topology;
    do not add a new circuit or move sound geometry just to produce a PCB diff.
    **Gate P is file-verified prototype artifacts**, separate from original A/B/C
    production/field holds. Supplier CAM/placement/allocated parts, GDT fit/forming
@@ -102,15 +103,25 @@ geometry fails closed; extend and test the validator rather than ignore it.
   file/artifact checks pass. That CSV is a generated draft reference, not an
   independent source or upload approval; on failure it may remain from an older
   checked revision.
-- The intended SMT resistor is **Uni-Royal HP122WF2201T4E**, HP12 / 2512,
-  2.2 kohm / 2 W / 1%, with **no verified LCSC code**. **C2791283 is
-  HP122WJ0472T4E, 4.7 kohm / 5%, not this part**; the mapping in `02661d8`
-  is rejected. Keep sourcing pending, never guess a replacement code.
-  BOM `Sourcing=External` requires an empty code and an exact HTTPS
+- The user selected **Uni-Royal PS122WF2201T4E / C2793873**, PS12 / 2512,
+  2.2 kohm / 2 W / 1%, for **both R1/R2 in prototype and production under one
+  BOM**. Use manufacturer `Uni-Royal`, `Sourcing=LCSC` and empty
+  `Sourcing Reference` in BOM/CAD. [JLCPCB C2793873](https://jlcpcb.com/partdetail/C2793873)
+  verifies identity and resolves the former resistor External blocker, not
+  file verification or job allocation. The user reports **110 ORDERED into
+  their JLCPCB parts library**, not received, inspected or allocated to a PCBA
+  job; whole-BOM **`allocation_verified` remains `false`**. MATERIALS records
+  quantities and separate allocation tasks. No agent upload or order is authorized.
+  Prior **HP122WF2201T4E pending External sourcing is superseded, not ordered**.
+  **C2791283 is HP122WJ0472T4E, 4.7 kohm / 5%**; its wrong pairing with
+  HP122WF2201T4E in `02661d8` remains rejected history, not a PS12 identity.
+  The generic BOM `Sourcing=External` rule still requires an empty code and exact HTTPS
   `Sourcing Reference` matched to PCB/schematic metadata. This is explicit
   pending procurement, not a guessed C-code or allocation approval. Unresolved
   external rows block **both prototype and production publication**. Ordinary
   LCSC rows still require valid reviewed C-codes; those do not reserve stock.
+  Use REMEDIATION's latest revision-specific results, not the prior HP12 checks,
+  for native verification and publication status. Part selection is not a new PASS.
 - `make gerbers` / `make prototype` run the complete file/artifact checks and
   may publish **FILE-VERIFIED PROTOTYPE ONLY** packages with **all five
   C4/C5/W3/W1/W4 ledger holds recorded as deferred, not closed**. No file,
@@ -189,7 +200,7 @@ unavailable, record the actual failed version probe; do not claim DRC passed.
 
 All intentional custom geometry is under `pcb/DogFence.pretty/` with symbols
 in `pcb/DogFence.kicad_sym`. `fp-lib-table` / `sym-lib-table` use `${KIPRJMOD}`.
-Do not replace modified Kefa terminals, manufacturer HP12 lands, the cathode-right
+Do not replace modified Kefa terminals, manufacturer PS12 lands, the cathode-right
 SMA diode, or the axial GDT overpass with similarly named stock-library objects.
 Preserve global pad nets, positions and the two distinct local LED-terminal mappings.
 
@@ -233,12 +244,14 @@ pad2 `(0,2.54,90)`; C pad1 `(0,2.54,270)` and pad2 `(0,-2.54,270)`. Do not match
 their rotations or replace them with one generic footprint.
 
 The authorized **16-part BOM (eight SMT, eight THT)** uses Vishay **BYG23T-M3/TR /
-C145454** for D1-D4 and intended **Uni-Royal HP122WF2201T4E**, HP12 / 2512 SMT,
-2.2 kohm / 2 W / 1%, for R1/R2, plus the retained GDTs and Kefa terminals.
+C145454** for D1-D4 and selected **Uni-Royal PS122WF2201T4E / C2793873**,
+PS12 / 2512 SMT, 2.2 kohm / 2 W / 1%, for both R1/R2 in prototype and production,
+plus the retained GDTs and Kefa terminals. No layout modification is required.
 R1/R2 origins are **(120.00,104.50)/(120.00,140.50), rotation 0**, pads at
 **X=116.875/123.125**. Manufacturer lands are **1.35 x 3.70 mm rectangles at
-local X=+/-3.125**, maximum body **6.45 x 3.40**, courtyard **8.10 x 4.20 mm**,
-with zero additional mask/paste margins. No resistor holes, standoff or forming.
+local X=+/-3.125**, maximum body **6.45 x 3.40 mm**, maximum height **0.65 mm**;
+the **8.10 x 4.20 mm courtyard** and project-selected zero additional mask/paste
+margins remain unchanged. No resistor holes, standoff or forming.
 D1/D2 origins are **(130.80,104.50)/(130.80,140.50), rotation 0**, cathodes east
 at **X=132.90**, anodes at **X=128.70**. D3/D4 remain at
 **(135.00,99.00)/(135.00,146.00), rotation 180**, cathodes west to LED positive
@@ -253,12 +266,18 @@ Datasheet 5/20 kA impulse or terminal current ratings are
 **component** ratings, not assembled-board performance. Three paralleled EARTH
 pins remain connected, but are not a 72 A assembly rating. The 2 W resistor
 still dissipates about 0.50 W nominal; a wattage label is not cool-body or
-continuous potted qualification. HP12's [SMD-SP-003 V.7, 08-Jan-2026](https://www.uni-royal.cn/en/images/userfile/file/1784806233a2e6d381ea80b5d9.pdf)
-specifies **+/-100 ppm/C referenced to 25 C**, 2 W at 70 C ambient derating to
-zero at 155 C. SMT heat rejection may help, but does not lower loss or prove
-cooler operation. Do not transfer PR02's 220 C hot-spot, 75 K/W example or
-axial standoff to HP12. Use DESIGN_BOUNDS for current screens; actual chip/pad/PCB
-and gel/cable interface temperatures require separate qualification.
+continuous potted qualification. PS12's [SMD-SP-007 V.7, 08-Jan-2026](https://www.uni-royal.cn/en/images/userfile/file/1784854235b7c79f8d8a205c5d.pdf)
+specifies **+/-100 ppm/C referenced to 25 C** (TCR test endpoints -55/+125 C),
+2 W at 70 C ambient derating to zero at 155 C. The numerical screens remain
+**0.501018 W nominal / 0.756803 W upper per resistor**, not measured temperatures.
+The family **500 V working / 1000 V overload** ceilings do not override the lower
+power/resistance limits: **66.33 V working / 165.83 V for the specified 5 s overload**
+at 2 W / 2.2 kohm, not a 500 V system rating. PS page 6 supplies one-pulse power
+and voltage curves, not repetitive-pulse or board qualification. SMT heat
+rejection may help, but does not lower loss or prove cooler operation. Do not
+transfer PR02's 220 C hot-spot, 75 K/W example or axial standoff to PS12. Use
+DESIGN_BOUNDS for current screens; actual chip/pad/PCB and gel/cable interface
+temperatures require separate qualification.
 
 Selected hole/pad sizes are KF128 2.00/3.20, KF129 2.00/2.80,
 B5G470L 1.40/2.80 and earth GDT 1.50/3.00 mm. These depend on the
@@ -298,7 +317,7 @@ preserve their procurement history.
   compatible materials or completed thermal qualification. The 35-37 V source
   window is an unimplemented historical proposal. `design_bounds.py` now uses
   a declared 35 V floor / 40.39597 V upper screen, not a guaranteed or enforced
-  window. HP12's +/-100 ppm/C at 25 C reference replaces the historical PR02/MBE
+  window. PS12's +/-100 ppm/C at 25 C reference replaces the historical PR02/MBE
   screens; use `pcb/DESIGN_BOUNDS.md` rather than duplicating stale derived values.
 - Preserve WAGO through-splice/PCB-tap wiring. Normal perimeter current does
   not pass through every PCB. Surge current is a separate design case.

@@ -3,7 +3,7 @@
 
 Run this file for a reproducible study or use simulate() for individual cases.
 Stations and cut spans are zero based: cut ("A", 0) opens A between stations
-0 and 1. Rungs conduct only A -> B and C -> B. The selected HP12 / BYG23T
+0 and 1. Rungs conduct only A -> B and C -> B. The selected PS12 / BYG23T
 branches retain series isolation: D3/D4 have cathodes at LED_POS and anodes
 at B, AFTER D1/D2. They neither regulate positive voltage nor shunt the inputs.
 Six boundary ends remain independent except for source-side TEST connections.
@@ -29,7 +29,7 @@ REVISION = "1.2.0-dev"
 CORES = "ABC"
 CHANNELS = "AC"
 CUT_SETS = tuple("".join(c) for n in (1, 2, 3) for c in combinations(CORES, n))
-RESISTOR_MPN = "HP122WF2201T4E"
+RESISTOR_MPN = "PS122WF2201T4E"
 RESISTOR_TCR_PPM = 100.0
 RESISTOR_REFERENCE_C = 25.0
 RESISTOR_P70_W = 2.0
@@ -478,15 +478,15 @@ def branch_budget(voltage_v, channel=Channel(), *, connector_v=None, shunt_a=0.0
 
 
 def resistor_allowance(local_ambient_c):
-    """HP12 ambient derating only, NOT a chip/gel temperature prediction.
+    """PS12 ambient derating only, NOT a chip/gel temperature prediction.
 
-    Uni-Royal SMD-SP-003 V.7, 08-Jan-2026: 2 W P70, zero at 155 C ambient.
-    No HP12 hot-spot limit or mounted K/W is supplied by this model; adequate
+    Uni-Royal SMD-SP-007 V.7, 08-Jan-2026: 2 W P70, zero at 155 C ambient.
+    No PS12 hot-spot limit or mounted K/W is supplied by this model; adequate
     heat flow and assembly/material limits still apply. No below-70 C uprating.
     """
     _finite("resistor ambient", local_ambient_c)
     if local_ambient_c < -55:
-        raise ValueError("HP12 ambient below -55 C operating range")
+        raise ValueError("PS12 ambient below -55 C operating range")
     return RESISTOR_P70_W * max(0.0, min(
         1.0, (RESISTOR_ZERO_POWER_AMBIENT_C - local_ambient_c) / (RESISTOR_ZERO_POWER_AMBIENT_C - 70)))
 
@@ -544,7 +544,7 @@ def study(options):
                       "channel_c": Channel(led_v=3.3, diode_v=1.9)}))))
     minimum_r = Channel(led_v=0, diode_v=0, resistor_error=-0.01,
                         resistor_tcr_ppm=-RESISTOR_TCR_PPM, resistor_temperature_c=125)
-    loads.append(row("HP12 max-adjustment screen, zero drops, R-min at 125 C (25 C reference), zero cable R", simulate(
+    loads.append(row("PS12 max-adjustment screen, zero drops, R-min at 125 C (25 C reference), zero cable R", simulate(
         **(options | {"source": Source(ADJUSTMENT_SCREEN_V), "cable": zero_cable,
                       "channel_a": minimum_r, "channel_c": minimum_r}))))
 
@@ -590,8 +590,8 @@ def study(options):
                          "No input shunt or positive regulation. Forward-only cuts omit series reverse "
                          "leakage; 1 uA classification is not physical darkness or daylight visibility."},
             "limitations": [
-                "HP122WF2201T4E uses +/-100 ppm/C referenced to 25 C from SMD-SP-003 V.7, not the "
-                "website's tighter 75 ppm/C. The selected 125 C R input is not a thermal prediction. "
+                "PS122WF2201T4E uses +/-100 ppm/C referenced to 25 C from SMD-SP-007 V.7. "
+                "The selected 125 C R input is not a thermal prediction. "
                 "SMT changes heat flow, not nominal power loss or a proven cooler result; PR02 "
                 "hot-spot/standoff/K/W data do not apply.",
                 "0.7 V diode default preserves comparison, not BYG23T data at 15 mA. Its 1.9 V "

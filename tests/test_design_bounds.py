@@ -50,7 +50,7 @@ class DesignBoundsTests(unittest.TestCase):
         self.assertAlmostEqual(resistor_bounds(minimum_c=-55, maximum_c=-30)[0],
                                2200 * 0.99 * (1 - 100e-6 * 80))
         resistor = self.report["resistor"]
-        self.assertEqual(resistor["mpn"], "HP122WF2201T4E")
+        self.assertEqual(resistor["mpn"], "PS122WF2201T4E")
         self.assertEqual(resistor["manufacturer"], "Uni-Royal")
         self.assertEqual(resistor["package"], "2512 SMT")
         self.assertNotIn("lead_material", resistor)
@@ -61,12 +61,15 @@ class DesignBoundsTests(unittest.TestCase):
         self.assertEqual(resistor["p70_w"], 2)
         self.assertEqual(resistor["zero_power_ambient_c"], 155)
         self.assertNotIn("pr02_", json.dumps(self.report))
-        self.assertEqual(resistor["family_max_working_voltage_v"], 300)
+        self.assertEqual(resistor["family_max_working_voltage_v"], 500)
         self.assertAlmostEqual(resistor["rated_working_voltage_at_p70_v"], math.sqrt(2 * 2200))
-        self.assertEqual(resistor["family_max_overload_voltage_v"], 500)
+        self.assertEqual(resistor["family_max_overload_voltage_v"], 1000)
+        self.assertEqual(resistor["dielectric_withstanding_voltage_v"], 500)
         self.assertAlmostEqual(resistor["short_time_overload_test_v"], 165.83123951777)
         self.assertEqual(resistor["short_time_overload_test_s"], 5)
-        self.assertIn("not an impulse curve", " ".join(self.report["limitations"]))
+        self.assertIn("one-pulse power and voltage curves", " ".join(self.report["limitations"]))
+        self.assertIn("neither establishes repetitive surge or board-lightning qualification",
+                      " ".join(self.report["limitations"]))
 
     def test_nominal_comparison_and_nonuniform_vf_is_worse_than_uniform(self):
         rows = self.report["normal_cases"]
@@ -124,7 +127,7 @@ class DesignBoundsTests(unittest.TestCase):
         self.assertEqual(analyze(high_drop_v=60)["current_bounds"]["conditional_all_station_led_min_ma"], 0)
 
     def test_historical_pr02_mbe_screens_are_not_selected_limits(self):
-        # Historical 20 C reference is explicit, not a compatibility mode in HP12 helpers.
+        # Historical 20 C reference is explicit, not a compatibility mode in PS12 helpers.
         pr02_min = 2200 * 0.99 * (1 - 250e-6 * (125 - 20))
         self.assertAlmostEqual(pr02_min, 2120.8275)
         self.assertAlmostEqual(dc.branch_budget(dc.ADJUSTMENT_SCREEN_V, dc.Channel(

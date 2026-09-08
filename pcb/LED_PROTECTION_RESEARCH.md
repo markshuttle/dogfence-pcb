@@ -29,6 +29,12 @@ not L1/L2's active/current-regulating circuits. Their research below remains
 history, not a prerequisite or the current BOM. The new shunts are not a
 guaranteed forward-pulse limiter or an instantaneous <=5 V clamp.
 
+**2026-09-08 supersession:** current R1/R2 are user-selected **PS122WF2201T4E /
+C2793873 SMT** for prototype and production, with the same 16-part topology.
+The PR02 implementation and unselected circuits below remain historical research.
+Use current ELECTRICAL/ASSEMBLY/DESIGN_BOUNDS; no further protection research or
+physical qualification is a Gate P prototype-file prerequisite.
+
 ## 1. Initial L1 Investigation
 
 The initial active development circuit investigated was:
