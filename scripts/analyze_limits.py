@@ -3,7 +3,7 @@
 
 Run this file for a reproducible study or use simulate() for individual cases.
 Stations and cut spans are zero based: cut ("A", 0) opens A between stations
-0 and 1. Rungs conduct only A -> B and C -> B. The selected PR02 / BYG23T
+0 and 1. Rungs conduct only A -> B and C -> B. The selected HP12 / BYG23T
 branches retain series isolation: D3/D4 have cathodes at LED_POS and anodes
 at B, AFTER D1/D2. They neither regulate positive voltage nor shunt the inputs.
 Six boundary ends remain independent except for source-side TEST connections.
@@ -29,11 +29,11 @@ REVISION = "1.2.0-dev"
 CORES = "ABC"
 CHANNELS = "AC"
 CUT_SETS = tuple("".join(c) for n in (1, 2, 3) for c in combinations(CORES, n))
-RESISTOR_MPN = "PR02000202201FA100"
-RESISTOR_TCR_PPM = 250.0
+RESISTOR_MPN = "HP122WF2201T4E"
+RESISTOR_TCR_PPM = 100.0
+RESISTOR_REFERENCE_C = 25.0
 RESISTOR_P70_W = 2.0
 RESISTOR_ZERO_POWER_AMBIENT_C = 155.0
-RESISTOR_HOTSPOT_MAX_C = 220.0
 DIODE_MPN = "BYG23T-M3/TR"
 # Conditional monotone reverse-leakage screen at normal positive LED voltage,
 # within 1300 V / <=125 C. Not a guaranteed 2 V or all-temperature leakage spec.
@@ -100,16 +100,16 @@ class Channel:
     diode_v: float = 0.7
     resistor_error: float = 0.0
     resistor_tcr_ppm: float = 0.0
-    resistor_temperature_c: float = 20.0
+    resistor_temperature_c: float = RESISTOR_REFERENCE_C
     junction_temperature_c: float = 20.0
     led_tempco_v_per_c: float = 0.0
     diode_tempco_v_per_c: float = 0.0
 
     def values(self):
-        """Selected corner, not automatic worst-case or a diode I/V curve."""
+        """Selected corner; R references 25 C, junction drops retain 20 C."""
         _finite("channel", *asdict(self).values())
         r = self.resistor_ohm * (1 + self.resistor_error) * (
-            1 + self.resistor_tcr_ppm * 1e-6 * (self.resistor_temperature_c - 20))
+            1 + self.resistor_tcr_ppm * 1e-6 * (self.resistor_temperature_c - RESISTOR_REFERENCE_C))
         led = self.led_v + self.led_tempco_v_per_c * (self.junction_temperature_c - 20)
         diode = self.diode_v + self.diode_tempco_v_per_c * (self.junction_temperature_c - 20)
         _finite("calculated channel values", r, led, diode)
@@ -478,15 +478,15 @@ def branch_budget(voltage_v, channel=Channel(), *, connector_v=None, shunt_a=0.0
 
 
 def resistor_allowance(local_ambient_c):
-    """PR02 Cu-lead ambient derating only, NOT a film/gel temperature limit.
+    """HP12 ambient derating only, NOT a chip/gel temperature prediction.
 
-    Vishay 28729, 08-Jul-2025: 2 W P70, zero at 155 C ambient. The PR02-specific
-    hot-spot limit is 220 C, despite the generic 250 C film entry; adequate heat
-    flow and all assembly/material limits still apply. No below-70 C uprating.
+    Uni-Royal SMD-SP-003 V.7, 08-Jan-2026: 2 W P70, zero at 155 C ambient.
+    No HP12 hot-spot limit or mounted K/W is supplied by this model; adequate
+    heat flow and assembly/material limits still apply. No below-70 C uprating.
     """
     _finite("resistor ambient", local_ambient_c)
     if local_ambient_c < -55:
-        raise ValueError("PR02 ambient below -55 C category range")
+        raise ValueError("HP12 ambient below -55 C operating range")
     return RESISTOR_P70_W * max(0.0, min(
         1.0, (RESISTOR_ZERO_POWER_AMBIENT_C - local_ambient_c) / (RESISTOR_ZERO_POWER_AMBIENT_C - 70)))
 
@@ -544,7 +544,7 @@ def study(options):
                       "channel_c": Channel(led_v=3.3, diode_v=1.9)}))))
     minimum_r = Channel(led_v=0, diode_v=0, resistor_error=-0.01,
                         resistor_tcr_ppm=-RESISTOR_TCR_PPM, resistor_temperature_c=125)
-    loads.append(row("PR02 max-adjustment screen, zero drops, R-min at 125 C, zero cable R", simulate(
+    loads.append(row("HP12 max-adjustment screen, zero drops, R-min at 125 C (25 C reference), zero cable R", simulate(
         **(options | {"source": Source(ADJUSTMENT_SCREEN_V), "cable": zero_cable,
                       "channel_a": minimum_r, "channel_c": minimum_r}))))
 
@@ -590,6 +590,10 @@ def study(options):
                          "No input shunt or positive regulation. Forward-only cuts omit series reverse "
                          "leakage; 1 uA classification is not physical darkness or daylight visibility."},
             "limitations": [
+                "HP122WF2201T4E uses +/-100 ppm/C referenced to 25 C from SMD-SP-003 V.7, not the "
+                "website's tighter 75 ppm/C. The selected 125 C R input is not a thermal prediction. "
+                "SMT changes heat flow, not nominal power loss or a proven cooler result; PR02 "
+                "hot-spot/standoff/K/W data do not apply.",
                 "0.7 V diode default preserves comparison, not BYG23T data at 15 mA. Its 1.9 V "
                 "maximum is at 1 A / 25 C, not a minimum or full-temperature low-current bound.",
                 "40.39597 V is an accessible-adjustment screen, not enforced MCOV. The legacy 35..37 V "
@@ -619,8 +623,10 @@ def main(argv=None):
     parser.add_argument("--copper-alpha", type=float, default=0.00393)
     parser.add_argument("--resistor-ohm", type=float, nargs=2, default=(2200.0,) * 2)
     parser.add_argument("--resistor-error", type=float, nargs=2, default=(0.0,) * 2)
-    parser.add_argument("--resistor-temp", type=float, default=20.0)
-    parser.add_argument("--tcr-ppm", type=float, nargs=2, default=(0.0,) * 2)
+    parser.add_argument("--resistor-temp", type=float, default=RESISTOR_REFERENCE_C,
+                        help="selected resistor temperature in C; resistance references 25 C")
+    parser.add_argument("--tcr-ppm", type=float, nargs=2, default=(0.0,) * 2,
+                        help="signed ppm/C relative to 25 C; zero preserves nominal comparison")
     parser.add_argument("--led-v", type=float, nargs=2, default=(2.1,) * 2)
     parser.add_argument("--diode-v", type=float, nargs=2, default=(0.7,) * 2)
     parser.add_argument("--junction-temp", type=float, default=20.0)

@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-"""P6: preserve evidence, then run clean/all and clean/-j4 all, sequentially.
+"""P6: preserve evidence, then run clean/serial and clean/parallel, sequentially.
 
 Requires exclusive ownership of build/ and tmp/manufacturing/ for the whole run.
 --expect-holds asserts ledger IDs; it never changes or bypasses the ledger. Pass
 the option with no IDs only for a genuinely reviewed, holds-closed source.
+--target defaults to all (production). Use prototype to verify prototype-only
+publication with the same file/sourcing gates and recorded, deferred holds.
 Evidence stays in tmp/workflow-validation/run-*/{before,serial,parallel}/.
 PASS can mean correctly REFUSED publication, not successful make all or approval.
 Assembly PDF rendering, processed CAM and hardware qualification remain separate.
@@ -96,7 +98,10 @@ def geometry_comparison(data):
     return data
 
 
-def validate_attempt(saved, sources, review, returncode):
+def validate_attempt(saved, sources, review, returncode, target="all"):
+    m.require(target in ("all", "prototype"), "Unknown workflow target")
+    mode = "prototype" if target == "prototype" else "build"
+    published_status = "prototype" if target == "prototype" else "verified"
     status = m.read_json(saved / "build/status.json")
     relative = Path(status["attempt"])
     m.require(relative.parent == Path("tmp/manufacturing/runs") and relative.name.startswith("attempt-"),
@@ -107,6 +112,8 @@ def validate_attempt(saved, sources, review, returncode):
     project, exports, reports = attempt / "project", attempt / "exports", attempt / "reports"
     verification = m.read_json(reports / "verification.json")
     checks, holds = verification["checks"], review["release_holds"]
+    held = bool(holds) and target == "all"
+    state = "failed" if held else published_status
     m.require(inventory(reports) == inventory(saved / "build/reports"), "Public/private reports differ")
     m.require(verification["source_hashes"] == sources and all(
         m.sha256(project / name[4:] if name.startswith("pcb/") else attempt / name) == digest
@@ -118,14 +125,18 @@ def validate_attempt(saved, sources, review, returncode):
               "Incomplete file checks")
     m.require(checks["engineering_release"] == {
         "verified": not holds, "holds": holds, "review": review.get("file_release_review")}, "Release ledger differs")
-    m.require(returncode == (2 if holds else 0) and verification["errors"] == ([HOLD_ERROR] if holds else [])
-              and status["status"] == verification["status"] == ("failed" if holds else "verified")
-              and status["requires_verified_manifest_for_upload"] is True, "Unexpected build outcome")
+    m.require(returncode == (2 if held else 0) and verification["errors"] == ([HOLD_ERROR] if held else [])
+              and status["status"] == verification["status"] == state
+              and status["mode"] == verification["mode"] == mode
+              and status["publication"] == verification["publication"] == m.PUBLICATION.get(state, "Not published.")
+              and status["requires_matching_manifest_for_upload"] is True
+              and status["required_manifest_status"] == published_status
+              and verification["scope"] == m.SCOPE, "Unexpected build outcome")
     commands = json.loads((reports / "commands.json").read_text(encoding="utf-8"))
     tools = [c["command"][:-1] for c in commands if c["command"][-1:] == ["--version"]
              and c["returncode"] == 0 and c["stdout"].strip() == verification["tool_version"]]
     m.require(len(tools) == 1, "Missing/ambiguous successful native version probe")
-    result = {"sources": sources, "revision": revision, "tool": tools[0], "version": verification["tool_version"]}
+    result = {"mode": mode, "sources": sources, "revision": revision, "tool": tools[0], "version": verification["tool_version"]}
     result["export_diagnostics"] = checks["export_diagnostics"]
     for command in commands:
         args = command["command"]
@@ -148,8 +159,13 @@ def validate_attempt(saved, sources, review, returncode):
     m.require(not m.differences(nets, board.nets), "Schematic/PCB terminal membership differs")
     m.require(m.compare_ipc(exports / "pcb.d356", board) == checks["nets"]["ipc"], "IPC differs")
     result["nets"] = {name: sorted(nodes) for name, nodes in nets.items()}
-    release = attempt / "release" if holds else saved / "build"
+    release = attempt / "release" if held else saved / "build"
     result["bom"] = m.validate_bom(release / "BOM.csv", exports / "schematic.xml", board)
+    external = {ref: {key: row[key] for key in ("MPN", "Manufacturer", "Sourcing Reference")}
+                for ref, row in result["bom"].items() if row.get("Sourcing") == "External"}
+    m.require(checks["sourcing"] == {"file_metadata_verified": True, "allocation_verified": False,
+                                    "pending_external": external}, "Sourcing verification differs")
+    m.require(held or not external, "Unresolved external sourcing in publication")
     positions = m.check_placement(m.read_csv(exports / "native-pos.csv", m.POSITION_FIELDS), board, native=True)
     for path in (exports / "CPL.csv", release / "CPL.csv", saved / "pcb/CPL.csv"):
         m.require(m.check_placement(m.read_csv(path, m.CPL_FIELDS), board) == positions
@@ -165,19 +181,25 @@ def validate_attempt(saved, sources, review, returncode):
     files = {"gerbers/" + name: exports / ("drills" if name in m.DRILLS else "gerbers") / name for name in m.FAB_FILES}
     m.require({p.name for p in (release / "gerbers").iterdir()} == m.FAB_FILES, "Release layer inventory differs")
     m.require(all(m.sha256(release / name) == m.sha256(path) for name, path in files.items()), "Release geometry differs")
-    m.validate_zip(release / "Gerbers.zip", {Path(name).name: path for name, path in files.items()})
+    readme = m.package_readme(revision, mode, holds).encode("utf-8")
+    m.require((exports / "README.txt").read_bytes() == (release / "README.txt").read_bytes() == readme,
+              "Package scope README differs")
+    m.validate_zip(release / "Gerbers.zip", {**{Path(name).name: path for name, path in files.items()},
+                                          "README.txt": release / "README.txt"})
     m.validate_zip(release / "FlyTest.zip", {"Gerbers.zip": release / "Gerbers.zip",
                    "pcb.d356": exports / "pcb.d356", "README.txt": exports / "README.txt"})
+    m.require(checks["archives"] == {"verified": True, "Gerbers.zip": sorted(m.FAB_FILES | {"README.txt"}),
+                                    "FlyTest.zip": ["Gerbers.zip", "README.txt", "pcb.d356"]}, "Archive inventory differs")
     for name in ("pcb.d356", "Assembly.pdf"):
         m.require(m.sha256(release / name) == m.sha256(exports / name), f"Release copy differs: {name}")
     m.require(m.sha256(release / "BOM.csv") == m.sha256(project / "BOM.csv"), "Release BOM differs")
-    for name in m.ENGINEERING_NOTES:
+    for name in (*m.ENGINEERING_NOTES, "verification.json"):
         m.require(m.sha256(release / name) == m.sha256(project / name), f"Release engineering note differs: {name}")
     files.update({name: release / name for name in ("BOM.csv", "CPL.csv", "pcb.d356", "Assembly.txt", "ViaTreatment.csv",
                                                    *m.ENGINEERING_NOTES, "verification.json")})
     files.update({name: exports / name for name in ("native-pos.csv", "README.txt")})
     result["artifact_comparison_hashes"] = {name: comparison_hash(path) for name, path in files.items()}
-    if holds:
+    if held:
         m.require({p.name for p in (saved / "build").iterdir()} == {
             "status.json", "reports", "drc_report.json", "drc_report.txt", "erc_report.json", "erc_report.txt"}
             and not inventory(saved / "pcb/Gerbers.zip"), "Held build leaked public artifacts")
@@ -185,7 +207,9 @@ def validate_attempt(saved, sources, review, returncode):
         manifest = m.read_json(release / "manifest.json")
         artifacts = {name: digest for name, digest in inventory(release).items()
                      if digest != "directory" and name != "manifest.json"}
-        m.require(review.get("file_release_review") and manifest["status"] == "verified"
+        m.require((target == "prototype" or review.get("file_release_review"))
+                  and manifest["status"] == published_status and manifest["mode"] == mode
+                  and manifest["publication"] == m.PUBLICATION[published_status] and manifest["scope"] == m.SCOPE
                   and manifest["source_hashes"] == sources and manifest["artifact_hashes"] == artifacts
                   and manifest["hardware_revision"] == revision and manifest["verification"] == checks
                   and manifest["tool"]["command"] == tools[0] and manifest["tool"]["version"] == result["version"]
@@ -196,6 +220,8 @@ def validate_attempt(saved, sources, review, returncode):
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--expect-holds", nargs="*", required=True, help="Exact expected ledger IDs (no bypass)")
+    parser.add_argument("--target", choices=("all", "prototype"), default="all",
+                        help="Production (all) or prototype-only publication; file/sourcing checks always apply")
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[1]
     parent, runs = root / "tmp/workflow-validation", root / "tmp/manufacturing/runs"
@@ -207,7 +233,7 @@ def main():
     sentinel = run / "clean-boundary-sentinel.txt"
     sentinel.write_text(f"Preserve {run.name} across both clean commands.\n", encoding="ascii")
     shutil.copy2(Path(__file__), run / "verify_workflow.py")
-    report = {"status": "failed", "commands": [], "snapshots": {}, "python_version": sys.version,
+    report = {"status": "failed", "target": args.target, "commands": [], "snapshots": {}, "python_version": sys.version,
               "runner_sha256": m.sha256(Path(__file__)), "sentinel_sha256": m.sha256(sentinel),
               "scope": {"file_validation": m.SCOPE,
                         "comparison": "Validated Gerbers/drills: strict bytes except the timestamp regexes below. BOM/CPL/IPC/native positions/assembly text/controlled notes: exact bytes. XML: complete terminals and BOM identities. DRC/ERC JSON: only date removed. Geometry JSON: only input path fields removed and via_apertures rows sorted by complete content (layer-set iteration order); every field and duplicate retained. All hashes and measurements compared.",
@@ -220,11 +246,13 @@ def main():
         review = m.read_json(root / "pcb/verification.json")
         ids = [hold["id"] for hold in review["release_holds"]]
         m.require(sorted(ids) == sorted(args.expect_holds) and len(ids) == len(set(ids)), "Unexpected release hold IDs")
+        held = bool(ids) and args.target == "all"
+        outcome = "expected publication refusal" if held else m.PUBLICATION["prototype" if args.target == "prototype" else "verified"]
         report.update(source_hashes=sources, expected_holds=review["release_holds"])
         report["unrelated_tmp_before"] = inventory(root / "tmp", (runs, run))
         report["snapshots"]["before"] = preserve(root, run / "before")
         results = report["comparison"] = {}
-        for label, build_command in (("serial", ["make", "all"]), ("parallel", ["make", "-j4", "all"])):
+        for label, build_command in (("serial", ["make", args.target]), ("parallel", ["make", "-j4", args.target])):
             for command in (["make", "clean"], build_command):
                 clean = command[-1] == "clean"
                 name = label + ("-clean" if clean else "-build")
@@ -251,15 +279,15 @@ def main():
                     m.require(process.returncode == 0 and not any(inventory(root / p) for p in OWNED if p != "pcb/CPL.csv")
                               and inventory(root / "pcb/CPL.csv") == cpl_before, "Clean boundary violated")
                 else:
-                    results[label] = validate_attempt(run / label, sources, review, process.returncode)
-                    record.update(outcome="expected publication refusal" if ids else "verified file publication",
+                    results[label] = validate_attempt(run / label, sources, review, process.returncode, args.target)
+                    record.update(outcome=outcome,
                                   status=m.read_json(root / "build/status.json"), artifact_hashes=report["snapshots"][label])
                 record["verified"] = True
                 m.write_json(run / "report.json", report)
         changed = [key for key in results["serial"] if results["serial"][key] != results["parallel"].get(key)]
         m.require(results["serial"] == results["parallel"], f"Serial/parallel comparison differs: {changed}")
         report.update(status="pass", comparison_verified=True, unrelated_tmp_unchanged=True,
-                      publication="refused as required" if ids else "file-verified, not order approval")
+                       publication=outcome)
     except Exception as exc:
         report["error"] = f"{type(exc).__name__}: {exc}"
     finally:

@@ -5,6 +5,7 @@ from pathlib import Path
 import tempfile
 import unittest
 from unittest.mock import patch
+import zipfile
 
 from scripts import verify_workflow as w
 from test_manufacturing import FakeKiCad, make_project
@@ -16,8 +17,8 @@ class WorkflowTests(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
 
-    def make_attempt(self, held):
-        root = self.root / ("held" if held else "published")
+    def make_attempt(self, held, target="all"):
+        root = self.root / (target + ("-held" if held else "-published"))
         root.mkdir()
         make_project(root)
         for name in w.m.ENGINEERING_NOTES:
@@ -25,7 +26,8 @@ class WorkflowTests(unittest.TestCase):
         if held:
             path = root / "pcb/verification.json"
             review = w.m.read_json(path)
-            review.update(release_holds=[{"id": "TEST", "reason": "Synthetic hold"}], file_release_review=None)
+            review.update(release_holds=[{"id": key, "reason": "Synthetic qualification hold"}
+                                         for key in ("C4", "C5", "W3", "W1", "W4")], file_release_review=None)
             w.m.write_json(path, review)
         fake = FakeKiCad()
 
@@ -56,46 +58,113 @@ class WorkflowTests(unittest.TestCase):
         pipeline = w.m.Manufacturing(root, "fake-kicad")
         with patch.object(w.m.subprocess, "run", invoke), contextlib.redirect_stdout(io.StringIO()), \
                 contextlib.redirect_stderr(io.StringIO()):
-            self.assertEqual(pipeline.execute("build"), 1 if held else 0, pipeline.errors)
+            self.assertEqual(pipeline.execute("prototype" if target == "prototype" else "build"),
+                             1 if held and target == "all" else 0, pipeline.errors)
         return pipeline
 
     def test_all_release_notes_match_staged_sources_and_compare_exact_bytes(self):
-        for held in (True, False):
-            with self.subTest(held=held):
-                pipeline = self.make_attempt(held)
-                result = w.validate_attempt(pipeline.root, pipeline.sources, pipeline.review, 2 if held else 0)
-                for name in w.m.ENGINEERING_NOTES:
-                    self.assertEqual(result["artifact_comparison_hashes"][name],
-                                     w.m.sha256(pipeline.project / name), name)
+        for target in ("all", "prototype"):
+            for held in (True, False):
+                with self.subTest(target=target, held=held):
+                    pipeline = self.make_attempt(held, target)
+                    result = w.validate_attempt(pipeline.root, pipeline.sources, pipeline.review,
+                                                2 if held and target == "all" else 0, target)
+                    self.assertEqual(result["mode"], "prototype" if target == "prototype" else "build")
+                    for name in (*w.m.ENGINEERING_NOTES, "verification.json"):
+                        self.assertEqual(result["artifact_comparison_hashes"][name],
+                                         w.m.sha256(pipeline.project / name), name)
 
     def test_missing_or_changed_release_note_is_rejected_with_holds(self):
-        pipeline = self.make_attempt(True)
-        w.validate_attempt(pipeline.root, pipeline.sources, pipeline.review, 2)
-        for name in w.m.ENGINEERING_NOTES:
-            path = pipeline.run / "release" / name
-            original = path.read_bytes()
-            for missing in (True, False):
-                with self.subTest(note=name, missing=missing):
-                    try:
-                        if missing:
-                            path.unlink()
-                        else:
-                            path.write_bytes(original.replace(b"\r\n", b"\n"))
-                        error = FileNotFoundError if missing else w.m.VerificationError
-                        with self.assertRaisesRegex(error, name):
-                            w.validate_attempt(pipeline.root, pipeline.sources, pipeline.review, 2)
-                    finally:
-                        path.write_bytes(original)
+        for target, returncode in (("all", 2), ("prototype", 0)):
+            pipeline = self.make_attempt(True, target)
+            w.validate_attempt(pipeline.root, pipeline.sources, pipeline.review, returncode, target)
+            release = pipeline.run / "release" if target == "all" else pipeline.build
+            for name in (*w.m.ENGINEERING_NOTES, "verification.json"):
+                path = release / name
+                original = path.read_bytes()
+                for missing in (True, False):
+                    with self.subTest(target=target, note=name, missing=missing):
+                        try:
+                            if missing:
+                                path.unlink()
+                            else:
+                                path.write_bytes(original + b"\n" if name == "verification.json"
+                                                 else original.replace(b"\r\n", b"\n"))
+                            error = FileNotFoundError if missing else w.m.VerificationError
+                            with self.assertRaisesRegex(error, name):
+                                w.validate_attempt(pipeline.root, pipeline.sources, pipeline.review, returncode, target)
+                        finally:
+                            path.write_bytes(original)
 
     def test_changed_assembly_terminal_datum_is_rejected(self):
-        pipeline = self.make_attempt(True)
-        path = pipeline.run / "release" / "Assembly.txt"
-        text = path.read_text()
-        changed = text.replace("8.500000 | -20.000000 | 1.000000", "8.500000 | 20.000000 | 1.000000", 1)
-        self.assertNotEqual(changed, text)
-        path.write_text(changed)
-        with self.assertRaisesRegex(w.m.VerificationError, "Assembly datum reference differs"):
-            w.validate_attempt(pipeline.root, pipeline.sources, pipeline.review, 2)
+        for target, returncode in (("all", 2), ("prototype", 0)):
+            pipeline = self.make_attempt(True, target)
+            release = pipeline.run / "release" if target == "all" else pipeline.build
+            path = release / "Assembly.txt"
+            text = path.read_text()
+            changed = text.replace("8.500000 | -20.000000 | 1.000000", "8.500000 | 20.000000 | 1.000000", 1)
+            self.assertNotEqual(changed, text)
+            path.write_text(changed)
+            with self.subTest(target=target), self.assertRaisesRegex(w.m.VerificationError, "Assembly datum reference differs"):
+                w.validate_attempt(pipeline.root, pipeline.sources, pipeline.review, returncode, target)
+
+    def test_publication_mode_status_scope_and_hashes_cannot_be_changed(self):
+        for target in ("all", "prototype"):
+            pipeline = self.make_attempt(target == "prototype", target)
+            w.validate_attempt(pipeline.root, pipeline.sources, pipeline.review, 0, target)
+            other = "prototype" if target == "all" else "all"
+            with self.assertRaisesRegex(w.m.VerificationError, "Unexpected build outcome"):
+                w.validate_attempt(pipeline.root, pipeline.sources, pipeline.review, 0, other)
+            for name, changes in (
+                    ("manifest.json", {"mode": "production", "status": "verified" if target == "prototype" else "prototype",
+                                       "publication": "Field approved", "scope": {}, "source_hashes": {},
+                                       "artifact_hashes": {}, "verification": {}}),
+                    ("status.json", {"mode": "production", "status": "verified" if target == "prototype" else "prototype",
+                                     "publication": "Field approved", "requires_matching_manifest_for_upload": False,
+                                     "required_manifest_status": "verified" if target == "prototype" else "prototype"})):
+                path = pipeline.build / name
+                original = w.m.read_json(path)
+                for key, value in changes.items():
+                    with self.subTest(target=target, file=name, key=key):
+                        try:
+                            w.m.write_json(path, {**original, key: value})
+                            with self.assertRaises(w.m.VerificationError):
+                                w.validate_attempt(pipeline.root, pipeline.sources, pipeline.review, 0, target)
+                        finally:
+                            w.m.write_json(path, original)
+
+    def test_prototype_scope_marker_is_required_in_both_archives_and_matches_ledger(self):
+        pipeline = self.make_attempt(True, "prototype")
+        for path in (pipeline.run / "exports/README.txt", pipeline.build / "README.txt"):
+            original = path.read_bytes()
+            try:
+                path.write_bytes(original.replace(b"PROTOTYPE ONLY", b"PRODUCTION APPROVED"))
+                with self.assertRaisesRegex(w.m.VerificationError, "Package scope README differs"):
+                    w.validate_attempt(pipeline.root, pipeline.sources, pipeline.review, 0, "prototype")
+            finally:
+                path.write_bytes(original)
+        for name in ("Gerbers.zip", "FlyTest.zip"):
+            path = pipeline.build / name
+            original = path.read_bytes()
+            with zipfile.ZipFile(io.BytesIO(original)) as archive:
+                members = {name: archive.read(name) for name in archive.namelist()}
+            for change in ("missing", "altered", "extra"):
+                with self.subTest(archive=name, change=change):
+                    try:
+                        payload = members.copy()
+                        if change == "missing":
+                            payload.pop("README.txt")
+                        elif change == "altered":
+                            payload["README.txt"] = b"Production approved; no holds.\n"
+                        else:
+                            payload["unexpected.txt"] = b"unreviewed"
+                        with zipfile.ZipFile(path, "w") as archive:
+                            for member, data in payload.items():
+                                archive.writestr(member, data)
+                        with self.assertRaisesRegex(w.m.VerificationError, "ZIP"):
+                            w.validate_attempt(pipeline.root, pipeline.sources, pipeline.review, 0, "prototype")
+                    finally:
+                        path.write_bytes(original)
 
     def test_only_recognized_timestamps_are_normalized(self):
         fixtures = {
@@ -193,13 +262,41 @@ class WorkflowTests(unittest.TestCase):
         script.write_text("# Isolated runner-control fixture, not a release.\n", encoding="ascii")
         (self.root / "pcb").mkdir()
         w.m.write_json(self.root / "pcb/verification.json", {"release_holds": [{"id": "C4", "reason": "Open"}]})
-        with patch.object(w, "__file__", str(script)), patch.object(w.m, "source_inventory", return_value={}), \
-                patch.object(w.sys, "argv", [str(script), "--expect-holds", "WRONG"]), \
-                patch.dict(w.os.environ, {"MAKEFLAGS": "", "MFLAGS": "", "MAKEFILES": ""}), \
-                patch.object(w.subprocess, "run") as execute, contextlib.redirect_stdout(io.StringIO()):
-            self.assertEqual(w.main(), 1)
-            execute.assert_not_called()
-        report = w.m.read_json(next((self.root / "tmp/workflow-validation").glob("run-*/report.json")))
-        self.assertEqual(report["status"], "failed")
-        self.assertIn("Unexpected release hold IDs", report["error"])
-        self.assertEqual(report["commands"], [])
+        for target in ("all", "prototype"):
+            with self.subTest(target=target), patch.object(w, "__file__", str(script)), \
+                    patch.object(w.m, "source_inventory", return_value={}), \
+                    patch.object(w.sys, "argv", [str(script), "--expect-holds", "WRONG", "--target", target]), \
+                    patch.dict(w.os.environ, {"MAKEFLAGS": "", "MFLAGS": "", "MAKEFILES": ""}), \
+                    patch.object(w.subprocess, "run") as execute, contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(w.main(), 1)
+                execute.assert_not_called()
+        for path in (self.root / "tmp/workflow-validation").glob("run-*/report.json"):
+            report = w.m.read_json(path)
+            self.assertEqual(report["status"], "failed")
+            self.assertIn("Unexpected release hold IDs", report["error"])
+            self.assertEqual(report["commands"], [])
+
+    def test_target_drives_serial_parallel_commands_and_publication_outcome(self):
+        script = self.root / "scripts/verify_workflow.py"
+        script.parent.mkdir()
+        script.write_text("# Isolated runner-control fixture, not a release.\n", encoding="ascii")
+        review = {"release_holds": [{"id": "C4", "reason": "Synthetic qualification hold"}]}
+        for target in ("all", "prototype"):
+            def invoke(command, **kwargs):
+                return w.subprocess.CompletedProcess(command, 2 if command[-1] == "all" else 0)
+
+            with self.subTest(target=target), patch.object(w, "__file__", str(script)), \
+                    patch.object(w.sys, "argv", [str(script), "--expect-holds", "C4", "--target", target]), \
+                    patch.dict(w.os.environ, {"MAKEFLAGS": "", "MFLAGS": "", "MAKEFILES": ""}), \
+                    patch.object(w.m, "source_inventory", return_value={}), patch.object(w.m, "read_json", return_value=review), \
+                    patch.object(w, "inventory", return_value={}), patch.object(w, "preserve", return_value={}), \
+                    patch.object(w, "validate_attempt", return_value={}) as validate, \
+                    patch.object(w.subprocess, "run", side_effect=invoke) as execute, contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(w.main(), 0)
+                self.assertEqual([call.args[0] for call in execute.call_args_list],
+                                 [["make", "clean"], ["make", target], ["make", "clean"], ["make", "-j4", target]])
+                self.assertEqual([call.args[-1] for call in validate.call_args_list], [target, target])
+        for path in (self.root / "tmp/workflow-validation").glob("run-*/report.json"):
+            report = w.m.read_json(path)
+            expected = "expected publication refusal" if report["target"] == "all" else w.m.PUBLICATION["prototype"]
+            self.assertEqual(report["publication"], expected)

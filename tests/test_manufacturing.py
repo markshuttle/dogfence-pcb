@@ -23,9 +23,9 @@ from test_compare_nets import BOARD, ipc_text, xml_netlist
 
 REPO = Path(__file__).resolve().parents[1]
 EXTERNAL_METADATA = {
-    "MPN": "PR02000202201FA100", "Manufacturer": "Vishay BCcomponents", "LCSC": "",
+    "MPN": "HP122WF2201T4E", "Manufacturer": "Uni-Royal", "LCSC": "",
     "Sourcing": "External",
-    "Sourcing Reference": "https://www.vishay.com/search?type=inv&query=PR02000202201FA100",
+    "Sourcing Reference": "https://store.nacsemi.com/products/detail?stock=XSJMZ0000010410",
 }
 
 
@@ -324,9 +324,9 @@ class ManufacturingTests(unittest.TestCase):
         ET.ElementTree(tree).write(xml, encoding="utf-8", xml_declaration=True)
         return xml
 
-    def assert_failed(self, defect=None):
+    def assert_failed(self, defect=None, mode="build"):
         previous_cpl = (self.root / "pcb" / "CPL.csv").read_bytes()
-        rc, pipeline, fake = self.execute(defect=defect)
+        rc, pipeline, fake = self.execute(mode, defect=defect)
         self.assertNotEqual(rc, 0)
         self.assertFalse((self.root / "build" / "manifest.json").exists())
         self.assertFalse((self.root / "build" / "Gerbers.zip").exists())
@@ -334,45 +334,62 @@ class ManufacturingTests(unittest.TestCase):
         return pipeline, fake
 
     def test_success_publishes_complete_hashed_package_and_native_mirrors(self):
-        rc, pipeline, fake = self.execute()
-        self.assertEqual(rc, 0, pipeline.errors)
-        build = self.root / "build"
-        manifest = json.loads((build / "manifest.json").read_text())
-        self.assertEqual(manifest["status"], "verified")
-        self.assertEqual(manifest["hardware_revision"], "fixture-1")
-        self.assertEqual(manifest["tool"]["version"], "9.0.7")
-        self.assertEqual(manifest["verification"]["population"]["references"], ["J_LED_A", "J_LED_C", "R1"])
-        for name, digest in manifest["artifact_hashes"].items():
-            self.assertEqual(m.sha256(build / name), digest, name)
-        self.assertEqual({p.relative_to(build).as_posix() for p in build.rglob("*") if p.is_file()},
-                         set(manifest["artifact_hashes"]) | {"manifest.json"})
-        for name in ("CPL.csv", "Gerbers.zip"):
-            self.assertEqual((build / name).read_bytes(), (self.root / "pcb" / name).read_bytes())
-        rows = m.read_csv(build / "CPL.csv", m.CPL_FIELDS)
-        c = next(row for row in rows if row["Designator"] == "J_LED_C")
-        self.assertEqual(float(c["Mid Y"]), -40)
-        self.assertEqual(float(c["Rotation"]), 270)
-        self.assertNotIn("H1", {row["Designator"] for row in rows})
-        self.assertNotIn("R_DNP", {row["Designator"] for row in rows})
-        self.assertIn("pcb/pcb.kicad_dru", manifest["source_hashes"])
-        self.assertIn("pcb/Local.pretty/THT.kicad_mod", manifest["source_hashes"])
-        self.assertNotIn("pcb/CPL.csv", manifest["source_hashes"])
-        for name in m.ENGINEERING_NOTES:
-            self.assertEqual((build / name).read_bytes(), (self.root / "pcb" / name).read_bytes())
-            self.assertEqual(m.sha256(build / name), manifest["source_hashes"][f"pcb/{name}"])
-        for name in ("analyze_limits.py", "design_bounds.py"):
-            self.assertIn(f"scripts/{name}", manifest["source_hashes"])
-        with zipfile.ZipFile(build / "Gerbers.zip") as archive:
-            self.assertEqual(set(archive.namelist()), m.FAB_FILES)
-        with zipfile.ZipFile(build / "FlyTest.zip") as archive:
-            self.assertEqual(set(archive.namelist()), {"Gerbers.zip", "pcb.d356", "README.txt"})
-        self.assertNotEqual(pipeline.run / "exports" / "drills", pipeline.run / "exports" / "gerbers")
+        for mode, state in (("build", "verified"), ("prototype", "prototype")):
+            with self.subTest(mode=mode):
+                rc, pipeline, fake = self.execute(mode)
+                self.assertEqual(rc, 0, pipeline.errors)
+                build = self.root / "build"
+                manifest = m.read_json(build / "manifest.json")
+                status = m.read_json(build / "status.json")
+                report = m.read_json(build / "reports/verification.json")
+                for record in (manifest, status, report):
+                    self.assertEqual((record["status"], record["mode"], record["publication"]),
+                                     (state, mode, m.PUBLICATION[state]))
+                self.assertTrue(status["requires_matching_manifest_for_upload"])
+                self.assertEqual(status["required_manifest_status"], state)
+                self.assertEqual(manifest["hardware_revision"], "fixture-1")
+                self.assertEqual(manifest["tool"]["version"], "9.0.7")
+                self.assertEqual(manifest["verification"]["population"]["references"], ["J_LED_A", "J_LED_C", "R1"])
+                self.assertEqual(manifest["source_hashes"], m.source_inventory(self.root))
+                for name, digest in manifest["artifact_hashes"].items():
+                    self.assertEqual(m.sha256(build / name), digest, name)
+                self.assertEqual({p.relative_to(build).as_posix() for p in build.rglob("*") if p.is_file()},
+                                 set(manifest["artifact_hashes"]) | {"manifest.json"})
+                for name in ("CPL.csv", "Gerbers.zip"):
+                    self.assertEqual((build / name).read_bytes(), (self.root / "pcb" / name).read_bytes())
+                rows = m.read_csv(build / "CPL.csv", m.CPL_FIELDS)
+                c = next(row for row in rows if row["Designator"] == "J_LED_C")
+                self.assertEqual(float(c["Mid Y"]), -40)
+                self.assertEqual(float(c["Rotation"]), 270)
+                self.assertNotIn("H1", {row["Designator"] for row in rows})
+                self.assertNotIn("R_DNP", {row["Designator"] for row in rows})
+                self.assertIn("pcb/pcb.kicad_dru", manifest["source_hashes"])
+                self.assertIn("pcb/Local.pretty/THT.kicad_mod", manifest["source_hashes"])
+                self.assertNotIn("pcb/CPL.csv", manifest["source_hashes"])
+                for name in (*m.ENGINEERING_NOTES, "verification.json"):
+                    self.assertEqual((build / name).read_bytes(), (self.root / "pcb" / name).read_bytes())
+                    self.assertEqual(m.sha256(build / name), manifest["source_hashes"][f"pcb/{name}"])
+                for name in ("analyze_limits.py", "design_bounds.py"):
+                    self.assertIn(f"scripts/{name}", manifest["source_hashes"])
+                readme = (build / "README.txt").read_bytes()
+                self.assertEqual(readme, m.package_readme("fixture-1", mode, []).encode("utf-8"))
+                self.assertEqual(b"PROTOTYPE ONLY" in readme, mode == "prototype")
+                for name, members in (("Gerbers.zip", m.FAB_FILES | {"README.txt"}),
+                                      ("FlyTest.zip", {"Gerbers.zip", "pcb.d356", "README.txt"})):
+                    with zipfile.ZipFile(build / name) as archive:
+                        self.assertEqual(set(archive.namelist()), members)
+                        self.assertEqual(archive.read("README.txt"), readme)
+                self.assertNotEqual(pipeline.run / "exports" / "drills", pipeline.run / "exports" / "gerbers")
 
     def test_check_runs_all_gates_and_refreshes_reference_without_publishing(self):
         rc, pipeline, fake = self.execute("check")
         self.assertEqual(rc, 0, pipeline.errors)
         self.assertFalse((self.root / "build" / "CPL.csv").exists())
         self.assertFalse((self.root / "build" / "manifest.json").exists())
+        status = m.read_json(self.root / "build/status.json")
+        self.assertEqual(status["mode"], "check")
+        self.assertEqual(status["publication"], "Not published.")
+        self.assertIsNone(status["required_manifest_status"])
         self.assertTrue((self.root / "pcb" / "CPL.csv").read_text().startswith("Designator,"))
         for kind in ("drc", "erc"):
             commands = [command for command in fake.calls if kind in command]
@@ -389,9 +406,11 @@ class ManufacturingTests(unittest.TestCase):
             path = self.root / "pcb" / filename
             data = path.read_bytes()
             path.unlink()
-            pipeline, fake = self.assert_failed()
-            self.assertIn(filename, " ".join(pipeline.errors))
-            self.assertEqual(fake.calls, [])
+            for mode in ("build", "prototype"):
+                with self.subTest(filename=filename, mode=mode):
+                    pipeline, fake = self.assert_failed(mode=mode)
+                    self.assertIn(filename, " ".join(pipeline.errors))
+                    self.assertEqual(fake.calls, [])
             path.write_bytes(data)
 
     def test_missing_helper_is_a_hard_gate(self):
@@ -448,18 +467,37 @@ class ManufacturingTests(unittest.TestCase):
     def test_malformed_reports_cannot_pass_as_zero_violations(self):
         self.assert_failed("report-malformed")
 
-    def test_engineering_holds_allow_checks_but_block_publication(self):
+    def test_engineering_holds_defer_for_prototype_but_failed_production_quarantines_it(self):
         path = self.root / "pcb" / "verification.json"
         review = m.read_json(path)
-        review.update(release_holds=[{"id": "C4", "reason": "Protection not selected"}], file_release_review=None)
+        review.update(release_holds=[{"id": key, "reason": "Synthetic qualification hold"}
+                                     for key in ("C4", "C5", "W3", "W1", "W4")], file_release_review=None)
         m.write_json(path, review)
-        for mode, expected in (("check", 0), ("build", 1)):
+        review_hash = m.sha256(path)
+        for mode, expected in (("check", 0), ("prototype", 0), ("build", 1)):
             rc, pipeline, fake = self.execute(mode)
             self.assertEqual(rc, expected, pipeline.errors)
             self.assertTrue((pipeline.run / "exports" / "CPL.csv").exists())
-            self.assertFalse((self.root / "build" / "manifest.json").exists())
-            self.assertFalse((self.root / "build" / "Gerbers.zip").exists())
-            self.assertFalse((self.root / "pcb" / "Gerbers.zip").exists())
+            self.assertEqual(pipeline.verification["engineering_release"],
+                             {"verified": False, "holds": review["release_holds"], "review": None})
+            self.assertEqual(m.sha256(path), review_hash)
+            for name in ("build/manifest.json", "build/Gerbers.zip", "pcb/Gerbers.zip"):
+                self.assertEqual((self.root / name).exists(), mode == "prototype", name)
+            if mode == "prototype":
+                self.assertEqual(m.read_json(self.root / "build/manifest.json")["status"], "prototype")
+                readme = (self.root / "build/README.txt").read_text()
+                self.assertIn("PROTOTYPE ONLY", readme)
+                for hold in review["release_holds"]:
+                    self.assertIn(f"- {hold['id']}: {hold['reason']}", readme)
+                prototype_zip = m.sha256(self.root / "pcb/Gerbers.zip")
+            elif mode == "build":
+                self.assertEqual(m.read_json(pipeline.run / "previous-build/manifest.json")["status"], "prototype")
+                self.assertEqual(m.sha256(pipeline.run / "previous-pcb-Gerbers.zip"), prototype_zip)
+                self.assertEqual(m.read_json(self.root / "build/status.json")["status"], "failed")
+        for defect in ("warning", "report-malformed", "geometry", "ipc-net", "missing-cpl", "flipped-y",
+                       "missing-layer", "wrong-drill", "export-warning", "export-failure"):
+            with self.subTest(prototype_defect=defect):
+                self.assert_failed(defect, mode="prototype")
         review["release_holds"] = []
         m.write_json(path, review)
         rc, pipeline, fake = self.execute()
@@ -565,7 +603,9 @@ class ManufacturingTests(unittest.TestCase):
     def test_bom_source_identity_mismatch_blocks(self):
         path = self.root / "pcb" / "BOM.csv"
         path.write_text(path.read_text().replace("R1K", "WRONG-MPN"))
-        self.assert_failed()
+        for mode in ("build", "prototype"):
+            with self.subTest(mode=mode):
+                self.assert_failed(mode=mode)
 
     def test_existing_lcsc_source_field_alias_is_explicit_and_conflicts_fail(self):
         board = nets.read_board(self.root / "pcb" / "pcb.kicad_pcb")
@@ -807,12 +847,13 @@ class ManufacturingTests(unittest.TestCase):
         review.update(release_holds=[{"id": key, "reason": "Synthetic open hold"} for key in ("C4", "C5", "W3", "W1", "W4")],
                       file_release_review=None)
         m.write_json(path, review)
-        for mode, expected in (("check", 0), ("build", 1)):
+        for mode, expected in (("check", 0), ("build", 1), ("prototype", 1)):
             with self.subTest(mode=mode):
                 rc, pipeline, fake = self.execute(mode, netlist=xml.read_text())
                 self.assertEqual(rc, expected)
-                self.assertEqual(pipeline.errors, [
-                    "Open engineering release holds; verified draft exports retained privately"] if mode == "build" else [])
+                error = {"build": "Open engineering release holds; verified draft exports retained privately",
+                         "prototype": "Unresolved external sourcing allocation; verified draft exports retained privately: R1, R2"}
+                self.assertEqual(pipeline.errors, [error[mode]] if mode in error else [])
                 self.assertEqual(pipeline.verification["engineering_release"]["holds"], review["release_holds"])
                 self.assertEqual(set(pipeline.verification["sourcing"]["pending_external"]), {"R1", "R2"})
                 self.assertEqual({p.name for p in (self.root / "build").iterdir()},
@@ -937,11 +978,13 @@ class ManufacturingTests(unittest.TestCase):
                 path.write_text(path.read_text() + "\n")
             return result
 
-        pipeline = m.Manufacturing(self.root, "fake-kicad")
-        with patch.object(m.subprocess, "run", change_source), contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
-            self.assertNotEqual(pipeline.execute("build"), 0)
-        self.assertIn("Sources changed", " ".join(pipeline.errors))
-        self.assertFalse((self.root / "build" / "manifest.json").exists())
+        for mode in ("build", "prototype"):
+            with self.subTest(mode=mode):
+                pipeline = m.Manufacturing(self.root, "fake-kicad")
+                with patch.object(m.subprocess, "run", change_source), contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                    self.assertNotEqual(pipeline.execute(mode), 0)
+                self.assertIn("Sources changed", " ".join(pipeline.errors))
+                self.assertFalse((self.root / "build" / "manifest.json").exists())
 
     def test_staged_source_change_invalidates_snapshot(self):
         original = FakeKiCad()
@@ -953,11 +996,13 @@ class ManufacturingTests(unittest.TestCase):
                 path.write_text(path.read_text() + "\n")
             return result
 
-        pipeline = m.Manufacturing(self.root, "fake-kicad")
-        with patch.object(m.subprocess, "run", change_staged), contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
-            self.assertNotEqual(pipeline.execute("build"), 0)
-        self.assertIn("Staged source changed", " ".join(pipeline.errors))
-        self.assertFalse((self.root / "build" / "manifest.json").exists())
+        for mode in ("build", "prototype"):
+            with self.subTest(mode=mode):
+                pipeline = m.Manufacturing(self.root, "fake-kicad")
+                with patch.object(m.subprocess, "run", change_staged), contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                    self.assertNotEqual(pipeline.execute(mode), 0)
+                self.assertIn("Staged source changed", " ".join(pipeline.errors))
+                self.assertFalse((self.root / "build" / "manifest.json").exists())
 
     def test_clean_never_removes_other_tmp_evidence_or_generated_cpl(self):
         (self.root / "tmp" / "other-agent").mkdir(parents=True)
@@ -984,10 +1029,19 @@ class ManufacturingTests(unittest.TestCase):
         self.assertIn("real invocation failure", (pipeline.reports / "version-0.log").read_text())
 
     def test_make_j4_all_public_targets_share_one_transaction(self):
-        result = subprocess.run(["make", "-n", "-j4", *m_target_names()], cwd=self.root, capture_output=True, text=True)
-        self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(result.stdout.count("scripts/manufacturing.py build"), 1)
-        self.assertNotIn("manufacturing.py check", result.stdout)
+        cases = [([], "build"), (["check"], "check"), (m_target_names(), "build"),
+                 (["gerbers", "prototype", "check"], "prototype")]
+        for prototype in ("gerbers", "prototype"):
+            cases += [([prototype], "prototype"), (["check", prototype], "prototype"), ([prototype, "check"], "prototype")]
+            for production in set(m_target_names()) - {"gerbers", "prototype", "check"}:
+                cases += [([production], "build"), ([production, prototype], "build"), ([prototype, production], "build")]
+        for goals, mode in cases:
+            with self.subTest(goals=goals):
+                result = subprocess.run(["make", "-n", "-j4", *goals], cwd=self.root, capture_output=True, text=True)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                commands = [line.split() for line in result.stdout.splitlines() if "scripts/manufacturing.py" in line]
+                self.assertEqual(len(commands), 1, result.stdout)
+                self.assertEqual(commands[0][-1], mode)
 
     def test_make_forwards_quoted_cli_paths_without_shell_reinterpretation(self):
         result = subprocess.run(["make", "all", 'KICAD_CLI="missing path/kicad-cli"'], cwd=self.root,
@@ -1000,12 +1054,16 @@ class ManufacturingTests(unittest.TestCase):
     def test_parallel_transactions_serialize_without_partial_package(self):
         fake = FakeKiCad()
         with patch.object(m.subprocess, "run", fake), contextlib.redirect_stdout(io.StringIO()):
-            with ThreadPoolExecutor(max_workers=2) as executor:
-                results = list(executor.map(lambda _: m.Manufacturing(self.root, "fake-kicad").execute("build"), range(2)))
-        self.assertEqual(results, [0, 0])
-        manifest = json.loads((self.root / "build" / "manifest.json").read_text())
-        for name, digest in manifest["artifact_hashes"].items():
-            self.assertEqual(m.sha256(self.root / "build" / name), digest)
+            for modes in (("build", "build"), ("prototype", "build"), ("build", "prototype")):
+                with self.subTest(modes=modes), ThreadPoolExecutor(max_workers=2) as executor:
+                    results = list(executor.map(lambda mode: m.Manufacturing(self.root, "fake-kicad").execute(mode), modes))
+                self.assertEqual(results, [0, 0])
+                manifest = m.read_json(self.root / "build/manifest.json")
+                self.assertIn((manifest["mode"], manifest["status"]), (("build", "verified"), ("prototype", "prototype")))
+                for name, digest in manifest["artifact_hashes"].items():
+                    self.assertEqual(m.sha256(self.root / "build" / name), digest)
+                self.assertEqual((self.root / "build/README.txt").read_text(),
+                                 m.package_readme("fixture-1", manifest["mode"], []))
 
     def test_zip_membership_payload_and_deterministic_metadata(self):
         one, two = self.root / "one.zip", self.root / "two.zip"
@@ -1162,6 +1220,8 @@ class ManufacturingTests(unittest.TestCase):
         self.assertEqual(rc, 0, pipeline.errors)
         text = (pipeline.run / "release" / "Assembly.txt").read_text()
         self.assertIn("DRAFT: not an accepted JLCPCB placement model or production approval.", text)
+        self.assertIn("Population: 3 components; 2 SMT / 1 THT.", text)
+        self.assertNotIn("PR02", text)
         self.assertIn("R1 | R1K | Local:THT | 10.000000 | 20.000000 | 10.000000 | -20.000000 | 0.000000 | top", text)
         self.assertIn("R1 | 1 | POWER | thru_hole | 8.500000 | 20.000000 | 8.500000 | -20.000000 | 1.000000", text)
         for ref in ("H1", "R_DNP", "VIA"):
@@ -1176,8 +1236,12 @@ class ManufacturingTests(unittest.TestCase):
         path.write_text(native_positions(board))
         positions = m.check_placement(m.read_csv(path, m.POSITION_FIELDS), board, native=True)
         bom = m.read_bom(REPO / "pcb" / "BOM.csv")
+        for ref in ("R1", "R2"):
+            self.assertEqual(bom[ref]["MPN"], "HP122WF2201T4E")
+            self.assertNotEqual(bom[ref]["LCSC Part #"], "C2791283")  # Verified 4.7k / 5% part, not 2.2k / 1%.
         text = m.assembly_reference(board, bom, positions, "1.2.0-dev")
         anchors, terminals = text.split("TERMINAL DATUMS\n")
+        self.assertIn("Population: 16 components; 8 SMT / 8 THT.", anchors)
         self.assertEqual(sum(line.startswith(tuple(ref + " | " for ref in bom)) for line in anchors.splitlines()), 16)
         rows = [line.split(" | ") for line in terminals.splitlines() if " | " in line][1:]
         self.assertEqual(len(rows), 34)
@@ -1195,6 +1259,8 @@ class ManufacturingTests(unittest.TestCase):
             ("GDT_AC", "1"): ("WIRE_A", 125.8, 114.88, 1.4),
             ("GDT_AC", "2"): ("WIRE_C", 125.8, 130.12, 1.4),
         }
+        expected.update({(ref, pad.pin): (pad.net, pad.x, pad.y, pad.drill)
+                         for ref in ("R1", "R2") for pad in board.footprints[ref].pads})
         for row in rows:
             key = (row[0], row[1])
             if key in expected:
@@ -1383,7 +1449,8 @@ class ManufacturingTests(unittest.TestCase):
 
 
 def m_target_names():
-    return ["all", "package", "gerbers", "drills", "ipc", "bom", "cpl", "zip-gerbers", "zip-flytest", "check"]
+    return ["all", "package", "release", "production", "gerbers", "prototype", "drills", "ipc", "bom", "cpl",
+            "zip-gerbers", "zip-flytest", "check"]
 
 
 @unittest.skipUnless(os.environ.get("KICAD_TEST_CLI"), "Set KICAD_TEST_CLI for isolated native CLI fixture probes")

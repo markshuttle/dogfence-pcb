@@ -40,13 +40,18 @@ def _finite(name, *values):
 
 def resistor_bounds(nominal_ohm=2200.0, tolerance_fraction=0.01, tcr_ppm=dc.RESISTOR_TCR_PPM,
                     minimum_c=-30.0, maximum_c=125.0):
-    """PR02 initial tolerance / either TCR sign at selected temperatures, not aging."""
+    """HP12 initial tolerance / linear TCR screen about 25 C, not aging.
+
+    SMD-SP-003 V.7 tests TCR at -55/125 C; do not extend the screen to the
+    separate 155 C operating/zero-power endpoint.
+    """
     _finite("resistor inputs", nominal_ohm, tolerance_fraction, tcr_ppm,
             minimum_c, maximum_c)
     if (nominal_ohm <= 0 or not 0 <= tolerance_fraction < 1 or tcr_ppm < 0
-            or not -55 <= minimum_c <= maximum_c <= 155):
-        raise ValueError("invalid resistance/tolerance or PR02 -55..155 C TCR characterization range")
-    drift = tcr_ppm * 1e-6 * max(abs(minimum_c - 20), abs(maximum_c - 20))
+            or not -55 <= minimum_c <= maximum_c <= 125):
+        raise ValueError("invalid resistance/tolerance or HP12 -55..125 C TCR test envelope")
+    drift = tcr_ppm * 1e-6 * max(abs(minimum_c - dc.RESISTOR_REFERENCE_C),
+                              abs(maximum_c - dc.RESISTOR_REFERENCE_C))
     if drift >= 1:
         raise ValueError("TCR envelope permits nonpositive resistance")
     bounds = (nominal_ohm * (1 - tolerance_fraction) * (1 - drift),
@@ -119,7 +124,7 @@ def normal_cases(*, source_min_v=35.0, source_max_v=dc.ADJUSTMENT_SCREEN_V, cabl
 
 
 def thermal_envelope(voltage_v, local_ambient_c):
-    """PR02 Cu-lead ambient derating arithmetic, conditional on adequate heat flow.
+    """HP12 ambient derating arithmetic, conditional on adequate heat flow.
 
     Fixed-current ceiling uses Rmax; a voltage-fed power bound uses Rmin.
     R uses the separate -30..125 C screen, not an electrothermal equilibrium.
@@ -203,7 +208,7 @@ def analyze(**options):
     branch_rows = []
     for name, voltage, channel in (
             ("36V_2.8V_nominal_comparison", 36.0, dc.Channel()), ("36V_zero_drop_rmin", 36.0, low),
-            ("legacy_37V_proposal_PR02_zero_drop_rmin", 37.0, low),
+            ("legacy_37V_proposal_selected_R_zero_drop_rmin", 37.0, low),
             ("analysis_upper_zero_drop_rmin", ceiling_v, low),
             ("accessible_adjustment_screen", dc.ADJUSTMENT_SCREEN_V, low)):
         budget = dc.branch_budget(voltage, channel)
@@ -216,7 +221,7 @@ def analyze(**options):
             "two_resistors_and_rectifiers_w": 2 * (watts + budget["diode_w"]),
             "two_resistors_rectifiers_clamps_upper_w": 2 * (watts + budget["diode_w"] + clamp_w),
             "two_branch_electrical_input_w": 2 * voltage * budget["branch_a"],
-            "pr02_p70_margin_w": dc.RESISTOR_P70_W - watts,
+            "p70_margin_w": dc.RESISTOR_P70_W - watts,
             "rating_only_local_ambient_ceiling_c": (
                 dc.RESISTOR_ZERO_POWER_AMBIENT_C
                 - (dc.RESISTOR_ZERO_POWER_AMBIENT_C - 70) * watts / dc.RESISTOR_P70_W
@@ -228,7 +233,7 @@ def analyze(**options):
     board_heat = 2 * watts
     faults = []
     for profile, case, voltage in (("historical_36V_2.8V_6.9_nominal", "historical_36V_2.8V_6.9_nominal", 36.0),
-                                   ("analysis_upper_PR02_zero_drop_rmin", "nonuniform_A40", ceiling_v)):
+                                   ("analysis_upper_selected_R_zero_drop_rmin", "nonuniform_A40", ceiling_v)):
         inputs = cases[case] | {"source": dc.Source(voltage, series_ohm=0.25)}
         inputs = {k: v for k, v in inputs.items() if k != "channel_overrides"}
         for core in dc.CHANNELS:
@@ -248,6 +253,7 @@ def analyze(**options):
                     "k12_current_ratio": abs(current) / k12_a if arc else None,
                 })
 
+    rated_voltage_v = min(300.0, math.sqrt(dc.RESISTOR_P70_W * 2200))
     return {
         "revision": dc.REVISION, "conditional_only": True,
         "stations": STATIONS, "spacing_km": SPACING_KM,
@@ -267,13 +273,20 @@ def analyze(**options):
                   "copper_alpha_per_c": 0.00393,
                   "contact_ohm_per_span_ABC": options.get("contact_ohm_per_span", CONTACT_OHM_PER_SPAN),
                   "effective_4km_core_ohm_ABC": [r * 4 for r in effective_rails]},
-        "resistor": {"mpn": dc.RESISTOR_MPN, "lead_material": "copper",
+        "resistor": {"mpn": dc.RESISTOR_MPN, "manufacturer": "Uni-Royal", "package": "2512 SMT",
+                     "nominal_ohm": 2200.0,
                      "r_min_ohm": r_min, "r_max_ohm": r_max,
                      "screen_temperature_range_c": [-30, 125], "tolerance_fraction": 0.01,
                      "tcr_abs_ppm_per_c": dc.RESISTOR_TCR_PPM, "aging_included": False,
+                     "reference_temperature_c": dc.RESISTOR_REFERENCE_C,
+                     "tcr_test_temperatures_c": [-55, 125],
                      "p70_w": dc.RESISTOR_P70_W,
                      "zero_power_ambient_c": dc.RESISTOR_ZERO_POWER_AMBIENT_C,
-                     "pr02_hotspot_max_c": dc.RESISTOR_HOTSPOT_MAX_C},
+                     "family_max_working_voltage_v": 300.0,
+                     "rated_working_voltage_at_p70_v": rated_voltage_v,
+                     "family_max_overload_voltage_v": 500.0,
+                     "short_time_overload_test_v": min(2.5 * rated_voltage_v, 500.0),
+                     "short_time_overload_test_s": 5.0},
         "diodes": {"D1_D2_D3_D4_mpn": dc.DIODE_MPN, "vrrm_v": 1300,
                    "D3_D4_cathodes": "LED_A_POS / LED_C_POS after D1/D2",
                    "D3_D4_anodes": "WIRE_B", "positive_voltage_regulation": False,
@@ -306,9 +319,6 @@ def analyze(**options):
             "cable_temperature_margin_k": 10.0,
             "bulk_to_outside_effective_rtheta_max_k_per_w": effective_rtheta_limit(board_heat, 30, 60),
             "film_to_local_effective_rtheta_max_k_per_w": effective_rtheta_limit(watts, 60, 110),
-            "pr02_mounted_example_rtheta_k_per_w": 75.0,
-            "pr02_example_minimum_body_standoff_mm": 1.0,
-            "pr02_mounted_example_hotspot_rise_k": 75.0 * watts,
             "onegel_thermal_property_assumed": False,
         },
         "faults_cv_demand_only": faults,
@@ -330,10 +340,14 @@ def analyze(**options):
             "1 uA state classification is not an optical dark threshold; series reverse leakage is not solved.",
             "The two-branch input-power heat bound already includes resistor, diode, LED and clamp energy. "
             "Do not add clamp leakage as another PSU load. Contact/auxiliary heat and solar input are excluded.",
-            "PR02 2 W does not remove the nominal 1.002 W resistor heat per board. Ambient derating reaches "
-            "zero at 155 C; its specific hot-spot maximum is 220 C despite the generic 250 C film entry. "
-            "Neither is an allowed OneGel/contact temperature or a demonstrated thermal interface.",
-            "75 K/W is a typical mounted example with >=1 mm body standoff, NOT OneGel Rtheta. "
+            "HP12 2 W does not remove the nominal 1.002 W resistor heat per board. SMT changes heat flow, "
+            "not power loss or a proven cooler result. Ambient derating reaches zero at 155 C; no HP12 "
+            "hot-spot or mounted K/W is established. PR02 thermal/standoff data do not apply.",
+            "HP12 TCR uses +/-100 ppm/C referenced to 25 C, not the website's 75 ppm/C. The linear "
+            "-30..125 C screen stays within the PDF's -55/125 C TCR test endpoints, not 155 C. "
+            "Aging and assembly/solder drift are excluded.",
+            "HP12 family 300 V is limited by sqrt(P*R): 66.3325 V at 2 W / nominal 2.2k. "
+            "The 165.8312 V five-second overload test is not an impulse curve or repetitive surge rating.",
             "60 C interface / 110 C film are proposed conservative targets, not universal user limits. "
             "Meet actual cable <=70 C and all gel/adhesive/LED/connector limits with uncertainty.",
             "Resistance uses selected -30..125 C inputs, not self-heating. Rating-only ambient/current/voltage "
@@ -349,8 +363,8 @@ def analyze(**options):
             "User accepts installation lead-reversal LED damage and direct-strike rebuilding; energized "
             "cattle fencing is prohibited near the ENTIRE boundary, including 4 km cable, stations and hub.",
             "RF, ordinary switching, nearby lightning, recovery, aging/lifetime and potted thermal behavior "
-            "remain unqualified. C4/C5/W3 and release gates remain open. Continuous-safe normal TEST stays "
-            "mandatory; no timer or active current-stage prerequisite is added.",
+            "remain unqualified. C4/C5/W3 performance review is separate from prototype export. "
+            "Continuous-safe normal TEST stays mandatory; no timer or active current-stage prerequisite is added.",
         ],
     }
 
@@ -391,7 +405,7 @@ def main(argv=None):
     print("\nSource-end case | branch mA | resistor W | two resistors W | rating local ceiling C")
     for row in report["source_end_branches"]:
         local = row["rating_only_local_ambient_ceiling_c"]
-        text = f"{local:.3f}" if local is not None else "NONE (above PR02 P70)"
+        text = f"{local:.3f}" if local is not None else "NONE (above HP12 P70)"
         print(f"{row['case']} | {1000 * row['branch_a']:.4f} | {row['resistor_w']:.6f}"
               f" | {row['two_resistors_w']:.6f} | {text}")
     print("\nLocal C | allowed W | margin W | fixed-current ceiling mA | zero-drop source ceiling V | nominal R min ohm")

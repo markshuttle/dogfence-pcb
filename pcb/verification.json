@@ -15,9 +15,9 @@
   "reviewed_netlist_annotation": {
     "tool_version": "9.0.7",
     "stdout": "Warning: schematic has annotation errors, please use the schematic editor to fix them\n",
-    "reason": "2026-09-07 SMT 2512 resistor update re-review: manually inspected tmp/annotation-review/hybrid-k5p32sud/report.json, commands.json and the baseline/numbered comparison proofs. All 20 source property/instance references are unique and consistent; 16 populated parts, four mounts, eight nets and all 34 terminals match PCB/BOM. Renaming only the ten intentional J_/GDT_ references removes the warning while preserving all component contents and terminal memberships after inverse renaming. Duplicate, unassigned and property/instance-mismatch probes fail source validation despite producing the same aggregate warning. Accept only this KiCad 9.0.7 kicadxml stdout line, empty stderr and exit 0 with the exact five input hashes below. Only the changed schematic hash was deliberately updated after that review; other approval hashes and hardware release holds are unchanged. This is diagnostic review, not circuit/procurement/thermal/surge approval. Never refresh approval hashes automatically.",
+    "reason": "2026-09-07 HP12 sourcing correction re-review: manually inspected tmp/annotation-review/hybrid-64xarlnh/report.json and commands.json; baseline and inverse-numbered comparison.json files are byte-identical. All 20 source property/instance references are unique and consistent; 16 populated parts, four mounts, eight nets and all 34 terminals match PCB/BOM, including explicit pending HP122WF2201T4E sourcing. Renaming only the ten intentional J_/GDT_ references removes the warning while preserving all component contents and terminal memberships. Duplicate, unassigned and property/instance-mismatch probes are structurally rejected despite the same native warning. Accept only this KiCad 9.0.7 kicadxml stdout line, empty stderr and exit 0 with the exact five input hashes below. Only the changed schematic hash was deliberately updated after this review; the other four approval hashes and eight-label review remain unchanged. All five engineering holds remain open. This is diagnostic review, not part allocation, circuit, thermal or surge approval. Never refresh approval hashes automatically.",
     "source_hashes": {
-      "pcb/pcb.kicad_sch": "1ed78b777516032fff5a399c2b97664257be4499838b48522ce63ad0fe55d033",
+      "pcb/pcb.kicad_sch": "e03c0c8df5e148db9ce868eb5da40800a557c386d29bfc9803020ae97c7f83fd",
       "pcb/pcb.kicad_pro": "cb018c8545e0cfa72b4867d7bd1eb36d56b16298f38eb48d0073dbba8234db0e",
       "pcb/DogFence.kicad_sym": "a1a846c7c485c7c8a429c86cb75555c7278df0dba558eecaceb144c2bb43f75d",
       "pcb/sym-lib-table": "ea40d83d52d3814721b6121a7103b8dca0e4ab19d8a15ef1e849e6de10a8b532",
@@ -35,7 +35,7 @@
     },
     {
       "id": "W3",
-      "reason": "PR02 2 W resistors and a >=1 mm body-standoff requirement are implemented; the 0.769433 W screening load is not a measured closed-OneGel temperature or an accepted source/thermal envelope. Continuous normal TEST qualification remains open. See ELECTRICAL.md."
+      "reason": "HP12 2512 SMT 2 W resistors are implemented; the 0.756803 W screening load is not a measured chip/pad/PCB or closed-OneGel temperature or an accepted source/thermal envelope. SMT changes heat flow, not normal power loss. Continuous normal TEST qualification remains open. See ELECTRICAL.md and DESIGN_BOUNDS.md."
     },
     {
       "id": "W1",
@@ -43,7 +43,7 @@
     },
     {
       "id": "W4",
-      "reason": "Allocated-lot pin/body/pattern acceptance, PR02 standoff/forming, mixed-assembly solder fill and the 1.30 mm earth-terminal overhang remain to accept. R1/R2 external sourcing has no assigned LCSC code or JLCPCB allocation. See ASSEMBLY.md."
+      "reason": "Allocated-lot pin/body/pattern acceptance, retained GDT forming, HP12 lands/stencil, mixed-assembly solder fill and the 1.30 mm earth-terminal overhang remain to accept. Intended R1/R2 HP122WF2201T4E external sourcing has no verified LCSC code or JLCPCB allocation; C2791283 is a rejected 4.7 kohm/5% mapping. SMT resistors have no insertion holes or axial standoff requirement. See ASSEMBLY.md."
     }
   ],
   "file_release_review": null

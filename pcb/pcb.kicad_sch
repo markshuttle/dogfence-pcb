@@ -2481,7 +2481,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "https://www.lcsc.com"
+		(property "Datasheet" "https://www.uni-royal.cn/en/images/userfile/file/1784806233a2e6d381ea80b5d9.pdf"
 			(at 205.74 62.23 0)
 			(effects
 				(font
@@ -2508,7 +2508,7 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC" "C2791283"
+		(property "LCSC" ""
 			(at 205.74 62.23 0)
 			(effects
 				(font
@@ -2517,7 +2517,7 @@
 				(hide yes)
 			)
 		)
-		(property "Sourcing" "LCSC"
+		(property "Sourcing" "External"
 			(at 205.74 62.23 0)
 			(effects
 				(font
@@ -2526,7 +2526,7 @@
 				(hide yes)
 			)
 		)
-		(property "Sourcing Reference" ""
+		(property "Sourcing Reference" "https://store.nacsemi.com/products/detail?stock=XSJMZ0000010410"
 			(at 205.74 62.23 0)
 			(effects
 				(font
@@ -3564,7 +3564,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "https://www.lcsc.com"
+		(property "Datasheet" "https://www.uni-royal.cn/en/images/userfile/file/1784806233a2e6d381ea80b5d9.pdf"
 			(at 205.74 123.19 0)
 			(effects
 				(font
@@ -3591,7 +3591,7 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC" "C2791283"
+		(property "LCSC" ""
 			(at 205.74 123.19 0)
 			(effects
 				(font
@@ -3600,7 +3600,7 @@
 				(hide yes)
 			)
 		)
-		(property "Sourcing" "LCSC"
+		(property "Sourcing" "External"
 			(at 205.74 123.19 0)
 			(effects
 				(font
@@ -3609,7 +3609,7 @@
 				(hide yes)
 			)
 		)
-		(property "Sourcing Reference" ""
+		(property "Sourcing Reference" "https://store.nacsemi.com/products/detail?stock=XSJMZ0000010410"
 			(at 205.74 123.19 0)
 			(effects
 				(font

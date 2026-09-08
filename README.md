@@ -1,12 +1,12 @@
 # Dog Fence Indicator & Surge Protection System
 
-**Draft hardware revision: 1.2.0-dev. Reviewed baseline: 1.1.0. Manufacturing and field release remain on hold.**
+**Draft hardware revision: 1.2.0-dev. Reviewed baseline: 1.1.0. File-verified prototype artifacts are authorized; production and field release remain on hold. No upload or order is authorized.**
 
 This is the specification for a 4 km DogWatch SmartFence boundary with local DC fault indicators and GDT surge paths. It is not a board-level surge rating, a completed qualification report, or permission to upload the existing manufacturing files.
 
-Following checkpoint **ad282e3**, the user-authorized **16-part hybrid is implemented in the schematic, PCB, local libraries and design BOM**: two PR02 2 W axial resistors and four BYG23T SMA diodes, including two negative-voltage output shunts. Implementation is not assembled hardware or pulse/thermal qualification; **C4, C5, W3, W1 and W4 remain open**.
+The authorized **16-part hybrid now uses two Uni-Royal HP12 2512 SMT resistors and four BYG23T SMA diodes**, including two negative-voltage output shunts. The intended resistor is **HP122WF2201T4E, 2.2 kohm / 2 W / 1%; sourcing remains pending**. Implementation is not assembled hardware or pulse/thermal qualification; **C4, C5, W3, W1 and W4 remain open**, deferred only for the prototype-artifact scope below.
 
-[REMEDIATION.md](REMEDIATION.md) records the agreed requirements, issue evidence, and release gates. The design sources are the working schematic, PCB, project settings/rules, and libraries under `pcb/`, with reviewed sourcing in `pcb/BOM.csv`. Generated `build/` files, backup archives, and `tmp/` copies are not design authorities. [Electrical analysis](pcb/ELECTRICAL.md) and [controlled assembly notes](pcb/ASSEMBLY.md) distinguish implemented changes from unresolved protection, fit and process decisions. `pcb/verification.json` enforces the engineering publication holds. Revision labels and documentation changes alone do not establish hardware qualification.
+[REMEDIATION.md](REMEDIATION.md) records the agreed requirements, issue evidence, and release gates. The design sources are the working schematic, PCB, project settings/rules, and libraries under `pcb/`, with reviewed sourcing in `pcb/BOM.csv`. Generated `build/` files, backup archives, and `tmp/` copies are not design authorities. [Electrical analysis](pcb/ELECTRICAL.md) and [controlled assembly notes](pcb/ASSEMBLY.md) distinguish implemented changes from unresolved protection, fit and process decisions. `pcb/verification.json` retains the engineering hold ledger; prototype publication records those holds without closing them. Revision labels and documentation changes alone do not establish hardware qualification.
 
 ## 1. Deployment Baseline
 
@@ -66,8 +66,8 @@ Three **WAGO 221-613** three-way splices maintain A/B/C cable continuity and pro
 
 | Implemented circuit path | Connection |
 | :--- | :--- |
-| A indicator | WIRE_A -> R1 (PR02, 2.2 kohm / 2 W) -> D1 (BYG23T) -> LED_A_POS -> external LED A -> WIRE_B |
-| C indicator | WIRE_C -> R2 (PR02, 2.2 kohm / 2 W) -> D2 (BYG23T) -> LED_C_POS -> external LED C -> WIRE_B |
+| A indicator | WIRE_A -> R1 (HP12, 2.2 kohm / 2 W) -> D1 (BYG23T) -> LED_A_POS -> external LED A -> WIRE_B |
+| C indicator | WIRE_C -> R2 (HP12, 2.2 kohm / 2 W) -> D2 (BYG23T) -> LED_C_POS -> external LED C -> WIRE_B |
 | Negative output shunts | D3 cathode to LED_A_POS, D4 cathode to LED_C_POS; both anodes to WIRE_B. These BYG23T diodes are across the LED connectors, **after** D1/D2, not additional series components. |
 | Differential GDTs | GDT_AB between A/B, GDT_BC between B/C, GDT_AC between A/C |
 | Earth GDTs | GDT_A_E, GDT_B_E, GDT_C_E each connect their respective core to the separate EARTH bus |
@@ -86,20 +86,20 @@ The **historical zero-leakage, forward-only comparison**, not a measurement, use
 | All 41 boards with negligible cable drop | **1.2375 A / 44.55 W** | About 15.09 mA each |
 | Illustrative sensitivity: 40 ohms/core and 4.0 V combined forward drop | Not a guaranteed cable/temperature limit | About **6.21 mA** at the far end |
 
-The updated analysis includes PR02 tolerance/TCR, a higher BYG23T forward-drop screen and conditional clamp leakage. The forward-only core model still represents healthy normal TEST: D3/D4 add no forward B-to-A/C path. It does not establish reverse leakage, RF behavior, surge survival, thermal limits or daylight visibility. Neither the 8.04 mA nor the illustrative 6.21 mA comparison is an accepted worst-case current.
+The updated analysis includes HP12 tolerance/TCR, a higher BYG23T forward-drop screen and conditional clamp leakage. The forward-only core model still represents healthy normal TEST: D3/D4 add no forward B-to-A/C path. It does not establish reverse leakage, RF behavior, surge survival, thermal limits or daylight visibility. Neither the 8.04 mA nor the illustrative 6.21 mA comparison is an accepted worst-case current.
 
 **Two MEAN WELL LRS-75-36 supplies (each 36 V, 2.1 A, 75.6 W) are ORDERED. The user has allocated one to TEST and one as a disconnected spare.** There is no parallel, series, opposite-end or second-channel supply connection. Verify receipt/nameplates and the working unit's setting, 32.4-39.6 V adjustment, tolerances, derating and hiccup behavior. The earlier LRS-35-36 belief is procurement history, not a third confirmed PSU. The capacity increase does not solve source/fuse/GDT coordination.
 
-At the nominal source-end comparison point, each 2.2 kohm resistor still dissipates about **0.50 W**, approximately **1 W per board in the two resistors alone**. The selected **Vishay BCcomponents PR02000202201FA100** is the **copper-lead PR02, 2 W at 70 C ambient, 1%, +/-250 ppm/K**, not the 1.3 W FeCu version. It derates to zero at 155 C ambient; the PR02-specific hot-spot maximum is 220 C, not permission for gel or nearby materials to reach that temperature. Its **>=1.00 mm body-to-PCB standoff is an assembly requirement**, not an accepted forming process or measured thermal result. The 2 W rating does not remove the heat or close W3.
+At the nominal source-end comparison point, each 2.2 kohm resistor still dissipates about **0.50 W**, approximately **1 W per board in the two resistors alone**. The intended **Uni-Royal HP122WF2201T4E** is **HP12 / 2512 SMT, 2 W at 70 C ambient, 1%, +/-100 ppm/C referenced to 25 C**, derating to zero at 155 C ambient per [SMD-SP-003 V.7, 08-Jan-2026](https://www.uni-royal.cn/en/images/userfile/file/1784806233a2e6d381ea80b5d9.pdf). Its chip/termination/PCB heat path may help heat rejection, but does not lower electrical loss or prove cooler OneGel operation. PR02 hot-spot, thermal-resistance and standoff data do not apply. W3 remains open.
 
-The stdlib analysis is reproducible with `python3 -B scripts/analyze_limits.py` and `python3 -B scripts/design_bounds.py`. It models all three cores, exercises **280 clean-cut cases**, and screens shorts and conditional ignited-GDT paths. At the declared **40.39597 V** adjustment/tolerance screen, PR02's 1% / 250 ppm/K resistance screen through 125 C gives **Rmin = 2120.8275 ohms**. With zero junction drops and zero cable resistance, this gives **19.047268 mA and 0.769432871 W per resistor**, or **1.561875985 A / 63.0935 W for 82 branches**. These are calculations, not an enforced or guaranteed combined PSU maximum, actual resistor temperature or physical test result. At 125 C local ambient the PR02 derating allowance is only 0.705882 W; headline P70 margin alone is not thermal approval.
+The stdlib analysis is reproducible with `python3 -B scripts/analyze_limits.py` and `python3 -B scripts/design_bounds.py`. It models all three cores, exercises **280 clean-cut cases**, and screens shorts and conditional ignited-GDT paths. [DESIGN_BOUNDS](pcb/DESIGN_BOUNDS.md) records the selected HP12 resistance envelope, upper current/power screens and ambient derating. These are calculations, not a guaranteed source maximum, self-heating solution or physical test result.
 
-The [updated design bounds](pcb/DESIGN_BOUNDS.md) use conditional standard-based **8.21 ohm/km**, 70 C cable and an explicit contact budget, giving **40.29306 ohms/core**. At a declared **35 V feed floor**, a **5.2 V combined forward-drop screen** and nonuniform PR02 loads give **4.090396 mA** at a named far-end LED corner after **50 uA conditional clamp diversion**. The corresponding uniform case gives 5.636756 mA; neither is an exhaustive minimum or measured brightness. The deliberately loose all-station comparison floor is about 0.1950 mA after diversion within the stated envelope, not predicted installed brightness. Series-diode reverse leakage and physical OFF-state glow are not solved by the ideal cut model. The former **4.6681 mA MBE result and 35-37 V proposal are historical**; no 37 V ceiling is enforced. Qualify the real normal source range and actual closed OneGel assembly; no active 37 V cutoff or historical 40-part circuit is imposed as a prerequisite.
+The [updated design bounds](pcb/DESIGN_BOUNDS.md#normal-current) retain conditional cable/contact assumptions and a declared **35 V feed floor / 40.39597 V upper screen**, neither enforced nor guaranteed. Nonuniform HP12 loads, a **5.2 V combined forward-drop screen** and **50 uA conditional clamp diversion** give named current corners, not an exhaustive minimum or measured brightness; the loose comparison floor is not predicted installed brightness. Series-diode reverse leakage and physical OFF-state glow are not solved by the ideal cut model. Older PR02/MBE results and the **35-37 V proposal are historical**. Qualify the real normal source range and closed OneGel assembly for production/field use; no active 37 V cutoff or historical 40-part circuit is imposed as a prototype prerequisite.
 
 **Protection holds remain open:**
 
 - **C4, implemented but unqualified:** D3/D4 provide negative-voltage shunt paths, not positive regulation, forward pulse-current limiting or reversed-flying-lead immunity. BYG23T's **75 ns reverse recovery is not forward-clamp response time**. Its typical **9 V / 620 ns forward overshoot at 1.5 A, 12 A/us, 25 C** does not prove <=5 V at the LED. Ordinary RUN/TEST/switching and nearby-lightning response remain unqualified. Installation-polarity LED damage is accepted with spares, not claimed immunity. See [ELECTRICAL section 9](pcb/ELECTRICAL.md).
-- **C5, powered faults:** The ordered 2 A Littelfuse 0217002.MXP fuse has published DC interrupting data, but cable-limited faults and PSU hiccup behavior may prevent prompt clearing. GDT powered recovery remains unresolved, **not an observed latched failure**. In the new declared cable/upper-source screen, a far-end 10 V arc path takes **0.127800 A / 1.279635 W**, with **0.984994 A total**; a near-source 100-ohm fault dissipates **16.050680 W at only 1.330681 A total**. These conditional load lines are neither extinction predictions nor worst-case fault bounds. D3/D4 do not change the upstream GDT paths.
+- **C5, powered faults:** The ordered 2 A Littelfuse 0217002.MXP fuse has published DC interrupting data, but cable-limited faults and PSU hiccup behavior may prevent prompt clearing. GDT powered recovery remains unresolved, **not an observed latched failure**. The [selected fault screens](pcb/DESIGN_BOUNDS.md#fault-screen) include sustained path heating at source currents below the fuse rating; these conditional load lines are neither extinction predictions nor worst-case fault bounds. D3/D4 do not change the upstream GDT paths.
 - **Transient coordination:** A 470 V DC sparkover value is not a 470 V transient clamp. Reviewed impulse sparkover at 1 kV/us reaches 950 V for SMD5050-470NA and 1100 V for 2R470TD-8; B5G470L's 850 V figure covers 99% of measured values. Account for lead overshoot and unverified cable impulse withstand.
 - **System ratings:** Component 5/20 kA impulse ratings, paralleled terminal pins, and heavy copper do not establish an assembled 20 kA rating, 72 A terminal capability, equal current sharing, direct-strike protection, or a multi-decade service life. Complete-path qualification and documented limits are required.
 
@@ -112,12 +112,12 @@ qualified or evidence of zero induction/lightning risk.
 
 ## 4. Hardware Component Selection & Specifications
 
-The implemented design has **16 electrical parts, all top-side: six SMT and ten THT**, plus four mechanical hole footprints. These are design counts, not inspected hardware or a native-check result. Codes identify sourcing, not reserved stock or verified footprint compatibility.
+The authorized design has **16 electrical parts, all top-side: eight SMT and eight THT**, plus four mechanical hole footprints. These are design counts, not inspected hardware or a native-check result. Codes identify sourcing, not reserved stock or verified footprint compatibility.
 
 | References | Manufacturer / MPN | Sourcing code | Component data and design role |
 | :--- | :--- | :--- | :--- |
 | D1-D4 | **Vishay General Semiconductor BYG23T-M3/TR** | C145454 | 1300 V repetitive reverse, 1 A, SMA. D1/D2 series; D3/D4 negative output shunts. Recovery and voltage ratings do not qualify the LED transient response. |
-| R1, R2 | **Vishay BCcomponents PR02000202201FA100** | **External; no verified LCSC code** | 2.2 kohm, 2 W copper-lead PR02, 1%, +/-250 ppm/K; 15.24 mm formed pitch and >=1.00 mm body-to-PCB standoff required. Actual process and OneGel thermal acceptance remain open. |
+| R1, R2 | **Uni-Royal HP122WF2201T4E** | **Pending; no verified LCSC code** | HP12 / 2512 SMT, 2.2 kohm, 2 W P70, 1%, +/-100 ppm/C at 25 C reference. No resistor insertion holes or lead forming. Actual solder process and OneGel thermal acceptance remain open. |
 | GDT_AB, GDT_BC | Ruilon SMD5050-470NA | C39692533 | 470 V DC sparkover, component 5 kA impulse rating (8/20 us), nominal 5 x 5 mm SMT body. |
 | GDT_AC | Bencent B5G470L | C5337217 | 470 V DC sparkover, component 5 kA (8/20 us), nominal 5.5 mm diameter x 6 mm axial body, bridging over B. |
 | GDT_A_E, GDT_B_E, GDT_C_E | Ruilon 2R470TD-8 | C2836978 | 470 V DC sparkover, component 20 kA (8/20 us), nominal 8 mm diameter x 6 mm axial body. |
@@ -126,7 +126,7 @@ The implemented design has **16 electrical parts, all top-side: six SMT and ten 
 
 Use the exact manufacturers' drawings and rating conditions, including maximum body/lead dimensions, capacitance, pulse endurance, and soldering limits. [REMEDIATION source links](REMEDIATION.md#source-links) include the reviewed datasheets. The purchased external indicator is **APEM Q10F5SXXSG02E**, a **no-internal-resistor** device with a **20 mA family maximum and 5 V reverse maximum**, not a regulated 2 V lamp; see [LED.md](LED.md).
 
-The old onsemi 1N4007G and Vishay MBE04140C2201FC100 are **retired from the design**, not default substitutions; procurement history remains separate in MATERIALS. PR02's design BOM explicitly uses `Sourcing=External`, an empty LCSC field and the [HTTPS Vishay inventory reference](https://www.vishay.com/search?type=inv&query=PR02000202201FA100). Only Mouser availability has been identified, not JLCPCB allocation. External metadata can pass file checks, but public package publication remains blocked until assigned sourcing is reviewed, independently of the engineering holds. No order or stock reservation has been made.
+The old onsemi 1N4007G, Vishay MBE04140C2201FC100 and axial **PR02000202201FA100** are **retired from the design**, not default substitutions; procurement history remains in MATERIALS. **C2791283 is HP122WJ0472T4E, 4.7 kohm / 5%, not the intended HP122WF2201T4E, 2.2 kohm / 1%.** Do not reuse that wrong mapping from commit `02661d8` or guess another code. Pending sourcing must use `Sourcing=External`, an empty LCSC field and an exact matching HTTPS sourcing reference until a valid mapping is reviewed. External metadata can pass file checks, but unresolved sourcing blocks **both prototype and production publication**. A correct code is still not supplier allocation. No order or stock reservation has been made.
 
 ## 5. Unapproved Alternatives
 
@@ -135,7 +135,7 @@ Retain these earlier sourcing suggestions for investigation, **not as approved u
 | Intended references | Previously suggested alternatives |
 | :--- | :--- |
 | D1, D2 | Vishay 1N4007GP-E3/54 |
-| R1, R2 | Vishay PR02000202201JA100, historical PR02 suggestion, **not the selected 1% FA100 part** |
+| R1, R2 | Vishay PR02000202201JA100, historical PR02 suggestion; both it and the former 1% FA100 selection are **retired, not the intended HP12 SMT part** |
 | GDT_AB, GDT_BC | Littelfuse SH470 |
 | GDT_AC | Bourns 2027-47-BLF or Littelfuse CG2-470L |
 | Earth GDTs | Littelfuse SL1021A470R |
@@ -161,8 +161,8 @@ These are protected nominal design features, not tolerance-free measured accepta
 | Earth GDT spacing | Centres Y = 113.50, 122.50, 131.50 mm, retaining **9.00 mm pitch**. Nominal 8 mm bodies suggest a 1 mm gap, but actual maximum bodies, formed leads, and honest courtyards must establish fit. |
 | GDT_AC overpass | Now at X=125.80 mm, north-south over Wire B, 15.24 mm formed pitch. **At least 2.0 mm physical standoff under the entire raised span**, per the controlled side-view/forming drawing and inspection method. |
 | LED terminals | J_LED_A origin (145.50, 103.00), 90 degrees, opens north; J_LED_C (145.50, 142.00), 270 degrees, opens south. On both, pad 1 positive is at X = 142.96 and pad 2 B return at X = 148.04 mm. Do not replace intentional custom pad mappings with stock-library geometry. |
-| Diodes | D1/D2 retain centres (132.50,104.50)/(132.50,140.50), 0 degrees, cathodes right. D3/D4 are at (135.00,99.00)/(135.00,146.00), 180 degrees, cathodes left to LED positive and anodes right to B. All use `DogFence:BYG23T_SMA_K_Right`; physical polarity must be checked after rotation. |
-| Resistors | R1/R2 retain centres (116.00,104.50)/(116.00,140.50), 15.24 mm pitch and 1.40/2.40 mm hole/pad geometry in `DogFence:PR02_Cu_P15.24mm`. Body-to-PCB standoff >=1.00 mm is required, not demonstrated process acceptance. No folded takeoff or additional via is implemented. |
+| Diodes | D1/D2 origins (130.80,104.50)/(130.80,140.50), 0 degrees, cathodes at X=132.90 and anodes at X=128.70. D3/D4 remain at (135.00,99.00)/(135.00,146.00), 180 degrees, cathodes at X=132.90 and anodes at X=137.10. Straight cathode links at X=132.90 are 1.80 mm wide and 5.50 mm long. All use `DogFence:BYG23T_SMA_K_Right`; check physical polarity after rotation. |
+| Resistors | R1/R2 origins (120.00,104.50)/(120.00,140.50), 0 degrees, pad centres X=116.875/123.125. HP12 lands are 1.35 x 3.70 mm rectangles at local X=+/-3.125, with zero additional mask/paste margins; maximum body 6.45 x 3.40 and courtyard 8.10 x 4.20 mm. No resistor holes, axial standoff or forming; no folded takeoff or additional via. |
 | Other orientation | J_IN opens left (0 degrees), J_EARTH right (180 degrees); J_IN A/B/C run north to south. Footprint origins/rotations are not automatically assembler centroids/model rotations. |
 | Legend | Native 1.0 mm height / 0.15 mm stroke lettering, underside references and 1.2.0-dev identification are implemented. A/B/C/EARTH, polarity and cathode identification remain; processed printing still needs inspection. |
 
@@ -185,7 +185,7 @@ The following limits concern the **hole**, not its copper pad:
 
 - Preserve **all 14 stitching vias at 1.0 mm drill / 1.8 mm pad** and the protected copper. Fix surrounding soldering geometry or seek an approved process/layout solution; do not delete or shrink vias to fit a covering option.
 - Inspect full drill circles and exposed annuli against actual `F.Mask`, `B.Mask`, and `F.Paste`, then the processed mask/stencil. The historical **0.19 mm SMT/via intersections** are gone; new metric lands give **1.239713 mm hole-to-SMT-aperture and 0.839713 mm full-annulus-to-aperture** gaps. The 4.00 mm metric centre spacing is an explicit design choice; the drawing's contradictory 0.165-inch entry and actual solder-volume/profile acceptance remain W1 holds. Adjacent same-net rail-via mask circles intentionally overlap, but no component paste/mask aperture is excused over a via hole.
-- Identify treatment by **coordinates and hole function**, never diameter alone. Resistor holes formerly shared the 1.0 mm via diameter and now use 1.40 mm. All insertion holes remain open. Ordinary via diameters may be adjusted in CAM; check that no protected nominal drill was reduced. No fill is requested.
+- Identify treatment by **coordinates and hole function**, never diameter alone. Legacy resistor holes are removed by the SMT conversion. All retained connector/GDT insertion holes remain open. Ordinary via diameters may be adjusted in CAM; check that no protected nominal drill was reduced. No fill is requested.
 - **70 micrometres of exterior copper is not 70 micrometres of barrel plating.** JLCPCB's published 18 micrometres average hole plating is not a guaranteed minimum in every barrel. Agree any finished minimum used in current/surge calculations separately. Nonconductive fill adds no conductive cross-section.
 - Tenting, plugging, opacity, or gel encapsulation does not prove hermetic sealing, freeze-thaw immunity, or an assembled ingress rating.
 
@@ -201,7 +201,7 @@ The last line uses JLCPCB's ordinary component-hole **+0.13/-0.08 mm** tolerance
 
 The retired 1N4007G's 0.90-to-1.10 mm hole correction is historical. **D1-D4 now use SMA lands, not insertion holes**: each land is **2.50 x 2.00 mm**, at local X=+/-2.10 mm, with a **1.70 mm inner gap** and zero additional mask/paste margins. Local pad 1/cathode is +X; D3/D4's 180-degree placement puts it left globally. Actual stencil, solder and placement acceptance remain required.
 
-The selected hole/pad schedule is **KF128 2.00/3.20, KF129 2.00/2.80, PR02 1.40/2.40, B5G470L 1.40/2.80, earth GDTs 1.50/3.00 mm**. Minimum nominal ring is 0.40 mm. PR02's copper-lead maximum is **0.83 mm**; earth GDT maximum is 1.05 mm. Other controlled pin envelopes and the separate hole-position/formed-pattern budget remain in [fit evidence](pcb/ASSEMBLY.md#hole-fit-evidence). Actual allocated parts still must pass free-insertion, forming/standoff and solder-process inspection; supplier CAD or nominal pitch is not that acceptance.
+The selected hole/pad schedule is **KF128 2.00/3.20, KF129 2.00/2.80, B5G470L 1.40/2.80, earth GDTs 1.50/3.00 mm**. Minimum nominal ring is 0.40 mm; earth GDT maximum lead is 1.05 mm. Other controlled pin envelopes and the separate hole-position/formed-pattern budget remain in [fit evidence](pcb/ASSEMBLY.md#hole-fit-evidence). Actual allocated THT parts still must pass free-insertion, GDT forming/standoff and solder-process inspection; supplier CAD or nominal pitch is not that acceptance. HP12 resistor acceptance concerns its SMT lands, body, placement and solder process, not insertion or axial forming.
 
 After drill changes, recheck pad sizes, hole/copper spacing, edge clearances and **at least 0.254 mm nominal component PTH annular ring for two-layer 2 oz fabrication**. Generic via-ring rules do not establish component-pad compliance. Finished-ring acceptance also requires hole and registration tolerances. Resolve fit in CAD, not by forced insertion or reaming plated boards.
 
@@ -233,10 +233,12 @@ Use headless KiCad 9 (tested baseline **9.0.7**). The CLI is verified by invocat
 
 ```bash
 make check
-make all
+make prototype
 ```
 
-`make check` performs file verification and refreshes the generated CPL reference only after all file/artifact checks pass, without publishing an upload package. It explicitly validates `External` sourcing metadata without claiming allocation. **`make all` remains blocked by C4/C5/W3/W1/W4 and independently by unresolved PR02 external sourcing**, even if file checks pass or the engineering holds later close. An assigned LCSC code and reviewed sourcing update are needed before public package publication; obtain the exact supplier quote/allocation, not an assumed JLC procurement promise. Reports are in `build/reports/` and `build/drc_report.*` / `build/erc_report.*`; `build/status.json` identifies the attempt. Only a published `build/manifest.json` with `status=verified` and matching source/artifact hashes identifies a current file-verified package. It still does not approve a prototype order or field use. Run `make clean` separately from builds and preserve desired run evidence first.
+`make check` performs file verification and refreshes the generated CPL reference only after all file/artifact checks pass, **without publication**. `make gerbers` / `make prototype` run the same complete checks and may publish **FILE-VERIFIED PROTOTYPE ONLY** packages with all five ledger holds explicitly deferred, not closed. **Unresolved HP12 sourcing still blocks both publication modes**; no guessed code or engineering-hold override is allowed.
+
+`make all`, `package`, `release`, `production`, `drills`, `ipc`, `bom`, `cpl`, `zip-gerbers` and `zip-flytest` retain the production gates, including C4/C5/W3/W1/W4. Production wins if mixed with prototype goals, regardless of goal order. Reports are in `build/reports/` and `build/drc_report.*` / `build/erc_report.*`; `build/status.json` identifies the attempt. Require a matching `build/manifest.json` with validated revision/source/artifact hashes and the correct pair: **`status=prototype`, `mode=prototype`**, or production **`status=verified`, `mode=build`**. Filenames or `status=verified` alone are insufficient. Neither mode authorizes upload, an order or field use. Run `make clean` separately and preserve desired evidence first.
 
 | Intended output | Purpose, only after verification |
 | :--- | :--- |
@@ -245,16 +247,18 @@ make all
 | `build/CPL.csv` | Native-generated placement including all required SMT/THT parts, excluding mechanical/DNP items; `pcb/CPL.csv` is the generated draft reference. Native signed Y is retained and rotations normalized modulo 360. |
 | `build/pcb.d356`, `build/FlyTest.zip` | IPC-D-356 and fabrication data for bare-board electrical testing, not assembled functional or surge testing. |
 | `build/Assembly.pdf`, `build/Assembly.txt`, `build/ViaTreatment.csv` | Native assembly drawing/placements and coordinate-based via identification, accompanied by all seven controlled engineering notes. Notes and analysis helpers are snapshotted/hashed; release-note copies compare exactly. Not supplier placement/process approval. |
+| `build/README.txt` | Generated mode/hold notice, also included inside both `Gerbers.zip` and `FlyTest.zip`. The same public filenames serve both modes; this notice travels with the files but does not replace the matching manifest. |
 
 Fresh exports must agree in origin, handedness, drills, geometry, population, net connectivity and archive contents. Never hand-edit generated fabrication data or correct placement handedness using absolute Y values. Obtain separate **processed PCB/stencil CAM approval** and **parts-placement/assembly approval**, including any evidence-backed centroid/model rotation corrections. See [ORDERING.md](ORDERING.md).
 
 | Release gate | Evidence required |
 | :--- | :--- |
-| A: File ready | Correct source/circuit/library/rule data, passing automated checks, reviewed regenerated artifacts and synchronized documentation with open qualifications identified. |
-| B: Prototype order | Gate A plus required part-fit, via/solder/forming process, CAM and placement acceptance, and a controlled prototype test scope. Known manufacturing defects must not be deferred to chance assembly. |
+| **P: File-verified prototype artifacts** | Same strict file/artifact and sourcing checks, matching prototype manifest, and all open ledger holds recorded as deferred. Authorized artifact scope only; supplier CAM/placement/allocated parts and separate user authorization are still needed before an actual order. |
+| A: Production file ready | Original engineering/file-release review: correct source/circuit/library/rule data, passing checks, reviewed artifacts, synchronized documentation and evidence-backed hold closure. Not closed by P. |
+| B: Original prototype-order gate | Original Gate A plus required part-fit, via/solder/GDT-forming process, CAM and placement acceptance, and a controlled test scope. Not closed by prototype file generation. |
 | C: Field release | Required normal/protection/fault, continuous thermal, 5 m daylight, full-hub cut, RF/site and environmental evidence, accepted earthing, maintained cattle-fence prohibition and documented performance limits. Installation-polarity LED immunity is excluded, not passed. |
 
-Gate B can precede defined physical qualification tests, but neither documentation nor five basic bench passes closes **C4/C5** or authorizes full rollout. A successful build means manufacturing data verified for that revision, not lightning protection verified.
+**P is separate from the original A/B/C production/field holds.** Do not require switch/environmental physical qualification or enclosure dry-fit before boards exist to generate prototype artifacts. GDT fit/forming, panel/process, exact MPN/allocation and supplier CAM/placement remain explicit order tasks; PR02 procurement/forming is retired. Prototype-dependent tests remain deferred, not passed. No upload or order is authorized by the present file-generation scope, and neither documentation nor five basic bench passes closes C4/C5 or permits full rollout.
 
 ## 9. Documentation Map
 

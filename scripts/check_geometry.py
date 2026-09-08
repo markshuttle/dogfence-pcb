@@ -1012,20 +1012,50 @@ class GeometryCheck:
             fp = self.footprints.get(ref)
             attr = fp.one("attr", required=False) if fp else None
             self.expect(fp is not None and fp.values[0] == "DogFence:R_2512_6332Metric"
+                        and scalar(fp, "layer") == "F.Cu"
                         and attr is not None and attr.atoms() == ["smd"],
-                        "RESISTOR_FOOTPRINT", f"{ref}: populated R_2512_6332Metric SMD footprint required", fp)
+                        "RESISTOR_FOOTPRINT", f"{ref}: populated top-side HP12 R_2512_6332Metric required", fp)
             if fp:
                 xy, rotation = position(fp)
                 self.expect(math.dist(xy, (120.0, y)) <= EPS and abs(rotation) <= EPS,
                             "RESISTOR_GEOMETRY", f"{ref}: preserve origin (120, {y}) and zero rotation", fp)
-            for num, x, net in (("1", 117.2, rail), ("2", 122.8, anode)):
+                self.expect(len(fp.children("pad")) == 2
+                            and sorted(p.values[0] for p in fp.children("pad")) == ["1", "2"],
+                            "RESISTOR_GEOMETRY", f"{ref}: exactly two undrilled SMT pads required", fp)
+                for layer, half in (("F.Fab", (3.225, 1.7)), ("F.CrtYd", (4.05, 2.1))):
+                    boxes = [n for n in fp.children("fp_rect") if scalar(n, "layer") == layer]
+                    self.expect(len(boxes) == 1
+                                and math.dist(point(boxes[0], "start"), tuple(-v for v in half)) <= EPS
+                                and math.dist(point(boxes[0], "end"), half) <= EPS,
+                                "RESISTOR_ENVELOPE", f"{ref}: require reviewed HP12 {layer} body/assembly envelope", fp)
+            for num, x, net in (("1", 116.875, rail), ("2", 123.125, anode)):
                 pad = self.required_pad(ref, num)
                 if pad:
+                    local, angle = position(pad.node)
+                    expected = pad_shape("rect", (1.35, 3.7), (x, y), 0)
                     self.expect(math.dist(pad.center, (x, y)) <= EPS and pad.net == net and pad.kind == "smd"
-                                and pad.hole is None and pad.node.values[2] == "roundrect"
-                                and math.dist(point(pad.node, "size"), (1.8, 3.4)) <= EPS
-                                and pad.layers == {"F.Cu", "F.Mask", "F.Paste"},
-                                "RESISTOR_GEOMETRY", f"{pad.label}: preserve 1.80 x 3.40 mm SMD pad on {net}", pad.node)
+                                and pad.hole is None and pad.node.values[2] == "rect"
+                                and math.dist(point(pad.node, "size"), (1.35, 3.7)) <= EPS
+                                and math.dist(local, (x - 120.0, 0)) <= EPS and abs(angle) <= EPS
+                                and pad.layers == {"F.Cu", "F.Mask", "F.Paste"}
+                                and expected.contains(pad.shape) and pad.shape.contains(expected),
+                                "RESISTOR_GEOMETRY", f"{pad.label}: require 1.35 x 3.70 mm HP12 rectangle "
+                                f"at ({x}, {y}) on {net}", pad.node)
+                    openings = [a for a in self.apertures if a.node is pad.node]
+                    self.expect(len(openings) == 2
+                                and {layer for a in openings for layer in a.layers} == {"F.Mask", "F.Paste"}
+                                and all(expected.contains(a.shape) and a.shape.contains(expected) for a in openings),
+                                "RESISTOR_APERTURE", f"{pad.label}: require matching HP12 F.Mask/F.Paste rectangles "
+                                "with zero effective margins and paste ratio", pad.node)
+            land_region = pad_shape("rect", (7.6, 3.7), (120.0, y), 0)
+            openings = [a for a in self.apertures if a.reference == ref
+                        or (a.layers & {"F.Mask", "F.Paste"} and a.shape.overlaps(land_region))]
+            self.expect(len(openings) == 4 and all(a.reference == ref for a in openings),
+                        "RESISTOR_APERTURE", f"{ref}: only the four pad-owned mask/paste apertures "
+                        "may cover the lands and inner gap", fp)
+        for net, start_y, end_y in (("LED_A_POS", 99.0, 104.5), ("LED_C_POS", 140.5, 146.0)):
+            self.expect(self.run_covered((132.9, start_y), (132.9, end_y), 1.8, net, "F.Cu"),
+                        "SHUNT_LINK_GEOMETRY", f"{net}: preserve the straight >=1.80 mm cathode link at X=132.90")
         holes = []
         for ref, minimum in COMPONENT_HOLE_MINIMA.items():
             for num in (("1", "2", "3") if ref in ("J_IN", "J_EARTH") else ("1", "2")):

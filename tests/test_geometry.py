@@ -406,26 +406,89 @@ class GeometryTests(unittest.TestCase):
 
     def test_resistor_footprint_and_pads_are_required(self):
         for ref, y in (("R1", 104.5), ("R2", 140.5)):
-            for num, x in (("1", -2.8), ("2", 2.8)):
+            for num, x in (("1", -3.125), ("2", 3.125)):
                 p = pad(self.authoritative, ref, num)
                 self.assertEqual(list(map(float, p.one("at").atoms()[:2])), [x, 0.0])
-                self.assertEqual(list(map(float, p.one("size").atoms())), [1.8, 3.4])
-            for change in ("library", "origin", "pitch", "pad", "net"):
+                self.assertEqual(list(map(float, p.one("size").atoms())), [1.35, 3.7])
+                self.assertEqual(p.values[1:3], ["smd", "rect"])
+                self.assertIsNone(p.one("drill", required=False))
+            for change in ("library", "missing", "bottom", "dnp", "type", "origin", "pitch", "pad",
+                           "net", "rotation", "shape", "drill", "extra-pad"):
                 with self.subTest(ref=ref, change=change):
                     board = deepcopy(self.positive)
                     fp, p = footprint(board, ref), pad(board, ref, "2")
                     if change == "library":
                         fp.values[0] = Atom("DogFence:MBE0414_P15.24mm", quoted=True)
+                    elif change == "missing":
+                        board.values.remove(fp)
+                    elif change in ("bottom", "dnp", "type"):
+                        replace(fp, {"bottom": '(layer "B.Cu")', "dnp": "(attr smd dnp)",
+                                     "type": "(attr through_hole)"}[change])
                     elif change == "origin":
                         replace(fp, f"(at 120.1 {y})")
                     elif change == "pitch":
                         replace(p, "(at 2.5 0)")
                     elif change == "pad":
                         replace(p, "(size 2.5 2.5)")
-                    else:
+                    elif change == "net":
                         set_net(board, p, "WIRE_B")
-                    self.assert_defect("RESISTOR_FOOTPRINT" if change == "library" else "RESISTOR_GEOMETRY",
-                                       self.report(board))
+                    elif change == "rotation":
+                        replace(p, "(at 3.125 0 90)")
+                    elif change == "shape":
+                        p.values[2] = Atom("roundrect")
+                        replace(p, "(roundrect_rratio 0.25)")
+                    elif change == "drill":
+                        replace(p, "(drill 1.4)")
+                    else:
+                        fp.values.append(deepcopy(p))
+                    code = "RESISTOR_FOOTPRINT" if change in ("library", "missing", "bottom", "dnp", "type") \
+                        else "RESISTOR_GEOMETRY"
+                    if change == "drill":
+                        code = "INVALID_STRUCTURE"
+                    self.assert_defect(code, self.report(board))
+
+    def test_resistor_mask_paste_and_extra_apertures_cannot_drift(self):
+        for ref in ("R1", "R2"):
+            for num in ("1", "2"):
+                for change in ('(layers "F.Cu" "F.Mask")', '(layers "F.Cu" "F.Paste")',
+                               '(layers "B.Cu" "B.Mask" "B.Paste")', "(solder_mask_margin -0.1)",
+                               "(solder_paste_margin -0.1)", "(solder_paste_margin_ratio -0.05)"):
+                    with self.subTest(ref=ref, num=num, change=change):
+                        board = deepcopy(self.positive)
+                        replace(pad(board, ref, num), change)
+                        self.assert_defect("RESISTOR_APERTURE", self.report(board))
+            for field in ("solder_mask_margin", "solder_paste_margin", "solder_paste_ratio"):
+                with self.subTest(ref=ref, inherited=field):
+                    board = deepcopy(self.positive)
+                    fp = footprint(board, ref)
+                    replace(fp, f"({field} -0.1)")
+                    self.assert_defect("RESISTOR_APERTURE", self.report(board))
+                    pad_field = "solder_paste_margin_ratio" if field == "solder_paste_ratio" else field
+                    for p in fp.children("pad"):
+                        replace(p, f"({pad_field} 0)")
+                    self.assert_pass(self.report(board))
+            for layer in ("F.Mask", "F.Paste"):
+                with self.subTest(ref=ref, extra=layer):
+                    board = deepcopy(self.positive)
+                    fp = footprint(board, ref)
+                    fp.values.append(parse(f'''(fp_rect (start -1 -1) (end 1 1)
+                        (stroke (width 0) (type solid)) (fill solid) (layer "{layer}"))'''))
+                    self.assert_defect("RESISTOR_APERTURE", self.report(board))
+
+    def test_straight_shunt_cathode_links_keep_full_width(self):
+        for start, end in (((132.9, 99), (132.9, 104.5)), ((132.9, 140.5), (132.9, 146))):
+            for change in ("width", "missing"):
+                with self.subTest(start=start, change=change):
+                    board = deepcopy(self.positive)
+                    track = next(n for n in board.children("segment")
+                                 if tuple(map(float, n.one("start").atoms())) == start
+                                 and tuple(map(float, n.one("end").atoms())) == end)
+                    self.assertEqual(track.one("width").atoms(), ["1.8"])
+                    if change == "width":
+                        replace(track, "(width 0.8)")
+                    else:
+                        board.values.remove(track)
+                    self.assert_defect("SHUNT_LINK_GEOMETRY", self.report(board))
 
     def test_selected_fit_holes_cannot_revert_to_unsupported_sizes(self):
         for ref, minimum in COMPONENT_HOLE_MINIMA.items():
@@ -435,13 +498,13 @@ class GeometryTests(unittest.TestCase):
                 self.assert_defect("COMPONENT_FIT_DRILL", self.report(board))
 
     def test_body_courtyards_include_declared_pose_and_assembly_margin(self):
-        for ref in (*COMPONENT_HOLE_MINIMA, "GDT_AB", "GDT_BC", "D1", "D2", "D3", "D4"):
+        for ref in (*COMPONENT_HOLE_MINIMA, "GDT_AB", "GDT_BC", "D1", "D2", "D3", "D4", "R1", "R2"):
             with self.subTest(ref=ref):
                 fp = footprint(self.authoritative, ref)
                 boxes = {rect.one("layer").atoms()[0]: rect for rect in fp.children("fp_rect")}
                 body, courtyard = boxes["F.Fab"], boxes["F.CrtYd"]
                 if ref in ("R1", "R2", "D1", "D2", "D3", "D4"):
-                    half_body, half_courtyard = ((3.15, 1.6), (3.95, 1.95)) if ref.startswith("R") \
+                    half_body, half_courtyard = ((3.225, 1.7), (4.05, 2.1)) if ref.startswith("R") \
                         else ((2.25, 1.4), (3.6, 1.8))
                     for rect, half in ((body, half_body), (courtyard, half_courtyard)):
                         self.assertEqual(tuple(map(float, rect.one("start").atoms())), tuple(-v for v in half))
@@ -449,6 +512,13 @@ class GeometryTests(unittest.TestCase):
                 for edge, direction in (("start", -1), ("end", 1)):
                     for b, c in zip(body.one(edge).atoms(), courtyard.one(edge).atoms()):
                         self.assertGreaterEqual(direction * (float(c) - float(b)) + 1e-9, 0.10 + 0.25)
+                if ref.startswith("R"):
+                    for layer in ("F.Fab", "F.CrtYd"):
+                        board = deepcopy(self.positive)
+                        box = next(n for n in footprint(board, ref).children("fp_rect")
+                                   if n.one("layer").atoms() == [layer])
+                        replace(box, "(start -3.15 -1.6)")
+                        self.assert_defect("RESISTOR_ENVELOPE", self.report(board))
 
         earth = footprint(self.authoritative, "J_EARTH")
         x, y, angle = map(float, earth.one("at").atoms())

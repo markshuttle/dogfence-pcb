@@ -9,7 +9,7 @@ import unittest
 
 from scripts.analyze_limits import (
     ADJUSTMENT_SCREEN_V, CLAMP_LEAKAGE_SCREEN_A, DIODE_MPN, RESISTOR_MPN,
-    RESISTOR_TCR_PPM, Cable, Channel, CUT_SETS, Fault, IdealSourceShort, Source,
+    RESISTOR_REFERENCE_C, RESISTOR_TCR_PPM, Cable, Channel, CUT_SETS, Fault, IdealSourceShort, Source,
     assess_psu, branch_budget, cut_sweep, main, resistor_allowance, simulate,
 )
 
@@ -145,7 +145,7 @@ class ElectricalTests(unittest.TestCase):
                           resistor_temperature_c=125, junction_temperature_c=70,
                           led_tempco_v_per_c=-0.002, diode_tempco_v_per_c=-0.001)
         r, led, diode = channel.values()
-        self.assertAlmostEqual(r, 2120.8275)
+        self.assertAlmostEqual(r, 2156.22)
         self.assertAlmostEqual(led, 2.0)
         self.assertAlmostEqual(diode, 0.65)
         source = Source(39.6, error_fraction=0.01, temperature_c=50,
@@ -274,15 +274,20 @@ class ElectricalTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             branch_budget(36, shunt_a=0.1)
 
-    def test_selected_pr02_rating_tcr_and_historical_mbe_screen(self):
-        self.assertEqual(RESISTOR_MPN, "PR02000202201FA100")
-        self.assertEqual(RESISTOR_TCR_PPM, 250)
+    def test_selected_hp12_rating_tcr_and_25c_reference(self):
+        self.assertEqual(RESISTOR_MPN, "HP122WF2201T4E")
+        self.assertEqual(RESISTOR_TCR_PPM, 100)
+        self.assertEqual(RESISTOR_REFERENCE_C, 25)
+        reference = Channel(resistor_tcr_ppm=100)
+        self.assertEqual(reference.resistor_temperature_c, 25)
+        self.assertEqual(reference.values()[0], 2200)
+        self.assertAlmostEqual(replace(reference, resistor_temperature_c=20).values()[0], 2198.9)
         minimum_r = Channel(led_v=0, diode_v=0, resistor_error=-0.01,
-                            resistor_tcr_ppm=-250, resistor_temperature_c=125)
-        self.assertAlmostEqual(minimum_r.values()[0], 2120.8275)
+                            resistor_tcr_ppm=-100, resistor_temperature_c=125)
+        self.assertAlmostEqual(minimum_r.values()[0], 2156.22)
         upper = branch_budget(ADJUSTMENT_SCREEN_V, minimum_r)
-        self.assertAlmostEqual(upper["branch_a"] * 1000, 19.0472681064, places=9)
-        self.assertAlmostEqual(upper["resistor_w"], 0.7694328710095, places=12)
+        self.assertAlmostEqual(upper["branch_a"] * 1000, 18.7346235542, places=9)
+        self.assertAlmostEqual(upper["resistor_w"], 0.7568032910561, places=12)
         self.assertLess(upper["branch_a"], 0.020)
         self.assertLess(upper["resistor_w"], resistor_allowance(70))
         self.assertEqual(resistor_allowance(-55), 2)
@@ -290,14 +295,10 @@ class ElectricalTests(unittest.TestCase):
         self.assertAlmostEqual(resistor_allowance(100), 2 * 55 / 85)
         self.assertAlmostEqual(resistor_allowance(125), 2 * 30 / 85)
         self.assertEqual(resistor_allowance(155), 0)
-        self.assertEqual(resistor_allowance(220), 0)
-        # Old MBE initial/TCR screen is history, not the selected PR02's rating.
-        mbe = replace(minimum_r, resistor_tcr_ppm=-50)
-        self.assertAlmostEqual(mbe.values()[0], 2166.5655)
-        historical = branch_budget(ADJUSTMENT_SCREEN_V, mbe)
-        self.assertAlmostEqual(historical["resistor_w"], 0.753190, places=6)
-        self.assertGreater(historical["resistor_w"], 0.65)
-        self.assertGreater(upper["resistor_w"], historical["resistor_w"])
+        self.assertEqual(resistor_allowance(156), 0)
+        for temperature in (-55.01, math.nan, math.inf, -math.inf):
+            with self.subTest(temperature=temperature), self.assertRaises(ValueError):
+                resistor_allowance(temperature)
 
     def test_negative_clamp_leakage_diverts_led_current_not_resistor_heat_or_psu_load(self):
         self.assertEqual(DIODE_MPN, "BYG23T-M3/TR")
@@ -348,17 +349,21 @@ class ElectricalTests(unittest.TestCase):
         output = StringIO()
         with redirect_stdout(output):
             main(["--json", "--stations", "5", "--r-core", "7", "8", "9",
-                  "--led-v", "2.8", "3.3", "--source-error", "0.01"])
+                  "--led-v", "2.8", "3.3", "--source-error", "0.01",
+                  "--resistor-temp", "125", "--tcr-ppm", "-100", "100",
+                  "--resistor-error", "-0.01", "0.01"])
         report = json.loads(output.getvalue())
         self.assertTrue(report["provisional"])
         self.assertEqual(report["cut_sweep"]["cases"], 28)
         self.assertEqual(report["cut_sweep"]["shunt_diversion_bound_a"], CLAMP_LEAKAGE_SCREEN_A)
         self.assertEqual(report["selected_parts"], {"R1_R2": RESISTOR_MPN, "D1_D2_D3_D4": DIODE_MPN})
-        self.assertAlmostEqual(report["maximum_adjustment_branch"]["resistor_w"], 0.7694328710095)
+        self.assertAlmostEqual(report["maximum_adjustment_branch"]["resistor_w"], 0.7568032910561)
         self.assertIn("1.9 V", " ".join(report["limitations"]))
         self.assertIn("NOT <=5 V", " ".join(report["limitations"]))
         self.assertEqual(report["inputs"]["cable"]["r20_ohm_per_km"], [7, 8, 9])
+        self.assertEqual(report["inputs"]["channel_a"]["resistor_temperature_c"], 125)
         self.assertAlmostEqual(report["loads"][0]["voltage_v"], 36.36)
+        self.assertAlmostEqual(report["loads"][0]["led_max_ma"], 1000 * (36.36 - 2.8 - 0.7) / 2156.22)
         with redirect_stderr(StringIO()), self.assertRaises(SystemExit) as failure:
             main(["--stations", "0"])
         self.assertEqual(failure.exception.code, 2)

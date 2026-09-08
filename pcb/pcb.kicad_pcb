@@ -2061,8 +2061,8 @@
 		(solder_paste_margin 0)
 		(solder_paste_ratio 0)
 		(fp_rect
-			(start -3.15 -1.6)
-			(end 3.15 1.6)
+			(start -3.225 -1.7)
+			(end 3.225 1.7)
 			(stroke
 				(width 0.1)
 				(type solid)
@@ -2126,7 +2126,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C2791283"
+		(property "LCSC" ""
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
@@ -2162,7 +2162,7 @@
 				)
 			)
 		)
-		(property "Datasheet" "https://www.lcsc.com"
+		(property "Datasheet" "https://www.uni-royal.cn/en/images/userfile/file/1784806233a2e6d381ea80b5d9.pdf"
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
@@ -2186,7 +2186,7 @@
 				)
 			)
 		)
-		(property "Sourcing" "LCSC"
+		(property "Sourcing" "External"
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
@@ -2198,7 +2198,7 @@
 				)
 			)
 		)
-		(property "Sourcing Reference" ""
+		(property "Sourcing Reference" "https://store.nacsemi.com/products/detail?stock=XSJMZ0000010410"
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
@@ -2229,8 +2229,8 @@
 			(layer "F.SilkS")
 		)
 		(fp_rect
-			(start -3.95 -1.95)
-			(end 3.95 1.95)
+			(start -4.05 -2.1)
+			(end 4.05 2.1)
 			(stroke
 				(width 0.05)
 				(type solid)
@@ -2238,19 +2238,17 @@
 			(fill no)
 			(layer "F.CrtYd")
 		)
-		(pad "1" smd roundrect
-			(at -2.8 0 0)
-			(size 1.8 3.4)
+		(pad "1" smd rect
+			(at -3.125 0 0)
+			(size 1.35 3.7)
 			(layers "F.Cu" "F.Mask" "F.Paste")
-			(roundrect_rratio 0.25)
 			(net 3 "WIRE_C")
 			(uuid "69e80db5-9ddb-43ec-abd0-bad2aa58c164")
 		)
-		(pad "2" smd roundrect
-			(at 2.8 0 0)
-			(size 1.8 3.4)
+		(pad "2" smd rect
+			(at 3.125 0 0)
+			(size 1.35 3.7)
 			(layers "F.Cu" "F.Mask" "F.Paste")
-			(roundrect_rratio 0.25)
 			(net 7 "Net-(D2-A)")
 			(uuid "5ac0c940-05f0-4b73-bf38-27964ebb1fe4")
 		)
@@ -2490,8 +2488,8 @@
 		(solder_paste_margin 0)
 		(solder_paste_ratio 0)
 		(fp_rect
-			(start -3.15 -1.6)
-			(end 3.15 1.6)
+			(start -3.225 -1.7)
+			(end 3.225 1.7)
 			(stroke
 				(width 0.1)
 				(type solid)
@@ -2555,7 +2553,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C2791283"
+		(property "LCSC" ""
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
@@ -2591,7 +2589,7 @@
 				)
 			)
 		)
-		(property "Datasheet" "https://www.lcsc.com"
+		(property "Datasheet" "https://www.uni-royal.cn/en/images/userfile/file/1784806233a2e6d381ea80b5d9.pdf"
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
@@ -2615,7 +2613,7 @@
 				)
 			)
 		)
-		(property "Sourcing" "LCSC"
+		(property "Sourcing" "External"
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
@@ -2627,7 +2625,7 @@
 				)
 			)
 		)
-		(property "Sourcing Reference" ""
+		(property "Sourcing Reference" "https://store.nacsemi.com/products/detail?stock=XSJMZ0000010410"
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
@@ -2658,8 +2656,8 @@
 			(layer "F.SilkS")
 		)
 		(fp_rect
-			(start -3.95 -1.95)
-			(end 3.95 1.95)
+			(start -4.05 -2.1)
+			(end 4.05 2.1)
 			(stroke
 				(width 0.05)
 				(type solid)
@@ -2667,19 +2665,17 @@
 			(fill no)
 			(layer "F.CrtYd")
 		)
-		(pad "1" smd roundrect
-			(at -2.8 0 0)
-			(size 1.8 3.4)
+		(pad "1" smd rect
+			(at -3.125 0 0)
+			(size 1.35 3.7)
 			(layers "F.Cu" "F.Mask" "F.Paste")
-			(roundrect_rratio 0.25)
 			(net 1 "WIRE_A")
 			(uuid "6242ea90-ae26-422d-9636-750508d7c1f9")
 		)
-		(pad "2" smd roundrect
-			(at 2.8 0 0)
-			(size 1.8 3.4)
+		(pad "2" smd rect
+			(at 3.125 0 0)
+			(size 1.35 3.7)
 			(layers "F.Cu" "F.Mask" "F.Paste")
-			(roundrect_rratio 0.25)
 			(net 5 "Net-(D1-A)")
 			(uuid "02aa19ac-92f0-4c91-899f-fe22e5b8906b")
 		)
@@ -4456,14 +4452,14 @@
 	)
 	(segment
 		(start 108.38 104.5)
-		(end 117.2 104.5)
+		(end 116.875 104.5)
 		(width 1.8)
 		(layer "F.Cu")
 		(net 1)
 		(uuid "11111111-0001-4000-8000-000000000001")
 	)
 	(segment
-		(start 122.8 104.5)
+		(start 123.125 104.5)
 		(end 128.7 104.5)
 		(width 1.8)
 		(layer "F.Cu")
@@ -4512,14 +4508,14 @@
 	)
 	(segment
 		(start 108.38 140.5)
-		(end 117.2 140.5)
+		(end 116.875 140.5)
 		(width 1.8)
 		(layer "F.Cu")
 		(net 3)
 		(uuid "33333333-0001-4000-8000-000000000001")
 	)
 	(segment
-		(start 122.8 140.5)
+		(start 123.125 140.5)
 		(end 128.7 140.5)
 		(width 1.8)
 		(layer "F.Cu")

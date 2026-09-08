@@ -1,59 +1,195 @@
 # DFM Evidence
 
-Research date: **2026-09-07**. Design baseline: **97e202d**, hardware
-**1.2.0-dev**. Scope: P3, principally W1/W4/W5.
+Research date: **2026-09-07**. Original DFM baseline: **97e202d**; SMT-resistor
+review: **02661d8**, followed by the selected manufacturer-land correction below.
+Hardware **1.2.0-dev**. Scope: P3/P4 board design and five assembled prototypes.
 
 Dimensions are millimetres unless explicitly marked inches. Global coordinates
 use the top-view board convention from ASSEMBLY.md; local coordinates are
 identified separately below.
 
-**Hybrid update after checkpoint ad282e3:** the original six-family research
-below remains historical evidence. Current R1/R2 are copper-lead PR02
-PR02000202201FA100 (0.83 maximum lead, retained 1.40/2.40 holes/pads,
-12.00 x 4.20 conservative body box, >=1.00 standoff). D1-D4 are now
-BYG23T-M3/TR SMA; no onsemi diode PTH remains. ASSEMBLY controls the selected
-2.50 x 2.00 lands / 1.70 inner gap / 7.20 x 3.60 courtyard and exact orientations.
-Parent visually read the original Vishay 89429, 25-Feb-2020 p4 outline/land
-leaders through the public PDF viewer; 1.52/1.68 land minima and 1.88 maximum
-inner gap are resolved, while 5.28 outside span is a reference dimension.
-This is not JLCPCB stencil, part allocation or physical acceptance. All other
-protected geometry and the metric GDT land decision remain unchanged.
+**Current selection:** R1/R2 are intended **Uni-Royal/Royalohm HP122WF2201T4E**,
+2.2 kohm, 2 W, 1%, 2512 SMT. **Sourcing remains pending; C2791283 is rejected**
+because both official distributor listings identify a 4.7-kohm/5% part. The
+selected correction uses **1.35 x 3.70 rectangular lands at local X=+/-3.125**,
+maximum-body F.Fab **6.45 x 3.40** and courtyard **8.10 x 4.20**. There are no
+R1/R2 holes or axial standoff/forming requirements. Prior PR02 forming/sourcing
+evidence is concise history in [ASSEMBLY](ASSEMBLY.md#axial-resistor-history),
+not an active supplier task or a fallback population instruction.
 
-**Evidence and original integration recommendations, NOT manufacturing approval.**
-The bounded research wrote only this record. In the subsequent 2026-09-07
-integration, the parent adopted the worked hole/pattern envelopes, body boxes,
-courtyards, metric SMT lands and standard untented vias in the PCB/local
-footprints. [ASSEMBLY.md](ASSEMBLY.md) now controls those choices and their
-unperformed lot/process acceptance. The recommendations below retain their
-original calculations and provenance; they do not claim supplier agreement,
-physical testing, or approval of a new protection circuit. Current automated
-results belong to the REMEDIATION handoff, not the research-only verification
-section below. Schematic/BOM identities and all guardrails remain unchanged.
+D1-D4 remain BYG23T-M3/TR SMA, with D1/D2 moved for straight cathode links as
+recorded below. The earlier visual review of Vishay **89429, 25-Feb-2020 p4**
+supports the retained **2.50 x 2.00 lands, 1.70 inner gap and 7.20 x 3.60
+courtyard**: 1.52/1.68 land minima and 1.88 maximum inner gap were resolved;
+5.28 outside span is reference, not a maximum. Kefa/GDT fit envelopes, the metric
+Ruilon land selection and all protected copper/vias remain unchanged.
+
+**Evidence and selected design requirements, not supplier approval.** Expected
+inventory is **16 parts: eight SMT/eight THT**, eight nets, **34 terminals,
+32 PTH hits (18 component +14 via), four NPTH, 52 IPC records, F.Mask 52,
+B.Mask 36 and F.Paste 16 apertures**. These are design counts, not a fresh native
+verification of the corrected lands. The parent owns source/library/BOM/checker
+integration and revision-specific verification; [ASSEMBLY.md](ASSEMBLY.md)
+controls the physical handoff. Historical diameter-only screens below are
+identified separately from the retained current THT design.
+
+For the explicit prototype scope, **`make gerbers` / `make prototype` publish
+only after strict file and sourcing checks**. C4/C5/W3/W1/W4 remain visible,
+deferred production holds, not closed issues; switch/environmental research or
+completed qualification is not required to generate prototype artifacts.
+Unresolved sourcing still blocks publication. `make all`, `make package`,
+`make release`, `make production` and the other export aliases retain the holds.
+Filenames stay the same: require matching source/artifact hashes and manifest
+**status=prototype, mode=prototype**, distinct from production
+**status=verified, mode=build**. The generated README markers inside the ZIPs
+identify prototype scope and deferred holds. See
+[artifact controls](ASSEMBLY.md#prototype-artifacts).
+Actual order authorization still requires supplier part/process/placement/CAM
+acceptance. No email response, allocation or physical test is invented here.
+
+## HP12 SMT Conversion
+
+The following evidence was obtained during the read-only 02661d8 review and
+bounded sourcing follow-up. The manufacturer document is from **Uniroyal
+Electronics Global Co., Ltd.**, carrying Uni-Royal, Royalohm and Uniohm branding.
+Its cover identifies **SMD-SP-003, HP Series**; the printed revision is
+**V.7, 08-Jan-2026**, not the July-2026 upload date.
+
+| Source | Readable evidence / limitation |
+| :--- | :--- |
+| [Original manufacturer HP PDF][hp-pdf] | **V:** pages **1, 2, 4, 5, 6 and 8**, including cover, ordering, body and land dimension leaders, ratings/derating, TCR/overload and reflow. **T:** full eleven-page text through [the reader][hp-text]. Page images used the public viewer method below; no dimensions were inferred from an unreadable figure. |
+| [Manufacturer HP product listing][hp-page] | HP12, 2 W, 0.5%/1%/5% options. The applicable range is listed at **+/-75 ppm/C**, conflicting with the PDF's **+/-100 ppm/C**. The tighter web figure is not adopted as a guaranteed lot specification. |
+| [LCSC C2791283][hp-wrong-lcsc] | Readable identity **HP122WJ0472T4E, 4.7 kohm, 5%, 2 W, 2512**. Not HP122WF2201T4E. |
+| [JLCPCB C2791283][hp-wrong-jlc] | Independently gives the same wrong-for-this-design MPN, value, tolerance, power and package. A matching C-code across internal files would not cure this mismatch. |
+| [NAC Semi intended-MPN listing][hp-nac] | Readable **ROYALOHM HP122WF2201T4E, 2512, 2.2 kohm, 1%, 2 W**; retrieved MOQ **3,600**. Exact BOM/source reference, not an accepted small-lot quote, JLCPCB code mapping or allocation. Public stock is indicative only. |
+
+The [LCSC-linked PDF][hp-distributed] did not yield usable drawing pages through
+the attempted fetch/viewer paths; no revision or dimensional proof is assigned
+to it. TME returned HTTP 403 and Mouser an access-denied page. Official exact
+and prefix searches did not establish an intended-part C-code or an acceptable
+packaging-only variant. Importantly, the [JLCPCB exact search][hp-search-jlc]
+returned a JavaScript-dependent zero-result page, but so did the
+[known-listed HP122WJ0472T4E control search][hp-control-jlc].
+[LCSC search][hp-search-lcsc] returned
+`Search by ""` without product rows. These are retrieval limitations, **not
+proof that the intended part is unavailable**. Sourcing remains pending; no
+substitution, supplier correspondence or order allocation was accepted.
+
+Page 2 decodes **HP12 / 2W / F / 2201 / T4 / E** as the HP12 type, 2 W, 1%,
+2.2 kohm, tape/reel with 4,000-piece standard reel and standard feature. This
+does not require buying a full reel for five prototypes. The actual procurement
+route, ten fitted resistors plus attrition, packaging and allocated lot need
+supplier acceptance.
+
+### Body And Lands
+
+Page 4's body drawing gives **L=6.35 +/-0.10, W=3.20 +/-0.20 and H=0.55 +/-0.10**,
+therefore maxima **6.45 x 3.40 x 0.65 mm**. Its top termination length A is
+0.60 +/-0.25 and bottom termination length B is 0.50 +/-0.20. Those letters are
+body-drawing dimensions, not the separate land-pattern letters on page 5.
+
+Page 5's original leaders identify:
+
+| Land drawing field | Meaning | Manufacturer recommendation, mm |
+| :--- | :--- | ---: |
+| A | Inner gap between lands | **4.90 +/-0.10** |
+| B | One land's longitudinal length | **1.35 +/-0.10** |
+| C | Transverse land width | **3.70 +/-0.10** |
+| D | Outside span | **7.60 +/-0.10** |
+
+Select these nominal values as **rectangular, undrilled F.Cu/F.Mask/F.Paste
+lands**, with **zero effective mask margin, paste margin and paste ratio**.
+Centre pitch is `4.90 + 1.35 = 6.25`, hence local X=**-3.125/+3.125** for
+pad 1/pad 2. Each nominal land has **4.995 mm^2** area. Customer F.Paste remains
+a source datum, not approval of the assembler's processed aperture or deposit.
+
+The maximum-body F.Fab is **X=+/-3.225, Y=+/-1.70**. The selected courtyard is
+**X=+/-4.05, Y=+/-2.10**: lands plus 0.25 per side need **8.10 x 4.20**;
+maximum body plus 0.10 projected pose and 0.25 assembly clearance needs
+**7.15 x 4.10**, which fits inside it. Body height 0.65 excludes solder seating
+height. The chip is not assigned the retired resistor's axial body standoff.
+
+**Review correction, not approved alternate geometry:** 02661d8 used 1.80 x
+3.40 roundrect lands at +/-2.80, 3.80 inner gap and 7.40 outside span, with
+6.30 x 3.20 F.Fab and 7.90 x 3.90 courtyard. Its F.Fab did not bound the HP12
+maximum body; the courtyard was 0.10 short per transverse side under the stated
+pose/assembly budget. No present neighbour collision was demonstrated. The
+manufacturer-based selection above replaces that unreviewed land deviation;
+passing source/native consistency checks did not constitute land-pattern approval.
+
+### Placement And Routing
+
+| References | Origin / rotation | Pad 1 / pad 2 global X and nets |
+| :--- | :--- | :--- |
+| R1 | **(120.00,104.50), 0 deg** | **116.875 WIRE_A / 123.125 Net-(D1-A)**, both Y=104.50 |
+| R2 | **(120.00,140.50), 0 deg** | **116.875 WIRE_C / 123.125 Net-(D2-A)**, both Y=140.50 |
+| D1, D2 | **(130.80,104.50)/(130.80,140.50), 0 deg** | K1 **132.90 LED_A_POS/LED_C_POS**; A2 **128.70 resistor output** |
+| D3, D4 | **(135.00,99.00)/(135.00,146.00), 180 deg** | K1 **132.90 LED_A_POS/LED_C_POS**; A2 **137.10 WIRE_B** |
+
+R1/R2 remain nonpolar; preserve pad numbering and one-way branch order through
+D1/D2. The cathode links at **X=132.90** run Y=99.00..104.50 and 140.50..146.00:
+each **5.50 mm long and 1.80 mm wide on F.Cu**, with no dogleg. Preserve the
+**X=108.38 takeoffs**, **1.80-mm branch copper**, **0.80-mm shunt anode-to-B
+routes**, **1.60-mm protected B.Cu returns**, full 3.20-mm rails, fourteen
+1.00/1.80-mm vias and the solid isolated EARTH bus. The LED terminals and all
+GDT/Kefa geometry remain unchanged. No folded branch or added via is selected.
+
+### Rating And Process
+
+- **PDF TCR basis:** +/-100 ppm/C for 2.2 kohm, with reference temperature **25 C
+  or specified room temperature** and test temperatures -55/125 C. The web
+  listing's +/-75 discrepancy remains explicit; do not borrow PR02's 250 ppm/K
+  model or silently claim the tighter figure for the allocated lot.
+- **Power/voltage:** 2 W through 70 C ambient, linear derating to zero at 155 C.
+  The 300-V family maximum is also limited by `RCWV = sqrt(P*R)`, **66.33 V**
+  for nominal 2.2 kohm at 2 W. Page 6's five-second overload test uses the lower
+  of `2.5*RCWV` and 500 V, therefore **165.83 V** here. It is not a microsecond
+  surge-power/repetition curve; no such curve was established in the retrieved
+  sheet. Neither HP's high-power label nor the 500-V dielectric entry proves
+  tolerance of the existing pre-GDT-sparkover transient screens.
+- **Heat path:** nominal dissipation remains about **0.50 W per resistor**, not
+  less because the package changed. Chip terminations and solder conduct into
+  local copper/FR-4; the 1.80-mm tracks do not establish thermal resistance or
+  lower chip temperature. The wider cathode links are separated from resistor
+  output copper by D1/D2. **PR02's hot-spot limit and 75 K/W mounting example do
+  not apply.** No heat reduction or completed continuous-duty test is promised.
+- **Reflow:** visually read p8 recommends SAC305, 150..200 C preheat for
+  60..120 s, <=3 C/s ramp-up, 217 C liquidus for 60..150 s, **260 C peak**,
+  10 s within 5 C below peak, <=6 C/s ramp-down, <=8 minutes from 25 C to peak
+  and **two reflow cycles**. The manufacturer explicitly calls for application
+  adjustment. Actual mixed-assembly/stencil acceptance remains a supplier fact,
+  not permission to apply the most permissive GDT heat-test limit to every part.
+
+These limits inform part selection and the assembly handoff. They do not add
+switch/environmental or completed performance qualification as prerequisites for
+prototype artifacts; the independent production holds remain deferred, not closed.
 
 ## Conclusions
 
 - Original mechanical figures for **all six requested part families were
   visually read**, including the Kefa tolerance tables and both Ruilon THT
   revisions. Their dimensional associations are no longer a text-reader hold.
-- Ruilon **2R470TD-8** has a drawing lead maximum of **1.05 mm**. Its current
-  1.20 mm hole leaves only `1.20 - 0.08 - 1.05 = 0.07 mm`, below the required
-  0.10 mm allowance. Its metric maximum body is **6.30 long x 8.20 diameter**.
+- Ruilon **2R470TD-8** has a drawing lead maximum of **1.05 mm**. Its former
+  97e202d 1.20 mm hole left only `1.20 - 0.08 - 1.05 = 0.07 mm`, below the
+  required 0.10 mm allowance; the retained selected hole is **1.50 mm**. Its
+  metric maximum body is **6.30 long x 8.20 diameter**.
 - Kefa **KF128-7.62-3P** pins are rectangular, nominal **0.90 x 0.80**.
   **KF129-5.08-2P** has a real source conflict: **0.90 x 0.80** in the
   C475092-distributed drawing versus **0.95 x 0.80** in the manufacturer-linked
-  drawing, both marked **A / 21.03.13**. The present 1.40/1.30 holes are not a
-  tolerance-supported solution. In particular, KF129 fails the project allowance
-  even using the smaller nominal pin, before adding pin tolerances.
-- Vishay explicitly labels its **0.80 mm lead as nominal**. Bencent's original
-  figure labels a **0.80 mm round lead without a tolerance**. Neither figure
-  supplies a manufacturer-guaranteed finished lead maximum. A controlled
-  **0.90 mm finished acceptance envelope** is proposed for each, instead of
-  leaving the hole design indefinitely unspecified.
+  drawing, both marked **A / 21.03.13**. The former 97e202d 1.40/1.30 holes were
+  not a tolerance-supported solution; both retained selections use **2.00 mm**.
+  In particular, the old KF129 hole failed the project allowance even using the
+  smaller nominal pin, before adding pin tolerances.
+- The retired Vishay MBE explicitly labels its **0.80 mm lead as nominal**.
+  Bencent's original figure labels a **0.80 mm round lead without a tolerance**.
+  Neither figure supplies a manufacturer-guaranteed finished lead maximum. A controlled
+  **0.90 mm finished acceptance envelope** was proposed for each; it remains
+  operative only for **B5G470L**, now with 1.40 mm holes. R1/R2 are SMT.
 - Ruilon **SMD5050-470NA**: **X1 is pad centre-to-centre spacing**, not the inner
   gap or outside span. The metric recommendation translates to **5.50 x 1.20 mm
   lands at local Y = +/-2.00** in this board's orientation. The 4.0 mm / 0.165 in
   conflict exists in the original manufacturer PDF too. Use of the metric column
-  is an explicit proposed engineering choice, not a claimed manufacturer erratum.
+  is an explicit selected engineering choice, not a claimed manufacturer erratum.
 - **Standard untented ENIG vias** are a supported alternative to unsupported
   1.00 mm filling/tenting assumptions. Preserve every 1.00/1.80 via and all
   protected copper. No special fill, press-fit tolerance or CAM exception is
@@ -82,16 +218,16 @@ Repeatable access method, not an alternative drawing authority:
    leaders. Viewer IDs are temporary, so the permanent evidence links below
    identify the original files, not expiring image tokens.
 
-**V** below means original figure visually read; **T** means retrieved text.
-**Derived** means arithmetic from published dimensions. **E** means a proposed
-controlled procurement/assembly envelope, **not a manufacturer guarantee**.
+**V** means original figure visually read; **T** means retrieved text.
+**Derived** means arithmetic from published dimensions. **E** means a controlled
+procurement/assembly envelope, **not a manufacturer guarantee**.
 Original PDFs/images were not added to the workspace in this bounded task.
 
-| Exact selected identity | Original source and revision | Access actually used |
+| Retained or explicitly historical identity | Original source and revision | Access actually used |
 | :--- | :--- | :--- |
 | Cixi Kefa KF128-7.62-3P / C474957 | [Manufacturer drawing][k128-m] and [C474957 drawing][k128-l], title KF128-7.62, revision A, 21.03.13, one sheet. Manufacturer [product page][k128-page] links the 7.62 drawing separately from 7.5. | V: both sheets, pin leaders, PCB layout and general tolerance table. P=3 applied to the family drawing. |
 | Cixi Kefa KF129-5.08-2P / C475092 | [Manufacturer drawing][k129-m] and [C475092 drawing][k129-l], title KF129-5.08, revision A, 21.03.13, one sheet. [Product page][k129-page] identifies the 5.08 drawing. | V: both sheets. Different 0.95/0.90 pin-width labels despite identical revision/date; not silently reconciled. P=2. |
-| Vishay MBE04140C2201FC100 / C1368610 | [Document 28766][vishay], revision 11-Jul-2018, p13 dimensions; p4 ordering and p7 construction/assembly. [Document 28721][vishay-pack], revision 16-Jan-2025, packaging. | V: 28766 p13. T: ordering, tin-plated copper construction and packaging. Packaging did not establish a missing lead-diameter maximum. |
+| **Historical, retired:** Vishay MBE04140C2201FC100 / C1368610 | [Document 28766][vishay], revision 11-Jul-2018, p13 dimensions; p4 ordering and p7 construction/assembly. [Document 28721][vishay-pack], revision 16-Jan-2025, packaging. | V: 28766 p13. T: ordering, tin-plated copper construction and packaging. Packaging did not establish a missing lead-diameter maximum. Not a current procurement/forming requirement. |
 | Bencent B5G470L / C5337217 | [C5337217 PDF][bencent-l], A2 / 2018-01-03, p2. The current [manufacturer product page][bencent-page] supplies [this direct PDF download][bencent-m], also A2 / 2018-01-03. | V: p2 from both sources. The 20260514 upload pathname is not a new drawing revision. Lead diameter is printed directly on the figure, outside its A/B/C table. |
 | Ruilon 2R470TD-8 / C2836978 | [Distributed SP-GDT-017][ruilon-tht-l], A3 / 2023-11-02, p3; [manufacturer SP-GDT-017][ruilon-tht-m], A6 / 2025-10-16, p5. Manufacturer listing [page 4][ruilon-page4] links A6 for 2R470TD-8. | V: both dimension figures, specifically the **TD axial** drawing, not the SD surface-mount drawing below it. Mechanical dimensions agree. |
 | Ruilon SMD5050-470NA / C39692533 | [Distributed SP-GDT-006][ruilon-smt-l] and [manufacturer SP-GDT-006][ruilon-smt-m], A3 / 2024-08-19, p3. Manufacturer listing [page 5][ruilon-page5] links that file for the exact non-BVL MPN. | V: both p3 figures/tables; X/X1/Y leaders and body axes resolved. T: p5 reflow and p6 solder-bridging caution. No BVL or NB substitution used. |
@@ -160,8 +296,8 @@ relative to the actual pin-pattern datum, not only the total body length.
 
 | Exact identity | Visually resolved dimensions | Finished-pin design treatment |
 | :--- | :--- | :--- |
-| Vishay MBE04140C2201FC100 | p13's `d_nom = 0.80` is the round wire diameter. `D_max = 4.20` is body diameter; `L_max = 11.90` body length; `l_min = 31.0` each unformed lead; `M_min = 15.0` mounting pitch. | **E <=0.90 diameter**, including tin finish, roundness and any insertion-section forming distortion. This is nominal +0.10 (12.5%), chosen as a controllable upper acceptance limit, not a Vishay specification. Do not borrow radial MBB0207 tolerances or tape-spacing tolerances. |
-| Bencent B5G470L | p2 lead is explicitly round, diameter **0.80**, with no +/- or maximum qualifier. A=62 +/-2 is unformed overall length; B=6 +/-0.20 is body length; C=diameter 5.50 +/-0.20 is body diameter including the end-electrode outline. Copper leads, matte-tin finish are stated. | **E <=0.90 diameter**, for the same stated procurement rationale as Vishay. A/B/C tolerances do not create a tolerance on the separate 0.80 lead callout. Current 1.20 holes pass diameter-only against this E, but not the complete fixed-pattern budget below. |
+| **Historical, retired:** Vishay MBE04140C2201FC100 | p13's `d_nom = 0.80` is the round wire diameter. `D_max = 4.20` is body diameter; `L_max = 11.90` body length; `l_min = 31.0` each unformed lead; `M_min = 15.0` mounting pitch. | Former **E <=0.90 diameter**, including tin finish, roundness and forming distortion, was a nominal +0.10 design limit, not a Vishay guarantee. No current R1/R2 insertion or forming task. |
+| Bencent B5G470L | p2 lead is explicitly round, diameter **0.80**, with no +/- or maximum qualifier. A=62 +/-2 is unformed overall length; B=6 +/-0.20 is body length; C=diameter 5.50 +/-0.20 is body diameter including the end-electrode outline. Copper leads, matte-tin finish are stated. | **E <=0.90 diameter**, for the stated procurement rationale. A/B/C tolerances do not create a tolerance on the separate 0.80 lead callout. Former 1.20 holes passed diameter-only against this E, but not the complete fixed-pattern budget below; selected holes remain **1.40**. |
 | Ruilon 2R470TD-8 | TD figure in both revisions: lead diameter **1.00 +/-0.05**; body diameter **8.00 +/-0.20**; axial body length **6.00 +/-0.30**; unformed overall length **62 +/-2**. | Drawing-derived maximum **1.05 diameter**. Require the finished insertion section to remain <=1.05 after forming too; enlarged bends/burrs must not enter the barrel. THT finish is nickel plated in the retrieved manufacturer text. |
 
 The Ruilon A6 version-history text dates its A3 entry 2023-03-31, whereas the
@@ -187,6 +323,9 @@ limit, `(0.039+0.002) x 25.4 = 1.0414`.
 
 All hole sizes here are **nominal finished component PTH dimensions**, not
 unplated tool diameters. Use ordinary round holes, not press-fit or slots.
+The first table is the **historical 97e202d diameter-only screen**, not the
+current hole schedule. The adopted Kefa/GDT position budget follows it; current
+R1/R2 have no holes.
 
 ```text
 H_min = H_nom - 0.08
@@ -195,7 +334,7 @@ Diameter-only requirement: H_min >= D_pin + 0.10
 Nominal ring = (minimum pad width - H_nom) / 2 >= 0.254
 ```
 
-| Part family | Current hole | H_min minus design pin envelope | Diameter-only minimum on a 0.10 mm hole grid |
+| Part family | 97e202d hole | H_min minus design pin envelope | Diameter-only minimum on a 0.10 mm hole grid |
 | :--- | ---: | ---: | ---: |
 | KF128, E diagonal 1.486607 | 1.40 | -0.166607 | 1.70 |
 | KF129, E diagonal 1.523975 | 1.30 | -0.303975 | 1.80 |
@@ -205,7 +344,7 @@ Nominal ring = (minimum pad width - H_nom) / 2 >= 0.254
 
 The first two negative results are against the **proposed conservative E**,
 not a claim that every nominal connector fails to enter the old board.
-Nominal KF128 diagonal is 1.204159, leaving 0.115841 in the current worst hole,
+Nominal KF128 diagonal is 1.204159, leaving 0.115841 in that former worst hole,
 only 0.015841 beyond the required allowance before any pin tolerance. KF129's
 smaller nominal diagonal is also 1.204159, leaving **0.015841 total** in its
 1.22 worst hole; the larger nominal diagonal is 1.241974 and exceeds that hole.
@@ -217,33 +356,32 @@ diametral assembly allowance cannot also pay for arbitrary pitch error.
 JLCPCB publishes hole position tolerance +/-0.05. Conservatively treating that
 as +/-0.05 on each board axis gives radial `e_h = sqrt(2)*0.05 = 0.070711`.
 
-One implementation-ready, ordinary-process choice is the following table, with
-a **separately controlled part-pattern limit `e_p <=0.050 mm radial` per pin**.
+The retained selected Kefa/GDT ordinary-process geometry follows, with a
+**separately controlled part-pattern limit `e_p <=0.050 mm radial` per pin**.
 This limit applies after one common rigid alignment of the complete pin pattern
 to the nominal footprint, through the full insertion length. It includes
 non-collinearity, lean and forming errors, not just adjacent pitch. It is an
-incoming/formed-part inspection condition, **not a Kefa/Vishay/GDT guarantee**.
+incoming/formed-part inspection condition, **not a Kefa/GDT guarantee**.
 
 ```text
 Additional diametral position budget = 2*(e_h + e_p) = 0.241421
 Require H_nom - 0.08 - D_pin - 0.241421 >= 0.10
 ```
 
-| References | Proposed hole / unchanged pad size | Diameter-only clearance | Clearance after separate position budget | Nominal ring |
+| References | Selected hole / retained pad size | Diameter-only clearance | Clearance after separate position budget | Nominal ring |
 | :--- | :--- | ---: | ---: | ---: |
 | J_IN, J_EARTH | **2.00 / 3.20** | 0.433393 | 0.191972 | 0.60 |
 | J_LED_A, J_LED_C | **2.00 / 2.80** | 0.396025 | 0.154604 | 0.40 |
-| R1, R2 | **1.40 / 2.40** | 0.420000 | 0.178579 | 0.50 |
 | GDT_AC | **1.40 / 2.80** | 0.420000 | 0.178579 | 0.70 |
 | GDT_A_E, GDT_B_E, GDT_C_E | **1.50 / 3.00** | 0.370000 | 0.128579 | 0.75 |
 
-This is a conservative **bounded design option for parent selection**, not a
+This is the conservative **bounded retained THT design**, not a
 requirement to enlarge every hole this much regardless of actual part evidence.
 It deliberately trades more solder volume and fixture dependence for insertion
-margin without requiring tighter JLCPCB fabrication tolerances. All pad shapes,
-centres, nets and copper dimensions can remain unchanged. The minimum ring is
-0.40, above 0.254. Nominal rings are not guarantees of finished registration,
-etch tolerance, solder fill or barrel copper.
+margin without requiring tighter JLCPCB fabrication tolerances. The retained
+Kefa/GDT pad shapes, centres, nets and copper dimensions remain unchanged. The
+minimum ring is 0.40, above 0.254. Nominal rings are not guarantees of finished
+registration, etch tolerance, solder fill or barrel copper.
 
 Smaller holes are supportable only with an independently demonstrated combined
 alignment bound `e_h + e_p <= (H_nom - 0.08 - D_pin - 0.10)/2`, or an accepted
@@ -253,10 +391,9 @@ Kefa drawings. Conversely, screening an ordinary lot to the explicit E/pattern
 limits is a legitimate alternative to waiting for a new manufacturer guarantee;
 do not claim the screen has already passed or that its yield is known.
 
-For 15.24-pitch axial parts, the proposed radial part-pattern bound limits the
-two-pin spacing error to at most 0.10. Vishay's formed mounting dimension would
-then be at least **15.14 > 15.00**. Inspect actual M after assembly as well;
-larger holes must not let the leads collapse inward below the mounting minimum.
+For the retained 15.24-pitch axial GDTs, the radial part-pattern bound limits
+two-pin spacing error to at most 0.10. Inspect the actual formed pattern and
+overpass height after seating; larger holes must not permit collapse or tilt.
 The minimum-hole proof covers neither ceramic-seal bending stress nor pullout.
 
 ## Body Geometry
@@ -271,28 +408,29 @@ with rotation 270 degrees. Both retain global positive X=142.96 and B-return
 X=148.04, at Y=103.00/142.00 respectively. Body-outline changes do not authorize
 pad-position, pad-angle or net changes.
 
-Proposed assembly control: the actual projected body must remain inside its
+Selected assembly control: the actual projected body must remain inside its
 listed body box expanded by **0.10 on each side**, including translation and
 tilt. This is an inspected projection bound, not permission to add arbitrary
 rotation on top of the allowance. Courtyards contain that projection plus at
 least 0.25 assembly margin, and existing pads plus 0.25 where pads dominate.
 
-| Footprint family | Proposed F.Fab body/envelope box: X; Y | Proposed F.CrtYd box: X; Y |
+| Footprint family | Selected F.Fab body/envelope box: X; Y | Selected F.CrtYd box: X; Y |
 | :--- | :--- | :--- |
 | KF128 Input and Earth | **-6.00..5.40; -12.50..12.50** (E) | **-6.35..5.75; -12.85..12.85** |
 | KF129 LED A and C | **-5.10..6.40; -6.10..6.10** (E) | **-5.45..6.75; -6.45..6.45** |
-| MBE0414 | **-5.95..5.95; -2.10..2.10**, unchanged | **-9.10..9.10; -2.50..2.50**, unchanged |
+| HP12 SMT resistor | **-3.225..3.225; -1.70..1.70** | **-4.05..4.05; -2.10..2.10** |
 | B5G470L north-south overpass | **-2.86..2.86; -3.10..3.10** | **-3.25..3.25; -9.30..9.30** |
 | 2R470TD-8 east-west | **-3.15..3.15; -4.105..4.105** | **-9.40..9.40; -4.46..4.46** |
-| SMD5050-470NA north-south electrode axis | **-2.605..2.605; -2.25..2.25** | **-3.00..3.00; -3.75..3.75**; widen X, retain existing Y |
+| SMD5050-470NA north-south electrode axis | **-2.605..2.605; -2.25..2.25** | **-3.00..3.00; -3.75..3.75**, retained |
 
-These changes do not conceal interference by shrinking courtyards. The SMT
-body's shorter Y follows the newly resolved axial C dimension; its courtyard Y
-is deliberately retained. All body/pad proposals are suitable for source
-integration without moving protected vias, rails, earth copper, mounts or LEDs.
-They still need integrated native DRC and actual assembly acceptance.
+These selections do not conceal interference by shrinking courtyards. The
+Ruilon SMT-GDT body's shorter Y follows its resolved axial C dimension; its
+courtyard Y is deliberately retained. The HP12 maximum body and lands now have
+their own explicit envelope. Preserve protected vias, rails, earth copper,
+mounts and LEDs; native file verification and actual assembly acceptance remain
+different checks.
 
-Calculated checkpoint-placement checks, **not a DRC run**:
+Retained GDT/Kefa checkpoint-placement calculations, **not a new DRC run**:
 
 - J_IN courtyard east becomes X=111.75; SMT west is X=116.50: **4.75 gap**.
 - SMT east becomes X=122.50; overpass west is X=122.55: **0.05 gap**.
@@ -355,14 +493,14 @@ The conversion conflict is substantial, not ordinary display rounding:
 ```
 
 The original manufacturer file repeats the contradiction; there was no public
-correction in the retrieved exact-MPN source. **Recommend selecting the printed
-metric 4.00 mm spacing**, documenting that decision explicitly. The duplicated
-0.165 also appears as the correct rounded inch value for C=4.2 in the same
-table, which is consistent with a copied conversion error, but does not prove
+correction in the retrieved exact-MPN source. **The printed metric 4.00 mm
+spacing is explicitly selected**, not an inferred manufacturer erratum. The
+duplicated 0.165 also appears as the correct rounded inch value for C=4.2 in the
+same table, which is consistent with a copied conversion error, but does not prove
 the manufacturer's intended correction. Do not average the numbers, silently
 choose a 4.2 pitch, call X1 a gap, or claim written approval.
 
-Exact proposed footprint geometry, preserving pad numbers and nonpolar part
+Retained selected footprint geometry, preserving pad numbers and nonpolar part
 orientation:
 
 | Pad | Local centre | Copper / nominal mask / nominal paste rectangle |
@@ -469,6 +607,9 @@ alloy/flux, THT sequence and formed GDTs still require process evidence.
 The E limits make a bounded design possible; **no actual lot or sample was
 measured in this research**. A normal procurement inspection can control them
 without pretending that the manufacturer guarantees a new dimension.
+These are supplier/order and physical-acceptance controls, not additional
+qualification prerequisites for prototype artifact generation. Later enclosure,
+thermal and protection activities stay separate from the board file workflow.
 
 1. Parent records the adopted finished-pin/body/pattern limits and exact
    drawing/MPN/lot on the procurement and assembly traveller. Obtain an ordinary
@@ -483,7 +624,7 @@ without pretending that the manufacturer guarantees a new dimension.
 3. Independently measure the complete pin pattern through the insertion depth,
    using a calibrated optical fixture or suitable metrology. Confirm the
    separate 0.050 radial per-pin envelope, not just one nominal pitch. Formed
-   axial parts are inspected after forming; preserve Vishay M>=15.0. A tight
+   GDTs are inspected after forming; R1/R2 are undrilled SMT. A tight
    nominal gauge that forces leads into place is not a valid inspection.
 4. Check insertion with a dimensional fixture representing the chosen minimum
    finished holes and the accepted pattern budget, then on the actual boards.
@@ -505,17 +646,18 @@ without pretending that the manufacturer guarantees a new dimension.
 | Party / part | Precise fact still needed; what no longer needs rediscovery |
 | :--- | :--- |
 | Kefa / C474957 and C475092 | Which controlled KF129 A/21.03.13 pin-width variant is actually supplied: 0.90 or 0.95? What finished metal-pin tolerances, plating/burr inclusion, pitch/non-collinearity and pin-to-body datums are guaranteed? The rectangular axes, body projections, end keys and drawing general-tolerance bands **have been read**. Adopted E limits plus independent lot acceptance can replace an absent tighter guarantee for that limited lot, not for all future purchases. |
-| Vishay / MBE04140C2201FC100 | Finished d_max for the exact neutral C1 part, including pure-tin finish and the straight insertion section, if a manufacturer-guaranteed limit is desired. The public d_nom=0.80 and D/L/M body/mounting limits are already resolved. Otherwise control <=0.90 by procurement inspection, rather than relabelling d_nom as a maximum. |
-| Bencent / B5G470L | Finished 0.80-wire tolerance and allowable forming/seal-support geometry. Public p2 really contains a round 0.80 callout without its tolerance. A2 body limits are resolved; the current manufacturer download did not supply a newer toleranced lead drawing. Control <=0.90 and verify the proposed formed envelope if selected. |
+| Uni-Royal/Royalohm / HP122WF2201T4E | Exact JLCPCB/LCSC mapping or accepted procurement route and allocation for ten fitted parts plus attrition; applicable lot/revision and PDF 100 versus web 75 ppm/C discrepancy; actual stencil/reflow/placement acceptance. C2791283 is rejected. The manufacturer body and land leaders **have been visually read**; no resistor hole or axial forming response is needed. |
+| Bencent / B5G470L | Finished 0.80-wire tolerance and allowable forming/seal-support geometry. Public p2 really contains a round 0.80 callout without its tolerance. A2 body limits are resolved; the current manufacturer download did not supply a newer toleranced lead drawing. Control <=0.90 and accept the actual formed part against the selected envelope. |
 | Ruilon / 2R470TD-8 | Exact revision/production code allocated; allowed bend radius/seal setback, post-forming lead condition and ordinary nickel-lead solder process. The 1.05 lead maximum and 6.30/8.20 metric body maxima are **resolved in both drawings**, not unreadable. |
-| Ruilon / SMD5050-470NA | Formal resolution of X1=4.0 mm versus 0.165 in, preferably a corrected controlled drawing. Figure association and a complete metric-based implementation are resolved here; parent can explicitly select the metric design without claiming manufacturer correction or approval of the old 5.2 x 2 alternative. |
+| Ruilon / SMD5050-470NA | Formal resolution of X1=4.0 mm versus 0.165 in, preferably a corrected controlled drawing. Figure association and the selected metric-based implementation are resolved here, without claiming manufacturer correction or approval of the old 5.2 x 2 alternative. |
 | JLCPCB / actual assembly | Ordinary-service part allocation, retained drill data, processed mask/stencil, fitting/lead-forming capability, real solder profile and workmanship. Standard untented fabrication does not require a 1 mm fill exception. Any required finished-via/barrel minimum beyond published standard guarantees remains a separate design/supplier decision, not implicitly approved special processing. |
 
 ## Verification Scope
 
-Read AGENTS.md, all of REMEDIATION.md and ASSEMBLY.md; inspected the current BOM,
-relevant local footprints and routing without editing them. Original figure
-access and primary web evidence are identified above. The stated diagonals,
+**Original 97e202d research record:** read AGENTS.md, all of REMEDIATION.md and
+ASSEMBLY.md; inspected the then-current BOM, relevant local footprints and
+routing without editing them. Original figure access and primary web evidence
+are identified above. The stated diagonals,
 hole/position/ring budgets, body conversions and SMT clearances were checked
 with a calculation-only `python3 -B -c` invocation using `math.hypot`; it did
 not read/write project files or access the network. No KiCad checks or physical
@@ -523,15 +665,37 @@ tests were run, and no release hold is closed by this record.
 `git diff --no-index --check /dev/null pcb/DFM_EVIDENCE.md` passed as a
 documentation whitespace check, not a hardware gate.
 
-On parent adoption, update the authoritative source/library/body and process
-records consistently, preserve all guardrails, then regenerate and inspect
-native artifacts with the integrated gates. This task does not authorize
-approval-hash refreshes or modification of existing evidence.
+**02661d8 read-only review:** the source geometry check and 60 geometry tests
+passed; retained native XML/IPC/CPL/BOM/Gerber/drill data matched the reviewed
+PCB/schematic hashes, and the retained assembly PDF was inspected. Those results
+described the former roundrect resistor lands, **not a validation of the selected
+rectangular correction**. The manufacturer/body and C-code findings above were
+not disproved by internal file consistency. In-memory probes also showed missing
+resistor angle/aperture guards and a body/courtyard test that no longer iterated
+R1/R2; the parent owns the checker/test corrections.
+
+**This documentation integration edits only ASSEMBLY.md and DFM_EVIDENCE.md.**
+The parent owns CAD/libraries/BOM/sourcing metadata, diagnostic review, checker
+changes and integrated verification. No shared Make/native workflow, source
+synchronization, supplier request, upload, order, commit or physical test is run
+by this documentation task. Publish only source-matched artifacts under the
+explicit prototype/production distinction; do not refresh approval hashes or
+claim supplier/performance acceptance from this evidence record.
 
 ## Direct Sources
 
 Exact original URLs behind the linked source tables above:
 
+[hp-pdf]: https://www.uni-royal.cn/en/images/userfile/file/1784806233a2e6d381ea80b5d9.pdf
+[hp-text]: https://r.jina.ai/https://www.uni-royal.cn/en/images/userfile/file/1784806233a2e6d381ea80b5d9.pdf
+[hp-page]: https://www.uni-royal.cn/en/product.php?s=High-Power+Thick+Film+Chip+Res
+[hp-wrong-lcsc]: https://www.lcsc.com/product-detail/C2791283.html
+[hp-wrong-jlc]: https://jlcpcb.com/partdetail/UniRoyalElec-HP122WJ0472T4E/C2791283
+[hp-nac]: https://store.nacsemi.com/products/detail?stock=XSJMZ0000010410
+[hp-distributed]: https://datasheet.lcsc.com/datasheet/pdf/72ec9a363d94a6fd0729e3976f9248d5.pdf?productCode=C2791283
+[hp-search-jlc]: https://jlcpcb.com/parts/componentSearch?searchTxt=HP122WF2201T4E
+[hp-control-jlc]: https://jlcpcb.com/parts/componentSearch?searchTxt=HP122WJ0472T4E
+[hp-search-lcsc]: https://www.lcsc.com/search?q=HP122WF2201T4E
 [k128-page]: https://www.kefaelectronic.com/KF128-7-5-7-62-PCB-Terminal-Block-pd45490974.html
 [k128-m]: https://jirorwxhqiillo5p.ldycdn.com/KF128-7.62-aidqiBpqKirRliSqmrqirloj.pdf
 [k128-l]: https://datasheet.lcsc.com/datasheet/pdf/2bd9ccda2e0f72df8237e78ea70a6d85.pdf?productCode=C474957

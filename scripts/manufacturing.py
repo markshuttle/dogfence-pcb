@@ -1,17 +1,22 @@
 #!/usr/bin/env python3
 """KiCad 9 manufacturing transaction, not hardware/protection certification.
 
-build: verify a complete snapshot, export privately, validate, then publish.
+build: verify a complete snapshot, export privately, validate, then publish
+       production files only when engineering holds and external sourcing allow.
+prototype: the same file checks; publish prototype-only packages with all
+           engineering holds recorded but deferred. External sourcing still blocks.
 check: the same checks/exports, retaining evidence and refreshing the generated
        CPL reference, but publishing no upload package.
 clean: remove build-owned outputs/runs only; NEVER delete the project's tmp/.
 
 All public Make targets use this one locked transaction. Each attempt invalidates
 the previous public release and retains it under tmp/manufacturing/runs/ until
-explicit clean. Only build/manifest.json with status=verified describes a release.
+explicit clean. A matching build/manifest.json and validated source/artifact hashes
+are required: production uses status=verified/mode=build; prototypes use
+status=prototype/mode=prototype.
 pcb/CPL.csv is a generated reference mirror, not an input or independent source.
 pcb/verification.json records narrowly reviewed warnings and design-release
-holds. Holds cannot be bypassed by a successful DRC or an export target.
+holds. Prototype exports do not approve or clear production/qualification holds.
 
 Placement uses mm, absolute origin, native signed Y, native footprint anchors and
 rotations modulo 360. No unreviewed JLCPCB centroid/rotation corrections are made.
@@ -93,7 +98,7 @@ SCOPE = {
     "placement_tolerance_mm": 0.00001,
     "rotation_tolerance_degrees": 0.00001,
     "bom_fields": "Exact MPN, Manufacturer and sourcing in schematic/PCB; CSV 'LCSC Part #' accepts source 'LCSC' or 'LCSC Part #'; conflicting aliases fail. Absent Sourcing defaults to LCSC, not External. Only External XML may omit an empty LCSC field.",
-    "sourcing": "External requires an empty LCSC code and an exact HTTPS Sourcing Reference. File metadata parity and a catalogue reference do not verify procurement allocation. External allocation remains pending and blocks publication independently of engineering holds; no network lookup or upload authorization is implied.",
+    "sourcing": "External requires an empty LCSC code and an exact HTTPS Sourcing Reference. File metadata parity and a catalogue reference do not verify procurement allocation. External allocation remains pending and blocks both production and prototype publication independently of engineering holds; no network lookup or upload authorization is implied.",
     "gerber_tolerance_mm": 0.000002,
     "gerber_coverage": "Copper pads/vias/straight tracks, board outline, mask/paste aperture inventory, sizes and corner radii; unsupported critical-layer source graphics rejected; legend syntax (not rendered glyph equivalence)",
     "via_masks": "KiCad 9 flat global/per-via tenting flags; absent local flags inherit; absent global flags tent both sides. Via openings use board mask expansion and individual circular flashes at zero minimum mask width. Only source-matched openings of untented, overlapping same-net vias may expose their group holes; component mask/paste exposure is forbidden.",
@@ -104,6 +109,10 @@ SCOPE = {
                         "mixed SMT/THT heavy-copper assembly quote and panel plan",
                         "circuit protection, powered fault/surge, thermal and site qualification"],
     "reproducibility": "Fresh source snapshot and exports; deterministic ZIP metadata; native timestamps retained",
+}
+PUBLICATION = {
+    "verified": "File-verified production package; not CAM, order or field approval.",
+    "prototype": "File-verified PROTOTYPE ONLY; not production, CAM, order or field approval.",
 }
 
 
@@ -386,11 +395,14 @@ def assembly_reference(board, bom, positions, revision):
     """Source datums for supplier review, not guessed package-centroid offsets."""
     lines = [f"Dog Fence {revision} - assembly datum reference", SCOPE["placement"],
              "DRAFT: not an accepted JLCPCB placement model or production approval.",
+             f"Population: {len(positions)} components; "
+             f"{sum('smd' in board.footprints[ref].attributes for ref in positions)} SMT / "
+             f"{sum('through_hole' in board.footprints[ref].attributes for ref in positions)} THT.",
              "PCB coordinates: top view, X east/right, Y south/down.",
              "CPL/fabrication coordinates: X=PCB X, Y=-PCB Y; no origin shift or mirroring.",
              "Footprint anchors and terminal centres are NOT measured package centroids.",
              "Confirm exact-part model origins, rotations and polarity with the assembler.",
-             "ASSEMBLY.md controls body envelopes, PR02/GDT forming, standoff and panel overhang.", "",
+             "ASSEMBLY.md controls body envelopes, SMT mounting, GDT forming and panel overhang.", "",
              "PLACEMENT ANCHORS",
              "Reference | MPN | Footprint | PCB X mm | PCB Y mm | CPL X mm | CPL Y mm | Rotation deg | Side"]
     for ref in sorted(positions):
@@ -410,6 +422,21 @@ def assembly_reference(board, bom, positions, revision):
     lines += ["", "Assembly.pdf: native top-view body, pad-outline, courtyard and board-outline overlay.",
               "Courtyards are assembly envelopes, not copper or approved panel/tooling geometry.",
               "Use ViaTreatment.csv separately for stitching-via function and coordinates."]
+    return "\n".join(lines) + "\n"
+
+
+def package_readme(revision, mode, holds):
+    label = {"build": "PRODUCTION FILE PACKAGE", "prototype": "PROTOTYPE ONLY - NOT PRODUCTION APPROVED",
+             "check": "PRIVATE CHECK DRAFT - NOT PUBLISHED"}[mode]
+    lines = [f"Dog Fence {revision} - {label}", f"Export mode: {mode}",
+             "File verification requires a matching manifest.json and validated source/artifact hashes.",
+             "All source, DRC/ERC, DFM, BOM, net, placement and artifact checks must pass.",
+             "Production/qualification holds are deferred for prototype export, NOT approved or cleared.",
+             "Not CAM acceptance, procurement allocation, order approval, field approval or surge certification.",
+             "Gerbers.zip: fabrication layers/drills and this README.",
+             "FlyTest.zip: Gerbers.zip and pcb.d356 for bare-board continuity only, not assembled functional or surge testing.",
+             "Open production/qualification holds:"]
+    lines += [f"- {hold['id']}: {hold['reason']}" for hold in holds] or ["- None recorded."]
     return "\n".join(lines) + "\n"
 
 
@@ -800,7 +827,8 @@ class Manufacturing:
                         path.write_text(message + "\n", encoding="utf-8")
         write_json(self.reports / "commands.json", self.commands)
         write_json(self.reports / "verification.json", {
-            "status": state, "errors": self.errors, "checks": self.verification,
+            "status": state, "mode": self.mode, "publication": PUBLICATION.get(state, "Not published."),
+            "errors": self.errors, "checks": self.verification,
             "source_hashes": self.sources, "hardware_revision": self.revision,
             "tool_version": self.version, "scope": SCOPE,
         })
@@ -809,8 +837,11 @@ class Manufacturing:
         for kind in ("drc", "erc"):
             for extension in ("txt", "json"):
                 shutil.copy2(self.reports / f"{kind}_report.{extension}", self.build)
-        write_json(self.build / "status.json", {"status": state, "attempt": str(self.run.relative_to(self.root)),
-                                               "requires_verified_manifest_for_upload": True})
+        write_json(self.build / "status.json", {
+            "status": state, "mode": self.mode, "publication": PUBLICATION.get(state, "Not published."),
+            "attempt": str(self.run.relative_to(self.root)), "requires_matching_manifest_for_upload": True,
+            "required_manifest_status": {"build": "verified", "prototype": "prototype"}.get(self.mode),
+        })
 
     def run_checks(self):
         pcb, sch = self.project / "pcb.kicad_pcb", self.project / "pcb.kicad_sch"
@@ -951,11 +982,12 @@ class Manufacturing:
                 writer.writerow(["Stitching via", p.net, p.x, p.y, p.drill, p.width,
                                  "yes" if front else "no", "yes" if back else "no",
                                  treatment + "; no fill; preserve diameters; CAM acceptance not established"])
-        members = {name: release / "gerbers" / name for name in FAB_FILES}
-        make_zip(release / "Gerbers.zip", members)
         readme = scratch / "README.txt"
-        readme.write_text(f"Dog Fence {self.revision} - bare-board flying-probe input\n"
-                          "Contains pcb.d356 and Gerbers.zip. Not assembled functional or surge testing.\n", encoding="utf-8")
+        readme.write_text(package_readme(self.revision, self.mode, self.review["release_holds"]), encoding="utf-8")
+        shutil.copy2(readme, release / "README.txt")
+        members = {name: release / "gerbers" / name for name in FAB_FILES}
+        members["README.txt"] = readme
+        make_zip(release / "Gerbers.zip", members)
         make_zip(release / "FlyTest.zip", {"pcb.d356": release / "pcb.d356",
                                           "Gerbers.zip": release / "Gerbers.zip", "README.txt": readme})
         self.verification["archives"] = {"verified": True, "Gerbers.zip": sorted(members),
@@ -964,6 +996,7 @@ class Manufacturing:
 
     def execute(self, mode):
         require(mode in ("build", "check", "clean", "prototype"), "Unknown manufacturing mode")
+        self.mode = mode
         require(not (self.root / "tmp").is_symlink() and not self.staging.is_symlink()
                 and not self.build.is_symlink(), "Refusing symlinked build/staging paths")
         self.staging.mkdir(parents=True, exist_ok=True)
@@ -1037,9 +1070,11 @@ class Manufacturing:
                     print("External sourcing pending allocation (not verified): " + "; ".join(
                         f"{ref}: {part['MPN']} ({part['Sourcing Reference']})" for ref, part in external.items()))
                 if holds:
-                    print("Manufacturing release held: " + "; ".join(f"{h['id']}: {h['reason']}" for h in holds))
+                    print("Production/qualification holds (not prototype file-export gates): " +
+                          "; ".join(f"{h['id']}: {h['reason']}" for h in holds))
                 if mode == "build":
                     require(not holds, "Open engineering release holds; verified draft exports retained privately")
+                if mode in ("build", "prototype"):
                     require(not external,
                             "Unresolved external sourcing allocation; verified draft exports retained privately: " + ", ".join(external))
                 state = "checked" if mode == "check" else ("prototype" if mode == "prototype" else "verified")
@@ -1049,7 +1084,8 @@ class Manufacturing:
                     self.retain_reports(state)
                     shutil.copytree(self.build, release, dirs_exist_ok=True)
                     artifacts = {p.relative_to(release).as_posix(): sha256(p) for p in sorted(release.rglob("*")) if p.is_file()}
-                    manifest = {"status": state, "hardware_revision": self.revision,
+                    manifest = {"status": state, "mode": self.mode, "publication": PUBLICATION[state],
+                                "hardware_revision": self.revision,
                                 "created_utc": datetime.now(timezone.utc).isoformat(),
                                 "git_revision": revision["stdout"].strip() if revision["returncode"] == 0 else None,
                                 "worktree_dirty": bool(dirty["stdout"].strip()) if dirty["returncode"] == 0 else None,
@@ -1059,7 +1095,7 @@ class Manufacturing:
                                 "verification": self.verification, "scope": SCOPE}
                     require(source_inventory(self.root) == self.sources, "Sources changed before publication")
                     # Publish complete payload, then mirrors, then the verification marker.
-                    # A failed/interrupted publication has no verified manifest.
+                    # A failed/interrupted publication has no valid publication manifest.
                     self.build.rename(self.run / "current-reports")
                     release.rename(self.build)
                     for name in ("CPL.csv", "Gerbers.zip"):
@@ -1067,7 +1103,8 @@ class Manufacturing:
                         shutil.copy2(self.build / name, pending)
                         os.replace(pending, self.root / "pcb" / name)
                     write_json(self.build / "manifest.json", manifest)
-                print(f"Manufacturing data {state} for revision {self.revision}.")
+                print(f"Manufacturing data {state} ({self.mode}) for revision {self.revision}.")
+                print(PUBLICATION.get(state, "File checks passed; no package published."))
                 print("File checks only, not CAM acceptance, order approval or surge certification.")
                 return 0
             except (VerificationError, OSError, ValueError, KeyError, TypeError, ImportError, csv.Error,

@@ -36,26 +36,37 @@ class DesignBoundsTests(unittest.TestCase):
 
     def test_resistor_tolerance_tcr_cold_hot_and_zero_spread(self):
         low, high = resistor_bounds()
-        self.assertAlmostEqual(low, 2120.8275)
-        self.assertAlmostEqual(high, 2280.3275)
-        for temperature in (-30, 20, 125):
+        self.assertAlmostEqual(low, 2156.22)
+        self.assertAlmostEqual(high, 2244.22)
+        for temperature in (-55, -30, 20, 25, 125):
             for tolerance in (-0.01, 0.01):
-                for tcr in (-250, 250):
+                for tcr in (-100, 100):
                     selected = dc.Channel(resistor_error=tolerance, resistor_tcr_ppm=tcr,
                                           resistor_temperature_c=temperature).values()[0]
                     self.assertLessEqual(low, selected)
                     self.assertGreaterEqual(high, selected)
         self.assertEqual(resistor_bounds(tolerance_fraction=0, tcr_ppm=0), (2200, 2200))
+        self.assertEqual(resistor_bounds(minimum_c=25, maximum_c=25), (2178, 2222))
         self.assertAlmostEqual(resistor_bounds(minimum_c=-55, maximum_c=-30)[0],
-                               2200 * 0.99 * (1 - 250e-6 * 75))
-        self.assertLess(resistor_bounds(maximum_c=155)[0], low)
-        self.assertEqual(self.report["resistor"]["mpn"], "PR02000202201FA100")
-        self.assertEqual(self.report["resistor"]["lead_material"], "copper")
-        self.assertEqual(self.report["resistor"]["screen_temperature_range_c"], [-30, 125])
-        self.assertEqual(self.report["resistor"]["tcr_abs_ppm_per_c"], 250)
-        self.assertEqual(self.report["resistor"]["p70_w"], 2)
-        self.assertEqual(self.report["resistor"]["zero_power_ambient_c"], 155)
-        self.assertEqual(self.report["resistor"]["pr02_hotspot_max_c"], 220)
+                               2200 * 0.99 * (1 - 100e-6 * 80))
+        resistor = self.report["resistor"]
+        self.assertEqual(resistor["mpn"], "HP122WF2201T4E")
+        self.assertEqual(resistor["manufacturer"], "Uni-Royal")
+        self.assertEqual(resistor["package"], "2512 SMT")
+        self.assertNotIn("lead_material", resistor)
+        self.assertEqual(resistor["screen_temperature_range_c"], [-30, 125])
+        self.assertEqual(resistor["reference_temperature_c"], 25)
+        self.assertEqual(resistor["tcr_test_temperatures_c"], [-55, 125])
+        self.assertEqual(resistor["tcr_abs_ppm_per_c"], 100)
+        self.assertEqual(resistor["p70_w"], 2)
+        self.assertEqual(resistor["zero_power_ambient_c"], 155)
+        self.assertNotIn("pr02_", json.dumps(self.report))
+        self.assertEqual(resistor["family_max_working_voltage_v"], 300)
+        self.assertAlmostEqual(resistor["rated_working_voltage_at_p70_v"], math.sqrt(2 * 2200))
+        self.assertEqual(resistor["family_max_overload_voltage_v"], 500)
+        self.assertAlmostEqual(resistor["short_time_overload_test_v"], 165.83123951777)
+        self.assertEqual(resistor["short_time_overload_test_s"], 5)
+        self.assertIn("not an impulse curve", " ".join(self.report["limitations"]))
 
     def test_nominal_comparison_and_nonuniform_vf_is_worse_than_uniform(self):
         rows = self.report["normal_cases"]
@@ -70,9 +81,9 @@ class DesignBoundsTests(unittest.TestCase):
         self.assertLess(rows["nonuniform_A40"]["A40_ma"], rows["nonuniform_A40"]["C40_ma"])
         self.assertLess(rows["nonuniform_A40_other_rail_zero"]["A40_ma"], rows["nonuniform_A40"]["A40_ma"])
         self.assertAlmostEqual(rows["nonuniform_A40"]["A40_ma"], rows["nonuniform_C40"]["C40_ma"])
-        self.assertAlmostEqual(rows["uniform_high_vf_rmax"]["A40_ma"], 5.6867558486, places=9)
-        self.assertAlmostEqual(rows["nonuniform_A40"]["A40_ma"], 4.1403964183, places=9)
-        self.assertAlmostEqual(rows["nonuniform_A40_other_rail_zero"]["A40_ma"], 3.6561685326, places=9)
+        self.assertAlmostEqual(rows["uniform_high_vf_rmax"]["A40_ma"], 5.7170665239, places=9)
+        self.assertAlmostEqual(rows["nonuniform_A40"]["A40_ma"], 4.2776194086, places=9)
+        self.assertAlmostEqual(rows["nonuniform_A40_other_rail_zero"]["A40_ma"], 3.7936689719, places=9)
         for row in rows.values():
             self.assertLess(row["kcl_error_a"], 1.1e-10)
             self.assertLess(abs(row["power_balance_w"]), 1e-7)
@@ -81,9 +92,9 @@ class DesignBoundsTests(unittest.TestCase):
         bounds = self.report["current_bounds"]
         minimum = bounds["conditional_all_station_led_min_ma"]
         maximum = bounds["conditional_all_station_led_max_ma"]
-        self.assertAlmostEqual(bounds["conditional_all_station_branch_min_ma"], 0.245040521286, places=9)
-        self.assertAlmostEqual(minimum, 0.195040521286, places=9)
-        self.assertAlmostEqual(maximum, 1000 * dc.ADJUSTMENT_SCREEN_V / 2120.8275)
+        self.assertAlmostEqual(bounds["conditional_all_station_branch_min_ma"], 0.389146872551, places=9)
+        self.assertAlmostEqual(minimum, 0.339146872551, places=9)
+        self.assertAlmostEqual(maximum, 1000 * dc.ADJUSTMENT_SCREEN_V / 2156.22)
         self.assertAlmostEqual(bounds["conditional_total_current_upper_a"], 82 * maximum / 1000)
         self.assertAlmostEqual(bounds["local_B_tap_current_upper_a"], 2 * maximum / 1000)
         for name, row in self.report["normal_cases"].items():
@@ -112,12 +123,20 @@ class DesignBoundsTests(unittest.TestCase):
         self.assertEqual(analyze(source_min_v=0)["current_bounds"]["conditional_all_station_led_min_ma"], 0)
         self.assertEqual(analyze(high_drop_v=60)["current_bounds"]["conditional_all_station_led_min_ma"], 0)
 
-    def test_historical_mbe_35_37v_4_4v_bounds_are_named_regressions_not_current_limits(self):
-        r_min, r_max = resistor_bounds(tcr_ppm=50)
+    def test_historical_pr02_mbe_screens_are_not_selected_limits(self):
+        # Historical 20 C reference is explicit, not a compatibility mode in HP12 helpers.
+        pr02_min = 2200 * 0.99 * (1 - 250e-6 * (125 - 20))
+        self.assertAlmostEqual(pr02_min, 2120.8275)
+        self.assertAlmostEqual(dc.branch_budget(dc.ADJUSTMENT_SCREEN_V, dc.Channel(
+            resistor_ohm=pr02_min, led_v=0, diode_v=0))["resistor_w"], 0.7694328710095, places=12)
+        r_min = 2200 * 0.99 * (1 - 50e-6 * (125 - 20))
+        r_max = 2200 * 1.01 * (1 + 50e-6 * (125 - 20))
         low = dc.Channel(resistor_ohm=r_min, led_v=0, diode_v=0)
         high = dc.Channel(resistor_ohm=r_max, led_v=4.4, diode_v=0)
         self.assertAlmostEqual(r_min, 2166.5655)
         self.assertAlmostEqual(r_max, 2233.6655)
+        self.assertAlmostEqual(dc.branch_budget(dc.ADJUSTMENT_SCREEN_V, low)["resistor_w"],
+                               0.753190, places=6)
         old = dc.branch_budget(37, low)
         self.assertAlmostEqual(old["branch_a"] * 82, 1.400373, places=6)
         self.assertAlmostEqual(old["resistor_w"], 0.631876, places=6)
@@ -148,8 +167,8 @@ class DesignBoundsTests(unittest.TestCase):
                                        max(0, row[key + "_ma"] - 0.05))
         # Leakage partitions a rung, not 82 new feed loads. Zero-drop upper includes all branch energy.
         upper = self.report["normal_cases"]["zero_cable_upper"]
-        self.assertAlmostEqual(upper["source_a"], 82 * dc.ADJUSTMENT_SCREEN_V / 2120.8275)
-        self.assertAlmostEqual(upper["source_w"], 63.093495422779, places=9)
+        self.assertAlmostEqual(upper["source_a"], 82 * dc.ADJUSTMENT_SCREEN_V / 2156.22)
+        self.assertAlmostEqual(upper["source_w"], 62.057869866597, places=9)
         floor = self.report["current_bounds"]["conditional_all_station_led_min_ma"]
         self.assertGreater(floor, 0.001)  # Numerical ON margin only, NOT daylight or dark-state acceptance.
         lower_case = normal_cases()["nonuniform_A40"]
@@ -172,19 +191,19 @@ class DesignBoundsTests(unittest.TestCase):
         self.assertAlmostEqual(nominal["resistor_w"], 0.501018181818)
         self.assertAlmostEqual(nominal["two_resistors_and_rectifiers_w"], 1.023163636364)
         self.assertAlmostEqual(nominal["two_resistors_rectifiers_clamps_upper_w"], 1.023373636364)
-        self.assertAlmostEqual(at36["resistor_w"], 36 * 36 / 2120.8275)
-        self.assertAlmostEqual(at37["resistor_w"], 37 ** 2 / 2120.8275, places=12)
-        self.assertAlmostEqual(at37["resistor_w"], 0.645503, places=6)
-        self.assertAlmostEqual(at37["rating_only_local_ambient_ceiling_c"], 127.5661, places=4)
+        self.assertAlmostEqual(at36["resistor_w"], 36 * 36 / 2156.22)
+        self.assertAlmostEqual(at37["resistor_w"], 37 ** 2 / 2156.22, places=12)
+        self.assertAlmostEqual(at37["resistor_w"], 0.634907, places=6)
+        self.assertAlmostEqual(at37["rating_only_local_ambient_ceiling_c"], 128.0164, places=4)
         self.assertAlmostEqual(adjustment["voltage_v"], 40.39597)
-        self.assertAlmostEqual(adjustment["resistor_w"], 0.7694328710095, places=12)
-        self.assertAlmostEqual(adjustment["rating_only_local_ambient_ceiling_c"], 122.2991, places=4)
-        self.assertGreater(adjustment["pr02_p70_margin_w"], 1.23)
+        self.assertAlmostEqual(adjustment["resistor_w"], 0.7568032910561, places=12)
+        self.assertAlmostEqual(adjustment["rating_only_local_ambient_ceiling_c"], 122.8359, places=4)
+        self.assertAlmostEqual(adjustment["p70_margin_w"], 1.2431967089439, places=12)
         self.assertEqual(upper["resistor_w"], adjustment["resistor_w"])
         self.assertFalse(self.report["source"]["enforced"])
         self.assertEqual(self.report["source"]["legacy_unenforced_proposal_v"], [35, 37])
         self.assertAlmostEqual(self.report["source"]["analysis_upper_v"], 40.39597)
-        self.assertGreater(self.report["source"]["minimum_capacity_fraction"], 0.83)
+        self.assertAlmostEqual(self.report["source"]["minimum_capacity_fraction"], 0.8208712945317, places=12)
 
     def test_thermal_feasible_resistance_current_voltage_and_zero_allowance(self):
         low, high = resistor_bounds()
@@ -210,19 +229,16 @@ class DesignBoundsTests(unittest.TestCase):
         self.assertIsNone(effective_rtheta_limit(0, 30, 60))
         interface = self.report["thermal_interfaces"]
         self.assertFalse(interface["onegel_thermal_property_assumed"])
-        self.assertAlmostEqual(interface["two_branch_heat_upper_w"], 2 * dc.ADJUSTMENT_SCREEN_V ** 2 / 2120.8275)
+        self.assertAlmostEqual(interface["two_branch_heat_upper_w"], 2 * dc.ADJUSTMENT_SCREEN_V ** 2 / 2156.22)
         self.assertAlmostEqual(interface["bulk_to_outside_effective_rtheta_max_k_per_w"]
                                * interface["two_branch_heat_upper_w"], 30)
         self.assertEqual(interface["cable_temperature_margin_k"], 10)
         self.assertEqual(interface["film_target_c"], 110)
         self.assertEqual(interface["bulk_and_local_ambient_target_c"], 60)
         self.assertIn("proposals", interface["targets_status"])
-        self.assertEqual(interface["pr02_example_minimum_body_standoff_mm"], 1)
-        self.assertEqual(interface["pr02_mounted_example_rtheta_k_per_w"], 75)
-        self.assertAlmostEqual(interface["pr02_mounted_example_hotspot_rise_k"], 57.7074653257)
-        self.assertGreater(interface["pr02_mounted_example_hotspot_rise_k"] + 60, 110)
-        self.assertAlmostEqual(interface["bulk_to_outside_effective_rtheta_max_k_per_w"], 19.4948780656)
-        self.assertAlmostEqual(interface["film_to_local_effective_rtheta_max_k_per_w"], 64.9829268854)
+        self.assertAlmostEqual(interface["bulk_to_outside_effective_rtheta_max_k_per_w"], 19.8202097920)
+        self.assertAlmostEqual(interface["film_to_local_effective_rtheta_max_k_per_w"], 66.0673659733)
+        self.assertIn("SMT changes heat flow", " ".join(self.report["limitations"]))
 
     def test_faults_do_not_promote_cv_to_hiccup_or_k12_extinction(self):
         faults = self.report["faults_cv_demand_only"]
@@ -231,6 +247,10 @@ class DesignBoundsTests(unittest.TestCase):
         self.assertAlmostEqual(nominal_arc["path_a"], 0.259543, places=6)
         self.assertAlmostEqual(nominal_arc["path_w"], 2.602168, places=6)
         self.assertGreater(nominal_arc["k12_current_ratio"], 2.69)
+        selected_arc = next(f for f in faults if f["profile"] == "analysis_upper_selected_R_zero_drop_rmin"
+                            and f["path"] == "AB@40")
+        self.assertAlmostEqual(selected_arc["path_a"], 0.130838026726, places=9)
+        self.assertAlmostEqual(selected_arc["path_w"], 1.310092126188, places=9)
         for fault in faults:
             self.assertIsNone(fault["psu"]["actual_overload_current_a"])
             self.assertIsNone(fault["psu"]["fuse_clearing_s"])
@@ -256,7 +276,8 @@ class DesignBoundsTests(unittest.TestCase):
         bad_calls = (
             (resistor_bounds, {"nominal_ohm": 0}), (resistor_bounds, {"tolerance_fraction": 1}),
             (resistor_bounds, {"tcr_ppm": -50}), (resistor_bounds, {"tcr_ppm": 10000}),
-            (resistor_bounds, {"minimum_c": -56}), (resistor_bounds, {"maximum_c": 156}),
+            (resistor_bounds, {"minimum_c": -55.01}), (resistor_bounds, {"maximum_c": 125.01}),
+            (resistor_bounds, {"maximum_c": 155}),
             (resistor_bounds, {"minimum_c": 100, "maximum_c": 70}),
             (resistor_bounds, {"nominal_ohm": 1.79e308}),
             (cable_corner, {"temperature_c": 70.01}), (cable_corner, {"temperature_c": -30.01}),
@@ -288,7 +309,7 @@ class DesignBoundsTests(unittest.TestCase):
         with redirect_stdout(output):
             main([])
         self.assertIn("CONDITIONAL BOUNDS", output.getvalue())
-        self.assertIn("0.769433", output.getvalue())
+        self.assertIn("0.756803", output.getvalue())
         self.assertIn("after diversion", output.getvalue())
         self.assertIn("K/W", output.getvalue())
         root = Path(__file__).resolve().parents[1]

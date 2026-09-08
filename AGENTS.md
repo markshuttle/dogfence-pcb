@@ -1,7 +1,8 @@
 # Dog Fence Agent And Developer Guide
 
 Hardware development revision: **1.2.0-dev**. Tested native CLI: **KiCad 9.0.7**.
-Manufacturing and field release remain held; file checks are not hardware approval.
+File-verified prototype artifacts are authorized, not uploads or orders.
+Production/field release remains held; file checks are not hardware approval.
 
 ## 1. Start Here
 
@@ -29,8 +30,12 @@ Manufacturing and field release remain held; file checks are not hardware approv
 6. For a **board/prototype-only request**, work the P3/P4 board-finalization
    queue in ORDERING/REMEDIATION, not the first unchecked switch or environmental
    item. Preserve those independent holds without restarting their research.
-   The 16-part protection placement is already implemented; do not add a new
-   circuit or move sound geometry just to produce a PCB diff.
+   The authorized 16-part HP12 SMT conversion preserves the circuit topology;
+   do not add a new circuit or move sound geometry just to produce a PCB diff.
+   **Gate P is file-verified prototype artifacts**, separate from original A/B/C
+   production/field holds. Supplier CAM/placement/allocated parts, GDT fit/forming
+   and panel/process acceptance remain order tasks; enclosure dry-fit on received
+   boards and switch/environmental physical qualification do not gate P files.
 
 ## 2. Headless Environment
 
@@ -50,7 +55,7 @@ Manufacturing and field release remain held; file checks are not hardware approv
   stay under a non-hidden user-workspace directory, not system `/tmp`, `/run`,
   `/var/tmp` or hidden home directories. Project-local `tmp/` is git-ignored.
 
-## 3. Verification And Production
+## 3. Verification And Publication
 
 After any PCB/schematic/layout change, run:
 
@@ -97,31 +102,43 @@ geometry fails closed; extend and test the validator rather than ignore it.
   file/artifact checks pass. That CSV is a generated draft reference, not an
   independent source or upload approval; on failure it may remain from an older
   checked revision.
-- The 16-part hybrid uses **PR02000202201FA100** with no verified LCSC code.
+- The intended SMT resistor is **Uni-Royal HP122WF2201T4E**, HP12 / 2512,
+  2.2 kohm / 2 W / 1%, with **no verified LCSC code**. **C2791283 is
+  HP122WJ0472T4E, 4.7 kohm / 5%, not this part**; the mapping in `02661d8`
+  is rejected. Keep sourcing pending, never guess a replacement code.
   BOM `Sourcing=External` requires an empty code and an exact HTTPS
   `Sourcing Reference` matched to PCB/schematic metadata. This is explicit
   pending procurement, not a guessed C-code or allocation approval. Unresolved
-  external rows block publication independently even after engineering holds
-  are closed. Ordinary LCSC rows still require valid C-codes.
-- `make all` / `make package` and **every public export alias** (`gerbers`,
-  `drills`, `ipc`, `bom`, `cpl`, `zip-gerbers`, `zip-flytest`) run the same complete
-  transaction. Open engineering holds block publication even if file checks
-  pass. Clearing holds requires an evidence-backed file-release review, not an
-  override flag. There is no bypass export target.
-- One shared Make prerequisite and a filesystem lock serialize production.
+  external rows block **both prototype and production publication**. Ordinary
+  LCSC rows still require valid reviewed C-codes; those do not reserve stock.
+- `make gerbers` / `make prototype` run the complete file/artifact checks and
+  may publish **FILE-VERIFIED PROTOTYPE ONLY** packages with **all five
+  C4/C5/W3/W1/W4 ledger holds recorded as deferred, not closed**. No file,
+  sourcing or diagnostic check is bypassed. `make check` never publishes.
+- Production targets `all`, `package`, `release`, `production`, `drills`, `ipc`,
+  `bom`, `cpl`, `zip-gerbers`, `zip-flytest` retain all engineering holds and
+  sourcing gates. **Production wins mixed goals**, regardless of order.
+  Clearing production holds requires an evidence-backed file-release review;
+  prototype authorization is not that review or an upload/order authorization.
+- One shared Make prerequisite and a filesystem lock serialize both modes.
   Gerber and drill scratch directories are separate. `make -j4 all` cannot
   remove another target's outputs or publish a half-built package.
 - Each new attempt quarantines prior `build/` and the Gerber mirror within its
   owned run directory. A failure must not present yesterday's package as current.
-  Only a matching `build/manifest.json` with `status=verified` and validated
-  source/artifact hashes identifies a published file-verified release. This
-  never means CAM, prototype-order, field or lightning approval.
+  Only a matching `build/manifest.json` with validated revision/source/artifact
+  hashes and the correct pair identifies current file-verified artifacts:
+  **`status=prototype`, `mode=prototype`** or production **`status=verified`,
+  `mode=build`**. Status alone is insufficient. Neither means CAM, order, field
+  or lightning approval.
 
-When holds are closed, the published filenames remain `build/Gerbers.zip`
+When the selected publication mode's gates pass, filenames remain `build/Gerbers.zip`
 (mirror `pcb/Gerbers.zip`), `build/BOM.csv`, `build/CPL.csv` (generated source
 mirror), `build/pcb.d356` and `build/FlyTest.zip`. The release also contains
 `Assembly.pdf`, `Assembly.txt`, `ViaTreatment.csv`, the controlled notes, reports
-and manifest. The native assembly PDF includes pad outlines and courtyards;
+and manifest. Generated `README.txt` accompanies the release and travels inside
+both Gerbers/FlyTest ZIPs, identifying the mode and open holds. Both modes share
+these filenames and mirrors; require the matching manifest, not a filename.
+The native assembly PDF includes pad outlines and courtyards;
 the text gives exact footprint anchors and all electrical terminal datums with
 pin numbers/nets in PCB and signed-Y fabrication coordinates. These aid supplier-model
 review, not approved centroid corrections. Flying-probe inputs describe
@@ -135,6 +152,7 @@ python3 -B scripts/analyze_limits.py
 python3 -B scripts/design_bounds.py
 python3 -B scripts/review_annotation.py --cli /snap/bin/kicad.kicad-cli
 python3 -B scripts/verify_workflow.py --expect-holds C4 C5 W3 W1 W4
+python3 -B scripts/verify_workflow.py --target prototype --expect-holds C4 C5 W3 W1 W4
 ```
 
 The first command runs stdlib tests; native contract probes need
@@ -155,8 +173,11 @@ only the justified review fields if accepted. No automatic hash refresh.
 `tmp/manufacturing/`. It preserves old runs/reports under `tmp/workflow-validation/`,
 then executes clean/serial and clean/parallel builds separately and compares
 validated fabrication geometry, connectivity and population. `--expect-holds`
-is an assertion, not an override. A workflow PASS with open holds means both
-builds correctly refused publication; it does not mean `make all` succeeded.
+is an assertion, not an override. Default `--target all` with open holds must
+verify production refusal, not claim `make all` succeeded. `--target prototype`
+instead verifies **real serial/parallel prototype publication**, including the
+mode/hold notices and matching manifests. That PASS requires resolved sourcing;
+prototype refusal for an unresolved external part is not successful publication.
 
 `make clean` removes **only `build/`, owned manufacturing runs and the generated
 Gerber mirror**. It preserves unrelated `tmp/` evidence, the lock and the last
@@ -168,9 +189,9 @@ unavailable, record the actual failed version probe; do not claim DRC passed.
 
 All intentional custom geometry is under `pcb/DogFence.pretty/` with symbols
 in `pcb/DogFence.kicad_sym`. `fp-lib-table` / `sym-lib-table` use `${KIPRJMOD}`.
-Do not replace modified Kefa terminals, the cathode-right SMA diode, or the axial
-overpass with similarly named stock-library objects. Preserve global pad nets,
-positions and the two distinct local LED-terminal mappings.
+Do not replace modified Kefa terminals, manufacturer HP12 lands, the cathode-right
+SMA diode, or the axial GDT overpass with similarly named stock-library objects.
+Preserve global pad nets, positions and the two distinct local LED-terminal mappings.
 
 ```bash
 python3 -B pcb/sync_libraries.py --check
@@ -211,28 +232,43 @@ The LED local pad coordinates intentionally differ: A pad1 `(0,-2.54,90)` and
 pad2 `(0,2.54,90)`; C pad1 `(0,2.54,270)` and pad2 `(0,-2.54,270)`. Do not match
 their rotations or replace them with one generic footprint.
 
-The current **16-part BOM (six SMT, ten THT)** uses Vishay **BYG23T-M3/TR /
-C145454** for D1-D4 and **PR02000202201FA100** copper-lead 2 W / 1% resistors
-for R1/R2, plus the retained Ruilon/Bencent GDTs and Kefa terminals. D1/D2
-remain at (132.50,104.50)/(132.50,140.50), rotation 0, cathodes east. D3/D4
-are at (135.00,99.00)/(135.00,146.00), rotation 180, cathodes west to LED positive,
-anodes east to B. SMA pads are 2.50 x 2.00 at local X=+/-2.10; no diode holes.
-The initial takeoffs and resistor centres remain; no fold or new vias.
+The authorized **16-part BOM (eight SMT, eight THT)** uses Vishay **BYG23T-M3/TR /
+C145454** for D1-D4 and intended **Uni-Royal HP122WF2201T4E**, HP12 / 2512 SMT,
+2.2 kohm / 2 W / 1%, for R1/R2, plus the retained GDTs and Kefa terminals.
+R1/R2 origins are **(120.00,104.50)/(120.00,140.50), rotation 0**, pads at
+**X=116.875/123.125**. Manufacturer lands are **1.35 x 3.70 mm rectangles at
+local X=+/-3.125**, maximum body **6.45 x 3.40**, courtyard **8.10 x 4.20 mm**,
+with zero additional mask/paste margins. No resistor holes, standoff or forming.
+D1/D2 origins are **(130.80,104.50)/(130.80,140.50), rotation 0**, cathodes east
+at **X=132.90**, anodes at **X=128.70**. D3/D4 remain at
+**(135.00,99.00)/(135.00,146.00), rotation 180**, cathodes west to LED positive
+at **X=132.90**, anodes east to B at **X=137.10**. Straight cathode links at
+**X=132.90 are 1.80 mm wide and 5.50 mm long**. SMA pads remain 2.50 x 2.00 at
+local X=+/-2.10, zero additional mask/paste margins; no diode holes.
+Initial takeoffs and protected rails/vias/earth/mounts/LED mappings remain;
+no fold or new vias. Expected inventory is **34 terminals, 32 PTH hits
+(18 component +14 via), four NPTH, 52 IPC records; F.Mask 52, B.Mask 36,
+F.Paste 16**. These are design expectations, not a native-check result.
 Datasheet 5/20 kA impulse or terminal current ratings are
 **component** ratings, not assembled-board performance. Three paralleled EARTH
 pins remain connected, but are not a 72 A assembly rating. The 2 W resistor
 still dissipates about 0.50 W nominal; a wattage label is not cool-body or
-continuous potted qualification. PR02 ambient derating, its hot-spot limit and
-actual gel/cable interface temperatures are different constraints.
+continuous potted qualification. HP12's [SMD-SP-003 V.7, 08-Jan-2026](https://www.uni-royal.cn/en/images/userfile/file/1784806233a2e6d381ea80b5d9.pdf)
+specifies **+/-100 ppm/C referenced to 25 C**, 2 W at 70 C ambient derating to
+zero at 155 C. SMT heat rejection may help, but does not lower loss or prove
+cooler operation. Do not transfer PR02's 220 C hot-spot, 75 K/W example or
+axial standoff to HP12. Use DESIGN_BOUNDS for current screens; actual chip/pad/PCB
+and gel/cable interface temperatures require separate qualification.
 
-Selected hole/pad sizes are KF128 2.00/3.20, KF129 2.00/2.80, PR02
-1.40/2.40, B5G470L 1.40/2.80 and earth GDT 1.50/3.00 mm. These depend on the
+Selected hole/pad sizes are KF128 2.00/3.20, KF129 2.00/2.80,
+B5G470L 1.40/2.80 and earth GDT 1.50/3.00 mm. These depend on the
 controlled pin/body/pattern envelopes in ASSEMBLY, including actual lot and
 forming acceptance. Minimum ring is 0.40. Do not restore smaller legacy holes
 or equate these file checks with insertion/solder approval. J_EARTH has 1.00 mm
 nominal / 1.30 mm tolerance-budgeted body overhang; no courtyard trimming.
-PR02 uses a 0.83 mm maximum lead and requires >=1.00 mm body-to-PCB standoff
-with controlled forming. Old onsemi/MBE footprints are retired, not substitutes.
+GDT forming/overpass standoff remains required. Old onsemi/MBE/PR02 footprints
+and axial resistor instructions are retired, not substitutes or order tasks;
+preserve their procurement history.
 
 ## 6. Functional And Documentation Rules
 
@@ -262,7 +298,8 @@ with controlled forming. Old onsemi/MBE footprints are retired, not substitutes.
   compatible materials or completed thermal qualification. The 35-37 V source
   window is an unimplemented historical proposal. `design_bounds.py` now uses
   a declared 35 V floor / 40.39597 V upper screen, not a guaranteed or enforced
-  window. The selected PR02's +/-250 ppm/K replaces the old MBE 50 ppm/K screen.
+  window. HP12's +/-100 ppm/C at 25 C reference replaces the historical PR02/MBE
+  screens; use `pcb/DESIGN_BOUNDS.md` rather than duplicating stale derived values.
 - Preserve WAGO through-splice/PCB-tap wiring. Normal perimeter current does
   not pass through every PCB. Surge current is a separate design case.
 - Normal TEST must be continuous-safe; do not substitute a timer. TEST/OFF
@@ -322,8 +359,9 @@ supplement, not replace, electrical DRC.
   Gerbers/stencil data too. The current relocation removes the historical
   intersection; retained GDT land-pattern/process approval remains open.
 - Identify hole treatment by **function and coordinates**. Ordinary vias are
-  not lead-insertion holes. Resistor holes formerly shared 1.00 mm and now use
-  1.40 mm; never request filling by diameter. Confirm protected drills survive CAM.
+  not lead-insertion holes. Legacy resistor holes are removed by SMT conversion;
+  retained connector/GDT holes stay open. Never request filling by diameter.
+  Confirm protected drills survive CAM.
 - Use maximum finished lead dimensions, including rectangular-pin diagonals.
   Require `nominal hole - 0.08 mm >= maximum pin envelope + 0.10 mm` as the
   starting diametral allowance after tolerance, with separate pin-pitch,

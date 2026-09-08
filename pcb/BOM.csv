@@ -3,8 +3,8 @@ Comment,Designator,Footprint,LCSC Part #,MPN,Manufacturer,Sourcing,Sourcing Refe
 "KF128-7.62-3P",J_EARTH,"DogFence:KF128_7.62_3P_Earth",C474957,"KF128-7.62-3P","Cixi Kefa Elec",LCSC,
 "KF129-5.08-2P",J_LED_A,"DogFence:KF129_5.08_2P_LED_A",C475092,"KF129-5.08-2P","Cixi Kefa Elec",LCSC,
 "KF129-5.08-2P",J_LED_C,"DogFence:KF129_5.08_2P_LED_C",C475092,"KF129-5.08-2P","Cixi Kefa Elec",LCSC,
-"2.2k 2W",R1,"DogFence:R_2512_6332Metric",C2791283,"HP122WF2201T4E","Uni-Royal",LCSC,
-"2.2k 2W",R2,"DogFence:R_2512_6332Metric",C2791283,"HP122WF2201T4E","Uni-Royal",LCSC,
+"2.2k 2W",R1,"DogFence:R_2512_6332Metric",,"HP122WF2201T4E","Uni-Royal",External,https://store.nacsemi.com/products/detail?stock=XSJMZ0000010410
+"2.2k 2W",R2,"DogFence:R_2512_6332Metric",,"HP122WF2201T4E","Uni-Royal",External,https://store.nacsemi.com/products/detail?stock=XSJMZ0000010410
 "BYG23T-M3",D1,"DogFence:BYG23T_SMA_K_Right",C145454,"BYG23T-M3/TR","Vishay General Semiconductor",LCSC,
 "BYG23T-M3",D2,"DogFence:BYG23T_SMA_K_Right",C145454,"BYG23T-M3/TR","Vishay General Semiconductor",LCSC,
 "BYG23T-M3",D3,"DogFence:BYG23T_SMA_K_Right",C145454,"BYG23T-M3/TR","Vishay General Semiconductor",LCSC,

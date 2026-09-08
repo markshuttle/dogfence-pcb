@@ -2,15 +2,48 @@
 
 Document: DF-ASM-1.2.0-dev. Updated 2026-09-07 for hardware **1.2.0-dev**.
 
-**DEVELOPMENT / MANUFACTURING HOLD.** These instructions control the present
-**16-part hybrid**, not a qualified field protection design. There are six
-top-side SMT and ten top-side THT parts, plus four mechanical hole footprints.
-The two negative-voltage shunts and 2 W resistors are implemented in the files;
-powered-GDT recovery/source protection and thermal qualification remain open.
-See [REMEDIATION.md](../REMEDIATION.md), [ELECTRICAL.md](ELECTRICAL.md)
-and the controlled `verification.json` for release decisions. A DRC or
-geometry-check pass does not establish insertion fit, solderability, enclosure
-fit, continuous thermal safety, or surge performance.
+**DEVELOPMENT / FIVE-BOARD PROTOTYPE SCOPE.** These instructions control the
+selected **16-part SMT-resistor/BYG23T hybrid**, not a qualified field protection
+design. There are **eight top-side SMT and eight top-side THT parts**, plus four
+mechanical hole footprints. R1/R2 are intended **Uni-Royal/Royalohm
+HP122WF2201T4E**, 2.2 kohm, 2 W, 1%, with the manufacturer-based lands below.
+Their sourcing is **pending**: C2791283 is rejected, not an allocation for this
+part. There are no resistor insertion holes or axial standoff/forming operations.
+
+Expected file inventory is **eight nets, 34 electrical terminals, 52 IPC records,
+32 PTH hits (18 component +14 via), four NPTH, F.Mask 52, B.Mask 36 and F.Paste
+16 apertures**. These counts are design expectations, not a claim of a fresh
+native PASS for the corrected lands. Use source-matched reports after integration.
+A file check does not establish supplier acceptance or measured performance.
+
+## Prototype Artifacts
+
+`make gerbers` and `make prototype` publish prototype artifacts only after the
+same strict file, native diagnostic, geometry, connectivity, population and
+sourcing checks. **C4, C5, W3, W1 and W4 remain visible as deferred production
+holds, not closed issues.** Their qualification work, including switch and
+environmental research, is not a prerequisite for generating prototype artifacts.
+Pending or incorrect sourcing still blocks publication; accepting SMT does not
+make a guessed C-code valid. `make check` retains checked private exports without
+publishing a package.
+
+`make all`, `make package`, `make release`, `make production` and the remaining
+export aliases (`drills`, `ipc`, `bom`, `cpl`, `zip-gerbers`, `zip-flytest`) retain
+the production holds, including mixed prototype/production goals. Filenames
+remain `build/Gerbers.zip` (mirror
+`pcb/Gerbers.zip`), `build/BOM.csv`, `build/CPL.csv`, `build/pcb.d356` and
+`build/FlyTest.zip`, with assembly aids, notes and reports. Require matching
+manifest source/artifact hashes and **status=prototype, mode=prototype**, distinct
+from production **status=verified, mode=build**. The generated `README.txt`
+inside both ZIPs must identify **FILE-VERIFIED PROTOTYPE ONLY** and the deferred
+holds in prototype mode, even when archives are separated from the manifest.
+Never hand-edit generated artifacts or treat the unchanged filenames as approval.
+
+**Actually placing an order still needs authorization and supplier acceptance**
+of exact parts, placement, fit/forming, processed CAM/stencil and the mixed-assembly
+process. No supplier response, allocation or hardware test is implied here.
+[REMEDIATION.md](../REMEDIATION.md), [ELECTRICAL.md](ELECTRICAL.md) and
+`verification.json` retain the independent production/field dispositions.
 
 ## Drawing Conventions
 
@@ -28,10 +61,11 @@ fit, continuous thermal safety, or surge performance.
   guarantees. Inspect actual parts against them. Courtyards include the stated
   pose and assembly allowances; a drawing stroke is not extra body tolerance.
   LED arrows indicate the required wire-opening direction.
-- Local footprint origins are preserved except for the documented SMT/overpass
-  relocation below. Use the native generated CPL, not a hand-maintained positive
-  screen-Y table: native placement Y is negative for these positive board Y
-  coordinates. Rotations -90 and 270 degrees are equivalent. The assembler must
+- Local footprint origins follow the placement table, including the authorized
+  R1/R2 and D1/D2 moves and retained SMT-GDT/overpass relocation. Use the native
+  generated CPL, not a hand-maintained positive screen-Y table: native placement
+  Y is negative for these positive board Y coordinates. Rotations -90 and 270
+  degrees are equivalent. The assembler must
   approve its actual model origin, orientation and any centroid correction.
 
 `make check` now generates a native **Assembly.pdf** overlay of F.Fab, pad
@@ -54,9 +88,9 @@ that native export, so no ineffective PCB plot-setting change is retained.
 | J_EARTH | (155.00, 122.50), 180 deg | Wire openings east. Pin 1 at Y=130.12, pin 2 at Y=122.50, pin 3 at Y=114.88; all X=155.00 and all on EARTH. This does not establish a 72 A assembled rating or equal impulse sharing. |
 | J_LED_A | (145.50, 103.00), 90 deg | Openings north. Pin 1 positive at (142.96, 103.00); pin 2 WIRE_B return at (148.04, 103.00). |
 | J_LED_C | (145.50, 142.00), 270 deg | Openings south. Pin 1 positive at (142.96, 142.00); pin 2 WIRE_B return at (148.04, 142.00). |
-| D1, D2 | (132.50, 104.50) / (132.50, 140.50), 0 deg | **Vishay BYG23T-M3/TR, C145454**, SMA series diodes. Cathode band east/right, K1 at X=134.60 to LED positive; A2 at X=130.40 to resistor output. No diode insertion holes remain. |
+| D1, D2 | (130.80, 104.50) / (130.80, 140.50), 0 deg | **Vishay BYG23T-M3/TR, C145454**, SMA series diodes. Cathode band east/right, K1 at X=132.90 to LED positive; A2 at X=128.70 to resistor output. No diode insertion holes remain. |
 | D3, D4 | (135.00, 99.00) / (135.00, 146.00), 180 deg | Same BYG23T-M3/TR SMA, **negative shunts**, not series parts. Cathode band west/left, K1 at X=132.90 to LED_A_POS/LED_C_POS; A2 at X=137.10 to WIRE_B. No EARTH connection. |
-| R1, R2 | (116.00, 104.50) / (116.00, 140.50), 0 deg | **Vishay BCcomponents PR02000202201FA100**, 2.2 kohm, 2 W copper-lead version, 1%, +/-250 ppm/K. Formed pitch 15.24; pads X=108.38 and 123.62. Nonpolar; require **>=1.00 body-to-PCB standoff** and controlled forming. External sourcing/allocation remains pending. |
+| R1, R2 | (120.00, 104.50) / (120.00, 140.50), 0 deg | **Uni-Royal/Royalohm HP122WF2201T4E**, 2.2 kohm, 2 W, 1%, 2512. Nonpolar, top-side SMT. Pad 1 at X=116.875 to WIRE_A/C; pad 2 at X=123.125 to Net-(D1-A)/Net-(D2-A). Procurement/code mapping and allocation pending; **do not use C2791283**. No holes or axial standoff/forming. |
 | GDT_AB, GDT_BC | (119.50, 118.69) / (119.50, 126.31), 0 deg | Ruilon SMD5050-470NA. Pad 1 north, pad 2 south. AB connects A/B; BC connects B/C. Nonpolar tube, but preserve the specified footprint/net mapping. |
 | GDT_AC | (125.80, 122.50), 0 deg | Bencent B5G470L, internally north-south geometry despite 0-degree footprint rotation. Pad 1 A at (125.80, 114.88); pad 2 C at (125.80, 130.12). Apply the overpass drawing below. |
 | GDT_A_E, GDT_B_E, GDT_C_E | (138.62, 113.50), (138.62, 122.50), (138.62, 131.50), 0 deg | Ruilon 2R470TD-8, horizontal formed pitch 15.24. Pin 1 west at X=131.00 on A/B/C respectively; pin 2 east at X=146.24 on EARTH. Preserve 9.00 body-centre pitch; do not bend bodies together to ease insertion. |
@@ -76,8 +110,9 @@ selection: land length >=1.52, transverse width >=1.68, inner gap <=1.88 mm;
 5.28 overall land span is marked **reference**, not a maximum. The selected
 rectangular lands are **2.50 x 2.00 at local X=+/-2.10**, giving **1.70 inner
 gap and 6.70 outside span**. Local pad 1 is +X/K, pad 2 -X/A. Copper/mask/paste
-use zero added margins. Preserve all twelve top paste apertures: eight SMA plus
-four GDT; no via paste. This source selection is not processed-stencil approval.
+use zero effective mask/paste margins. Preserve all **sixteen** top paste
+apertures: eight SMA, four resistor and four GDT; no via paste. This source
+selection is not processed-stencil approval.
 
 The diode body envelope is **4.50 x 2.80 x 2.29 high**, with maximum terminal
 span rounded outward to **5.29** from the metric/inch drawing. Courtyard is
@@ -86,86 +121,92 @@ lands plus 0.25. Check bands and actual supplier-model rotation. D1/D2 point
 right; D3/D4 point left. A 75 ns **reverse-recovery** rating does not prove
 instantaneous forward clamping below 5 V; electrical qualification is separate.
 
-The PR02's selected **copper leads** give the 2 W P70 rating; a FeCu variant's
-1.3 W rating is not equivalent. Maximum dimensions are L1=10.0, L2=12.0,
-diameter=3.9 and finished lead **0.78 +/-0.05**. F.Fab conservatively bounds
-**12.00 x 4.20** within the retained **18.20 x 5.00** courtyard. Form to the
-15.24 pitch and required pin-pattern envelope, support the leads during forming,
-and fixture **>=1.00 beneath the body** above the finished PCB. Verify free
-insertion, final gap, coating integrity, seating stability and solder fill on
-each prototype. The former MBE0414 mounting data does not set PR02 bend limits.
+### HP12 SMT Resistors
 
-PR02's catalogue thermal example uses a body standoff; filling that gap with
-OneGel changes heat flow. Neither the standoff nor the 2 W label is a potted
-thermal PASS. Agree forming/cleaning/profile and test the closed assembly.
+The original Uni-Royal **SMD-SP-003, HP Series, V.7, 08-Jan-2026** was visually
+read on pages **1, 2, 4, 5, 6 and 8** for identity, ordering, dimensions, lands,
+ratings and reflow. [DFM_EVIDENCE.md](DFM_EVIDENCE.md#hp12-smt-conversion) records
+the exact URLs, dimension leaders, sourcing mismatch and retrieval limitations.
+The selected local `R_2512_6332Metric` is an exact-part implementation, not an
+assumption that every stock-looking 2512 pattern is interchangeable.
 
-The source BOM deliberately leaves R1/R2's LCSC codes empty with
-**Sourcing=External** and a manufacturer inventory reference. Do not use the
-retired C1368610 or a 220-ohm near-match. JLCPCB procurement/private-part mapping
-and allocated lot remain open; file checks do not approve external allocation,
-and unresolved external rows independently block publication.
+| HP12 feature | Selected nominal geometry / published limit |
+| :--- | :--- |
+| Pad 1 / pad 2 local centres | **(-3.125, 0) / (+3.125, 0)**, both 0 degrees |
+| Copper, F.Mask and F.Paste | **1.35 X x 3.70 Y rectangular lands**, undrilled, top only; zero effective mask margin, paste margin and paste ratio |
+| Land spacing | **6.25 centres, 4.90 inner gap, 7.60 outside span** |
+| Area per nominal copper/paste land | **4.995 mm^2**, not a measured solder deposit |
+| Published body | L=6.35 +/-0.10, W=3.20 +/-0.20, H=0.55 +/-0.10; maxima **6.45 x 3.40 x 0.65** |
+| F.Fab maximum-body box | **X=+/-3.225, Y=+/-1.70**, 6.45 x 3.40 |
+| F.CrtYd | **X=+/-4.05, Y=+/-2.10**, 8.10 x 4.20; contains lands plus 0.25 and maximum body plus 0.10 pose/0.25 assembly margin |
+
+Page 5's land leaders are **A=inner gap 4.90, B=individual longitudinal land
+length 1.35, C=transverse width 3.70, D=outside span 7.60**, each tabulated with
++/-0.10 tolerance. Select the nominal values explicitly; the manufacturer's
+recommendation is not evidence that the assembler's processed stencil is accepted.
+Inspect actual chip seating, terminal wetting, fillets and solder volume. The
+0.65 body-height maximum excludes the solder-joint seating height; no arbitrary
+axial-style gap is specified for this SMT part.
+
+Keep the takeoffs at **X=108.38**, the **1.80-wide** input/series/output routing,
+and the new straight D1-D3 / D2-D4 cathode connections at **X=132.90**. Each
+cathode link is **5.50 long, 1.80 wide on F.Cu**, at Y=99.00..104.50 and
+140.50..146.00 respectively. Shunt anode-to-B routes remain **0.80 wide**;
+protected B returns remain **1.60 on B.Cu**. No folded branch, new via, narrowed
+3.20 rail or changed EARTH geometry is authorized.
+
+The intended **HP122WF2201T4E remains selected**, but exact JLCPCB/LCSC code
+mapping, procurement route and allocation remain **pending**. Both official
+distributor listings identify **C2791283 as HP122WJ0472T4E, 4.7 kohm, 5%, 2 W**;
+reject that code for R1/R2. The intended 2.2-kohm/1% part has a readable external
+distributor listing, not verified JLCPCB allocation. A nominally similar suffix
+or package is not an approved substitution. Request ten fitted parts plus
+supplier-defined attrition only after the exact mapping/route is accepted.
+
+The PDF specifies **+/-100 ppm/C at 2.2 kohm**, referenced to **25 C or a
+specified room temperature**. The manufacturer web listing instead states
+**+/-75 ppm/C** for this HP12 range; that tighter value is not claimed without
+applicable supplier evidence. P70 is **2 W**, derating to zero at **155 C ambient**.
+The retained nominal load is about **0.50 W per resistor**. Heat now flows from
+chip terminations through solder into the local copper and board; trace width
+does not prove a temperature or a reduction in generated heat. The wider
+cathode links are downstream of D1/D2, not uninterrupted resistor-output copper.
+**PR02's hot-spot limit and 75 K/W mounting example do not apply to HP12.**
+Actual continuous-duty and transient performance remain separate, deferred
+qualification work, not prerequisites for prototype artifact generation.
+
+### Axial Resistor History
+
+**Historical only, not population or assembly instructions:** checkpoint
+6ba2a07 specified Vishay PR02000202201FA100 with external sourcing pending,
+1.40/2.40 holes/pads, 15.24 formed pitch, <=0.83 wire and a >=1.00 body-gap requirement. Its
+12.00 body-length envelope left 1.47 budgeted room per end for setback plus
+bend centreline radius; no accepted forming profile or allocation was recorded.
+Vishay 28729, 08-Jul-2025 p2/p3 distinguished axial Cu/A1 from radial options
+and tape feed spacing. That evidence remains history; **no R1/R2 hole, bend or
+axial standoff requirement survives the SMT conversion**.
 
 ### Axial Forming Approval
 
-The missing PR02 forming decision is bounded below, without moving its existing
-pads or borrowing the retired resistor's mounting rules. Side view along Y of
-R1/R2, **not to scale**; Z=0 is the finished top PCB surface. The 12.00 length
-is the conservative L2 envelope, not permission to bend inside the coating.
-
-```text
-                 PR02000202201FA100, D <=3.90
-                    |<-- L2 <=12.00 -->|
-                    +-----------------+
-          .---------|      body       |---------.
-          |         +-----------------+         |
-          |              ^ g >=1.00             |
- Z=0 =====|==============v======================|===== PCB top
-          |                                     |
-          |<--------- P =15.24 nominal --------->|
-       X=108.38                               X=123.62
-          R1: Y=104.50; R2: Y=140.50; origin X=116.00
-          Both holes 1.40; pads 2.40; wire d <=0.83
-
- One end, simple 90-degree bend:
- body-envelope edge -- straight setback s -- bend tangent
- bend centreline radius Rc = inside radius Ri + d/2
- required horizontal room = s + Rc
-```
-
-The nominal PR02 room is `(15.24 - 12.00)/2 = 1.62` per end. Reserving
-0.050 inward insertion-leg pattern error and 0.10 body projection/offset gives
-**1.47**. With d=0.83, the remaining bound is **s + Ri <=1.055**. This is a
-geometric ceiling, **not an approved minimum setback or bend radius**, and
-does not demonstrate that a permissible PR02 bend fits. Hole-position error
-and insertion allowance are accounted for separately in the hole-fit table.
+Only **GDT_AC and the three earth GDTs** remain formed axial parts. For a simple
+90-degree bend, straight setback `s` plus bend centreline radius
+`Rc = Ri + d/2` must fit the available horizontal room. The table reserves
+0.050 inward insertion-leg pattern error and 0.10 body projection/offset per
+end. These are geometric ceilings, **not approved minimum setbacks or bend
+radii**. Hole-position and insertion allowances are separate in the fit table.
 
 | Formed part | Nominal pitch | Axial body/envelope maximum | Finished wire limit | Available `s + Rc` after 0.050 leg / 0.10 body allowance | Corresponding `s + Ri` ceiling |
 | :--- | ---: | ---: | ---: | ---: | ---: |
-| R1/R2 PR02 | 15.24 | 12.00 | 0.83 | **1.47** | **1.055** |
 | GDT_AC B5G470L | 15.24 | 6.20 | 0.90 E | **4.37** | **3.920** |
 | Earth 2R470TD-8 GDTs | 15.24 | 6.30 | 1.05 | **4.32** | **3.795** |
 
-Obtain one dimensioned, accepted forming drawing for each family. It must state
-the straight-setback datum/minimum, inside-radius minimum and achieved maximum,
-body centring, complete pin-pattern tolerance, standoff range, maximum assembled
-height, bottom lead protrusion and trimming/soldering sequence. PR02's **>=1.00
-minimum gap does not define a maximum height**: at exactly 1.00 gap the largest
-body reaches 4.90, but 4.90 is not an upper assembly limit. The existing GDT_AC
-2.50 +/-0.25 underside / 8.50 complete-height development envelope remains below.
+Obtain one dimensioned, accepted forming drawing for each GDT family. It must
+state the straight-setback datum/minimum, inside-radius minimum and achieved
+maximum, body centring, complete pin-pattern tolerance, standoff range, maximum
+assembled height, bottom lead protrusion and trimming/soldering sequence. The
+existing GDT_AC 2.50 +/-0.25 underside / 8.50 complete-height development envelope
+remains below.
 No new height, lead-cut length or acceptable seal/coating stress is invented.
-
-Vishay 28729, **08-Jul-2025 p2**, lists the selected **axial Cu/A1** wire at
-0.78 with formed pitch **n/a**. Its separate factory radial Cu/L1 option is
-17.8 pitch; the 15 mm B1 option uses FeCu. Page 3's A1 packaging **5 mm pitch
-is tape feed spacing**, not PCB pitch. Those tables were visually rechecked;
-none approves the present 15.24 forming. The existing outline maxima above
-come from the prior controlled drawing review, not a new outline-page inspection.
-
-**First supplier decision for this board:** can the exact Cu/A1 PR02 be formed
-and soldered at the retained 15.24 pitch within these bounds? If not, return the
-minimum supported profile for design review. Do not silently substitute FeCu,
-force the leads, move the protected takeoffs, or assume increased height cures
-an unsupported bend. This remains W4 process/fit acceptance, not a DRC failure.
 
 ## GDT_AC Forming Drawing
 
@@ -257,7 +298,6 @@ No qualified yield or assembler acceptance of these limits is yet recorded.
 
 | THT references / exact BOM identity | Nominal hole / pad | Minimum hole | Supported maximum pin envelope / calculation | Status |
 | :--- | :--- | :--- | :--- | :--- |
-| R1, R2: Vishay PR02000202201FA100, external sourcing | **1.40 / 2.40** | 1.32 | Published lead **0.78 +/-0.05**, maximum **0.83**. `1.32 - 0.83 - 0.241421 = 0.248579 >=0.10`. | File fit budget passes; allocated part, forming/standoff and solder-fill acceptance HELD. |
 | GDT_AC: Bencent B5G470L, C5337217 | **1.40 / 2.80** | 1.32 | Original A2 figure labels round 0.80 without tolerance; adopt **E diameter <=0.90**. Residual allowance **0.178579** after position budget. | File envelope selected; actual E/pattern and overpass forming acceptance HELD. |
 | GDT_A_E, GDT_B_E, GDT_C_E: Ruilon 2R470TD-8, C2836978 | **1.50 / 3.00** | 1.42 | A3/A6 TD figures give **1.00 +/-0.05**, max **1.05**. `1.42 - 1.05 - 0.241421 = 0.128579 >=0.10`. | Known undersize corrected. Verify supplied revision, post-forming pin/pattern and nickel-lead process. |
 | J_IN, J_EARTH: Cixi Kefa KF128-7.62-3P, C474957 | **2.00 / 3.20** | 1.92 | Nominal 0.90 x 0.80; **E <=1.10 x 1.00**, diagonal **1.486607**. Residual allowance **0.191972** after position budget. | File envelope selected; finished metal-pin/pattern/body lot acceptance HELD. |
@@ -273,11 +313,11 @@ No qualified yield or assembler acceptance of these limits is yet recorded.
   **+0.10/-0.00** PCB hole is also not JLCPCB's ordinary nominal 1.40 process.
   The chosen 2.00 holes trade extra solder volume/fixturing for explicit fit
   margin. Neither stock CAD nor enlargement establishes actual solder fill.
-- Nominal component rings are **0.50 resistor, 0.70 GDT_AC, 0.75 earth GDT,
+- Nominal component rings are **0.70 GDT_AC, 0.75 earth GDT,
   0.60 KF128, 0.40 KF129**. These exceed the 0.254 nominal
   two-layer/2 oz component-PTH design requirement; finished ring and barrel
   plating still depend on fabrication/registration tolerances and the quote.
-- Inspect the PR02 formed pattern and >=1.00 body standoff after seating as
+- Inspect the GDT formed patterns and required overpass gap after seating as
   well as before insertion. Larger holes must not permit collapse, tilt or
   unstable assembly. Do not spend the same allowance twice or force a rigid
   connector to meet a nominal gauge.
@@ -290,7 +330,7 @@ No qualified yield or assembler acceptance of these limits is yet recorded.
 | Item | Drawing evidence used | Source representation / remaining hold |
 | :--- | :--- | :--- |
 | Vishay BYG23T-M3/TR, D1-D4 | Document 89429, 25-Feb-2020 p4, original outline/land figure visually reviewed. Body 4.50 x 2.80, terminal span 5.29 rounded outward; height <=2.29. | `F.Fab` 4.50 x 2.80; courtyard **X=+/-3.60, Y=+/-1.80**. Same local geometry, D1/D2 rotation 0 and D3/D4 180. |
-| Vishay PR02000202201FA100 | Document 28729, 08-Jul-2025, copper-lead PR02. L2 max 12.0, D max 3.9; d=0.78 +/-0.05. | Conservative `F.Fab` **12.00 x 4.20**, retained **18.20 x 5.00** courtyard; actual part has required >=1.00 standoff and pattern/forming acceptance. |
+| Uni-Royal/Royalohm HP122WF2201T4E, R1/R2 | SMD-SP-003, HP Series V.7, 08-Jan-2026 p4/p5, original body/land leaders visually read. Maximum body **6.45 x 3.40 x 0.65**. | `F.Fab` **6.45 x 3.40**; courtyard **8.10 x 4.20**. Rectangular **1.35 x 3.70** lands at local X=+/-3.125. Exact sourcing, actual placement and stencil/reflow acceptance pending; no axial forming. |
 | Bencent B5G470L | A2, 2018-01-03 p2: length 6 +/-0.2, diameter 5.5 +/-0.2; overall 62 +/-2. | `F.Fab` **5.72 X x 6.20 Y**, rounding the larger inch diameter outward. Courtyard X=+/-3.25, Y=+/-9.30. |
 | Ruilon SMD5050-470NA | SP-GDT-006 A3, 2024-08-19 p3: square **end face** A/B=5.0 +/-0.2; **axial** C=4.2 +/-0.3; electrode D=0.5 +/-0.1. | Corrected `F.Fab` **5.21 X x 4.50 Y**; courtyard X=+/-3.00, Y=+/-3.75. End-face height is not the 4.2 axial dimension. Metric lands selected below. |
 | Ruilon 2R470TD-8 | SP-GDT-017 A3, 2023-11-02 p3 and A6, 2025-10-16 p5, visually read TD figures agree: diameter 8 +/-0.2, length 6 +/-0.3. | `F.Fab` **6.30 X x 8.21 Y**, outward inch rounding; courtyard X=+/-9.40, Y=+/-4.46. Retain 9.00 centre pitch. |
@@ -337,8 +377,9 @@ LED courtyards stop at X=151.95, 0.10 before H2/H4's protected courtyard bounds.
 
 ## SMT Via Relocation
 
-The source retains the prior relocation and now implements the visually
-resolved **metric land recommendation**, without speculative mask reductions:
+The source retains the prior GDT relocation and visually resolved **metric GDT
+land recommendation**, without speculative mask reductions. Distances in this
+section refer to the four Ruilon GDT lands, not the four new resistor lands:
 
 - GDT_AB and GDT_BC remain at **X=119.50**, Y=118.69/126.31, zero rotation and
   unchanged nets. Lands are now **5.50 X x 1.20 Y at local Y=+/-2.00** for
@@ -427,9 +468,9 @@ Y south
                                                                EARTH
 ```
 
-- No filling by size. R1/R2 formerly shared the 1.00 via diameter and now use
-  1.40 component holes; hole function, not size, remains controlling. All
-  component PTH holes stay open for insertion; no via is an insertion pad.
+- No filling by size. R1/R2 have **no holes** after the SMT conversion. All
+  eighteen remaining component PTH holes stay open for insertion; hole function,
+  not size, remains controlling and no via is an insertion pad.
 - Preserve all fourteen via locations, hole diameters and copper diameters.
   Obtain written CAM agreement not to reduce the protected via drills under
   ordinary via-hole adjustment practices.
@@ -475,10 +516,14 @@ without changing the protected 3.20 mounting holes.
    nickel/tin lead finishes, heavy solid-copper thermal load and any selective
    solder tooling. SMT reflow followed by controlled THT soldering is a candidate
    sequence, not an approved universal profile.
-3. Establish a compatible profile for **all** installed parts, including the
-   new SMA BYG23T and PR02. The former onsemi solder limit applies only to the
-   retired diode, not the new assembly. The retrieved Ruilon/Bencent wave tables
-   use up to 280 degrees C and 2-5 seconds. Different
+3. Establish a compatible profile for **all** installed parts, including SMA
+   BYG23T and HP12. The visually read HP V.7 p8 recommended SAC305 reflow profile
+   gives 150..200 C preheat for 60..120 s, <=3 C/s ramp-up, 217 C liquidus for
+   60..150 s, **260 C peak**, 10 s within 5 C below peak, <=6 C/s ramp-down,
+   <=8 minutes from 25 C to peak and **two reflow cycles**. It is a recommendation
+   to adjust for the application, not an accepted JLCPCB profile. The former
+   onsemi solder limit applies only to the retired diode. The retained
+   Ruilon/Bencent wave tables use up to 280 degrees C and 2-5 seconds. Different
    measurement locations and heat-test limits are not permission to expose
    every part to the most permissive number. Record actual joint/body
    temperatures, time, preheat and the approved alloy/flux/cleaning process.
@@ -495,6 +540,9 @@ without changing the protected 3.20 mounting holes.
 
 ## COMBI Dry-Fit Hold
 
+These are later assembled-prototype/pre-encapsulation activities, **not
+prerequisites for generating prototype artifacts**. No new enclosure, gel,
+environmental or switch research is assigned by this board-only update.
 Use an actual WISKA COMBI 308, actual Essentra supports and fully formed/soldered
 board before potting. Its published **85 x 85 x 51 external** dimensions are not
 usable internal space. Assembly height, tolerances and tool access are not
@@ -526,31 +574,38 @@ simulated by DRC.
 
 ## Acceptance Record
 
-Before release, retain board serial/revision, BOM/lot and drawing revisions,
-approved pin-fit calculations, measured forming/pitch/height, solder profile,
-via-coordinate CAM acceptance, processed mask/stencil/drill review, assembler
-rotation approval, support/enclosure dry-fit and measured thermal/electrical
-results. Basic workmanship on five boards is not field or surge qualification.
+Before an actual prototype order, retain the accepted exact BOM/sourcing route,
+applicable part drawings/fit limits, GDT forming and mixed-assembly process,
+placement-model approval, processed CAM/stencil/drill review and panel plan.
+After assembly, record board serial/revision, BOM/lot, measured forming/pitch/
+height, solder/workmanship and electrical inspection results. Record later
+support/enclosure, continuous-duty and protection results under their separate
+acceptance scopes, not as prerequisites for generating prototype files.
 
-Open approvals are now specific: allocated Kefa/Vishay/Bencent parts must meet
-the selected drawing/E/pattern/body envelopes; actual resistor and GDT forming must be
-accepted; the KF129 drawing variant, metric SMT interpretation, processed
-stencil and solder fill/profile need supplier acceptance; J_EARTH's 1.30
-tolerance-budgeted overhang and full COMBI/support fit need inspection. Untented
-fabrication is standard, not an unresolved 1.00 filling request. Protected
-drills, any required barrel minimum, OneGel compatibility and P2 protection/
-continuous-duty design remain held. No lot, CAM or hardware pass is invented.
+Open supplier facts are specific: **HP122WF2201T4E code mapping/procurement and
+allocation**, its accepted stencil/reflow and actual placement; allocated Kefa/
+GDT drawing/E/pattern/body compliance; accepted GDT forming; KF129 variant and
+Ruilon metric/inch clarification; solder fill/profile; protected drills and any
+required barrel minimum; and J_EARTH's **1.30 tolerance-budgeted overhang** in the
+panel/depanelization process. Untented fabrication is standard, not an unresolved
+1.00 filling request. The five production holds remain visible and deferred for
+prototype artifacts; no lot, supplier email, CAM acceptance or hardware PASS is
+invented. Basic workmanship on five boards is not field or surge qualification.
 
 ## Evidence Links
 
 Initial evidence was retrieved 2026-09-06; original figures were subsequently
 resolved as recorded in DFM_EVIDENCE, with hybrid sources added 2026-09-07.
+The subsequent 02661d8 review supplied the HP12 visual and sourcing evidence.
 PDF text extraction and public PDF-viewer page images are retrieval aids, not
-supplier approval. The BYG23T outline/land figure was visually checked; retired
-onsemi/MBE links below preserve history, not current population instructions.
+supplier approval. HP12 pages 1/2/4/5/6/8 were visually checked; the earlier
+BYG23T outline/land review remains identified above. Retired PR02/onsemi/MBE
+links preserve history, not current population instructions.
 
 - [Selected Vishay BYG23T-M3/TR, 89429, 25-Feb-2020](https://www.vishay.com/docs/89429/byg23t.pdf), [C145454 identity](https://www.lcsc.com/product-detail/C145454.html).
-- [Selected copper-lead PR02, 28729, 08-Jul-2025](https://www.vishay.com/docs/28729/pr010203.pdf), [exact PR02000202201FA100 external sourcing reference](https://www.vishay.com/search?type=inv&query=PR02000202201FA100). No allocation is implied.
+- [Selected HP12 family, SMD-SP-003 V.7, 08-Jan-2026](https://www.uni-royal.cn/en/images/userfile/file/1784806233a2e6d381ea80b5d9.pdf), [manufacturer HP listing with conflicting TCR](https://www.uni-royal.cn/en/product.php?s=High-Power+Thick+Film+Chip+Res), [readable intended HP122WF2201T4E distributor identity](https://store.nacsemi.com/products/detail?stock=XSJMZ0000010410). No JLCPCB code mapping or allocation is established.
+- Rejected C2791283: [LCSC identity](https://www.lcsc.com/product-detail/C2791283.html), [JLCPCB identity](https://jlcpcb.com/partdetail/UniRoyalElec-HP122WJ0472T4E/C2791283). Both identify HP122WJ0472T4E, **4.7 kohm / 5%**, not the intended 2.2 kohm / 1%.
+- [Historical PR02, 28729, 08-Jul-2025](https://www.vishay.com/docs/28729/pr010203.pdf), [former PR02000202201FA100 sourcing reference](https://www.vishay.com/search?type=inv&query=PR02000202201FA100). Retired from the selected board; no past allocation or forming approval is implied.
 - [onsemi 1N4001/D family/case drawing](https://www.onsemi.com/pdf/datasheet/1n4001-d.pdf), [C232439 onsemi identity](https://www.lcsc.com/product-detail/C232439.html).
 - [Vishay document 28766](https://www.vishay.com/docs/28766/mbxsma.pdf).
 - [Bencent B5G470L A2 via LCSC](https://datasheet.lcsc.com/datasheet/pdf/6471acbc3d87a8a4a9e5f7b8a245655d.pdf?productCode=C5337217).
