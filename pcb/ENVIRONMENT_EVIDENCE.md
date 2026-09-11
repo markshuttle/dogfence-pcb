@@ -3,19 +3,37 @@
 **Hardware 1.2.0-dev; original research at checkpoint 97e202d on 2026-09-07; hybrid checkpoint 6ba2a07; catalogue-switch evidence updated 2026-09-07.**
 
 Controlled environment/hub evidence. The original bounded research edited only
-this file; the later documentation synchronization records the user's clarified
-site scope and implemented PR02/BYG23T circuit using the design BOM and
+this file; the later documentation synchronization recorded the user's clarified
+site scope and the then-implemented PR02/BYG23T circuit using the design BOM and
 [DESIGN_BOUNDS.md](DESIGN_BOUNDS.md). The subsequent P2 switch continuation
 visually reads the manufacturer's catalogue contact graphic and rechecks its
 application restrictions; it does not change the circuit or assign hub wiring.
 No supplier acceptance, procurement allocation or physical qualification is
 recorded. **C4, C5, W3, W1 and W4 remain open.**
 
-**2026-09-08 resistor supersession:** the current BOM now selects
-**PS122WF2201T4E / C2793873** for prototype and production. The PR02 mounting
-and thermal arithmetic below are historical checkpoint evidence, not PS12
-requirements. Use ELECTRICAL/DESIGN_BOUNDS for the selected SMT part; no new
-environmental or switch research, qualification or prototype-file gate is added.
+**2026-09-11 resistor correction:** the prototype BOM only selects
+**TE Connectivity 35212K2FT / C4129105** (2512 SMT, 2.2 kohm / 2 W / 1%, AEC-Q200,
+in stock at JLCPCB). The user confirms **Yageo SR2512FK-7W2K2L /
+[C876850](https://jlcpcb.com/partdetail/C876850) ORDERED** with an advised 20-day
+wait for future production, not receipt, inspection or job allocation. The prior
+Uni-Royal PS12 order was cancelled/refunded due to stockout; [MATERIALS](../MATERIALS.md)
+preserves its historical 110-part order separately. Whole-BOM
+`allocation_verified` remains `false`. TE prototype results do not establish
+Yageo thermal qualification: [ORDERING](../ORDERING.md) requires separate
+production-part review, controlled BOM/CAD, library, model and note updates and
+reverification before production release.
+
+Use [ELECTRICAL](ELECTRICAL.md) and [DESIGN_BOUNDS](DESIGN_BOUNDS.md) for current
+TE evidence from **9-1773463-5, Rev G, 02/2025**. Its +/-100 ppm/C at 2.2 kohm
+is supported; the retained 25 C reference and -30..125 C linear screen are
+engineering assumptions, not verified TE TCR test conditions. TE page 3's
+four-layer, 2 oz outer / 4 oz inner mounting/thermal reference differs from the
+actual two-layer board, so P70/derating transfer is conditional, not proof of
+two-layer failure. [ASSEMBLY](ASSEMBLY.md) controls the retained alternate
+project lands and pending supplier placement/stencil/solder acceptance.
+PR02 mounting/thermal arithmetic below and PS12 overload/pulse data are
+historical evidence, not TE or Yageo qualification. No new environmental or
+switch research, physical qualification or prototype-file gate is added.
 
 ## User-Confirmed Corrections
 
@@ -160,10 +178,11 @@ or unrestricted reuse/top-up of removed or contaminated gel.
 
 The historical **16-part PR02 checkpoint schematic/PCB/BOM** specified **Vishay BCcomponents
 PR02000202201FA100**, copper-lead **2.2 kohm / 2 W / 1% / +/-250 ppm/K**, not the
-retired MBE0414. Its **0.83 mm maximum lead, 15.24 mm formed pitch and retained
-1.40/2.40 mm holes/pads** do not establish process acceptance; **>=1.00 mm
-body-to-PCB standoff is required**, not measured or qualified mounting. Nominal
-resistor heat is still about **0.50 W each**. The declared **40.39597 V / zero-drop /
+retired MBE0414. Its **0.83 mm maximum lead, 15.24 mm formed pitch and then-retained
+1.40/2.40 mm holes/pads** did not establish process acceptance; **>=1.00 mm
+body-to-PCB standoff was required at that checkpoint**, not measured or qualified
+mounting and not a present SMT requirement. Nominal resistor heat was about
+**0.50 W each**. The declared **40.39597 V / zero-drop /
 PR02 Rmin = 2120.8275 ohm** screen through 125 C gives **0.769432871 W and
 19.047268 mA per branch**, or **1.561875985 A / 63.0935 W for 82 zero-cable
 branches**. These are analysis inputs/results, not enforced source limits or

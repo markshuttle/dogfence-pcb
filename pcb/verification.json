@@ -15,9 +15,9 @@
   "reviewed_netlist_annotation": {
     "tool_version": "9.0.7",
     "stdout": "Warning: schematic has annotation errors, please use the schematic editor to fix them\n",
-    "reason": "2026-09-08 PS12 selection re-review: manually inspected tmp/annotation-review/hybrid-j8a0a85i/report.json and commands.json; baseline and inverse-numbered comparison.json files are byte-identical. All 20 source property/instance references are unique and consistent; 16 populated parts, four mounts, eight nets and all 34 terminals match PCB/BOM, including PS122WF2201T4E / C2793873 for R1/R2. Renaming only the ten intentional J_/GDT_ references removes the warning while preserving all component contents and terminal memberships. Duplicate, unassigned and property/instance-mismatch probes are structurally rejected despite the same native warning. Accept only this KiCad 9.0.7 kicadxml stdout line, empty stderr and exit 0 with the exact five input hashes below. Only the changed schematic hash was deliberately updated after this review; the other four approval hashes and eight-label review remain unchanged. All five engineering holds remain open. This is diagnostic review, not part allocation, circuit, thermal or surge approval. Never refresh approval hashes automatically.",
+    "reason": "2026-09-11 TE Connectivity 35212K2FT prototype selection re-review: manually inspected tmp/annotation-review/hybrid-q2wofkcc/report.json and commands.json; baseline and inverse-numbered comparison.json files are byte-identical. All 20 source property/instance references are unique and consistent; 16 populated parts, four mounts, eight nets and all 34 terminals match PCB/BOM, including 35212K2FT / C4129105 for R1/R2. Renaming only the ten intentional J_/GDT_ references removes the warning while preserving all component contents and terminal memberships. Duplicate, unassigned and property/instance-mismatch probes are structurally rejected despite the same native warning. Accept only this KiCad 9.0.7 kicadxml stdout line, empty stderr and exit 0 with the exact five input hashes below. Only the changed schematic hash was deliberately updated after this review; the other four approval hashes and eight-label review remain unchanged. All five engineering holds remain open. This is diagnostic review, not part allocation, circuit, thermal or surge approval. Never refresh approval hashes automatically.",
     "source_hashes": {
-      "pcb/pcb.kicad_sch": "632e440e8ec321428eaf0521bed7bd2e04f64335e29f9a864a636e872a880cef",
+      "pcb/pcb.kicad_sch": "01329ea3bf88981f3df2f7ba202226f94947c2a3b8ff6c80a75d3c1ecd87e77a",
       "pcb/pcb.kicad_pro": "cb018c8545e0cfa72b4867d7bd1eb36d56b16298f38eb48d0073dbba8234db0e",
       "pcb/DogFence.kicad_sym": "a1a846c7c485c7c8a429c86cb75555c7278df0dba558eecaceb144c2bb43f75d",
       "pcb/sym-lib-table": "ea40d83d52d3814721b6121a7103b8dca0e4ab19d8a15ef1e849e6de10a8b532",
@@ -35,7 +35,7 @@
     },
     {
       "id": "W3",
-      "reason": "Selected PS12 2512 SMT 2 W resistors are implemented for prototype and production; the unchanged 0.756803 W screening load is not a measured chip/pad/PCB or closed-OneGel temperature or an accepted source/thermal envelope. SMT changes heat flow, not normal power loss. Continuous normal TEST qualification remains open. See ELECTRICAL.md and DESIGN_BOUNDS.md."
+      "reason": "TE Connectivity 35212K2FT / C4129105 is the prototype resistor; Yageo SR2512FK-7W2K2L / C876850 is ordered for production with a 20-day wait, not qualified by TE results. The 0.756803 W screen uses declared temperature/reference assumptions, not verified TE TCR test endpoints or a measured chip/pad/PCB/OneGel temperature. Transfer of TE's catalogue rating from its four-layer 2 oz outer / 4 oz inner reference PCB to this two-layer board is unverified. Actual source limits and continuous normal TEST qualification remain open. See ELECTRICAL.md and DESIGN_BOUNDS.md."
     },
     {
       "id": "W1",
@@ -43,7 +43,7 @@
     },
     {
       "id": "W4",
-      "reason": "Allocated-lot pin/body/pattern acceptance, retained GDT forming, PS12 lands/stencil, mixed-assembly solder fill and the 1.30 mm earth-terminal overhang remain to accept. Selected R1/R2 PS122WF2201T4E / C2793873 resolves the former External sourcing blocker; the user reports 110 ordered into their JLCPCB parts library, not received, inspected or allocated to a PCBA job. SMT resistors have no insertion holes or axial standoff requirement. See ASSEMBLY.md and MATERIALS.md."
+      "reason": "Allocated-lot pin/body/pattern acceptance, retained GDT forming, mixed-assembly solder fill and the 1.30 mm earth-terminal overhang remain open. Retained 1.35 x 3.70 mm resistor lands are a project alternative to TE's 1.50 x 3.00 mm recommendation; actual alternate-land placement/stencil/solder acceptance is required, not a manufacturer-exact fit claim. TE Connectivity 35212K2FT / C4129105 resolves prototype identity; Yageo SR2512FK-7W2K2L / C876850 is ordered for production with a 20-day wait, not job-allocated. Prior PS12 was cancelled/refunded. SMT resistors have no insertion holes or axial standoff. See ASSEMBLY.md and MATERIALS.md."
     }
   ],
   "file_release_review": null

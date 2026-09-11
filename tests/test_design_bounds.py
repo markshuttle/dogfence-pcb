@@ -50,26 +50,38 @@ class DesignBoundsTests(unittest.TestCase):
         self.assertAlmostEqual(resistor_bounds(minimum_c=-55, maximum_c=-30)[0],
                                2200 * 0.99 * (1 - 100e-6 * 80))
         resistor = self.report["resistor"]
-        self.assertEqual(resistor["mpn"], "PS122WF2201T4E")
-        self.assertEqual(resistor["manufacturer"], "Uni-Royal")
+        self.assertEqual(resistor["mpn"], "35212K2FT")
+        self.assertEqual(resistor["manufacturer"], "TE Connectivity")
         self.assertEqual(resistor["package"], "2512 SMT")
         self.assertNotIn("lead_material", resistor)
         self.assertEqual(resistor["screen_temperature_range_c"], [-30, 125])
+        self.assertEqual(resistor["supported_temperature_range_c"], [-55, 125])
         self.assertEqual(resistor["reference_temperature_c"], 25)
-        self.assertEqual(resistor["tcr_test_temperatures_c"], [-55, 125])
         self.assertEqual(resistor["tcr_abs_ppm_per_c"], 100)
         self.assertEqual(resistor["p70_w"], 2)
         self.assertEqual(resistor["zero_power_ambient_c"], 155)
         self.assertNotIn("pr02_", json.dumps(self.report))
-        self.assertEqual(resistor["family_max_working_voltage_v"], 500)
+        self.assertEqual(resistor["family_max_working_voltage_v"], 250)
         self.assertAlmostEqual(resistor["rated_working_voltage_at_p70_v"], math.sqrt(2 * 2200))
-        self.assertEqual(resistor["family_max_overload_voltage_v"], 1000)
+        self.assertEqual(resistor["family_max_overload_voltage_v"], 500)
         self.assertEqual(resistor["dielectric_withstanding_voltage_v"], 500)
-        self.assertAlmostEqual(resistor["short_time_overload_test_v"], 165.83123951777)
-        self.assertEqual(resistor["short_time_overload_test_s"], 5)
-        self.assertIn("one-pulse power and voltage curves", " ".join(self.report["limitations"]))
         self.assertIn("neither establishes repetitive surge or board-lightning qualification",
                       " ".join(self.report["limitations"]))
+
+    def test_te_provenance_does_not_promote_assumptions_or_unknown_tests(self):
+        self.assertEqual(self.report["model_scope"], "prototype_only")
+        resistor = self.report["resistor"]
+        self.assertEqual(resistor["datasheet"],
+                         {"document": "9-1773463-5", "revision": "G", "date": "02/2025"})
+        for field in ("reference_temperature_basis", "temperature_screen_basis"):
+            self.assertEqual(resistor[field], "declared_engineering_assumption")
+        self.assertEqual(resistor["tcr_test_method"],
+                         "Room and minimum/maximum operating temperatures (User Spec)")
+        for field in ("tcr_test_reference_temperature_c", "tcr_test_temperatures_c",
+                      "short_time_overload_test_v", "short_time_overload_test_s"):
+            with self.subTest(field=field):
+                self.assertIsNone(resistor[field])
+        self.assertNotIn("165.831", json.dumps(self.report, allow_nan=False))
 
     def test_nominal_comparison_and_nonuniform_vf_is_worse_than_uniform(self):
         rows = self.report["normal_cases"]
@@ -127,7 +139,7 @@ class DesignBoundsTests(unittest.TestCase):
         self.assertEqual(analyze(high_drop_v=60)["current_bounds"]["conditional_all_station_led_min_ma"], 0)
 
     def test_historical_pr02_mbe_screens_are_not_selected_limits(self):
-        # Historical 20 C reference is explicit, not a compatibility mode in PS12 helpers.
+        # Historical 20 C reference is explicit, not a compatibility mode in selected-part helpers.
         pr02_min = 2200 * 0.99 * (1 - 250e-6 * (125 - 20))
         self.assertAlmostEqual(pr02_min, 2120.8275)
         self.assertAlmostEqual(dc.branch_budget(dc.ADJUSTMENT_SCREEN_V, dc.Channel(
@@ -190,6 +202,10 @@ class DesignBoundsTests(unittest.TestCase):
         self.assertEqual(sweep["shunt_diversion_bound_a"], 50e-6)
 
     def test_branch_power_table_and_no_below_70C_rating_extrapolation(self):
+        resistor = self.report["resistor"]
+        self.assertEqual(resistor["catalogue_mounting"],
+                         {"layers": 4, "outer_copper_oz": 2, "inner_copper_oz": 4})
+        self.assertFalse(resistor["board_rating_transfer_verified"])
         nominal, at36, at37, upper, adjustment = self.report["source_end_branches"]
         self.assertAlmostEqual(nominal["resistor_w"], 0.501018181818)
         self.assertAlmostEqual(nominal["two_resistors_and_rectifiers_w"], 1.023163636364)

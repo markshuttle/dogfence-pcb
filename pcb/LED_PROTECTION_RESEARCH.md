@@ -11,7 +11,8 @@ the separate cable investigation owns its Class 5 resistance envelope. No
 series, parallel, or opposite-end source connection is assumed. Older
 procurement statements in the shared guides were deliberately not edited.
 
-**Current handoff: see section 11's negative findings before selecting parts.**
+**Original research handoff, superseded by the implementation notes below:**
+section 11 records the negative findings against its unselected candidates.
 The original pulse curve rejects L1's proposed PWC resistor string. L2 removes
 the separate regulator-current overshoot problem, but its TVS2700 operates
 outside the recommended input range during normal TEST and can exceed its DC
@@ -19,21 +20,37 @@ absolute limit after a post-resistor fault. **Neither circuit is selected for
 population.** The records preserve calculations and failures, not a completed
 design awaiting field qualification alone.
 
-**Later implementation after checkpoint ad282e3:** installation-polarity LED
+**Historical implementation after checkpoint ad282e3:** installation-polarity LED
 damage and direct-strike rebuilding are accepted, but not all routine/nearby
 transient damage. Energized cattle fencing is prohibited near the entire
 boundary, stations and hub; the old close-parallel exposure is withdrawn.
-ELECTRICAL/ASSEMBLY now control the **implemented 16-part PR02/BYG23T hybrid**:
+At that checkpoint, ELECTRICAL/ASSEMBLY controlled the **16-part PR02/BYG23T hybrid**:
 two 2 W axial resistors, two SMA series diodes and two SMA negative shunts,
 not L1/L2's active/current-regulating circuits. Their research below remains
 history, not a prerequisite or the current BOM. The new shunts are not a
 guaranteed forward-pulse limiter or an instantaneous <=5 V clamp.
 
-**2026-09-08 supersession:** current R1/R2 are user-selected **PS122WF2201T4E /
-C2793873 SMT** for prototype and production, with the same 16-part topology.
-The PR02 implementation and unselected circuits below remain historical research.
-Use current ELECTRICAL/ASSEMBLY/DESIGN_BOUNDS; no further protection research or
-physical qualification is a Gate P prototype-file prerequisite.
+**2026-09-11 resistor correction:** R1/R2 in the prototype BOM only are
+**TE Connectivity 35212K2FT / C4129105 2512 SMT** (in stock at JLCPCB), with
+**Yageo SR2512FK-7W2K2L / [C876850](https://jlcpcb.com/partdetail/C876850)**
+user-confirmed ORDERED with an advised 20-day wait for future production, not
+receipt or allocation. The prior Uni-Royal PS12 order was cancelled/refunded due
+to stockout; [MATERIALS](../MATERIALS.md) preserves its historical 110-part order.
+Whole-BOM `allocation_verified` remains `false`; **C4/C5/W3/W1/W4 remain open**.
+TE prototype results do not qualify Yageo thermal behavior. Separate exact-part
+review and controlled BOM/CAD, library, model and note updates, followed by
+reverification, are required before production release under [ORDERING](../ORDERING.md).
+
+The PR02 implementation and unselected circuits below remain historical research,
+not a current protection or procurement queue. [ELECTRICAL](ELECTRICAL.md) and
+[DESIGN_BOUNDS](DESIGN_BOUNDS.md) control TE **9-1773463-5, Rev G, 02/2025**
+evidence, conditional reference-board/P70 applicability, and the retained 25 C
+reference / -30..125 C engineering screen, not verified TE TCR test conditions.
+Do not transfer PS12 five-second overload or pulse curves to TE.
+[ASSEMBLY](ASSEMBLY.md) controls the retained alternate project lands and pending
+supplier placement/stencil/solder acceptance, not a manufacturer-exact fit claim.
+No further protection research or physical qualification is a Gate P
+prototype-file prerequisite; all five holds are deferred for files, not closed.
 
 ## 1. Initial L1 Investigation
 

@@ -1,16 +1,16 @@
 # Remediation Plan
 
 Prepared: 2026-09-06. Reviewed hardware baseline: v1.1.0.
-Implementation handoff: **2026-09-08, hardware 1.2.0-dev**.
+Implementation handoff: **2026-09-11, hardware 1.2.0-dev**.
 
-**Current priority: finish the PCB and five-board JLCPCB prototype handoff through P3/P4, not switch or environmental research. The user now selects Uni-Royal PS122WF2201T4E / C2793873 for R1/R2 in BOTH prototype and production, and reports 110 ORDERED into their JLCPCB parts library. This resolves the former HP12 External blocker with no layout change. Gate P remains file-verified prototype artifacts, separate from the original A/B/C production/field holds; supplier part/process/placement/CAM and PCBA-job allocation remain order tasks. Latest PS12 verification is recorded below, not inferred from the earlier HP12 results.**
+**Current priority: finish the PCB and five-board JLCPCB prototype handoff through P3/P4, not switch or environmental research. The prototype BOM selects TE Connectivity 35212K2FT / C4129105 (2512 SMT, 2.2 kohm / 2 W / 1%, AEC-Q200). The user confirms Yageo SR2512FK-7W2K2L / C876850 is ordered for production with a 20-day wait; JLCPCB independently confirms that identity. Prior Uni-Royal PS122WF2201T4E / C2793873 was cancelled/refunded due to stockout. TE's body fits the retained envelope, but its recommended lands differ: existing lands remain a project alternative awaiting process acceptance, not an exact manufacturer match. No layout change is made. Gate P is met for the corrected file-verified prototype package, separate from A/B/C production/field holds and supplier part/process/placement/CAM/job-allocation tasks. The corrected snapshot passes 208 tests, native checks and real serial/parallel publication; see TE Review Corrections below, not the earlier package records.**
 
 This is the starting context and implementation checklist for subsequent sessions. It consolidates the review and the user's later decisions, including changes to the originally proposed TEST wiring. It is not manufacturing approval, a completed hardware test report, or a board-level lightning certification.
 
 ## Start Here
 
 1. Read [AGENTS.md](AGENTS.md) for operating instructions and physical guardrails, then this file. Read the relevant source files before editing them.
-2. Inspect `git status` and the existing diff. Preserve all work already present. This PS12 update started clean on **5d405b0**, which records the previous SMT/prototype review; the branch is one commit ahead of its remote. Earlier descriptions of uncommitted review work are historical. This update makes no commit, push, upload or order. Historical preparation edits/archives and unrelated `tmp/` evidence must not be reverted or cleaned indiscriminately. See the latest handoff for preserved build evidence.
+2. Inspect `git status` and the existing diff. Preserve all work already present. This update started clean on **399c588**, which contains the clamp trace widening; the branch is up to date with origin/main. Earlier descriptions of uncommitted review work are historical. This update makes no commit, push, upload or order. Historical preparation edits/archives and unrelated `tmp/` evidence must not be reverted or cleaned indiscriminately. See the latest handoff for preserved build evidence.
 3. Treat the working `pcb/pcb.kicad_sch`, `pcb/pcb.kicad_pcb`, project settings, and reviewed sourcing data as the design sources. `build/*` contains generated reports and, only after successful publication, prototype or production outputs identified by their matching manifest. Backups, archives, and `tmp/` copies are not authoritative designs.
 4. Use the agreed requirements and TEST matrix below. Documents are synchronized to the current development source; `pcb/ELECTRICAL.md` and `pcb/ASSEMBLY.md` record the remaining design/evidence limitations. `REVIEW.md` remains an audit template, not completed approval.
 5. P1's checking infrastructure and the selected hybrid placement are implemented. For the current **board-only request**, work **P3 assembly/fit finalization, then P4 five-board supplier review**, following [ORDERING's focused queue](ORDERING.md#board-finalization-queue). Do not choose the first unchecked P2 switch or environmental item instead. Preserve those holds without restarting research; any later approved circuit change requires renewed layout/BOM checks.
@@ -30,11 +30,11 @@ Preparation already completed:
 | Package | Implemented and verified | Still open |
 | :--- | :--- | :--- |
 | P1 | Complete-project staging, strict native checks, fail-closed geometry/net/artifact validation, warning reviews, locked transactions and negative fixtures. | Maintain the checks for future supported geometry/tool changes; no broad warning suppression. |
-| P2 | **16-part PS12/BYG23T circuit implemented** for both prototype and production, preserving one-way rungs, six-end TEST and original GDTs. PS12 independently supports the same 100 ppm/C at 25 C DC screen; normal numerical results are unchanged. | Actual clamp/RF/transient performance, powered recovery/fault containment, continuous thermal/source limits and exact switch approval remain separate production/field holds, not Gate P prerequisites. No new protection circuit or hub numbering is selected. |
-| P3 | **All 16 parts placed/routed.** PS12's original body/land drawings match the existing resistor geometry and guards; no coordinate, copper, drill, mask/paste or courtyard change is needed. Straight D1-D3/D2-D4 links and protected copper remain. | Allocated-lot E/pattern acceptance, KF129 variant, Ruilon metric/inch clarification, retained GDT forming and actual solder/stencil approval, 1.30 mm earth-terminal overhang and support fit. No PR02 forming task remains. Enclosure dry-fit follows receipt, not Gate P files. |
-| P4 | **Gate P prototype package published and verified** with PS122WF2201T4E / C2793873, native signed-Y CPL, **16 anchors/34 terminal datums**, complete artifact checks and mode-marked ZIPs. `make gerbers` and real serial/parallel prototype publication pass. | The reported 110-part order is not receipt/inspection or whole-BOM job allocation; `allocation_verified` remains false. All five production holds remain open. Actual supplier centroids, allocation, panel, process and CAM acceptance remain order tasks. |
+| P2 | **16-part TE 35212K2FT / BYG23T prototype circuit implemented**, preserving one-way rungs, six-end TEST and original GDTs. TE supports +/-100 ppm/C; the unchanged 25 C reference and temperature screen are engineering assumptions. Unsupported overload-test conditions are now unknown. Yageo SR2512FK-7W2K2L / C876850 is ordered, not modeled or qualified by TE results. | Actual clamp/RF/transient performance, powered recovery/fault containment, continuous thermal/source limits and exact switch approval remain separate production/field holds, not Gate P prerequisites. No new protection circuit or hub numbering is selected. |
+| P3 | **All 16 parts placed/routed; geometry unchanged.** TE's maximum body fits the existing envelope; the retained 1.35 x 3.70 lands differ from TE's 1.50 x 3.00 recommendation. Their alternate-land placement/stencil/solder acceptance remains W4. Straight cathode links and protected copper remain. | Allocated-lot E/pattern acceptance, KF129 variant, Ruilon metric/inch clarification, retained GDT forming and actual solder/stencil approval, 1.30 mm earth-terminal overhang and support fit. No PR02 forming task remains. Enclosure dry-fit follows receipt, not Gate P files. |
+| P4 | **Corrected TE Gate P package published and verified**, including native signed-Y CPL, **16 anchors/34 terminal datums**, source-matched controlled notes and mode-marked ZIPs. Direct `make gerbers` and real serial/parallel prototype publication pass; earlier packages remain historical. | In-stock JLCPCB status is not receipt/inspection or whole-BOM job allocation; `allocation_verified` remains false. All five production holds remain open. Actual supplier centroids, allocation, panel, process and CAM acceptance remain order tasks. |
 | P5 | All nine main guides updated for the actual 1.2.0-dev draft, truthful claims, preserved purchases and separate acceptance categories. | Resynchronize after any future circuit/part/process decision; documents are not approval. |
-| P6 | **207 PS12 tests PASS including native probes; `make check` and `make gerbers` PASS.** Real clean serial/parallel **prototype publication/comparison PASS**; production refusal/comparison also PASS with unchanged hold IDs. Exact evidence is in **PS12 Selection** below. | Actual processed CAM, allocated parts and physical qualification are **not performed**. File-verified prototype artifacts do not close production or field qualification. |
+| P6 | **208 tests PASS including native probes; `make check` and `make gerbers` PASS.** Real serial/parallel **prototype publication/comparison PASS** and **production refusal/comparison PASS** with the same five hold IDs. See **TE Review Corrections**; earlier results remain tied to their snapshots. | Actual processed CAM, allocated parts and physical qualification are **not performed**. File-verified prototype artifacts do not close production or field qualification. |
 
 ## Agreed Requirements
 
@@ -58,7 +58,7 @@ Preparation already completed:
 | LEDs | Purchased baseline **APEM Q10F5SXXSG02E**, no internal resistor, 20 mA maximum per published family data and 5 V maximum reverse voltage. `02` does not mean regulated 2 V operation. Target **4-5 m visibility in full daylight**, with ON/OFF distinguishable at 5 m at the minimum field current and real viewing angles. |
 | Installation polarity risk | **User accepts LED damage from accidental low-voltage polarity reversal during installation**, with replacement LEDs available. Survival of reversed LED flying leads is no longer a required feature. Check polarity before power and correct mistakes while isolated; spare quantity remains to allocate, not a new purchase. This does not waive continuous TEST safety, source/earthing safety or normal-operation transient assessment. |
 | Direct lightning | User accepts potentially wholesale rebuilding after a direct strike; continued operation/direct-strike survival is not required. No numerical strike probability is established. This is **not** blanket acceptance of repeated damage from normal switching, RF, cattle-fence coupling or all nearby-lightning events. |
-| Simplified design direction | User authorized the **16-part SMT/BYG23T hybrid**, now selecting **PS122WF2201T4E / C2793873 for both prototype and production**. R1/R2 remain X=120.00 and D1/D2 X=130.80, with unchanged Y coordinates and straight 1.80-mm cathode links. Existing takeoffs, rails/vias, EARTH, B returns and LED terminals stay; **no fold or new vias**. The user reports **110 resistors ORDERED** to their JLCPCB library, not received/inspected or PCBA-job allocated. |
+| Simplified design direction | User authorized the **16-part SMT/BYG23T hybrid**, selecting **TE Connectivity 35212K2FT / C4129105 for prototypes** and confirming the production pre-order as **Yageo SR2512FK-7W2K2L / C876850** (20-day wait). Prior Uni-Royal PS12 was cancelled/refunded. R1/R2 remain X=120.00 and D1/D2 X=130.80, with unchanged Y coordinates and straight 1.80-mm cathode links. Existing takeoffs, rails/vias, EARTH, B returns and LED terminals stay; **no fold or new vias**. Stock/order identity is not job allocation. Yageo needs its own evidence/model/process/thermal review and deliberate BOM/CAD update before production; TE results do not qualify it. |
 | Earthing | User proposes sharing local earth between DogWatch protection and both shed-end boards. Confirm the connection to actual building PE/electrodes against regional OEM instructions and a qualified installer's site-specific earthing design. Do not add arbitrary unbonded rods, directly earth a fence core, or assume DC negative must be bonded to earth. Five earth-connected stations do not automatically require five independent electrodes. |
 
 The functional choices above are settled. Do not repeatedly ask the user to choose TEST direction, automatic identification, or a timeout. Remaining manufacturer, CAM, and physical-test evidence is tracked separately below.
@@ -112,7 +112,7 @@ Preserve these unless the user explicitly approves a reasoned design change. Cor
 | Earth GDTs | Centres at Y = 113.50, 122.50, 131.50 mm: retain 9.00 mm pitch. Check actual maximum body dimensions; nominal spacing does not prove a tolerance-free 1 mm air gap. |
 | LED terminals | J_LED_A at (145.50, 103.00), 90 degrees, opens north; J_LED_C at (145.50, 142.00), 270 degrees, opens south. Pad 1 positive at X = 142.96 and pad 2 B return at X = 148.04 on both. Preserve the intentional pad mapping. |
 | Overpass | GDT_AC north-south over B, now at X=125.80, with 15.24 mm formed pitch and at least 2.0 mm physical gap under the complete raised span. See the controlled forming/inspection drawing in `pcb/ASSEMBLY.md`. |
-| PS12 resistors | R1/R2 origins (120.00,104.50)/(120.00,140.50), rotation 0; 1.35 x 3.70 mm rectangular lands at local X=+/-3.125, global X=116.875/123.125. Maximum body 6.45 x 3.40 x 0.65 high and courtyard 8.10 x 4.20; project-selected zero additional mask/paste margins. PS12 independently matches these retained dimensions. No resistor holes, standoff or forming. |
+| 2512 SMT resistors | R1/R2 origins (120.00,104.50)/(120.00,140.50), rotation 0; retained project-alternate 1.35 x 3.70 mm lands at local X=+/-3.125, global X=116.875/123.125. TE maximum body 6.45 x 3.40 x 0.65 high fits the envelope; courtyard 8.10 x 4.20 and zero additional mask/paste margins stay. TE recommends 1.50 x 3.00 lands, 5.00 inner gap / 6.50 pitch instead; W4 accepts the actual alternative process, not an exact match. No resistor holes, standoff or forming. |
 | Diode links | D1/D2 origins (130.80,104.50)/(130.80,140.50), rotation 0, cathodes east at X=132.90. D3/D4 remain (135.00,99.00)/(135.00,146.00), rotation 180, cathodes west at X=132.90. Straight cathode links at X=132.90 are 1.80 mm wide and 5.50 mm long; shunt anode-to-B routes to J_LED_A/C pin 2 are 1.80 mm wide. |
 
 Apply [README's DFM policy](README.md#via-and-component-hole-dfm) and AGENTS section 9. In particular: no ordinary via as a lead-insertion hole, no blanket filling of all 1 mm holes, and no assumption that 2 oz exterior copper means 70-micrometre barrels.
@@ -124,7 +124,7 @@ The current board has **16 electrical components, all on top: eight SMT and eigh
 | References | Baseline MPN / sourcing code |
 | :--- | :--- |
 | D1-D4 | **Vishay General Semiconductor BYG23T-M3/TR / C145454**. 1300 V SMA; series D1/D2 and negative shunts D3/D4. The old onsemi THT diodes are retired. |
-| R1, R2 | Selected **Uni-Royal PS122WF2201T4E / C2793873**, PS12 / 2512, 2.2 kohm / 2 W / 1%, +/-100 ppm/C at 25 C, for prototype and production. `Sourcing=LCSC`, empty `Sourcing Reference`; **110 ORDERED** into JLCPCB parts library, user-reported. Prior HP122WF2201T4E External sourcing is superseded, not ordered. **C2791283 remains HP122WJ0472T4E, 4.7 kohm / 5%, rejected history.** |
+| R1, R2 | Prototype selection: **TE Connectivity 35212K2FT / [C4129105](https://jlcpcb.com/partdetail/C4129105)**, 3521 / 2512 SMT, 2.2 kohm / 2 W / 1%, +/-100 ppm/C, AEC-Q200, in stock at JLCPCB. User-confirmed production pre-order: **Yageo SR2512FK-7W2K2L / [C876850](https://jlcpcb.com/partdetail/C876850)** (20-day wait), independently identity-checked, not qualified or current population. Cancelled and refunded: **Uni-Royal PS122WF2201T4E / C2793873** due to distributor stockout. **C2791283 remains HP122WJ0472T4E, 4.7 kohm / 5%, rejected history.** |
 | GDT_AB, GDT_BC | Ruilon SMD5050-470NA / C39692533. |
 | GDT_AC | Bencent B5G470L / C5337217. |
 | GDT_A_E, GDT_B_E, GDT_C_E | Ruilon 2R470TD-8 / C2836978. |
@@ -184,8 +184,8 @@ correction, supplier acceptance and physical qualification are distinct.
 | C5 | The 2 A fuse need not clear cable-limited faults; powered GDT holdover/extinction is unqualified. | **OPEN DESIGN HOLD.** New-topology fault screens and actual published PSU/fuse limits replace the old fuse-blow claim. A modeled far-end 10 V arc draws 0.259543 A / 2.602168 W in its path with only 0.979810 A total. Select a supported protection/shutdown architecture and obtain actual powered-recovery evidence. |
 | W1 | Former nine rail-via holes overlapped all four SMT GDT apertures by 0.19 mm; 1.00 mm reliable covering was unsupported. | **FILE CORRECTION IMPLEMENTED; order/process hold remains.** Selected metric 5.50 x 1.20 lands at +/-2.00 and X=119.50 give **1.239713 hole / 0.839713 annulus gaps**. All fourteen vias are now standard untented, no fill/plug/cap. Original X1 leader is resolved; printed 4.00 mm versus 0.165-inch contradiction, processed stencil/profile and retained drill acceptance remain specific supplier facts. |
 | W2 | DC sparkover, component impulse ratings, heavy copper and parallel pins do not establish transient clamp limits, sharing or a board rating. | **Claims corrected; qualification OPEN.** No assembled surge/current/lifetime rating is assigned. Coordinate the actual protection/cable/earth paths and complete defined transient and recovery tests. |
-| W3 | Nominal 0.50 W/resistor and a wattage label do not prove closed-OneGel temperature or continuous safety. | **PS12 2 W SMT IMPLEMENTED; production thermal hold remains, deferred for Gate P.** Its independently supported 100 ppm/C / 25 C-reference resistance screen still gives **0.756803 W/resistor at 40.39597 V**, not a measured chip/pad/PCB temperature. Require an accepted real source envelope and instrumented duty evidence for the later release. PR02's 220 C hot spot, 75 K/W example and axial standoff do not apply. See DESIGN_BOUNDS. |
-| W4 | Original connector/earth-GDT holes lacked tolerance margin; part/process and sourcing acceptance remain incomplete. | **BOUNDED FILE DESIGN IMPLEMENTED; lot/fit/process hold remains, deferred for Gate P.** Retained hole/land geometry and minimum ring 0.40 remain. GDT forming, E/pattern lot inspection, PS12 stencil and heavy-copper solder process still need acceptance. J_EARTH needs **1.00 nominal / 1.30 budgeted overhang**. **PS122WF2201T4E / C2793873 resolves the old resistor External blocker**, but 110 ORDERED is not a received/inspected lot or PCBA-job allocation. No W4 closure is inferred. |
+| W3 | Nominal 0.50 W/resistor and a wattage label do not prove closed-OneGel temperature or continuous safety. | **TE 2512 SMT IMPLEMENTED; thermal hold remains, deferred for Gate P.** The TE prototype screen gives **0.756803 W/resistor at 40.39597 V** using an assumed 25 C reference and temperature inputs, not TE-confirmed test endpoints or measured chip/pad/PCB temperatures. TE's reference PCB is four-layer, 2 oz outer / 4 oz inner; rating transfer to this two-layer board is unverified, not demonstrated failure. Yageo production needs separate review and qualification. Require accepted source limits and instrumented duty evidence; no PR02 thermal/standoff transfer. See DESIGN_BOUNDS. |
+| W4 | Original connector/earth-GDT holes lacked tolerance margin; part/process and sourcing acceptance remain incomplete. | **BOUNDED FILE DESIGN IMPLEMENTED; lot/fit/process hold remains, deferred for Gate P.** Retained hole/land geometry and minimum ring 0.40 remain. Accept the project-alternate resistor lands, actual placement/stencil/heavy-copper solder process, GDT forming and E/pattern lots. J_EARTH needs **1.00 nominal / 1.30 budgeted overhang**. **TE 35212K2FT / C4129105** resolves prototype identity; **Yageo SR2512FK-7W2K2L / C876850** is ordered for production. Prior PS12 was cancelled/refunded. Stock or an order is not job allocation; no W4 closure is inferred. |
 | W5 | Former LED torque was too high; complete enclosure fit and raised GDT geometry were unproven. | **Instructions/drawing corrected:** 0.20-0.25 Nm subject to exact APEM model; controlled whole-span >=2.00 mm overpass drawing and inspection method. **OPEN:** accepted forming tolerances, Essentra thickness fit, COMBI dry-fit and material/process tests. |
 | W6 | Legacy legend, incomplete checks and inconsistent libraries/metadata undermined verification. | **File-level correction verified:** native 1.00/0.15 legend, strict effective rules, ten local footprints/six symbols, matched BOM metadata, DRC/parity/geometry and regression checks. Reviewed warnings remain visible and narrowly bound; no project severity ignores or exclusions. |
 | W7 | Legacy fault, RF, earthing, environmental/lifetime and five-board sign-off claims were overstated. | **Scope/documentation corrected.** PSU allocation, cable identity/colours, OneGel identity and A364 program family resolved. Entire-boundary energized-cattle fencing is prohibited; verify/maintain that restriction rather than qualify the withdrawn parallel run. **OPEN:** actual source/switch approval, cable/environmental applicability, OneGel/thermal conflicts, RF, earthing and physical qualification. |
@@ -234,13 +234,13 @@ Files: `pcb/pcb.kicad_sch`, the PCB as required, `pcb/BOM.csv`, `scripts/analyze
 - [x] Make the default analysis use 41 stations and same-end return. Model A, B and C separately, including floating islands and one-way branches; parameterize cable resistance, voltage, LED/diode drops and temperature/tolerance inputs.
 - [x] Add all seven cut combinations across all 40 spans, first/final spans and repair/retest sequences, with current/power balance and both legacy backfeed/masking negative controls.
 - [x] Record the user's acceptance of LED damage from accidental installation polarity errors. Reversed flying-lead survival is no longer a required feature; correct polarity, spare allocation and safe replacement remain installation controls.
-- [x] Implement the simple 16-part circuit, now with selected PS12 SMT resistors and BYG23T series/negative-shunt diodes under one prototype/production BOM. Preserve the one-way branch topology and no field soldering; actual pulse/clamp response and light output remain qualification, not implied forward-current regulation or reversed-lead immunity.
+- [x] Implement the simple 16-part circuit with TE 35212K2FT / C4129105 prototype resistors and BYG23T series/negative-shunt diodes. Preserve one-way topology and no field soldering. Yageo SR2512FK-7W2K2L / C876850 is the production pre-order, not populated by this BOM; actual pulse/clamp response and light output remain qualification, not forward-current regulation or reversed-lead immunity.
 - [ ] Select actual parts using maximum clamp voltage, leakage, temperature/tolerance, and pulse/current data, not just a nominal TVS/zener voltage. Check LED forward pulse current as well as reverse voltage. A voltage clamp alone is not automatically adequate forward-current protection. Recheck fault observability after any circuit change: preserve or explicitly model one-way rung behavior, rather than using the old forward-only model to validate a bidirectional replacement.
 - [ ] Coordinate the primary GDTs, indicator branches, source interface, and any secondary protection. Reviewed impulse sparkover at 1 kV/us is up to 950 V for SMD5050-470NA and 1100 V for 2R470TD-8; B5G470L's 850 V figure is specified for 99% of measured values. Include lead overshoot and the cable's unverified impulse withstand.
 - [x] Implement hard/resistive-short and conditional 10/15 V ignited-GDT load-line screens in the new topology, including separate earth paths and every station for inter-core faults. Explicitly distinguish CV demand from actual PSU overload/hiccup current and GDT holdover.
 - [ ] Complete the actual PSU/cable/GDT dynamic and failed-device analysis, and implement a coordinated protective/shutdown arrangement. Do not infer extinction from sparkover, holding current from glow-to-arc figures, or discrimination from a reduced fuse value alone.
 - [x] Remove `BLOWS (>2A)` from analysis logic. Use published Littelfuse 217 DC interruption/opening conditions and Mean Well current/power/overload envelopes; leave unmeasured hiccup and clearing times unknown. Recalculate faults for the new wiring.
-- [ ] Qualify continuous resistor/LED/connector temperatures over the actual supply range for production/field release, not Gate P. Selected PS122WF2201T4E is SMT 2 W / 1% / +/-100 ppm/C referenced to 25 C; DESIGN_BOUNDS gives the unchanged conditional screens. Verify chip/pad/PCB and material interfaces; neither P70 margin nor the retired PR02/MBE mounting data qualifies closed-OneGel duty.
+- [ ] Qualify continuous resistor/LED/connector temperatures for the intended population over the actual supply range for production/field release, not Gate P. DESIGN_BOUNDS models TE 35212K2FT prototypes with declared temperature/reference assumptions and conditional catalogue-rating transfer. Yageo SR2512FK-7W2K2L production requires its own manufacturer/model/process evidence and controlled source/BOM update; TE results do not qualify it. Verify chip/pad/PCB and material interfaces; no catalogue P70 margin or retired-part mounting data qualifies closed-OneGel duty.
 - [x] Define the electrical qualification scope and unresolved supplier/test evidence in `pcb/ELECTRICAL.md` and `ACCEPTANCE.md`. No needless logic, blanket earth plane, direction selector or unsupported assembled ratings were added.
 
 **Exit:** The hub logic and protection architecture are specified, reviewed, and reflected in the schematic/BOM. Normal-operation safety is analyzed; remaining powered-surge qualification is explicitly open rather than declared solved by prose.
@@ -266,14 +266,14 @@ Files: `pcb/pcb.kicad_pcb`, schematic footprint assignments, project-local libra
 - [ ] Accept actual allocated finished leads, body datums and pin patterns against the adopted drawing/E limits, including plating/burrs and forming uncertainty. KF128/KF129 now use 2.00 mm holes, not an unselected 1.60 mm CAD suggestion. Missing manufacturer maxima are not closed by an unperformed lot inspection.
 - [x] Read the original pin/body/SMT figures; resolve the earth-GDT 1.05 maximum and real KF129 drawing conflict. Define explicit conservative E/pattern procurement envelopes for missing maxima, separately from actual lot acceptance.
 - [x] Implement bounded component-hole sizes, independent position budgets and body/courtyard envelopes, preserving retained THT pad centres, mapping, rails and vias. Minimum nominal ring is 0.40 mm. R1/R2 and D1-D4 now have SMT lands, not PTH forming; retained GDT forming/standoff still needs supplier acceptance.
-- [x] Apply selected hole/position budgets, >=0.10 mm residual diametral allowance and >=0.254 nominal rings; recheck exported holes/copper/edges. Actual part-pattern, GDT forming and PS12/SMA land/polarity/stencil/solder acceptance remain separate. Never repair insertion by reaming PTHs.
+- [x] Apply selected hole/position budgets, >=0.10 mm residual diametral allowance and >=0.254 nominal rings; recheck exported holes/copper/edges. Actual part-pattern, GDT forming and selected resistor/SMA land/polarity/stencil/solder acceptance remain separate. Never repair insertion by reaming PTHs.
 - [x] Rebuild body/F.Fab and courtyard envelopes with pose/assembly clearance, including the diode courtyard correction found in review. No protected placement changes or courtyard trimming.
 - [ ] Accept actual rework/screwdriver access and the inspected body/forming projections; drawing clearance is not physical access proof.
 - [x] Retain the collision-removing GDT_AB/BC X=119.50 and GDT_AC X=125.80 relocation, all nine rail vias and full-width copper. The continuation replaces the former lands with **5.50 x 1.20 mm, 4.00 mm centres**; full drill-circle/annulus/mask/paste separation is checked.
 - [ ] Follow the selected GDT land pattern and obtain solder-volume/thermal-process acceptance. If no compliant solution preserves the protected geometry, obtain explicit design/process approval rather than shrinking vias or assuming 1 mm resin filling is standard.
 - [x] Implement the visually resolved metric SMD5050 pattern (5.50 x 1.20, 4.00 centres) and standard untented 1.80 mask openings on both sides. Keep the inch discrepancy and actual solder/CAM acceptance open; no fill exception or guardrail change is needed.
 - [x] Place/route the selected **16-part hybrid**, followed by the authorized HP12 SMT conversion and straight cathode links in 02661d8. Correct its resistor lands/body/courtyards to the manufacturer drawing and retain strict geometry regressions. No additional protection placement, thermal-relief narrowing, fold, new via or direction selector is introduced. Native verification for this correction is recorded in the latest handoff; supplier and performance approvals remain separate.
-- [x] Independently review the selected PS12 manufacturer body/land figures, **SMD-SP-007 V.7, 08-Jan-2026**, against the existing geometry. The same pads/body/courtyard fit without a layout change; update identities and source evidence, not copper. Actual PS12 lot/stencil/process acceptance remains separate.
+- [x] Preserve the historical PS12 body/land review, **SMD-SP-007 V.7, 08-Jan-2026**, as evidence for the retained geometry, not a current part/process approval. Independently review TE **9-1773463-5 Rev G, 02/2025**: body containment is supported, recommended lands differ, and the four-layer reference PCB limits rating-transfer claims. Retain the alternative geometry without a reroute; actual TE placement/stencil/process acceptance remains W4 and thermal qualification W3.
 - [x] Correct legend height/stroke/clipping using native 1.00 / 0.15 mm text. Retain polarity, cathode and A/B/C/EARTH labels; add underside references, F.Fab aids and 1.2.0-dev identification. Native DRC and rendered drawings checked.
 - [x] Reconcile the source stackup sum to 1.600 mm while retaining 0.070 mm copper on both sides.
 - [ ] Agree finished-thickness convention/tolerance in the actual quote and verify Essentra hole/panel-thickness engagement, including fabrication tolerance.
@@ -296,7 +296,7 @@ only a later approved circuit/part change would require another placement step.
 
 Files: `Makefile`, `pcb/BOM.csv`, `pcb/CPL.csv`, small export/validation helpers, generated `build/*`, assembly output sources.
 
-- [x] Keep `pcb/BOM.csv` as reviewed sourcing data for the **16-part** population. Selected PS12 uses verified **C2793873**, `Sourcing=LCSC` and an empty sourcing reference in both CAD sources. This removes the former resistor External blocker without changing the general unresolved-External rule. The old C2791283 pairing remains rejected history; identity and the 110-part order do not prove allocation.
+- [x] Keep `pcb/BOM.csv` as reviewed sourcing data for the **16-part** population. Prototype BOM uses verified **C4129105**, `Sourcing=LCSC` and empty sourcing reference in both CAD sources. This resolves the prototype resistor procurement blocker. Yageo SR2512FK-7W2K2L is ordered for production; prior Uni-Royal PS12 order was cancelled/refunded. In-stock JLCPCB status is not PCBA-job allocation.
 - [x] Generate CPL from native KiCad mm positions for all SMT/THT parts, excluding mechanical/DNP items. `pcb/CPL.csv` is a generated reference, refreshed only after complete file checks, never a second placement input.
 - [x] Retain absolute Gerber/drill origin and native signed-Y placement; validate common coordinates and rotations modulo 360 without taking absolute Y.
 - [x] Generate exact-part/footprint anchors and all 34 electrical terminal datums in both PCB and signed-Y fabrication coordinates, with native pad outlines/courtyards for review. Do not infer a centroid from a body/courtyard midpoint; actual supplier transforms remain the separate next item.
@@ -305,8 +305,8 @@ Files: `Makefile`, `pcb/BOM.csv`, `pcb/CPL.csv`, small export/validation helpers
 - [x] Validate actual exported geometry, drills, BOM/CPL, connectivity and ZIP payloads before either publication mode. Quarantine stale outputs and preserve filenames. Production still blocks on all engineering holds; prototype exports retain those holds as explicitly deferred and still block on every file/sourcing failure.
 - [x] Export native assembly PDF, placement text, coordinate-based via CSV and controlled engineering notes. Implement and test release-manifest revision/tool/source/artifact hashes and results; no generated files are hand-edited.
 - [x] Implement separate `gerbers`/`prototype` and production modes, production precedence for mixed goals, explicit mode/status manifests and generated scope/hold README text inside both transferable ZIPs. No diagnostic, geometry or sourcing gate is waived.
-- [x] Resolve the selected resistor identity with user-approved **PS122WF2201T4E / C2793873** for prototype and production; record 110 ORDERED, separate from job allocation.
-- [x] Publish the PS12 revision's **Gate P prototype** manifest/package after its actual native/file checks. `make gerbers` and real serial/parallel prototype publication pass, with matching mode/status/source/artifact hashes. C4/C5/W3/W1/W4 remain deferred, not closed; see PS12 Selection for the current package.
+- [x] Resolve the selected prototype resistor identity with user-approved **TE Connectivity 35212K2FT / C4129105** (in stock at JLCPCB); record Yageo SR2512FK-7W2K2L production pre-order and Uni-Royal PS12 cancellation.
+- [x] Republish the corrected TE 35212K2FT **Gate P prototype** snapshot after native/file checks and real serial/parallel prototype comparison. C4/C5/W3/W1/W4 remain deferred, not closed; **TE Review Corrections** controls current results, not the earlier TE or PS12 snapshots.
 - [ ] Publish a **production** manifest/package only after an evidence-backed file-release review closes the production holds. Gate P authorization does not satisfy this item.
 - [ ] Obtain order-specific acceptance for 2 oz/ENIG mixed SMT/THT assembly, actual part allocation/attrition, heavy-copper soldering, and GDT lead forming. Current public guidance permits THT under both Economic and Standard in principle; verify the exact quote instead of asserting a universal service restriction.
 - [ ] Approve manufacturer-added rails, fiducials, tooling, and depanelization without cuts/holes in protected functional copper. Standard PCBA's processing-size requirement may require panelization for this 63 x 56 mm board. Do not assume the old 73 x 76 mm panel or automatic rail removal, and distinguish five individual boards from five multi-up panels.
@@ -315,10 +315,7 @@ Files: `Makefile`, `pcb/BOM.csv`, `pcb/CPL.csv`, small export/validation helpers
 
 **Exit:** Verified production data is generated reproducibly and is unambiguous for assembly. Bare-board flying-probe continuity is not advertised as assembled functional or surge testing.
 
-**Current exit: PS12 Gate P files published and verified, including real
-serial/parallel prototype comparison.** Production remains held. Supplier placement, CAM, panel,
-allocated parts and process approvals remain order tasks; they are not replaced
-by artifact verification or physical environmental/switch tests.
+**Current exit: corrected TE Gate P files published and verified, including real serial/parallel comparison.** Earlier publication results are historical. Production remains held. Supplier placement, CAM, panel, allocated parts and process approvals remain order tasks; they are not replaced by artifact verification or physical environmental/switch tests.
 
 ### P5: Documentation
 
@@ -342,9 +339,9 @@ protection design. Repeat synchronization after any circuit/part/process change.
 
 ### P6: Validation
 
-- [x] Run stdlib/native tests and `make check` on the implemented PS12 circuit assumptions: **207 PASS including native probes**, with current source/diagnostic hashes. Revision-specific results are below; previous HP12 results remain historical. Repeat after any supported source/process change; these are file/model tests, not hardware qualification.
-- [x] Run separate clean `make all` and clean `make -j4 all`, preserve evidence, and compare validated geometry/connectivity/population with only documented metadata normalization. Both real builds correctly return nonzero solely for the five open holds; the comparison passes, not publication.
-- [x] Complete real PS12 serial/parallel **prototype publication** using `--target prototype`: clean, serial `make prototype`, clean and `make -j4 prototype` all exit 0; validated geometry, population, notes and manifest/mode/hold notices agree. The prior HP12 sourcing refusal remains historical, not reused as a publication result.
+- [x] Run full stdlib/native tests and `make check` for the corrected TE model/evidence snapshot: **208 PASS, no skips**, including **23 electrical +14 design-bound tests** and six native probes. Earlier 207-test results are historical. Repeat after supported source/process changes; these are file/model tests, not hardware qualification.
+- [x] Repeat separate clean `make all` and clean `make -j4 all`, preserving evidence and comparing validated geometry/connectivity/population. Both return exit 2 solely for the same five open holds; comparison passes, not production publication.
+- [x] Repeat real TE serial/parallel **prototype publication** with `--target prototype`: clean, serial `make prototype`, clean and `make -j4 prototype` all exit 0, with matching geometry, population, corrected notes and manifest/mode/hold notices.
 - [x] Exercise missing rules/project, wrong net, inadequate earth spacing, undersized diode hole, exposed via aperture, missing BOM/CPL part, reversed Y and missing layer fixtures, plus parser/export/race/staleness/diagnostic regressions. Invalid releases are blocked. Other THT maximum-pin fit remains an external evidence hold, not a claimed automatic fit check.
 - [x] Inspect rendered PCB/schematic/assembly data and validate native-generated copper/mask/paste/legend/drill geometry and archives. Retain supported-geometry and rendering limitations with the reports.
 - [ ] Review actual JLCPCB processed PCB/stencil and placement, including hole treatment, maximum-pin fit, forming/standoff and panel/tooling locations, before production approval.
@@ -357,13 +354,13 @@ protection design. Repeat synchronization after any circuit/part/process change.
 ## Release Gates
 
 **Current disposition: original A, B and C remain HELD; Gate P is MET for the
-current file-verified PS12 prototype artifacts.** The user explicitly permits
-prototype files without environmental, switching or completed hardware
-qualification. This does not close or rename any of the five ledger holds.
-`make gerbers` and `make prototype` retain **C4, C5, W3, W1 and W4 as deferred**,
+corrected TE prototype snapshot in TE Review Corrections. Prior packages are historical.**
+The user explicitly permits prototype files without environmental, switching or
+completed hardware qualification. This does not close or rename any of the five
+ledger holds. `make gerbers` and `make prototype` retain **C4, C5, W3, W1 and W4 as deferred**,
 while every source/library/DRC/ERC/net/geometry/artifact and sourcing check still
-blocks. User-selected **PS122WF2201T4E / C2793873** resolves the former HP12
-External blocker without a gate override. The 110-part order is not whole-BOM
+blocks. User-selected **TE Connectivity 35212K2FT / C4129105** resolves the prototype
+resistor procurement blocker without a gate override. In-stock JLCPCB status is not whole-BOM
 job allocation or a substitute for current native/file verification.
 
 Production targets `all`, `package`, `release`, `production`, `drills`, `ipc`,
@@ -391,8 +388,9 @@ Both modes use `build/Gerbers.zip` (mirror `pcb/Gerbers.zip`), BOM/CPL, FlyTest,
 assembly outputs and notes. Only the matching manifest identifies the current
 package: **prototype `status=prototype`, `mode=prototype`** versus **production
 `status=verified`, `mode=build`**. A filename, status alone, stale ZIP or private
-draft is insufficient. Use the **PS12 Selection** handoff for actual current
-publication results; the prior HP12 refusal is historical.
+draft is insufficient. Use **[TE Review Corrections](#te-review-corrections)**
+for current publication results. PS12 Selection and the initial TE Selection
+handoff describe superseded snapshots, not the current corrected package.
 
 The build's success message should mean **"manufacturing data verified for this revision"**, not **"20 kA lightning protection verified."**
 
@@ -420,7 +418,7 @@ Specifications were researched on 2026-09-06; recheck revisions and order-specif
 - [JLCPCB PCBA capabilities](https://jlcpcb.com/capabilities/pcb-assembly-capabilities), [placement-file requirements](https://jlcpcb.com/help/article/pick-place-file-for-pcb-assembly), [stencil-data preparation](https://jlcpcb.com/help/article/smt-stencil-data-prepared-for-smt-orders), and [assembly terms](https://jlcpcb.com/help/article/Terms-and-Conditions-of-JLCPCB-Assembly-Service).
 - [onsemi 1N4007 family datasheet](https://www.onsemi.com/pdf/datasheet/1n4001-d.pdf) and [C232439 identity](https://www.lcsc.com/product-detail/C232439.html). Reviewed drawing maximum lead: 0.86 mm. Reconcile other ratings with the actual revision, including temperature limits and the meaning of ordering suffixes.
 - [Vishay MBE0414 family datasheet](https://www.vishay.com/docs/28766/mbxsma.pdf), including derating, mounting dimensions, and pulse curves.
-- Current resistor: [Uni-Royal PS Series, SMD-SP-007 V.7, 08-Jan-2026](https://www.uni-royal.cn/en/images/userfile/file/1784854235b7c79f8d8a205c5d.pdf), [manufacturer PS12 page](https://www.uni-royal.cn/en/article.php?id=10109), and verified [JLCPCB C2793873](https://jlcpcb.com/partdetail/C2793873) / [LCSC C2793873](https://www.lcsc.com/product-detail/C2793873.html). PS12 matches the retained lands/body. HP122WF2201T4E/NAC and the rejected C2791283 4.7-kohm/5% pairing remain history in DFM_EVIDENCE and MATERIALS, not current sourcing tasks.
+- Resistors: [TE Connectivity 3521 Series, Data Sheet 9-1773463-5 Rev G, 02/2025](https://www.te.com/commerce/DocumentDelivery/DDEController?Action=showdoc&DocId=Data+Sheet%7F9-1773463-5%7FG1%7Fpdf%7FEnglish%7FENG_DS_9-1773463-5_G1.pdf), [JLCPCB C4129105](https://jlcpcb.com/partdetail/C4129105); user-confirmed and independently verified [Yageo SR2512FK-7W2K2L / JLCPCB C876850](https://jlcpcb.com/partdetail/C876850) production-order identity, not manufacturer/model/process/thermal acceptance; historical [Uni-Royal PS Series, SMD-SP-007 V.7, 08-Jan-2026](https://www.uni-royal.cn/en/images/userfile/file/1784854235b7c79f8d8a205c5d.pdf), [JLCPCB C2793873](https://jlcpcb.com/partdetail/C2793873) and HP12 / PR02. DFM_EVIDENCE records the corrected TE revision and unretained March 2023 citation.
 - [Ruilon SMD5050-470NA](https://www.lcsc.com/datasheet/C39692533.pdf), [Ruilon 2R470TD-8](https://www.lcsc.com/datasheet/C2836978.pdf), and [Bencent B5G470L](https://www.lcsc.com/datasheet/C5337217.pdf) manufacturer documents distributed through LCSC.
 - [KF128-7.62-3P](https://www.lcsc.com/datasheet/C474957.pdf) and [KF129-5.08-2P](https://www.lcsc.com/datasheet/C475092.pdf) drawings; verify maximum finished pin dimensions, not only linked CAD land patterns.
 - [APEM Q10F5SXXSG02E](https://www.apem.com/led-indicators/professional-grade-panel-mount-led-indicators/q10/q10f5sxxsg02e): no-resistor option, 5 V reverse limit, 20 mA family maximum, model-dependent viewing/torque data, and -40 to +85 degrees C temperature range.
@@ -437,10 +435,12 @@ Specifications were researched on 2026-09-06; recheck revisions and order-specif
 
 At the end of each implementation session, record the work-package IDs touched, changed files, exact verification commands/results, unresolved evidence, and the next bounded task. Preserve the distinction between implemented, file-verified, CAM-accepted, and physically qualified. Do not silently lower a requirement to obtain a PASS.
 
-Entries and evidence subsections through **SMT Prototype Review** are historical
-records for their named revisions. **PS12 Selection** and the current
-requirements/queue supersede earlier HP12 sourcing and universal export-hold
-wording; prior test results remain prior results, not tests of the new source.
+Entries and evidence subsections through **TE Connectivity 35212K2FT Prototype
+Selection**, including **PS12 Selection**, are historical records for their
+named snapshots. **[TE Review Corrections](#te-review-corrections)** and the
+current requirements/queue control. Earlier tests do not verify changed notes
+or assumptions, and an old package's use of the same revision/filenames does
+not make it current.
 
 | Date | Session result | Next task |
 | :--- | :--- | :--- |
@@ -453,6 +453,8 @@ wording; prior test results remain prior results, not tests of the new source.
 | 2026-09-07, board-only finalization from aca11eb | Worked **P3 assembly/fit handoff and P4 placement evidence**, not switch/environmental research. Reconciled the stale unchecked hybrid-placement item; added conditional axial-forming/panel bounds, native pad/courtyard overlay and exact sixteen-anchor/34-terminal datums. **202 tests PASS including native, final `make check` PASS, serial/parallel refusal/comparison PASS**. Final CAD/BOM/CPL/libraries and all release/approval fields are unchanged. No commit, upload or order. | Obtain **PR02 exact sourcing and accepted 15.24-pitch forming**, then allocated-part/process and actual supplier-model/panel/CAM acceptance for five individual assembled boards. Follow the board queue below; independent hub/qualification holds remain outside this scope. |
 | 2026-09-07, SMT/prototype review from 02661d8 | Corrected the wrong 4.7-kohm resistor code to explicit pending HP12 sourcing, adopted manufacturer SMT lands/body/courtyards, restored missed geometry coverage and hardened prototype/production mode handling. Synchronized current notes/model and added Gate P without closing A/B/C or the five holds. **207 tests PASS including native, `make check` PASS, real production serial/parallel refusal/comparison PASS.** `make gerbers` and real prototype workflow stop only on R1/R2 sourcing; no public package, upload, order or commit. | Resolve exact **HP122WF2201T4E** supplier mapping, then repeat real prototype publication and P3/P4 supplier model/process/panel/CAM review. No PR02 forming, switch or environmental research is needed for the prototype-file queue. |
 | 2026-09-08, PS12 selection from 5d405b0 | User selected **PS122WF2201T4E / C2793873 for prototype AND production** and reports **110 ORDERED** into JLCPCB library. Verified identity and independent PS body/lands; synchronized BOM/CAD/library/model/notes with **no layout change**. **207 tests PASS including native; `make check`, `make gerbers`, real serial/parallel prototype publication/comparison PASS; production refusal/comparison PASS.** Gate P files are current; all five production holds remain. No commit, upload or agent order. | Use current prototype manifest/package for separately authorized P3/P4 supplier review: job allocation/attrition, GDT/Kefa fit/forming, models, processed stencil/CAM and panel/process acceptance. Preserve independent qualification holds without reopening their research for files. |
+| 2026-09-11, initial TE 35212K2FT prototype selection | Selected **TE Connectivity 35212K2FT / C4129105** for prototypes, retaining the Yageo production pre-order after PS12 cancellation. BOM/CAD/library metadata changed with **no layout change**. **207 tests and the recorded native/publication workflows passed for that snapshot**; all five holds remained. The claimed exact TE land match and inherited TCR/overload-test conditions were subsequently found unsupported and are corrected below. No commit, upload or agent order. | Superseded by **TE Review Corrections**; preserve this snapshot's actual verification evidence, not its rejected manufacturer-equivalence claims. |
+| 2026-09-11, TE review corrections | User confirmed production **Yageo SR2512FK-7W2K2L / C876850**, independently identity-checked. Corrected TE alternate-land/mounting evidence, TCR assumption provenance, unknown overload test, live guides and current-release pointers. No additional CAD/BOM/library/geometry or diagnostic-approval change. **208 tests PASS including native, `make check`/`make gerbers` PASS, real serial/parallel prototype publication and production-refusal comparisons PASS.** | Current corrected Gate P files are ready for separately authorized supplier review. Accept actual alternate-land/process, parts/allocation, GDT forming, models/panel/CAM; qualify the intended population separately. No hold closure, upload, order or commit. |
 
 Plan-creation validation: `git diff --check` and `git diff --no-index --check /dev/null REMEDIATION.md` passed. These are documentation checks; the KiCad and model results above are prior review evidence, not newly performed hardware qualification.
 
@@ -897,6 +899,10 @@ no public manifest, order ZIP or Gerber mirror remains. Final library and
 
 ### PS12 Selection
 
+**Historical snapshot, superseded by TE prototype selection and the corrected
+TE/Yageo split below.** Its publication results and 110-piece order record are
+preserved; the later cancellation/refund means those parts are not inventory.
+
 The **2026-09-08** update started clean on **5d405b0**, which contains the prior
 HP12 review. The user selects **Uni-Royal PS122WF2201T4E / C2793873** for both
 R1/R2 in **prototype and production under one BOM**, and reports **110 ORDERED
@@ -953,9 +959,9 @@ Preserved prototype workflow:
 **`tmp/workflow-validation/run-_tcteri8/report.json`**, including separate
 serial/parallel source, report and published-package snapshots.
 
-**Current package:** `build/manifest.json` and `build/status.json` both identify
+**Then-published package (historical):** `build/manifest.json` and `build/status.json` identified
 **`status=prototype`, `mode=prototype`**, attempt **`attempt-eotyxtlu`**, hardware
-**1.2.0-dev**, base commit **5d405b0**, with `worktree_dirty=true`. Current source
+**1.2.0-dev**, base commit **5d405b0**, with `worktree_dirty=true`. That snapshot's source
 hashes are PCB **`71831aa537a8c14d5f91907ad923e15bf79c722bf9a34d6879c389107704b3ed`**
 and schematic **`632e440e8ec321428eaf0521bed7bd2e04f64335e29f9a864a636e872a880cef`**.
 Gerber ZIP/mirror SHA-256 is
@@ -971,6 +977,131 @@ holds and order-specific supplier/lot/job-allocation/physical acceptance remain
 open. No file, diagnostic or sourcing gate was weakened. This update makes no
 commit, push, upload or additional order.
 
+### TE Connectivity 35212K2FT Prototype Selection
+
+**Initial TE snapshot, now superseded by [TE Review Corrections](#te-review-corrections).**
+The native/package evidence below remains valid for its recorded source hashes,
+not for subsequently corrected manufacturer claims or changed controlled notes.
+
+The initial **2026-09-11** update handled JLCPCB's cancellation/refund of the prior Uni-Royal PS122WF2201T4E / C2793873 order. The user retained the **Yageo SR2512FK-7W2K2L** production pre-order (20-day wait, now confirmed as **C876850**) and selected **TE Connectivity 35212K2FT / C4129105** for prototype fabrication under Gate P.
+
+- The initial manufacturer-exact drop-in claim was rejected during review. TE's
+  maximum body **6.45 x 3.40 x 0.65 mm** fits the retained envelope, but its
+  recommended lands differ from the unchanged HP/PS-derived alternative. The
+  single terminal-band and guaranteed-fillet descriptions were also corrected;
+  use current ASSEMBLY/DFM_EVIDENCE, not this initial assessment, for dimensions.
+- The initial TE overload-test and TCR-reference attribution was unsupported.
+  **66.33 V catalogue working** and **250/500 V family ceilings** remain valid
+  component arithmetic/data. The **0.501018 W nominal / 0.756803 W upper** normal
+  screens remain conditional calculations; the later correction distinguishes
+  engineering temperature assumptions and unknown TE test conditions.
+- Updated BOM, CAD metadata (`pcb.kicad_pcb`, `pcb.kicad_sch`, local footprint `R_2512_6332Metric.kicad_mod`), scripts, tests, and documentation across the entire repository.
+- Reviewed netlist annotation diagnostics via `review_annotation.py`; verified byte-identical comparisons and updated `pcb/verification.json` with new schematic hash `01329ea3bf88981f3df2f7ba202226f94947c2a3b8ff6c80a75d3c1ecd87e77a`.
+
+| Verification / review | Actual result |
+| :--- | :--- |
+| `python3 -B pcb/sync_libraries.py --check` | **PASS**: ten local footprints and six symbols agree; no drift. |
+| `python3 -B scripts/review_annotation.py --cli /snap/bin/kicad.kicad-cli` | **PASS of evidence collection**, `tmp/annotation-review/hybrid-zr6pvihg/report.json`. |
+| Manual diagnostic review | Accepted schematic hash `01329ea3bf88981f3df2f7ba202226f94947c2a3b8ff6c80a75d3c1ecd87e77a`; all four other input hashes and eight-label review unchanged. |
+
+| Integrated verification | Actual result |
+| :--- | :--- |
+| `TMPDIR=/tmp/opencode KICAD_TEST_CLI=/snap/bin/kicad.kicad-cli python3 -B -W error -m unittest discover -s tests -v` | **207 PASS, no skips**, Python 3.14.4 / KiCad 9.0.7. |
+| `python3 -B scripts/analyze_limits.py && python3 -B scripts/design_bounds.py` | **PASS**: 0.501018 W nominal / 0.756803 W upper per resistor screens confirmed. |
+| `make check` | **PASS**, `attempt-i2kehgcu`: DRC 0, unconnected 0, footprint/parity 0; ERC 0 errors / 8 reviewed warnings. Eight nets, 34 terminals, 52 IPC records, 16 parts, 32 PTH (18 component + 14 via), 4 NPTH, F.Mask/B.Mask/F.Paste 52/36/16. `allocation_verified=false`; no publication. |
+| `python3 -B scripts/verify_workflow.py --expect-holds C4 C5 W3 W1 W4` | **PASS of expected publication refusal**, `tmp/workflow-validation/run-iolhmkqe/report.json`. Clean, serial `make all` (exit 2), clean, parallel `make -j4 all` (exit 2); all 5 holds refuse publication. |
+| `python3 -B scripts/verify_workflow.py --target prototype --expect-holds C4 C5 W3 W1 W4` | **PASS of serial/parallel prototype publication**, `tmp/workflow-validation/run-ounph_j6/report.json`. Both clean and both prototype builds exit 0 with matching validated geometry, connectivity, population and manifests. |
+| `make prototype` | **Exit 0, real prototype publication**, `attempt-qg3u34m7`. Mode/status both `prototype`, all five holds deferred. |
+
+Preserved prototype workflow: **`tmp/workflow-validation/run-ounph_j6/report.json`**.
+Preserved production refusal workflow: **`tmp/workflow-validation/run-iolhmkqe/report.json`**.
+
+**Then-published package (historical):** `build/manifest.json` and `build/status.json` identified **`status=prototype`, `mode=prototype`**, attempt **`attempt-qg3u34m7`**, hardware **1.2.0-dev**, base commit **399c588**, with `worktree_dirty=true`. That snapshot's source hashes were PCB **`da897569fe74102178f1bf5c51d4b7c27f283395c6c3026fd016a22f3eb2c1ff`** and schematic **`01329ea3bf88981f3df2f7ba202226f94947c2a3b8ff6c80a75d3c1ecd87e77a`**.
+Gerber ZIP/mirror SHA-256 is **`28422059378843896e07faf594ac297b1c610fac3b736dd469839806cc47ddc9`**; manifest SHA-256 is **`38ba2f0d5afe1698519a9aba17e4aa06bd6ac5870a2d0c0a10de754baa0c9c65`**.
+
+That publication contained the prototype ZIPs, BOM/CPL, IPC, assembly outputs,
+notices, controlled notes and reports. Its Gate P result applied only to that
+snapshot. It is not the current corrected package; A/B/C and all five holds
+remained open. No file/diagnostic/sourcing gate was weakened and no commit,
+push, upload or additional order was made.
+
+### TE Review Corrections
+
+The **2026-09-11** review correction implements the user's requested findings
+without changing the prototype BOM, CAD, libraries, placement, routing or circuit.
+It preserves all pre-existing uncommitted work on **399c588**; no commit, push,
+upload or order is authorized or performed.
+
+- **Production identity:** the user confirms **Yageo SR2512FK-7W2K2L / C876850**
+  is ordered with a 20-day wait. Direct [JLCPCB identity verification](https://jlcpcb.com/partdetail/C876850)
+  agrees on manufacturer, MPN, code, 2.2 kohm / 2 W / 1% / 100 ppm/C / 2512.
+  The earlier unverified code is corrected history in MATERIALS, not an ordered
+  alternate. Identity/order status is not receipt, inspection or job allocation.
+- **Mounting evidence:** TE **9-1773463-5 Rev G, 02/2025**, pages 1-5, supersedes
+  the unretained March 2023 citation. Its body envelope fits, but **1.50 x 3.00
+  recommended lands, 5.00 inner gap / 6.50 pitch** are not the retained
+  **1.35 x 3.70, 4.90 gap / 6.25 pitch** project alternative. Actual alternative
+  placement/stencil/solder approval remains W4. Distinct terminal bands and
+  conditional toe/heel/side extensions are corrected in DFM_EVIDENCE.
+- **Model provenance:** +/-100 ppm/C at 2.2 kohm is TE data; **25 C reference,
+  -30..125 C study and -55..125 C supported inputs** are engineering assumptions,
+  not verified TE TCR test endpoints. Numeric manufacturer TCR test conditions
+  and the unsupported PS12-derived overload voltage/duration are now `null` in
+  the report. The normal **0.501018 / 0.756803 W per resistor** screens are unchanged.
+  One new regression prevents promoting the unknown test conditions to facts.
+- **Rating transfer:** TE's page 3 reference PCB has **four layers, 2 oz outer /
+  4 oz inner copper**, unlike this two-layer board. Catalogue rating/derating
+  transfer is explicitly unverified, not a demonstrated two-layer failure.
+  TE **250/500/500 V** family ceilings and **66.33 V catalogue working** do not
+  establish a five-second pulse rating or a board operating limit.
+- **Live records:** electrical/risk/qualification/ordering/agent instructions
+  now distinguish TE prototypes from ordered Yageo production and retired PS12.
+  Yageo needs separate part/model/process/thermal review and a deliberate
+  source/BOM/library update before production; TE tests do not qualify it.
+  Current release pointers lead here; historical package evidence is preserved.
+- **Release ledger:** C4/C5/W3/W1/W4 remain open; W3/W4 reasons describe the
+  actual mounting/evidence limitations. No diagnostic approval or its five
+  input hashes was refreshed; those reviewed CAD/library inputs are unchanged.
+
+Changed scope: the two analysis helpers, two focused test files, geometry-checker
+diagnostic wording, seven controlled engineering notes, nine main guides, this
+handoff and W3/W4 ledger reasons. Independent integration review found the
+remaining live PS12 geometry diagnostics; their wording is corrected without
+changing validation behavior or dimensions. No other actionable issue was found.
+The existing TE BOM/CAD/library changes remain intact; no generated artifact is
+hand-edited. All integrated checks below completed on the corrected snapshot.
+
+| Exact command / review | Actual result |
+| :--- | :--- |
+| `TMPDIR=/tmp/opencode KICAD_TEST_CLI=/snap/bin/kicad.kicad-cli python3 -B -W error -m unittest discover -s tests -v` | **208 PASS, no skips**, Python 3.14.4 / KiCad 9.0.7. Includes six isolated native probes, the new TE-provenance regression, both 280-cut sweeps and existing file/negative fixtures. |
+| `python3 -B scripts/analyze_limits.py` and `python3 -B scripts/design_bounds.py` | Both **exit 0**; **0.501018 W nominal / 0.756803 W upper per resistor** unchanged. JSON now identifies prototype-only scope, engineering temperature assumptions, unknown manufacturer test conditions and unverified catalogue-rating transfer. These are conditional calculations, not measurements. |
+| `python3 -B pcb/sync_libraries.py --check` | **PASS**, ten footprints/six symbols. PCB, schematic, BOM, resistor footprint and all five diagnostic-review inputs match the reviewed pre-correction hashes; no synchronization or approval refresh was needed. |
+| `make check` | **PASS**, `attempt-l85xrk62`: DRC 0, unconnected 0, footprint/parity 0; ERC 0 errors/eight exact reviewed warnings. Eight nets/34 terminals/52 IPC records, 16 parts, **32 PTH (18 component +14 via), four NPTH**, F.Mask/B.Mask/F.Paste **52/36/16** and all archives checked. No publication from this target. |
+| `make gerbers` | **Exit 0, prototype publication**, `attempt-vcvn00fw`, with corrected notes and W3/W4 reasons. Native Assembly.pdf inspected; Assembly.txt confirms **16 anchors/34 terminal datums**, TE identities and unchanged signed-Y coordinates. |
+| `python3 -B scripts/verify_workflow.py --expect-holds C4 C5 W3 W1 W4` | **PASS of production refusal/comparison**, `tmp/workflow-validation/run-b4pz11o5/report.json`: clean (0), serial `make all` (2), clean (0), parallel `make -j4 all` (2). Both pass file checks and refuse solely for all five holds; validated geometry/connectivity/population/notes agree. |
+| `python3 -B scripts/verify_workflow.py --target prototype --expect-holds C4 C5 W3 W1 W4` | **PASS of actual prototype publication/comparison**, `tmp/workflow-validation/run-t_v3ku83/report.json`: both clean commands and serial/parallel prototype builds exit 0. Validated geometry/connectivity/population, controlled notes, manifests, mirrors and ZIP mode/hold notices agree. |
+| Final source/artifact review | `git diff --check` PASS. All unchanged physical/CAD/BOM/CPL hashes remain consistent. Current package source/artifact hashes and both mirrors validate; no generated artifact was hand-edited. Supplier CAM/placement/process/allocation and hardware tests remain unperformed. |
+
+**Current package:** `build/status.json` and `build/manifest.json` identify
+**status=prototype, mode=prototype**, attempt **`attempt-m6qoxdcv`**, hardware
+**1.2.0-dev**, base **399c588**, `worktree_dirty=true`. This is the final parallel
+prototype publication, preserved in the workflow above. PCB and schematic hashes
+remain **`da897569fe74102178f1bf5c51d4b7c27f283395c6c3026fd016a22f3eb2c1ff`** and
+**`01329ea3bf88981f3df2f7ba202226f94947c2a3b8ff6c80a75d3c1ecd87e77a`**.
+Gerber ZIP/mirror SHA-256:
+**`b8816e9a4d422c916b345c5ce63fe0b7b97df98ed8c7b91eb8623e383475801b`**.
+Manifest SHA-256:
+**`2df63812c0ea3971fbd7e4e8a368e96c857eb639e71f105ee03e192482998d05`**.
+
+The package contains Gerbers/FlyTest, TE BOM, generated CPL, IPC, assembly outputs,
+via treatment, scope notices, all seven corrected controlled notes and reports.
+The production workflow's `before/` preserves the initial check/direct prototype
+exports and earlier quarantined evidence; both workflows preserve their own
+serial/parallel snapshots and verify unrelated `tmp/` evidence unchanged.
+**Gate P is met, not upload/order or field approval.** A/B/C and C4/C5/W3/W1/W4
+remain held; `allocation_verified=false`. No switch/environment research,
+physical qualification, commit, upload or order was performed in this correction.
+
 ### Next Bounded Work
 
 **Current scope: board design/finalization only, for five fully assembled
@@ -978,15 +1109,11 @@ JLCPCB prototypes.** The following queue supersedes the old instruction to start
 with the first unchecked P2 item. Preserve the independent holds below without
 spending this board package on their research.
 
-1. **P3/P4, PS12 job allocation:** identity **PS122WF2201T4E / C2793873** is
-   resolved for both prototype and production. Confirm receipt/usable library
-   inventory from the reported **110 ORDERED**, then accept actual job allocation
-   of ten fitted resistors plus supplier-specified attrition for the five boards.
-   These are order tasks, not Gate P file blockers. Do not reopen superseded HP12
-   sourcing, the rejected C2791283 pairing, or PR02 forming.
+1. **P3/P4, resistor job allocation:** TE **35212K2FT / C4129105** remains the prototype selection. Accept allocation of ten fitted resistors plus supplier-specified attrition for five boards. Production pre-order **Yageo SR2512FK-7W2K2L / C876850** has a user-confirmed 20-day wait and independently verified identity, not current population or qualification. Prior PS12 was cancelled/refunded. These are order tasks, not Gate P file blockers; do not reopen HP12 sourcing, rejected codes or PR02 forming. Before any production substitution, review Yageo-specific evidence, update controlled sources/model and repeat affected checks.
 2. **P3, W1/W4/W5:** accept actual Kefa/GDT lot/body/pin patterns, KF129 variant,
    GDT forming, Ruilon metric/inch clarification and heavy-copper SMT/THT solder
-   process against the already implemented holes/lands. Board-side geometry is
+   process against the already implemented holes/lands, including the **retained
+   resistor-land alternative to TE's recommendation**. Board-side geometry is
    explicit; supplier and physical acceptance remain unperformed.
 3. **P4, C2/W1/W4:** review actual supplier models against the generated sixteen
    anchors / 34 pin datums, then the panel, processed PCB/stencil and protected
@@ -1026,7 +1153,9 @@ environmental research while waiting for a PCB supplier response.
    and the real hub current/OV/latch/isolation/transient circuit; a larger PSU,
    2 A fuse or 62 V eFuse alone is not that circuit.
 4. **W3/P6:** verify actual source setting/range and closed-OneGel temperatures
-   with selected PS12 SMT resistors, including chip/pad/PCB/material interfaces,
+   for the intended TE prototype or separately reviewed Yageo production population,
+   including chip/pad/PCB/material interfaces and rating transfer from the
+   manufacturer's mounting basis,
    upper-source, hot/solar and output-short cases. The **0.756803 W** current
    screen is not a temperature measurement; PR02/MBE and 37 V figures remain
    historical. No axial resistor standoff applies. A passive

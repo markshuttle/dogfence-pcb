@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Conditional P2 DC/thermal bounds for the selected 16-part station circuit.
+"""Conditional P2 DC/thermal bounds for the 16-part TE prototype circuit.
 
 Offline, stdlib only; reuses analyze_limits, without changing its defaults.
 All numbers are calculations, not measurements or release approval. The 35 V
@@ -40,16 +40,17 @@ def _finite(name, *values):
 
 def resistor_bounds(nominal_ohm=2200.0, tolerance_fraction=0.01, tcr_ppm=dc.RESISTOR_TCR_PPM,
                     minimum_c=-30.0, maximum_c=125.0):
-    """PS12 initial tolerance / linear TCR screen about 25 C, not aging.
+    """TE prototype initial tolerance / assumed linear TCR screen, not aging.
 
-    SMD-SP-007 V.7 tests TCR at -55/125 C; do not extend the screen to the
-    separate 155 C operating/zero-power endpoint.
+    The 25 C reference, default -30..125 C screen and supported -55..125 C
+    inputs are declared engineering assumptions, not TE-confirmed TCR test
+    conditions. Do not extend the model to the 155 C operating endpoint.
     """
     _finite("resistor inputs", nominal_ohm, tolerance_fraction, tcr_ppm,
             minimum_c, maximum_c)
     if (nominal_ohm <= 0 or not 0 <= tolerance_fraction < 1 or tcr_ppm < 0
             or not -55 <= minimum_c <= maximum_c <= 125):
-        raise ValueError("invalid resistance/tolerance or PS12 -55..125 C TCR test envelope")
+        raise ValueError("invalid resistance/tolerance or declared -55..125 C model input envelope")
     drift = tcr_ppm * 1e-6 * max(abs(minimum_c - dc.RESISTOR_REFERENCE_C),
                               abs(maximum_c - dc.RESISTOR_REFERENCE_C))
     if drift >= 1:
@@ -124,10 +125,11 @@ def normal_cases(*, source_min_v=35.0, source_max_v=dc.ADJUSTMENT_SCREEN_V, cabl
 
 
 def thermal_envelope(voltage_v, local_ambient_c):
-    """PS12 ambient derating arithmetic, conditional on adequate heat flow.
+    """TE catalogue derating arithmetic, not a qualified two-layer PCB rating.
 
+    Transfer from TE's four-layer mounting example requires separate review.
     Fixed-current ceiling uses Rmax; a voltage-fed power bound uses Rmin.
-    R uses the separate -30..125 C screen, not an electrothermal equilibrium.
+    R uses the assumed -30..125 C screen, not an electrothermal equilibrium.
     Ambient derating to zero at 155 C is not a film or OneGel temperature limit.
     The required nominal R is arithmetic, not a replacement MPN or LED-current limit.
     """
@@ -253,9 +255,9 @@ def analyze(**options):
                     "k12_current_ratio": abs(current) / k12_a if arc else None,
                 })
 
-    rated_voltage_v = min(500.0, math.sqrt(dc.RESISTOR_P70_W * 2200))
+    rated_voltage_v = min(250.0, math.sqrt(dc.RESISTOR_P70_W * 2200))
     return {
-        "revision": dc.REVISION, "conditional_only": True,
+        "revision": dc.REVISION, "conditional_only": True, "model_scope": "prototype_only",
         "stations": STATIONS, "spacing_km": SPACING_KM,
         "source": {"model": "one LRS-75-36 for TEST; second is spare (user confirmed)",
                    "nominal_v": 36.0, "analysis_floor_v": floor_v,
@@ -273,21 +275,29 @@ def analyze(**options):
                   "copper_alpha_per_c": 0.00393,
                   "contact_ohm_per_span_ABC": options.get("contact_ohm_per_span", CONTACT_OHM_PER_SPAN),
                   "effective_4km_core_ohm_ABC": [r * 4 for r in effective_rails]},
-        "resistor": {"mpn": dc.RESISTOR_MPN, "manufacturer": "Uni-Royal", "package": "2512 SMT",
+        "resistor": {"mpn": dc.RESISTOR_MPN, "manufacturer": "TE Connectivity", "package": "2512 SMT",
+                     "datasheet": {"document": "9-1773463-5", "revision": "G", "date": "02/2025"},
                      "nominal_ohm": 2200.0,
                      "r_min_ohm": r_min, "r_max_ohm": r_max,
                      "screen_temperature_range_c": [-30, 125], "tolerance_fraction": 0.01,
+                     "supported_temperature_range_c": [-55, 125],
+                     "temperature_screen_basis": "declared_engineering_assumption",
                      "tcr_abs_ppm_per_c": dc.RESISTOR_TCR_PPM, "aging_included": False,
                      "reference_temperature_c": dc.RESISTOR_REFERENCE_C,
-                     "tcr_test_temperatures_c": [-55, 125],
+                     "reference_temperature_basis": "declared_engineering_assumption",
+                     "tcr_test_method": "Room and minimum/maximum operating temperatures (User Spec)",
+                     "tcr_test_reference_temperature_c": None,
+                     "tcr_test_temperatures_c": None,
                      "p70_w": dc.RESISTOR_P70_W,
                      "zero_power_ambient_c": dc.RESISTOR_ZERO_POWER_AMBIENT_C,
-                     "family_max_working_voltage_v": 500.0,
+                     "catalogue_mounting": {"layers": 4, "outer_copper_oz": 2, "inner_copper_oz": 4},
+                     "board_rating_transfer_verified": False,
+                     "family_max_working_voltage_v": 250.0,
                      "rated_working_voltage_at_p70_v": rated_voltage_v,
-                     "family_max_overload_voltage_v": 1000.0,
+                     "family_max_overload_voltage_v": 500.0,
                      "dielectric_withstanding_voltage_v": 500.0,
-                     "short_time_overload_test_v": min(2.5 * rated_voltage_v, 1000.0),
-                     "short_time_overload_test_s": 5.0},
+                     "short_time_overload_test_v": None,
+                     "short_time_overload_test_s": None},
         "diodes": {"D1_D2_D3_D4_mpn": dc.DIODE_MPN, "vrrm_v": 1300,
                    "D3_D4_cathodes": "LED_A_POS / LED_C_POS after D1/D2",
                    "D3_D4_anodes": "WIRE_B", "positive_voltage_regulation": False,
@@ -341,16 +351,22 @@ def analyze(**options):
             "1 uA state classification is not an optical dark threshold; series reverse leakage is not solved.",
             "The two-branch input-power heat bound already includes resistor, diode, LED and clamp energy. "
             "Do not add clamp leakage as another PSU load. Contact/auxiliary heat and solar input are excluded.",
-            "PS12 2 W does not remove the nominal 1.002 W resistor heat per board. SMT changes heat flow, "
-            "not power loss or a proven cooler result. Ambient derating reaches zero at 155 C; no PS12 "
+            "TE 3521 2 W does not remove the nominal 1.002 W resistor heat per board. SMT changes heat flow, "
+            "not power loss or a proven cooler result. Ambient derating reaches zero at 155 C; no 3521 "
             "hot-spot or mounted K/W is established. PR02 thermal/standoff data do not apply.",
-            "PS12 TCR uses +/-100 ppm/C referenced to 25 C from SMD-SP-007 V.7. The linear "
-            "-30..125 C screen stays within the PDF's -55/125 C TCR test endpoints, not 155 C. "
+            "TE 9-1773463-5 Rev G, 02/2025 p3 specifies four layers, 2 oz outer / 4 oz inner copper. "
+            "Catalogue P70/derating transfer to the actual two-layer PCB remains conditional, "
+            "not demonstrated failure or qualification. See ASSEMBLY/DFM for retained alternative lands/process.",
+            "TE specifies +/-100 ppm/C at 2.2k using room and minimum/maximum operating temperatures "
+            "(User Spec), without numeric TCR test reference/endpoints. The 25 C reference, linear "
+            "-30..125 C screen and supported -55..125 C inputs are declared engineering assumptions, "
+            "not TE test conditions. No extension to the 155 C operating endpoint is modeled. "
             "Aging and assembly/solder drift are excluded.",
-            "PS12 family 500 V is limited by sqrt(P*R): 66.3325 V at 2 W / nominal 2.2k. "
-            "The 165.8312 V five-second overload test (1000 V family cap) is separate from the "
-            "PS one-pulse power and voltage curves (SMD-SP-007 V.7 p. 6), not digitized here; "
+            "TE 3521 family 250 V is limited by sqrt(P*R): 66.3325 V at 2 W / nominal 2.2k. "
+            "The 500 V overload family ceiling does not specify a short-time test voltage or duration; "
             "neither establishes repetitive surge or board-lightning qualification.",
+            "This model covers the TE prototype only. Ordered Yageo production parts need their own "
+            "part/model/process/thermal review before a source/BOM switch; no TE rating is transferred.",
             "60 C interface / 110 C film are proposed conservative targets, not universal user limits. "
             "Meet actual cable <=70 C and all gel/adhesive/LED/connector limits with uncertainty.",
             "Resistance uses selected -30..125 C inputs, not self-heating. Rating-only ambient/current/voltage "
@@ -408,7 +424,7 @@ def main(argv=None):
     print("\nSource-end case | branch mA | resistor W | two resistors W | rating local ceiling C")
     for row in report["source_end_branches"]:
         local = row["rating_only_local_ambient_ceiling_c"]
-        text = f"{local:.3f}" if local is not None else "NONE (above PS12 P70)"
+        text = f"{local:.3f}" if local is not None else "NONE (above TE catalogue P70)"
         print(f"{row['case']} | {1000 * row['branch_a']:.4f} | {row['resistor_w']:.6f}"
               f" | {row['two_resistors_w']:.6f} | {text}")
     print("\nLocal C | allowed W | margin W | fixed-current ceiling mA | zero-drop source ceiling V | nominal R min ohm")

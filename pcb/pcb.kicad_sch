@@ -2463,7 +2463,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "Uni-Royal"
+		(property "Manufacturer" "TE Connectivity"
 			(at 205.74 62.23 0)
 			(effects
 				(font
@@ -2481,7 +2481,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "https://www.uni-royal.cn/en/images/userfile/file/1784854235b7c79f8d8a205c5d.pdf"
+		(property "Datasheet" "https://www.te.com/commerce/DocumentDelivery/DDEController?Action=showdoc&DocId=Data+Sheet%7F9-1773463-5%7FG1%7Fpdf%7FEnglish%7FENG_DS_9-1773463-5_G1.pdf"
 			(at 205.74 62.23 0)
 			(effects
 				(font
@@ -2490,7 +2490,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" "Uni-Royal PS122WF2201T4E C2793873; 2.2k 2W 1% PS12/2512 SMD chip resistor; prototype and production"
+		(property "Description" "TE Connectivity 35212K2FT C4129105; 2.2k 2W 1% 3521/2512 SMD chip resistor; prototype selection"
 			(at 205.74 62.23 0)
 			(effects
 				(font
@@ -2499,7 +2499,7 @@
 				(hide yes)
 			)
 		)
-		(property "MPN" "PS122WF2201T4E"
+		(property "MPN" "35212K2FT"
 			(at 205.74 62.23 0)
 			(effects
 				(font
@@ -2508,7 +2508,7 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC" "C2793873"
+		(property "LCSC" "C4129105"
 			(at 205.74 62.23 0)
 			(effects
 				(font
@@ -3546,7 +3546,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "Uni-Royal"
+		(property "Manufacturer" "TE Connectivity"
 			(at 205.74 123.19 0)
 			(effects
 				(font
@@ -3564,7 +3564,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "https://www.uni-royal.cn/en/images/userfile/file/1784854235b7c79f8d8a205c5d.pdf"
+		(property "Datasheet" "https://www.te.com/commerce/DocumentDelivery/DDEController?Action=showdoc&DocId=Data+Sheet%7F9-1773463-5%7FG1%7Fpdf%7FEnglish%7FENG_DS_9-1773463-5_G1.pdf"
 			(at 205.74 123.19 0)
 			(effects
 				(font
@@ -3573,7 +3573,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" "Uni-Royal PS122WF2201T4E C2793873; 2.2k 2W 1% PS12/2512 SMD chip resistor; prototype and production"
+		(property "Description" "TE Connectivity 35212K2FT C4129105; 2.2k 2W 1% 3521/2512 SMD chip resistor; prototype selection"
 			(at 205.74 123.19 0)
 			(effects
 				(font
@@ -3582,7 +3582,7 @@
 				(hide yes)
 			)
 		)
-		(property "MPN" "PS122WF2201T4E"
+		(property "MPN" "35212K2FT"
 			(at 205.74 123.19 0)
 			(effects
 				(font
@@ -3591,7 +3591,7 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC" "C2793873"
+		(property "LCSC" "C4129105"
 			(at 205.74 123.19 0)
 			(effects
 				(font

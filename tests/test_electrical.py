@@ -274,8 +274,8 @@ class ElectricalTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             branch_budget(36, shunt_a=0.1)
 
-    def test_selected_ps12_rating_tcr_and_25c_reference(self):
-        self.assertEqual(RESISTOR_MPN, "PS122WF2201T4E")
+    def test_selected_resistor_catalogue_rating_tcr_and_assumed_25c_reference(self):
+        self.assertEqual(RESISTOR_MPN, "35212K2FT")
         self.assertEqual(RESISTOR_TCR_PPM, 100)
         self.assertEqual(RESISTOR_REFERENCE_C, 25)
         reference = Channel(resistor_tcr_ppm=100)
@@ -354,12 +354,16 @@ class ElectricalTests(unittest.TestCase):
                   "--resistor-error", "-0.01", "0.01"])
         report = json.loads(output.getvalue())
         self.assertTrue(report["provisional"])
+        self.assertEqual(report["model_scope"], "prototype_only")
+        self.assertEqual(report["resistor_model_assumptions"],
+                         {"reference_temperature_c": 25, "linear_tcr": True})
         self.assertEqual(report["cut_sweep"]["cases"], 28)
         self.assertEqual(report["cut_sweep"]["shunt_diversion_bound_a"], CLAMP_LEAKAGE_SCREEN_A)
         self.assertEqual(report["selected_parts"], {"R1_R2": RESISTOR_MPN, "D1_D2_D3_D4": DIODE_MPN})
         self.assertAlmostEqual(report["maximum_adjustment_branch"]["resistor_w"], 0.7568032910561)
         self.assertIn("1.9 V", " ".join(report["limitations"]))
         self.assertIn("NOT <=5 V", " ".join(report["limitations"]))
+        self.assertIn("engineering assumptions, not TE test conditions", " ".join(report["limitations"]))
         self.assertEqual(report["inputs"]["cable"]["r20_ohm_per_km"], [7, 8, 9])
         self.assertEqual(report["inputs"]["channel_a"]["resistor_temperature_c"], 125)
         self.assertAlmostEqual(report["loads"][0]["voltage_v"], 36.36)

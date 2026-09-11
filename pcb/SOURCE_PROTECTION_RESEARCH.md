@@ -14,16 +14,32 @@ below. All six original GDTs remain. The user prohibits energized cattle fencing
 near the whole boundary cable, stations and hub; the old parallel exposure is
 withdrawn. This does not establish GDT recovery or remove nearby-lightning/RF/
 switching and earthing questions. The 37 V / 1.6 A hub proposals below remain
-**unimplemented historical targets**. Recalculate them before use: the new
-PR02/40.39597 V normal-load screen can reach 1.561876 A, above the minimum
+**unimplemented historical targets**. Recalculate them before use: the then-current
+PR02/40.39597 V normal-load screen could reach 1.561876 A, above the minimum
 limit of the old proposed 8-kohm TPS26600 setting. See current ELECTRICAL and
 DESIGN_BOUNDS, not the older hub circuit as a ready-to-populate design.
 
-**2026-09-08 supersession:** the current unchanged-topology 16-part hybrid uses
-**PS122WF2201T4E / C2793873 SMT** for prototype and production. PR02 figures above
-are historical; current selected-part screens are in ELECTRICAL/DESIGN_BOUNDS.
-No source/GDT replacement below is selected or required to generate Gate P files;
-the separate production/field holds remain open.
+**2026-09-11 resistor correction:** the unchanged-topology 16-part hybrid uses
+**TE Connectivity 35212K2FT / C4129105 2512 SMT** (in stock at JLCPCB) in the
+prototype BOM only. The user confirms **Yageo SR2512FK-7W2K2L /
+[C876850](https://jlcpcb.com/partdetail/C876850) ORDERED** with an advised 20-day
+wait for future production, not receipt or allocation. The prior Uni-Royal PS12
+order was cancelled/refunded due to stockout; [MATERIALS](../MATERIALS.md)
+preserves its historical 110-part order. Whole-BOM `allocation_verified` remains
+`false`; **C4/C5/W3/W1/W4 remain open**. TE prototype results do not qualify Yageo
+thermal behavior. Separate production-part review and controlled BOM/CAD,
+library, model and note updates, followed by reverification, are required before
+production release under [ORDERING](../ORDERING.md).
+
+PR02 figures above are historical. Current TE **9-1773463-5, Rev G, 02/2025**
+evidence and conditional screens are in [ELECTRICAL](ELECTRICAL.md) and
+[DESIGN_BOUNDS](DESIGN_BOUNDS.md): reference-board/P70 transfer is conditional,
+and the retained 25 C reference / -30..125 C linear screen is an engineering
+assumption, not verified TE TCR test conditions. Do not transfer PS12 overload
+or pulse data. [ASSEMBLY](ASSEMBLY.md) controls the retained alternate project
+lands and their supplier placement/stencil/solder hold, not a manufacturer-exact
+fit claim. No source/GDT replacement below is selected or required to generate
+Gate P files; all five holds are deferred for files, not closed.
 
 ## Decision
 

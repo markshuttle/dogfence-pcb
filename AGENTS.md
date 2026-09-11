@@ -30,8 +30,9 @@ Production/field release remains held; file checks are not hardware approval.
 6. For a **board/prototype-only request**, work the P3/P4 board-finalization
    queue in ORDERING/REMEDIATION, not the first unchecked switch or environmental
    item. Preserve those independent holds without restarting their research.
-   The authorized 16-part hybrid selects PS12 SMT for prototype and production,
-   preserving the existing lands, placement, routing and circuit topology;
+   The authorized 16-part hybrid selects 2512 SMT (TE Connectivity 35212K2FT
+   for prototype; Yageo SR2512FK-7W2K2L / C876850 for production pre-order) preserving
+   the existing lands, placement, routing and circuit topology;
    do not add a new circuit or move sound geometry just to produce a PCB diff.
    **Gate P is file-verified prototype artifacts**, separate from original A/B/C
    production/field holds. Supplier CAM/placement/allocated parts, GDT fit/forming
@@ -103,24 +104,30 @@ geometry fails closed; extend and test the validator rather than ignore it.
   file/artifact checks pass. That CSV is a generated draft reference, not an
   independent source or upload approval; on failure it may remain from an older
   checked revision.
-- The user selected **Uni-Royal PS122WF2201T4E / C2793873**, PS12 / 2512,
-  2.2 kohm / 2 W / 1%, for **both R1/R2 in prototype and production under one
-  BOM**. Use manufacturer `Uni-Royal`, `Sourcing=LCSC` and empty
-  `Sourcing Reference` in BOM/CAD. [JLCPCB C2793873](https://jlcpcb.com/partdetail/C2793873)
-  verifies identity and resolves the former resistor External blocker, not
-  file verification or job allocation. The user reports **110 ORDERED into
-  their JLCPCB parts library**, not received, inspected or allocated to a PCBA
-  job; whole-BOM **`allocation_verified` remains `false`**. MATERIALS records
+- For the prototype order, the user selected **TE Connectivity 35212K2FT / C4129105**,
+  CGS 3521 / 2512 SMT, 2.2 kohm / 2 W / 1%, AEC-Q200, for **both R1/R2 in the prototype
+  BOM** (verified in stock at JLCPCB). Use manufacturer `TE Connectivity`, `Sourcing=LCSC`
+  and empty `Sourcing Reference` in BOM/CAD. [JLCPCB C4129105](https://jlcpcb.com/partdetail/C4129105)
+  verifies identity and resolves the prototype resistor procurement blocker.
+  The user confirms the production order is **Yageo SR2512FK-7W2K2L / C876850**
+  (20-day wait); [JLCPCB C876850](https://jlcpcb.com/partdetail/C876850) independently
+  confirms its identity. The prior **Uni-Royal PS122WF2201T4E / C2793873** order was
+  cancelled and refunded by JLCPCB due to distributor stockout. In-stock JLCPCB status is not
+  PCBA job allocation; whole-BOM **`allocation_verified` remains `false`**. MATERIALS records
   quantities and separate allocation tasks. No agent upload or order is authorized.
+  Yageo is not populated by the current TE prototype BOM. Before production,
+  review its own manufacturer/model, footprint/process and thermal evidence,
+  deliberately update BOM/CAD/libraries/model/notes and repeat the affected checks.
+  TE prototype results do not qualify Yageo or automatically switch the BOM.
   Prior **HP122WF2201T4E pending External sourcing is superseded, not ordered**.
   **C2791283 is HP122WJ0472T4E, 4.7 kohm / 5%**; its wrong pairing with
-  HP122WF2201T4E in `02661d8` remains rejected history, not a PS12 identity.
+  HP122WF2201T4E in `02661d8` remains rejected history, not a 2512 identity.
   The generic BOM `Sourcing=External` rule still requires an empty code and exact HTTPS
   `Sourcing Reference` matched to PCB/schematic metadata. This is explicit
   pending procurement, not a guessed C-code or allocation approval. Unresolved
   external rows block **both prototype and production publication**. Ordinary
   LCSC rows still require valid reviewed C-codes; those do not reserve stock.
-  Use REMEDIATION's latest revision-specific results, not the prior HP12 checks,
+  Use REMEDIATION's latest revision-specific results, not prior checks,
   for native verification and publication status. Part selection is not a new PASS.
 - `make gerbers` / `make prototype` run the complete file/artifact checks and
   may publish **FILE-VERIFIED PROTOTYPE ONLY** packages with **all five
@@ -200,7 +207,7 @@ unavailable, record the actual failed version probe; do not claim DRC passed.
 
 All intentional custom geometry is under `pcb/DogFence.pretty/` with symbols
 in `pcb/DogFence.kicad_sym`. `fp-lib-table` / `sym-lib-table` use `${KIPRJMOD}`.
-Do not replace modified Kefa terminals, manufacturer PS12 lands, the cathode-right
+Do not replace modified Kefa terminals, project-selected 2512 SMT lands, the cathode-right
 SMA diode, or the axial GDT overpass with similarly named stock-library objects.
 Preserve global pad nets, positions and the two distinct local LED-terminal mappings.
 
@@ -244,14 +251,20 @@ pad2 `(0,2.54,90)`; C pad1 `(0,2.54,270)` and pad2 `(0,-2.54,270)`. Do not match
 their rotations or replace them with one generic footprint.
 
 The authorized **16-part BOM (eight SMT, eight THT)** uses Vishay **BYG23T-M3/TR /
-C145454** for D1-D4 and selected **Uni-Royal PS122WF2201T4E / C2793873**,
-PS12 / 2512 SMT, 2.2 kohm / 2 W / 1%, for both R1/R2 in prototype and production,
-plus the retained GDTs and Kefa terminals. No layout modification is required.
+C145454** for D1-D4 and selected **TE Connectivity 35212K2FT / C4129105**,
+CGS 3521 / 2512 SMT, 2.2 kohm / 2 W / 1%, AEC-Q200, for both R1/R2 in the prototype
+order (in stock at JLCPCB; with Yageo SR2512FK-7W2K2L / C876850 ordered with 20-day wait for
+production builds; prior Uni-Royal PS12 cancelled/refunded), plus the retained
+GDTs and Kefa terminals. This evidence correction makes no layout modification.
 R1/R2 origins are **(120.00,104.50)/(120.00,140.50), rotation 0**, pads at
-**X=116.875/123.125**. Manufacturer lands are **1.35 x 3.70 mm rectangles at
+**X=116.875/123.125**. Retained project-alternate lands are **1.35 x 3.70 mm rectangles at
 local X=+/-3.125**, maximum body **6.45 x 3.40 mm**, maximum height **0.65 mm**;
 the **8.10 x 4.20 mm courtyard** and project-selected zero additional mask/paste
 margins remain unchanged. No resistor holes, standoff or forming.
+TE's recommendation is **1.50 x 3.00 mm, 5.00 mm inner gap / 6.50 mm pitch**,
+not these HP/PS-derived lands. Body containment does not establish an exact
+land-pattern match; accept the retained alternative's placement/stencil/solder
+process under W4. Preserve geometry unless a reviewed change is authorized.
 D1/D2 origins are **(130.80,104.50)/(130.80,140.50), rotation 0**, cathodes east
 at **X=132.90**, anodes at **X=128.70**. D3/D4 remain at
 **(135.00,99.00)/(135.00,146.00), rotation 180**, cathodes west to LED positive
@@ -266,18 +279,22 @@ Datasheet 5/20 kA impulse or terminal current ratings are
 **component** ratings, not assembled-board performance. Three paralleled EARTH
 pins remain connected, but are not a 72 A assembly rating. The 2 W resistor
 still dissipates about 0.50 W nominal; a wattage label is not cool-body or
-continuous potted qualification. PS12's [SMD-SP-007 V.7, 08-Jan-2026](https://www.uni-royal.cn/en/images/userfile/file/1784854235b7c79f8d8a205c5d.pdf)
-specifies **+/-100 ppm/C referenced to 25 C** (TCR test endpoints -55/+125 C),
-2 W at 70 C ambient derating to zero at 155 C. The numerical screens remain
-**0.501018 W nominal / 0.756803 W upper per resistor**, not measured temperatures.
-The family **500 V working / 1000 V overload** ceilings do not override the lower
-power/resistance limits: **66.33 V working / 165.83 V for the specified 5 s overload**
-at 2 W / 2.2 kohm, not a 500 V system rating. PS page 6 supplies one-pulse power
-and voltage curves, not repetitive-pulse or board qualification. SMT heat
-rejection may help, but does not lower loss or prove cooler operation. Do not
-transfer PR02's 220 C hot-spot, 75 K/W example or axial standoff to PS12. Use
-DESIGN_BOUNDS for current screens; actual chip/pad/PCB and gel/cable interface
-temperatures require separate qualification.
+continuous potted qualification. TE 3521's [Data Sheet 9-1773463-5 Rev G, 02/2025](https://www.te.com/commerce/DocumentDelivery/DDEController?Action=showdoc&DocId=Data+Sheet%7F9-1773463-5%7FG1%7Fpdf%7FEnglish%7FENG_DS_9-1773463-5_G1.pdf)
+specifies **+/-100 ppm/C** at 2.2 kohm, -55 to +155 C operation and catalogue
+2 W at 70 C ambient derating to zero at 155 C. Its TCR method names room and
+minimum/maximum operating temperatures, not numeric reference/test endpoints.
+The model's **25 C reference, -30..125 C study and -55..125 C supported inputs
+are engineering assumptions**, not TE test conditions. The conditional screens
+remain **0.501018 W nominal / 0.756803 W upper per resistor**.
+TE's page 3 reference PCB has **four layers, 2 oz outer / 4 oz inner copper**;
+catalogue rating/derating transfer to this two-layer board is unverified, not a
+demonstrated failure. The family **250 V working / 500 V overload** ceilings
+do not override power/resistance limits: **66.33 V catalogue working** at
+2 W / 2.2 kohm is not a system rating. The cited TE sheet does not establish
+PS12's `2.5*RCWV` / five-second overload test; model test voltage/duration remain
+unknown. Do not transfer PS pulse curves or PR02 hot-spot/K/W/standoff data.
+Use DESIGN_BOUNDS for current screens; actual chip/pad/PCB and gel/cable interface
+temperatures require separate qualification for the intended population.
 
 Selected hole/pad sizes are KF128 2.00/3.20, KF129 2.00/2.80,
 B5G470L 1.40/2.80 and earth GDT 1.50/3.00 mm. These depend on the
@@ -317,8 +334,9 @@ preserve their procurement history.
   compatible materials or completed thermal qualification. The 35-37 V source
   window is an unimplemented historical proposal. `design_bounds.py` now uses
   a declared 35 V floor / 40.39597 V upper screen, not a guaranteed or enforced
-  window. PS12's +/-100 ppm/C at 25 C reference replaces the historical PR02/MBE
-  screens; use `pcb/DESIGN_BOUNDS.md` rather than duplicating stale derived values.
+  window. The TE prototype +/-100 ppm/C screen assumes a 25 C reference; it is
+  not a verified TE TCR test condition or a Yageo qualification. Use
+  `pcb/DESIGN_BOUNDS.md` rather than duplicating stale derived values.
 - Preserve WAGO through-splice/PCB-tap wiring. Normal perimeter current does
   not pass through every PCB. Surge current is a separate design case.
 - Normal TEST must be continuous-safe; do not substitute a timer. TEST/OFF

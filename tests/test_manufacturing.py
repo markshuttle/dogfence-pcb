@@ -1238,8 +1238,8 @@ class ManufacturingTests(unittest.TestCase):
         positions = m.check_placement(m.read_csv(path, m.POSITION_FIELDS), board, native=True)
         bom = m.read_bom(REPO / "pcb" / "BOM.csv")
         for ref in ("R1", "R2"):
-            for key, expected in {"MPN": "PS122WF2201T4E", "Manufacturer": "Uni-Royal",
-                                  "LCSC Part #": "C2793873", "Sourcing": "LCSC", "Sourcing Reference": ""}.items():
+            for key, expected in {"MPN": "35212K2FT", "Manufacturer": "TE Connectivity",
+                                  "LCSC Part #": "C4129105", "Sourcing": "LCSC", "Sourcing Reference": ""}.items():
                 self.assertEqual(bom[ref][key], expected)
         text = m.assembly_reference(board, bom, positions, "1.2.0-dev")
         anchors, terminals = text.split("TERMINAL DATUMS\n")
@@ -1270,7 +1270,7 @@ class ManufacturingTests(unittest.TestCase):
                     net, x, y, drill = expected[key]
                     self.assertEqual(row[2], net)
                     self.assertEqual(tuple(map(float, row[4:])), (x, y, x, -y, drill))
-        self.assertIn("PS122WF2201T4E", anchors)
+        self.assertIn("35212K2FT", anchors)
         self.assertIn("Footprint anchors and terminal centres are NOT measured package centroids.", text)
 
     def test_via_treatment_csv_reports_source_requested_front_and_back(self):
