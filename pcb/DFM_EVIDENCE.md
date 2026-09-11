@@ -7,57 +7,36 @@ review: **02661d8**, followed by the manufacturer-land correction retained below
 Hardware **1.2.0-dev**. Scope: P3/P4 board design and five assembled prototypes.
 
 Dimensions are millimetres unless explicitly marked inches. Global coordinates
-use the top-view board convention from ASSEMBLY.md; local coordinates are
-identified separately below.
+use [ASSEMBLY's top-view convention](ASSEMBLY.md#drawing-conventions); local
+coordinates are identified separately below. [BOM.csv](BOM.csv) controls the
+current population; [Reviewed Components](ASSEMBLY.md#reviewed-components)
+indexes its assembly applicability and expected file inventory.
 
-**Current selection:** the user authorizes **TE Connectivity 35212K2FT /
-[C4129105](https://jlcpcb.com/partdetail/C4129105)** for R1/R2 in the **prototype
-order**, 2.2 kohm, 2 W, 1%, 2512 SMT, AEC-Q200 qualified, in stock at JLCPCB as an
-Extended Part. TE is the only active prototype BOM selection. The user has
-ordered **Yageo SR2512FK-7W2K2L / [C876850](https://jlcpcb.com/partdetail/C876850)**
-with a 20-day wait for later production; the prior Uni-Royal PS12 order was
-cancelled/refunded by JLCPCB due to stockout.
+**Evidence, not supplier approval.** The TE prototype body fits the retained
+envelope, but its lands remain a project alternative under **W4** and catalogue
+rating transfer to this mounting remains conditional under **W3**. The dated
+reviews below preserve those corrections and the historical PS12/HP12/axial
+investigations, not new population, routing or qualification decisions.
+[Physical Guardrails](ASSEMBLY.md#physical-guardrails) controls preservation;
+[SMA assembly evidence](ASSEMBLY.md#indicator-sma-and-resistor-assembly) owns the
+retained Vishay 89429, 25-Feb-2020 p4 outline/land review. Historical diameter-only
+screens below are not the current THT hole schedule.
 
-Retain **1.35 x 3.70 rectangular lands at local X=+/-3.125** as a **project
-alternative**, not TE's recommended pattern. TE's maximum body fits the existing
-F.Fab **6.45 x 3.40** and courtyard **8.10 x 4.20**. Actual alternate-land
-placement/stencil/solder-process acceptance remains W4; thermal/mounting transfer
-remains conditional under W3. All coordinates, tracks, courtyards and net/artifact
-counts stay unchanged; no resistor holes, axial standoff/forming or mandatory
-reroute follows. PS12, HP12 and PR02 investigations remain historical evidence.
+Prototype files still require every file/diagnostic/sourcing check, with
+**C4/C5/W3/W1/W4 deferred, not closed**, in [verification.json](verification.json).
+Production/field release remains held. Supplier part/fit/forming/process,
+allocation, placement and processed CAM acceptance are separate order duties;
+switch/environmental and received-board qualification do not gate prototype
+files. No supplier response, physical test or fresh publication result is
+implied. [Artifact controls](ASSEMBLY.md#prototype-artifacts) explain the required
+source-matched manifest and scope notices. All seven notes, BOM and ledger ship
+flat in the full release, not as the complete contents of either fabrication ZIP.
 
-D1-D4 remain BYG23T-M3/TR SMA, with D1/D2 moved for straight cathode links as
-recorded below. The earlier visual review of Vishay **89429, 25-Feb-2020 p4**
-supports the retained **2.50 x 2.00 lands, 1.70 inner gap and 7.20 x 3.60
-courtyard**: 1.52/1.68 land minima and 1.88 maximum inner gap were resolved;
-5.28 outside span is reference, not a maximum. Kefa/GDT fit envelopes, the metric
-Ruilon land selection and all protected copper/vias remain unchanged.
-
-**Evidence and selected design requirements, not supplier approval.** Expected
-inventory is **16 parts: eight SMT/eight THT**, eight nets, **34 terminals,
-32 PTH hits (18 component +14 via), four NPTH, 52 IPC records, F.Mask 52,
-B.Mask 36 and F.Paste 16 apertures**. These are design counts, not a fresh native
-verification of this TE evidence correction. The parent owns source/library/BOM/checker
-integration and revision-specific verification; [ASSEMBLY.md](ASSEMBLY.md)
-controls the physical handoff. Historical diameter-only screens below are
-identified separately from the retained current THT design.
-
-For the explicit prototype scope, **`make gerbers` / `make prototype` publish
-only after strict file and sourcing checks**. C4/C5/W3/W1/W4 remain visible,
-deferred production holds, not closed issues; switch/environmental research or
-completed qualification is not required to generate prototype artifacts.
-The resolved TE identity does not waive any source/sourcing check or establish
-publication; use REMEDIATION's latest source-matched verification and manifest.
-The parent owns integration and actual exports. `make all`,
-`make package`, `make release`, `make production` and the other export aliases
-retain the holds.
-Filenames stay the same: require matching source/artifact hashes and manifest
-**status=prototype, mode=prototype**, distinct from production
-**status=verified, mode=build**. The generated README markers inside the ZIPs
-identify prototype scope and deferred holds. See
-[artifact controls](ASSEMBLY.md#prototype-artifacts).
-Actual board-order authorization still requires supplier part/process/placement/CAM
-acceptance. No email response, allocation or physical test is invented here.
+Optional **repository-only** references: [MATERIALS](../MATERIALS.md) owns purchase
+history; [README's master DFM policy](../README.md#via-and-component-hole-dfm)
+remains normative. This note supports that policy with evidence and calculations;
+its sibling assembly controls and local acceptance duties remain usable without
+the root guides.
 
 ## TE 3521 Prototype Selection
 
@@ -71,8 +50,8 @@ against an unretained March 2023 edition is asserted.
 | Source | Readable evidence / limitation |
 | :--- | :--- |
 | [Original TE 3521 PDF][te-pdf], Rev G 02/2025 | **V: pp1-5**. p1 ratings/ambient derating, AEC-Q200 and MSL 1; p2 working-voltage formula/body/terminal bands; p3 recommended lands and four-layer reference PCB; pp4-5 performance-test conditions. These do not establish the earlier exact-pattern or PS12-derived test claims. |
-| [JLCPCB C4129105](https://jlcpcb.com/partdetail/C4129105) | Identifies **TE Connectivity 35212K2FT, 2.2 kohm, 2 W, 1%, +/-100 ppm/C, 2512**, in stock as an Extended Part for automated PCBA assembly. |
-| [JLCPCB C876850](https://jlcpcb.com/partdetail/C876850) | Direct listing verified 2026-09-11: **YAGEO SR2512FK-7W2K2L, 2.2 kohm, 2 W, 1%, +/-100 ppm/C, 2512**. Production pre-order identity only; 20-day wait is user-reported. Not receipt, job allocation or independent model/footprint/process/thermal acceptance. |
+| [JLCPCB C4129105](https://jlcpcb.com/partdetail/C4129105) | Identifies **TE Connectivity 35212K2FT, 2.2 kohm, 2 W, 1%, +/-100 ppm/C, 2512**, classified as an Extended Part for automated PCBA assembly. Identity is not receipt or job allocation. |
+| [JLCPCB C876850](https://jlcpcb.com/partdetail/C876850) | Direct listing verified 2026-09-11: **YAGEO SR2512FK-7W2K2L, 2.2 kohm, 2 W, 1%, +/-100 ppm/C, 2512**. Unpopulated production variant's identity only, not receipt, job allocation or independent model/footprint/process/thermal acceptance. |
 
 ### TE 3521 Body And Lands Fit
 
@@ -126,38 +105,37 @@ that two layers fail or that 2 W is possible only on four layers. Do not change
 the protected stackup/copper to manufacture a claimed match.
 
 - **Power/working voltage, pp1-2:** 2 W at 70 C ambient, constant from -55 to
-  70 C and linearly derated to zero at 155 C. Family working/overload/dielectric
+  70 C and linearly derated to zero at 155 C; operating range **-55..155 C**.
+  Family working/overload/dielectric
   ceilings are **250/500/500 V**. `min(250, sqrt(P*R_nominal))` gives **66.33 V
   RCWV** at catalogue 2 W / 2.2 kohm; this is not a system operating voltage.
 - **TCR, p4:** **+/-100 ppm/C for 100 ohm < R <=10 Mohm**, covering 2.2 kohm.
   The method calls for characterization at room and minimum/maximum operating
   temperatures, marked **User Spec**. The model's **25 C reference, -30..125 C
   study and -55..125 C supported inputs are engineering assumptions**, not TE
-  test conditions. DESIGN_BOUNDS leaves numeric manufacturer test endpoints unknown.
+  test conditions. [DESIGN_BOUNDS](DESIGN_BOUNDS.md#evidence-and-inputs) leaves
+  numeric manufacturer test endpoints unknown.
 - **Overload, pp1-2/4-5:** the inspected sheet gives a 500 V family ceiling but
   does **not establish the 2.5*RCWV, five-second test** previously carried over
   from PS12. No short-time or pulse capability is inferred; applicable TE or
   standard evidence would be needed to establish those conditions. This is not
   a claim that no such specification exists elsewhere.
 - **Heat/process:** retained **0.501018 W nominal / 0.756803 W upper per resistor**
-  are conditional DC calculations, not measured chip/pad/PCB temperatures or a
-  cooler result. PR02 hot-spot/K/W/standoff data do not apply. TE p5 solderability
+  are conditional DC calculations under [DESIGN_BOUNDS](DESIGN_BOUNDS.md#thermal-screens),
+  not measured chip/pad/PCB temperatures or a cooler result. PR02
+  hot-spot/K/W/standoff data do not apply. TE p5 solderability
   and soldering-heat tests are not an accepted stencil/reflow recipe; PS12's
   historical reflow profile is not automatically transferable.
 
-**Production pre-order, not current population:** Yageo SR2512FK-7W2K2L /
-C876850 needs its own manufacturer evidence/model, footprint/placement,
-stencil/solder-process and thermal acceptance, followed by a reviewed source/BOM
-update and affected file checks before use. Its confirmed identity and the
-user-reported order/20-day wait do not authorize an automatic substitution into
-the TE prototype BOM. Procurement history is controlled in MATERIALS/REMEDIATION.
+These TE results do not qualify the unpopulated Yageo production variant; apply
+the [independent review/substitution controls](ASSEMBLY.md#reviewed-components)
+before changing the population.
 
 ## PS12 SMT Selection (Historical Review)
 
-**Historical only, not current population or TE/Yageo specifications.** The user
-reported **110 ORDERED into the JLCPCB parts library** on 2026-09-08; JLCPCB later
-cancelled/refunded the order due to stockout. It is not current inventory or job
-allocation. The evidence below preserves the then-selected PS part and process.
+**Historical only, not current population or TE/Yageo specifications.** This
+preserves the then-selected **Uni-Royal PS122WF2201T4E / C2793873** and its
+manufacturer evidence, not available inventory or job allocation.
 
 The bounded **2026-09-08** review used the actual **PS Series** document from
 **Uniroyal Electronics Global Co., Ltd.**, not the HP datasheet. The cover and
@@ -173,14 +151,12 @@ July-2026 upload date is not a drawing revision.
 
 Page 2 decodes **PS12 / 2W / F / 2201 / T4 / E** as PS12, 2 W, 1%, 2200 ohm,
 tape/reel with a standard 4,000-piece reel, standard feature. It does not require
-a full-reel purchase for five prototypes or contradict the reported 110-piece order.
+a full-reel purchase for five prototypes or establish job allocation.
 
 Then-reviewed metadata was **`MPN=PS122WF2201T4E`**, **`LCSC Part #=C2793873`**,
 **`Sourcing=LCSC`**, empty **`Sourcing Reference`**, and [the PS manufacturer
 PDF][ps-pdf] as **`Datasheet`**. No NAC external-source row or pending HP code
-applied to PS. Current TE prototype quantities and sourcing are in
-[ASSEMBLY](ASSEMBLY.md#2512-smt-resistors); the cancelled 110-part order is not
-available to satisfy them. Integration/publication remains the parent's task.
+applied to PS; these are historical metadata, not current sourcing instructions.
 
 ### Body And Lands
 
@@ -215,20 +191,12 @@ height. The chip is not assigned the retired resistor's axial body standoff.
 
 ### Placement And Routing
 
-| References | Origin / rotation | Pad 1 / pad 2 global X and nets |
-| :--- | :--- | :--- |
-| R1 | **(120.00,104.50), 0 deg** | **116.875 WIRE_A / 123.125 Net-(D1-A)**, both Y=104.50 |
-| R2 | **(120.00,140.50), 0 deg** | **116.875 WIRE_C / 123.125 Net-(D2-A)**, both Y=140.50 |
-| D1, D2 | **(130.80,104.50)/(130.80,140.50), 0 deg** | K1 **132.90 LED_A_POS/LED_C_POS**; A2 **128.70 resistor output** |
-| D3, D4 | **(135.00,99.00)/(135.00,146.00), 180 deg** | K1 **132.90 LED_A_POS/LED_C_POS**; A2 **137.10 WIRE_B** |
-
-R1/R2 remain nonpolar; preserve pad numbering and one-way branch order through
-D1/D2. The cathode links at **X=132.90** run Y=99.00..104.50 and 140.50..146.00:
-each **5.50 mm long and 1.80 mm wide on F.Cu**, with no dogleg. Preserve the
-**X=108.38 takeoffs**, **1.80-mm branch copper**, **1.80-mm shunt anode-to-B
-routes**, **1.60-mm protected B.Cu returns**, full 3.20-mm rails, fourteen
-1.00/1.80-mm vias and the solid isolated EARTH bus. The LED terminals and all
-GDT/Kefa geometry remain unchanged. No folded branch or added via is selected.
+The PS review did not change placement/routing; the retained TE implementation
+uses the same [origins, pad/net mappings and indicator routing](ASSEMBLY.md#placement-and-polarity).
+Preserve nonpolar R1/R2 pad numbering, one-way D1/D2 branch order, straight
+cathode links, takeoffs and shunt routes. The
+[physical guardrails](ASSEMBLY.md#physical-guardrails) prohibit an unapproved
+folded branch, new via or change to the protected rails/EARTH/returns/mounts/LEDs.
 
 ### Rating And Process
 
@@ -249,12 +217,11 @@ GDT/Kefa geometry remain unchanged. No folded branch or added via is selected.
   voltage-versus-duration curves**; both constrain use. No curve digitization,
   repetitive-pulse rating or assembled-board/transient qualification is claimed.
   The HP review's absence of established pulse curves is not a PS fact.
-- **Heat path:** nominal dissipation remains about **0.50 W per resistor**, not
-  less because the part family changed. Chip terminations and solder conduct into
-  local copper/FR-4; the 1.80-mm tracks do not establish thermal resistance or
-  lower chip temperature. The wider cathode links are separated from resistor
-  output copper by D1/D2. **PR02's hot-spot limit and 75 K/W mounting example do
-  not apply.** No heat reduction or completed continuous-duty test is promised.
+- **Heat path:** the PS nominal comparison still dissipated about **0.50 W per
+  resistor**. Neither the family change nor wider tracks establishes reduced
+  heat or temperature; **PR02's hot-spot limit and 75 K/W mounting example do not
+  apply**. See the [assembly heat-path limitation](ASSEMBLY.md#2512-smt-resistors),
+  not a completed continuous-duty test.
 - **Reflow:** visually read p8 recommends SAC305, 150..200 C preheat for
   60..120 s, <=3 C/s ramp-up, 217 C liquidus for 60..150 s, **260 C peak**,
   10 s within 5 C below peak, <=6 C/s ramp-down, <=8 minutes from 25 C to peak
@@ -263,8 +230,7 @@ GDT/Kefa geometry remain unchanged. No folded branch or added via is selected.
   not permission to apply the most permissive GDT heat-test limit to every part.
 
 These PS-specific limits remain historical, not transferable TE or Yageo
-specifications. Current prototype artifact scope still defers the independent
-production holds without closing them.
+specifications.
 
 ## HP12 Investigation History
 
@@ -278,7 +244,7 @@ Royalohm and Uniohm branding; the July upload date was not its revision date.
 | :--- | :--- |
 | [Original manufacturer HP PDF][hp-pdf] | **V:** pages **1, 2, 4, 5, 6 and 8**, including cover, ordering, body/land leaders, ratings/derating, TCR/overload and reflow. **T:** full eleven-page text through [the reader][hp-text]. No dimensions were inferred from an unreadable figure. |
 | [Manufacturer HP product listing][hp-page] | HP12, 2 W, 0.5%/1%/5% options. The applicable range was listed at **+/-75 ppm/C**, conflicting with the PDF's **+/-100 ppm/C**. The tighter figure was not adopted. This conflict does not transfer to PS. |
-| [LCSC C2791283][hp-wrong-lcsc] and [JLCPCB C2791283][hp-wrong-jlc] | Both identify **HP122WJ0472T4E, 4.7 kohm, 5%, 2 W, 2512**, not HP122WF2201T4E or the subsequently cancelled PS122WF2201T4E. The old mapping was rejected; internal metadata parity could not cure that identity mismatch. |
+| [LCSC C2791283][hp-wrong-lcsc] and [JLCPCB C2791283][hp-wrong-jlc] | Both identify **HP122WJ0472T4E, 4.7 kohm, 5%, 2 W, 2512**, not HP122WF2201T4E or PS122WF2201T4E. The old mapping was rejected; internal metadata parity could not cure that identity mismatch. |
 | [NAC Semi former intended-MPN listing][hp-nac] | Readable **ROYALOHM HP122WF2201T4E, 2512, 2.2 kohm, 1%, 2 W**; retrieved MOQ **3,600**. Former external BOM/source reference, not an accepted small-lot quote, JLCPCB code or allocation. Public stock was indicative only. |
 
 The [HP-associated LCSC PDF][hp-distributed] did not yield usable drawing pages;
@@ -289,7 +255,7 @@ or packaging-only alternative: the [JLCPCB exact search][hp-search-jlc] and
 JavaScript-dependent zero-result pages; [LCSC search][hp-search-lcsc] returned
 `Search by ""` without rows. These were retrieval limitations, not proof of HP
 unavailability. No HP supplier response, purchase or board-job allocation was
-established by that investigation; none is implied by the later PS order report.
+established by that investigation.
 
 HP p2 decoded **HP12 / 2W / F / 2201 / T4 / E** as 2 W, 1%, 2.2 kohm,
 tape/reel with a standard 4,000-piece reel and standard feature, not a requirement
@@ -315,10 +281,6 @@ land-pattern approval.
   four-layer reference PCB**. Retain current geometry as a project alternative
   pending W4 supplier acceptance and W3 thermal/mounting qualification. Neither
   an exact mechanical/electrical drop-in nor a two-layer failure is established.
-- **Yageo production pre-order:** exact SR2512FK-7W2K2L / C876850 identity is
-  confirmed; the user reports a 20-day wait. Independent model/footprint/process/
-  thermal acceptance and a reviewed source/BOM update are required before use.
-  The cancelled/refunded PS12 110-piece order remains history, not allocation.
 - Original mechanical figures for **all six requested part families were
   visually read**, including the Kefa tolerance tables and both Ruilon THT
   revisions. Their dimensional associations are no longer a text-reader hold.
@@ -560,11 +522,9 @@ Implementation coordinates in this table are **local footprint coordinates**,
 using the existing origins/rotations and the two distinct LED pad mappings.
 Body boxes include electrodes, moulding projections and end keys, but not the
 entire unformed lead length. Retain reference/polarity/lead graphics as needed.
-LED A retains local pad 1 at (0,-2.54), pad 2 at (0,+2.54), with footprint
-rotation 90 degrees; LED C retains pad 1 at (0,+2.54), pad 2 at (0,-2.54),
-with rotation 270 degrees. Both retain global positive X=142.96 and B-return
-X=148.04, at Y=103.00/142.00 respectively. Body-outline changes do not authorize
-pad-position, pad-angle or net changes.
+Use the complete [local/global LED mappings](ASSEMBLY.md#placement-and-polarity),
+including stored pad angles. Body-outline changes do not authorize pad-position,
+pad-angle or net changes.
 
 Selected assembly control: the actual projected body must remain inside its
 listed body box expanded by **0.10 on each side**, including translation and
@@ -729,22 +689,18 @@ holes, heavier barrel plating by assertion or a special CAM concession.
 
 Adopted via implementation: explicitly **untent all fourteen on both
 sides**, with nominal **1.80 circular F.Mask/B.Mask openings**, no via F.Paste,
-and select the standard **Untented** order option. The parent has replaced
-the checkpoint's global front/back tenting request with this source setting.
-Preserve these exact nominal drills/copper/locations:
-
-- Nine rail vias: all combinations of X=112.50,114.00,115.50 and
-  Y=114.88,122.50,130.12; **1.00 / 1.80**.
-- Five EARTH vias: X=150.00, Y=114.88,118.69,122.50,126.31,130.12;
-  **1.00 / 1.80**.
+and select the standard **Untented, no fill/plug/cap** order option. This replaces
+the checkpoint's global front/back tenting request. Preserve **1.00 drill / 1.80
+copper** at every location in the
+[coordinate/function schedule](ASSEMBLY.md#stitching-via-identification).
 
 Use coordinate/function identification, never a fill-by-diameter instruction.
 Keep all component holes open. Review ordinary production files for preservation
 of the fourteen 1.00 nominal drills and unchanged copper; reject an unapproved
 CAM reduction rather than accepting it as an implementation detail. Public
 standard-via guidance does **not** guarantee a 1.00 finished diameter/tolerance.
-If the parent needs a contractual finished-via minimum beyond standard service,
-that remains a separate unresolved supplier fact, not authority to order special
+Any contractual finished-via minimum beyond standard service
+remains a separate unresolved supplier fact, not authority to order special
 processing. An untreated via is not a sealed environmental barrier.
 
 The PCBA FAQ says unused through-holes are protected during wave soldering, but
@@ -770,7 +726,7 @@ These are supplier/order and physical-acceptance controls, not additional
 qualification prerequisites for prototype artifact generation. Later enclosure,
 thermal and protection activities stay separate from the board file workflow.
 
-1. Parent records the adopted finished-pin/body/pattern limits and exact
+1. Record the adopted finished-pin/body/pattern limits and exact
    drawing/MPN/lot on the procurement and assembly traveller. Obtain an ordinary
    allocated-lot dimensional report or inspect independent actual samples
    before relying on the envelope for the prototype order. Do not approve an
@@ -806,13 +762,16 @@ thermal and protection activities stay separate from the board file workflow.
 | :--- | :--- |
 | Kefa / C474957 and C475092 | Which controlled KF129 A/21.03.13 pin-width variant is actually supplied: 0.90 or 0.95? What finished metal-pin tolerances, plating/burr inclusion, pitch/non-collinearity and pin-to-body datums are guaranteed? The rectangular axes, body projections, end keys and drawing general-tolerance bands **have been read**. Adopted E limits plus independent lot acceptance can replace an absent tighter guarantee for that limited lot, not for all future purchases. |
 | TE Connectivity / 35212K2FT / C4129105 | Exact prototype identity resolved; ten fitted parts plus attrition still need quote/job allocation. TE p2 body/bands and p3 recommended lands/reference PCB have been read. Accept the **retained alternative 1.35 x 3.70 lands at 6.25 pitch**, actual supplier model/placement, stencil and solder process under W4; W3 thermal transfer to the project's two-layer mounting remains conditional. Do not treat catalogue P70 or the family overload ceiling as assembled qualification. |
-| Yageo / SR2512FK-7W2K2L / C876850 | Production pre-order identity confirmed, user-reported 20-day wait, not current prototype population or allocation. Independently accept applicable manufacturer evidence/model, footprint/placement, stencil/solder process and thermal performance, then review the source/BOM update before a Yageo build. |
+| Yageo / SR2512FK-7W2K2L / C876850 | Identity confirmed, not current prototype population or allocation. Independently accept applicable manufacturer evidence/model, footprint/placement, stencil/solder process and thermal performance, then review the source/BOM update before a Yageo build. |
 | Bencent / B5G470L | Finished 0.80-wire tolerance and allowable forming/seal-support geometry. Public p2 really contains a round 0.80 callout without its tolerance. A2 body limits are resolved; the current manufacturer download did not supply a newer toleranced lead drawing. Control <=0.90 and accept the actual formed part against the selected envelope. |
 | Ruilon / 2R470TD-8 | Exact revision/production code allocated; allowed bend radius/seal setback, post-forming lead condition and ordinary nickel-lead solder process. The 1.05 lead maximum and 6.30/8.20 metric body maxima are **resolved in both drawings**, not unreadable. |
 | Ruilon / SMD5050-470NA | Formal resolution of X1=4.0 mm versus 0.165 in, preferably a corrected controlled drawing. Figure association and the selected metric-based implementation are resolved here, without claiming manufacturer correction or approval of the old 5.2 x 2 alternative. |
 | JLCPCB / actual assembly | Ordinary-service part allocation, retained drill data, processed mask/stencil, fitting/lead-forming capability, real solder profile and workmanship. Standard untented fabrication does not require a 1 mm fill exception. Any required finished-via/barrel minimum beyond published standard guarantees remains a separate design/supplier decision, not implicitly approved special processing. |
 
 ## Verification Scope
+
+These dated records apply only to their named snapshots. Reorganizing this note
+does not revalidate an older package or report a new native/hardware result.
 
 **Original 97e202d research record:** read AGENTS.md, all of REMEDIATION.md and
 ASSEMBLY.md; inspected the then-current BOM, relevant local footprints and
@@ -842,7 +801,7 @@ by this documentation task. Publish only source-matched artifacts under the
 explicit prototype/production distinction; do not refresh approval hashes or
 claim supplier/performance acceptance from this evidence record.
 
-**2026-09-11 TE evidence correction edits only ASSEMBLY.md and DFM_EVIDENCE.md.**
+**Historical 2026-09-11 TE evidence correction edits only ASSEMBLY.md and DFM_EVIDENCE.md.**
 It uses the independent original-page review above and the verified C876850
 listing, corrects attribution/assumptions and preserves every physical guardrail.
 No CAD/library/BOM/model/ledger or generated artifact is edited by this task.

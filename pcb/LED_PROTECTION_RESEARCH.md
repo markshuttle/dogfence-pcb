@@ -1,56 +1,44 @@
 # LED Protection Research
 
-**2026-09-07; hardware 1.2.0-dev; starting checkpoint 97e202d. Research, not circuit selection or release approval.**
+**Research began 2026-09-07 from checkpoint 97e202d; hardware 1.2.0-dev. Research, not circuit selection or release approval.**
 
-Only this evidence record is owned by this investigation. No schematic, PCB,
-library, BOM, approval hash, main guide, `build/`, or `tmp/manufacturing/` was
-changed by this investigation. C4/C5/W3 and the existing release gates remain
-open. Latest user facts: **two LRS-75-36 supplies ORDERED; one allocated to TEST,
-the other a disconnected spare**. The **CM03/05 reel identity is confirmed**;
-the separate cable investigation owns its Class 5 resistance envelope. No
-series, parallel, or opposite-end source connection is assumed. Older
-procurement statements in the shared guides were deliberately not edited.
+Added in **ad282e3**, this note includes later findings and dated corrections.
+Candidate calculations retain their original parts/circuits/assumptions;
+technical errata are allowed, not routine order rewrites. Purchase history is
+in [MATERIALS](../MATERIALS.md#resistor-procurement-and-history) (**repository-only**,
+not shipped with these notes). The study uses one TEST source and a disconnected
+spare, never series, parallel, separate-channel or opposite-end supplies.
 
-**Original research handoff, superseded by the implementation notes below:**
-section 11 records the negative findings against its unselected candidates.
-The original pulse curve rejects L1's proposed PWC resistor string. L2 removes
-the separate regulator-current overshoot problem, but its TVS2700 operates
-outside the recommended input range during normal TEST and can exceed its DC
-absolute limit after a post-resistor fault. **Neither circuit is selected for
-population.** The records preserve calculations and failures, not a completed
-design awaiting field qualification alone.
+**Original handoff, superseded:** section 11 rejects L1's PWC pulse-resistor
+string. L2 removes the regulator-current overshoot problem, but TVS2700 exceeds
+its recommended normal input range and can exceed its DC absolute limit after
+a post-resistor fault. **Neither circuit is selected**; these are negative
+findings, not a completed design awaiting field qualification alone.
 
-**Historical implementation after checkpoint ad282e3:** installation-polarity LED
-damage and direct-strike rebuilding are accepted, but not all routine/nearby
-transient damage. Energized cattle fencing is prohibited near the entire
-boundary, stations and hub; the old close-parallel exposure is withdrawn.
-At that checkpoint, ELECTRICAL/ASSEMBLY controlled the **16-part PR02/BYG23T hybrid**:
-two 2 W axial resistors, two SMA series diodes and two SMA negative shunts,
-not L1/L2's active/current-regulating circuits. Their research below remains
-history, not a prerequisite or the current BOM. The new shunts are not a
-guaranteed forward-pulse limiter or an instantaneous <=5 V clamp.
+**Historical implementation after ad282e3:** the **16-part PR02/BYG23T hybrid**
+used two 2 W axial resistors, two SMA series diodes and two SMA negative shunts,
+not L1/L2. The shunts do not guarantee forward-pulse limiting or instantaneous
+<=5 V clamping. Installation-polarity LED damage and direct-strike rebuilding
+are accepted, not all routine/nearby transient damage. **Continuous-safe TEST
+remains required. Energized cattle fencing is prohibited near the entire
+boundary, stations and hub**; the old close-parallel exposure is withdrawn.
 
-**2026-09-11 resistor correction:** R1/R2 in the prototype BOM only are
-**TE Connectivity 35212K2FT / C4129105 2512 SMT** (in stock at JLCPCB), with
-**Yageo SR2512FK-7W2K2L / [C876850](https://jlcpcb.com/partdetail/C876850)**
-user-confirmed ORDERED with an advised 20-day wait for future production, not
-receipt or allocation. The prior Uni-Royal PS12 order was cancelled/refunded due
-to stockout; [MATERIALS](../MATERIALS.md) preserves its historical 110-part order.
-Whole-BOM `allocation_verified` remains `false`; **C4/C5/W3/W1/W4 remain open**.
-TE prototype results do not qualify Yageo thermal behavior. Separate exact-part
-review and controlled BOM/CAD, library, model and note updates, followed by
-reverification, are required before production release under [ORDERING](../ORDERING.md).
+**2026-09-11 applicability correction:** the prototype [BOM](BOM.csv) now uses
+**TE Connectivity 35212K2FT / C4129105 2512 SMT**. The unpopulated **Yageo
+SR2512FK-7W2K2L / C876850** needs independent part/model/process/thermal review
+and controlled source updates; TE results do not qualify it. [ELECTRICAL](ELECTRICAL.md#9-simplified-indicator-direction)
+records the selected circuit. [DESIGN_BOUNDS](DESIGN_BOUNDS.md#evidence-and-inputs)
+records TE **9-1773463-5 Rev G, 02/2025**: the **25 C reference / -30..125 C
+linear screen are engineering assumptions**, not TE TCR test conditions.
+Catalogue-rating transfer from TE's four-layer reference to this two-layer board
+is unverified, not proof of failure; the [alternative lands](ASSEMBLY.md#2512-smt-resistors)
+still need placement/stencil/solder acceptance. **PR02 thermal/standoff and PS12
+five-second overload/pulse data do not qualify TE or Yageo.**
 
-The PR02 implementation and unselected circuits below remain historical research,
-not a current protection or procurement queue. [ELECTRICAL](ELECTRICAL.md) and
-[DESIGN_BOUNDS](DESIGN_BOUNDS.md) control TE **9-1773463-5, Rev G, 02/2025**
-evidence, conditional reference-board/P70 applicability, and the retained 25 C
-reference / -30..125 C engineering screen, not verified TE TCR test conditions.
-Do not transfer PS12 five-second overload or pulse curves to TE.
-[ASSEMBLY](ASSEMBLY.md) controls the retained alternate project lands and pending
-supplier placement/stencil/solder acceptance, not a manufacturer-exact fit claim.
-No further protection research or physical qualification is a Gate P
-prototype-file prerequisite; all five holds are deferred for files, not closed.
+**C4/C5/W3/W1/W4 remain open**, deferred only for Gate P files, not closed.
+No investigated circuit is a prototype-file prerequisite. [Artifact controls](ASSEMBLY.md#prototype-artifacts)
+retain supplier/qualification holds and source-hash requirements; the historical
+execution records below are not fresh artifact verification.
 
 ## 1. Initial L1 Investigation
 
@@ -112,7 +100,7 @@ LED_X_POS -- TVNx.IN;      TVNx.GND -- B
 
 This version has 15 components per rung, replacing the existing two. If all ten
 other electrical parts were retained, the board would have 40 electrical parts,
-not the current 14. No allocation, JLCPCB code, footprint fit, or placement is
+not the then-current 14. No allocation, JLCPCB code, footprint fit, or placement is
 approved. The resistor and capacitor codes follow their manufacturers' ordering
 tables; supplier allocation and exact product specification sheets still need
 confirmation. The `LM4050BEM3` orderable is listed in TI's addendum; do not invent
@@ -379,16 +367,16 @@ reconnection of a charged output is not included in a nominal DC limit.
 
 ## 7. Source, Thermal And RF Consequences
 
-The purchased supplies are individually 36 V / 2.1 A /75.6 W, with adjustable
-output, hiccup overload and higher OVP thresholds [R9]. Two ordered units are
-not a 4.2 A fence source. For one active source, a provisional 18 mA per rung
-ceiling gives <=1.476 A and <=59.63 W at 40.4 V, before other loads.
+The study uses one LRS-75-36, 36 V / 2.1 A /75.6 W, with adjustable
+output, hiccup overload and higher OVP thresholds [R9]. The disconnected spare
+does not make a 4.2 A fence source. For one active source, a provisional 18 mA
+per rung ceiling gives <=1.476 A and <=59.63 W at 40.4 V, before other loads.
 
 Input-capacitor startup is different: an ideal voltage step into all 82 empty
 capacitors through RP_min gives **1.971 A at 36 V**, or **2.212 A /89.37 W at
 40.4 V**. The latter exceeds one LRS-75's ratings. The published typical
 30 ms PSU rise time is not an enforced slew limit. A controlled source window
-and/or supported startup behavior are necessary; another ordered PSU is not
+and/or supported startup behavior are necessary; the spare PSU is not
 an assumed remedy. No timer is proposed for normal TEST.
 
 Normal source-end heat is still roughly a watt per board. At 18 mA, RP_max
@@ -540,8 +528,10 @@ python3 -B -c 'from scripts.analyze_limits import simulate, Cable, Channel; prin
 
 ## 11. Passive Follow-Up
 
-**2026-09-07, subsequent parent request. Comparison for a controlled prototype,
-not an approved BOM or evidence that every requirement has passed.**
+**2026-09-07, subsequent parent request. Historical comparison for a controlled
+prototype, not an approved BOM or evidence that every requirement has passed.**
+The later applicability corrections above supersede the installation-polarity
+and cattle-fence scope, not the candidate calculations or negative findings below.
 
 ### Recommendation
 

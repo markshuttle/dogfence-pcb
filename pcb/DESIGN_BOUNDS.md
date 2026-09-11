@@ -1,19 +1,23 @@
 # Conditional Design Bounds
 
-Hardware **1.2.0-dev**, TE evidence/provenance correction 2026-09-11, for the selected
-**16-part SMT-resistor / BYG23T circuit**. R1/R2 are **TE Connectivity 35212K2FT / C4129105**
-for the prototype order (in stock at JLCPCB). The user confirms **Yageo SR2512FK-7W2K2L /
-[C876850](https://jlcpcb.com/partdetail/C876850)** ordered with a 20-day wait for future
-production builds, not delivery or PCBA-job allocation. The prior Uni-Royal PS12 order was
-cancelled/refunded due to stockout. **This model covers TE prototypes only**; the ordered
-Yageo part needs its own part/model/process/thermal review before any source/BOM switch.
-This bounded update covers `scripts/analyze_limits.py`, `scripts/design_bounds.py`, their two focused test
-files, this note and `ELECTRICAL.md`. The nodal solver, topology, cable, source,
-PSU, OneGel and site assumptions are retained. Layout/BOM/sourcing, assembly,
-ordering and production-gate integration belong to the parent/other owners.
-All normal-model numerical screens are unchanged from the preceding analysis.
-These are calculations, not hardware qualification or closure of C4/C5/W3/W1/W4;
-they add no physical-test prerequisite to prototype exports.
+Hardware **1.2.0-dev**, TE evidence/provenance correction 2026-09-11. This note
+owns current parametric screens from `scripts/analyze_limits.py` and
+`scripts/design_bounds.py` for the **16-part TE 35212K2FT / BYG23T prototype
+circuit**. [BOM.csv](BOM.csv) selects **TE Connectivity 35212K2FT / C4129105**;
+**Yageo SR2512FK-7W2K2L / C876850 is not populated or qualified by this model**.
+Its independent part/model/process/thermal review and controlled source updates
+are required before production use under
+[Reviewed Components](ASSEMBLY.md#reviewed-components).
+
+The nodal solver, topology and cable/source/site assumptions are retained;
+all normal-model numerical screens are unchanged. These are calculations, not
+hardware qualification or closure of **C4/C5/W3/W1/W4** in
+[verification.json](verification.json). Those holds are deferred only for
+file-verified prototype artifacts, not production/field approval; no physical-test
+prerequisite is added to Gate P. [Artifact controls](ASSEMBLY.md#prototype-artifacts)
+explain the separate file, supplier and qualification scopes. Purchase history
+is in [MATERIALS](../MATERIALS.md#resistor-procurement-and-history), an optional
+**repository-only** reference, not part of the flat engineering-note package.
 
 ## Selected Circuit
 
@@ -26,8 +30,8 @@ D4 BYG23T-M3/TR: cathode LED_C_POS, anode WIRE_B
 
 D3/D4 are **negative clamps after the series diodes**, not input shunts or
 positive-voltage regulators. Negative connector voltage forward-biases the
-corresponding clamp. The forward-only core-to-B model remains applicable to
-healthy normal TEST; there is no new forward B-to-A/C path. Actual series-diode
+corresponding clamp. The [forward-only core-to-B model](ELECTRICAL.md#1-implemented-model)
+remains applicable to healthy normal TEST; there is no new forward B-to-A/C path. Actual series-diode
 reverse leakage, junction capacitance, recovery and harness ringing are not
 solved. The electrical regression is not a source-connectivity guard or proof
 that physical dark branches have zero leakage.
@@ -39,7 +43,7 @@ supersedes the earlier 0.5 m / 300 m exposure assumption; no numerical safe
 separation is established here. RF, ordinary switching, nearby lightning,
 powered recovery and continuous thermal behavior remain unqualified. Normal
 TEST must still be continuous-safe; no timer or active current-stage prerequisite
-is added. README/REMEDIATION synchronization belongs to the parent.
+is added.
 
 ## Evidence And Inputs
 
@@ -68,13 +72,16 @@ is added. README/REMEDIATION synchronization belongs to the parent.
   not an enforced operating window or a guaranteed combined MCOV**. The floor
   must include hub/interface/contact losses at the feeds. The legacy **35..37 V
   proposal was never implemented**; selecting `--source-max-v 37` only changes
-  a calculation. LRS adjustment up to 39.6 V and 41.4..48.6 V OVP do not enforce
-  37 V [5]. The deliberately stacked adjustment/tolerance screen remains:
+  a calculation. LRS adjustment is **32.4..39.6 V**; its **41.4..48.6 V OVP**
+  enforces neither 37 V nor the 40.39597 V screen [5]. The deliberately stacked
+  adjustment/tolerance screen remains:
 
   `39.6 * 1.01 * (1 + 0.0003 * (50 - 25)) + 0.1 = 40.39597 V`.
 
-  The 1% includes line/load regulation, not three additive tolerances. The
-  0.03%/C figure applies over 0..50 C, and 0.1 V is a selected ripple peak,
+  The **+/-1% includes setup, line and load regulation**, not three additive
+  tolerances. The **+/-0.03%/C** figure applies over **0..50 C**, not the whole
+  -30..70 C operating range. Published ripple/noise is **200 mV peak-to-peak**
+  under the stated measurement arrangement; **0.1 V is a selected ripple peak**,
   conservatively treated as continuous here. Accessible setting, tolerance
   interaction, startup/overshoot, malfunction and actual maximum still need
   evidence. A passive design qualified over the real normal source range is
@@ -98,20 +105,16 @@ is added. README/REMEDIATION synchronization belongs to the parent.
   is an input, not a self-heating result. Aging, assembly/solder drift and
   unbudgeted tap/harness losses are excluded. Catalogue P70/derating transfer to
   the actual two-layer PCB remains conditional as described below.
-- **Identity/sourcing:** **35212K2FT / C4129105** is selected for the prototype
-  order; JLCPCB confirms the exact 2.2k/2 W/1%/100 ppm/2512 identity in stock [13].
-  JLCPCB independently identifies **Yageo SR2512FK-7W2K2L / C876850** as
-  2.2k/2 W/1%/100 ppm/2512 [14]. Its 20-day order wait is user-confirmed, not
-  receipt or job allocation, and its production model is not established here;
-  the prior Uni-Royal PS12 order was cancelled/refunded by JLCPCB due to stockout.
-  The earlier **C2791283 mapping remains rejected: HP122WJ0472T4E, 4.7k/5%**.
-- **Retained geometry, not an exact TE land-pattern match:** TE p3 recommends
-  **1.50 mm long x 3.00 mm wide pads, 5.00 mm inner gap and 6.50 mm pitch** [12].
-  The unchanged `R_2512_6332Metric` has **1.35 x 3.70 mm pads, 4.90 mm gap and
-  6.25 mm pitch**. The matching 6.45 x 3.40 x 0.65 mm maximum body envelope is
-  not proof of land/process equivalence. No CAD change is made; an accepted
-  alternative-land/stencil/solder-process review is still required under
-  [ASSEMBLY.md](ASSEMBLY.md) and [DFM_EVIDENCE.md](DFM_EVIDENCE.md).
+- **Identity applicability:** JLCPCB independently confirms the TE prototype
+  identity [13] and the unpopulated Yageo identity [14], not interchangeability
+  or suitability of this TE model for Yageo. The historical rejected-code
+  correction remains in [DFM's HP12 investigation](DFM_EVIDENCE.md#hp12-investigation-history).
+- **Retained geometry, not an exact TE land-pattern match:** body containment
+  does not establish land/process equivalence. Use the detailed
+  [assembly land schedule](ASSEMBLY.md#2512-smt-resistors) and
+  [TE drawing comparison](DFM_EVIDENCE.md#te-3521-body-and-lands-fit).
+  The project alternative remains unchanged and requires W4 placement/stencil/
+  solder-process acceptance; no reroute or thermal equivalence follows.
 - **D1-D4:** Vishay **BYG23T-M3/TR**, 1300 V repetitive reverse, SMA [8].
   Preserve **36 V / 2.1 V LED + 0.7 V diode** as a named zero-leak historical
   comparison, not measured BYG23T Vf at roughly 15 mA. Its **1.9 V maximum at
@@ -133,7 +136,7 @@ Sources [1]-[9] preserve earlier evidence; [6]/[7] concern retired axial resisto
 and [9] the superseded HP12 selection. For that HP12 SMT conversion, the supplied
 research review visually confirmed [9], pages 1, 2, 4, 5, 6 and 8.
 For the PS12 selection, the supplied research review read [10], pages
-1, 2, 4, 5, 6, 7 and 8, and verified the JLCPCB identity [11] (now cancelled/refunded).
+1, 2, 4, 5, 6, 7 and 8, and verified the historical JLCPCB identity [11].
 The **2026-09-11 correction** uses the supplied TE review plus a fresh text
 extraction of [12] through `https://r.jina.ai/` after direct webfetch returned
 PDF binary. It confirms Rev G, 02/2025 and the stated method/mounting text;
@@ -151,11 +154,11 @@ No vendor reply, received part or physical test is inferred.
 7. [Vishay PR01/PR02/PR03, 28729, 08-Jul-2025](https://www.vishay.com/docs/28729/pr010203.pdf): **historical, retired PR02 only**. Cu/FeCu ratings, TCR, mounting/hot-spot examples and PR02-specific 220 C limit do not apply to SMT 2512.
 8. [Vishay BYG23T-M3, 89429, 25-Feb-2020](https://www.vishay.com/docs/89429/byg23t.pdf): pp. 1-2 ratings, exact `/TR` ordering, leakage/Vf test conditions and typical forward recovery. Original pulse/thermal curves are not a system qualification.
 9. [Uni-Royal HP Series, SMD-SP-003, V.7, 08-Jan-2026](https://www.uni-royal.cn/en/images/userfile/file/1784806233a2e6d381ea80b5d9.pdf): **historical, superseded HP12 selection**.
-10. [Uni-Royal PS Series, SMD-SP-007, V.7, 08-Jan-2026](https://www.uni-royal.cn/en/images/userfile/file/1784854235b7c79f8d8a205c5d.pdf): **historical PS12 review**, prior order cancelled/refunded by JLCPCB due to stockout.
+10. [Uni-Royal PS Series, SMD-SP-007, V.7, 08-Jan-2026](https://www.uni-royal.cn/en/images/userfile/file/1784854235b7c79f8d8a205c5d.pdf): **historical PS12 review**, not current population or TE/Yageo specifications.
 11. [JLCPCB C2793873](https://jlcpcb.com/partdetail/C2793873): historical Uni-Royal PS122WF2201T4E identity.
 12. [TE Connectivity CGS 3521 Series, Data Sheet 9-1773463-5 Rev G, 02/2025](https://www.te.com/commerce/DocumentDelivery/DDEController?Action=showdoc&DocId=Data+Sheet%7F9-1773463-5%7FG1%7Fpdf%7FEnglish%7FENG_DS_9-1773463-5_G1.pdf): active prototype selection 35212K2FT. P1 catalogue 2 W at 70 C ambient, derating to zero at 155 C, -55..155 C operation and 250/500/500 V working/overload/dielectric ceilings; p2 working-voltage formula; p3 recommended pads and four-layer 2 oz outer / 4 oz inner mounting; p4 +/-100 ppm/C at 2.2k, characterized at room/min/max operating temperatures (User Spec), without numeric TCR reference/endpoints. No short-time overload voltage/duration is established by the 500 V ceiling. AEC-Q200 qualification is not board qualification.
-13. [JLCPCB C4129105](https://jlcpcb.com/partdetail/C4129105): exact TE Connectivity 35212K2FT, 2.2k/2 W/1%/100 ppm/2512 identity, in stock at JLCPCB.
-14. [JLCPCB C876850](https://jlcpcb.com/partdetail/C876850): exact Yageo SR2512FK-7W2K2L, 2.2k/2 W/1%/100 ppm/2512 identity. The user confirms the production order and 20-day wait; this listing does not establish delivery, PCBA-job allocation or suitability of the TE model for Yageo.
+13. [JLCPCB C4129105](https://jlcpcb.com/partdetail/C4129105): exact TE Connectivity 35212K2FT, 2.2k/2 W/1%/100 ppm/2512 prototype identity, not job allocation.
+14. [JLCPCB C876850](https://jlcpcb.com/partdetail/C876850): exact Yageo SR2512FK-7W2K2L, 2.2k/2 W/1%/100 ppm/2512 identity. The listing does not establish suitability of the TE model for Yageo or independent manufacturer/process/thermal qualification.
 
 The machine-readable output distinguishes catalogue data, assumptions and unknowns:
 
@@ -262,9 +265,10 @@ linearly to **zero at 155 C ambient** [12]:
 2 oz outer and 4 oz inner copper**. The actual board is **two-layer, 2 oz per
 side**. The unchanged equation and all rating-only margins/ceilings below are
 catalogue arithmetic, not an established 2 W allowance for this mounting.
-Accept the alternative-land/process review in ASSEMBLY/DFM and establish actual
-thermal performance separately. The difference is **not evidence that the
-two-layer board fails** and does not authorize a geometry/topology change.
+Accept the [alternative-land/process review](ASSEMBLY.md#2512-smt-resistors)
+and establish actual thermal performance separately. The difference is **not
+evidence that the two-layer board fails** and does not authorize a geometry/
+topology change.
 
 **155 C is the zero-power ambient/operating endpoint, not a demonstrated
 powered-chip or material-interface temperature.** No separate 3521 hot-spot
@@ -326,7 +330,8 @@ Film, body, adjacent gel and cable-entry hot spots are different temperatures.
 Measure or otherwise establish each with uncertainty; a cool bulk reading
 does not establish safe cable or gel contact temperature near a hot resistor.
 OneGel's conflicting service fields and missing thermal data remain as recorded
-in ENVIRONMENT_EVIDENCE.md; adhesive, connector and LED limits also apply.
+in [ENVIRONMENT_EVIDENCE](ENVIRONMENT_EVIDENCE.md#wiska-onegel); adhesive,
+connector and LED limits also apply.
 
 For the **two selected branches only**, assigning all their electrical input to
 heat bounds it by **1.5136065821 W** at 40.39597 V. This already includes any
@@ -351,7 +356,8 @@ source screen. Its **220 C hot-spot limit, typical 75 K/W mounted example and
 >=1 mm body standoff** [7] belong to that axial part, not 2512 SMT. The old example's
 **57.7074653257 K rise** is not retained as an SMT or OneGel prediction.
 The named historical regression also retains the former MBE **2166.5655 ohm**
-minimum, **0.631876 W at 37 V** and **0.753190 W at 40.39597 V**, rather than
+minimum, **0.631876 W at 37 V** and **0.753190 W at 40.39597 V**, with its
+**0.65 W standard / 1 W power rating modes** [6], rather than
 calling them 2512 limits. Neither retired resistor's analysis was physical qualification;
 their 20 C arithmetic is explicit in the historical test, not a compatibility
 mode in the selected-part helpers.
@@ -373,7 +379,8 @@ cable/load/fault conditions or evidence of
 improved physical recovery. D3/D4 do not alter the upstream GDT paths.
 
 K.12's known 135 V / 1300 ohm DC-feed comparison is retained from
-SOURCE_PROTECTION_RESEARCH.md, sections 2/9 [N1,N2]. Ignoring the test diode
+[SOURCE_PROTECTION_RESEARCH](SOURCE_PROTECTION_RESEARCH.md#2-what-holdover-actually-specifies),
+sections 2/9 [N1,N2]. Ignoring the test diode
 drop gives **103.846 / 96.154 / 92.308 mA** at **0 / 10 / 15 V**. The old
 nominal far 10 V arc remains **0.259543 A / 2.602168 W**. Ratios in the new CLI
 use the actual modeled terminal voltage, including arc slope, not just its
@@ -396,6 +403,8 @@ the 2 W resistor label qualifies ordinary switching/RF/nearby-lightning stress.
 The installation-lead reversal exclusion does not waive normal-operation safety.
 
 ## Reproduction
+
+Repository-only commands, run from the checkout root:
 
 ```bash
 TMPDIR=/tmp/opencode python3 -B scripts/design_bounds.py --json
@@ -423,22 +432,23 @@ and both `--json` CLIs exited 0. Both CLIs also exited 0 without `--json`.
 Those tests predate this evidence/provenance correction; they did not establish
 the inherited TCR test conditions, overload rating or actual mounting equivalence.
 
-For **this TE evidence/provenance correction on 2026-09-11**, isolated tests on
-**Python 3.14.4** pass: **23 electrical +14 design-bound =37 tests, no failures
+For the **TE evidence/provenance correction on 2026-09-11, before deduplication**,
+isolated tests on **Python 3.14.4** pass: **23 electrical +14 design-bound =37 tests, no failures
 or skips**. Both read-only model commands without `--json` exit 0; JSON and
 error paths also pass in the focused suites. The nominal **0.501018 W** and
 upper **0.756803 W** per-resistor screens, both 280-cut sweeps and existing
 615 inter-core fault cases remain unchanged. The owned-file `git diff --check`
 passes. No integrated/native or physical qualification result is asserted.
 
-The current suites cover selected 3521 catalogue rating/TCR, the **assumed** 25 C
+Those suites cover selected 3521 catalogue rating/TCR, the **assumed** 25 C
 reference/temperature screen, unknown manufacturer TCR/overload test parameters,
 250/500/500 V family ceilings, working-voltage arithmetic, unverified catalogue
 mounting transfer, prototype-only scope, historical named values, BYG23T
 headroom, clamp diversion/blackout margin, unchanged resistor/PSU power and
 nonzero clamp body heat, finite/invalid inputs, thermal arithmetic and CLI JSON.
 These checks verify declared calculations, not actual LED polarity survival,
-source limits, optical darkness, recovery or physical temperatures. No
-`make check`, manufacturing/staging operation, approval refresh, commit, order
-or physical test is part of this bounded work. Parent owns integrated gates
-and README/REMEDIATION updates after source edits settle.
+source limits, optical darkness, recovery or physical temperatures. That bounded
+analysis update ran no integrated/native, manufacturing/staging, approval or
+physical-qualification operation. The dated results do not extend an earlier
+artifact PASS to changed note hashes; fresh integrated verification remains
+separate from this documentation cleanup.

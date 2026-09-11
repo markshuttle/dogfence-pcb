@@ -30,9 +30,8 @@ Production/field release remains held; file checks are not hardware approval.
 6. For a **board/prototype-only request**, work the P3/P4 board-finalization
    queue in ORDERING/REMEDIATION, not the first unchecked switch or environmental
    item. Preserve those independent holds without restarting their research.
-   The authorized 16-part hybrid selects 2512 SMT (TE Connectivity 35212K2FT
-   for prototype; Yageo SR2512FK-7W2K2L / C876850 for production pre-order) preserving
-   the existing lands, placement, routing and circuit topology;
+   Use the [reviewed prototype population](pcb/ASSEMBLY.md#reviewed-components),
+   preserving the existing lands, placement, routing and circuit topology;
    do not add a new circuit or move sound geometry just to produce a PCB diff.
    **Gate P is file-verified prototype artifacts**, separate from original A/B/C
    production/field holds. Supplier CAM/placement/allocated parts, GDT fit/forming
@@ -104,24 +103,13 @@ geometry fails closed; extend and test the validator rather than ignore it.
   file/artifact checks pass. That CSV is a generated draft reference, not an
   independent source or upload approval; on failure it may remain from an older
   checked revision.
-- For the prototype order, the user selected **TE Connectivity 35212K2FT / C4129105**,
-  CGS 3521 / 2512 SMT, 2.2 kohm / 2 W / 1%, AEC-Q200, for **both R1/R2 in the prototype
-  BOM** (verified in stock at JLCPCB). Use manufacturer `TE Connectivity`, `Sourcing=LCSC`
-  and empty `Sourcing Reference` in BOM/CAD. [JLCPCB C4129105](https://jlcpcb.com/partdetail/C4129105)
-  verifies identity and resolves the prototype resistor procurement blocker.
-  The user confirms the production order is **Yageo SR2512FK-7W2K2L / C876850**
-  (20-day wait); [JLCPCB C876850](https://jlcpcb.com/partdetail/C876850) independently
-  confirms its identity. The prior **Uni-Royal PS122WF2201T4E / C2793873** order was
-  cancelled and refunded by JLCPCB due to distributor stockout. In-stock JLCPCB status is not
-  PCBA job allocation; whole-BOM **`allocation_verified` remains `false`**. MATERIALS records
-  quantities and separate allocation tasks. No agent upload or order is authorized.
-  Yageo is not populated by the current TE prototype BOM. Before production,
-  review its own manufacturer/model, footprint/process and thermal evidence,
-  deliberately update BOM/CAD/libraries/model/notes and repeat the affected checks.
-  TE prototype results do not qualify Yageo or automatically switch the BOM.
-  Prior **HP122WF2201T4E pending External sourcing is superseded, not ordered**.
-  **C2791283 is HP122WJ0472T4E, 4.7 kohm / 5%**; its wrong pairing with
-  HP122WF2201T4E in `02661d8` remains rejected history, not a 2512 identity.
+- Use [BOM.csv](pcb/BOM.csv) and the synchronized CAD/library metadata for exact
+  prototype identities. [MATERIALS](MATERIALS.md#resistor-procurement-and-history)
+  owns purchasing, cancelled/rejected selections and allocation evidence. A
+  production pre-order is not a second implemented BOM; prototype results do not
+  qualify a substitution. Review its own evidence and deliberately update affected
+  sources/models/notes before repeating the checks. Whole-BOM
+  **`allocation_verified` remains `false`**; public stock is not PCBA-job allocation.
   The generic BOM `Sourcing=External` rule still requires an empty code and exact HTTPS
   `Sourcing Reference` matched to PCB/schematic metadata. This is explicit
   pending procurement, not a guessed C-code or allocation approval. Unresolved
@@ -223,93 +211,34 @@ LCSC fields without changing values or footprints; run `--write`, `--check` and
 geometry or part substitution. Reference/value text placement can differ per
 instance; shared geometry and sourcing metadata must agree.
 
-The project enforces two-layer/2 oz track width >=0.1651 mm, conservative
-general clearance 0.20 mm, hole clearance 0.25 mm, copper-edge clearance 0.50 mm,
-and legend height/stroke >=1.00/0.15 mm with 0.15 mm pad clearance. These values
-are not all fabricator minima. Component-PTH annular ring >=0.254 mm and EARTH
-separation >=3.0 mm are explicit `.kicad_dru` constraints. Via-ring rules are not
-component-ring or pin-fit evidence. Do not weaken settings to obtain a PASS.
+Before editing rules, read the [project guardrails](pcb/ASSEMBLY.md#physical-guardrails)
+and [master DFM policy](README.md#via-and-component-hole-dfm). Project settings,
+`.kicad_dru` and independent executable guards enforce the adopted requirements,
+not merely fabricator minima. Via-ring rules are not component-ring or pin-fit
+evidence. Do not weaken settings to obtain a PASS.
 
 ## 5. Physical Guardrails
 
-Preserve these unless the user approves a reasoned physical design change:
+**Before any PCB, footprint, placement, routing or process edit, read
+[ASSEMBLY's Physical Guardrails](pcb/ASSEMBLY.md#physical-guardrails) and its linked
+placement, land, forming, hole-fit and via inventories.** These constraints are
+binding unless the user approves a reasoned physical design change. Preserve
+protected copper, mounts, all stitching vias, takeoffs, B returns, EARTH separation
+and the distinct LED mappings; do not fold branches, add vias or trim courtyards
+to conceal a fit problem. Keep independent executable geometry checks.
 
-| Feature | Protected geometry |
-| :--- | :--- |
-| Board | 63 x 56 mm, (97.00,94.50) to (160.00,150.50). Nominal finished thickness 1.60 mm; the source now totals 1.440 core + 0.070 copper per side + 0.010 mask per side. Supplier thickness convention/tolerances and support fit remain to agree. |
-| Mounting | Four 3.20 mm NPTH at (101.50,99.00), (155.50,99.00), (101.50,146.00), (155.50,146.00), with protected 3.45 mm-radius front/back courtyards and copper keepouts. |
-| Exterior copper | 0.070 mm on both F.Cu and B.Cu. A/B/C rails stay full 3.20 mm width on both layers, not narrowed thermal-relief spokes. |
-| Rail vias | Three per rail at X=112.50,114.00,115.50; Y=114.88 (A),122.50 (B),130.12 (C). All 1.00 mm drill / 1.80 mm copper. Do not delete, shrink or move. |
-| Earth copper/vias | Matching solid 4.50 mm-grid copper on both sides, bounding X=143.99..157.25 and Y=111.25..133.75. Five 1.00/1.80 mm vias at X=150.00, Y=114.88,118.69,122.50,126.31,130.12. Preserve slit-free continuity and geometry. |
-| Earth isolation | >=3.00 mm fence-to-earth copper separation; present minimum 3.25 mm. Preserve B returns at X=135.50, Y=107.20/137.80 unless an approved equivalent maintains constraints. |
-| Earth GDTs | Centres Y=113.50,122.50,131.50; 9.00 mm pitch. Actual maximum bodies/forming must establish the gap, not a nominal 8 mm diameter claim. |
-| Overpass | GDT_AC runs north-south over B, now at X=125.80, with 15.24 mm pitch and >=2.00 mm pre-encapsulation physical gap under the complete raised span. Follow ASSEMBLY.md; gel is not automatically equivalent to an air gap. |
-| LED terminals | J_LED_A=(145.50,103.00),90 degrees, opens north; J_LED_C=(145.50,142.00),270 degrees, opens south. Both pad1 positive X=142.96 and pad2 B return X=148.04. |
-
-The LED local pad coordinates intentionally differ: A pad1 `(0,-2.54,90)` and
-pad2 `(0,2.54,90)`; C pad1 `(0,2.54,270)` and pad2 `(0,-2.54,270)`. Do not match
-their rotations or replace them with one generic footprint.
-
-The authorized **16-part BOM (eight SMT, eight THT)** uses Vishay **BYG23T-M3/TR /
-C145454** for D1-D4 and selected **TE Connectivity 35212K2FT / C4129105**,
-CGS 3521 / 2512 SMT, 2.2 kohm / 2 W / 1%, AEC-Q200, for both R1/R2 in the prototype
-order (in stock at JLCPCB; with Yageo SR2512FK-7W2K2L / C876850 ordered with 20-day wait for
-production builds; prior Uni-Royal PS12 cancelled/refunded), plus the retained
-GDTs and Kefa terminals. This evidence correction makes no layout modification.
-R1/R2 origins are **(120.00,104.50)/(120.00,140.50), rotation 0**, pads at
-**X=116.875/123.125**. Retained project-alternate lands are **1.35 x 3.70 mm rectangles at
-local X=+/-3.125**, maximum body **6.45 x 3.40 mm**, maximum height **0.65 mm**;
-the **8.10 x 4.20 mm courtyard** and project-selected zero additional mask/paste
-margins remain unchanged. No resistor holes, standoff or forming.
-TE's recommendation is **1.50 x 3.00 mm, 5.00 mm inner gap / 6.50 mm pitch**,
-not these HP/PS-derived lands. Body containment does not establish an exact
-land-pattern match; accept the retained alternative's placement/stencil/solder
-process under W4. Preserve geometry unless a reviewed change is authorized.
-D1/D2 origins are **(130.80,104.50)/(130.80,140.50), rotation 0**, cathodes east
-at **X=132.90**, anodes at **X=128.70**. D3/D4 remain at
-**(135.00,99.00)/(135.00,146.00), rotation 180**, cathodes west to LED positive
-at **X=132.90**, anodes east to B at **X=137.10**. Straight cathode links at
-**X=132.90 are 1.80 mm wide and 5.50 mm long**. SMA pads remain 2.50 x 2.00 at
-local X=+/-2.10, zero additional mask/paste margins; no diode holes.
-Initial takeoffs and protected rails/vias/earth/mounts/LED mappings remain;
-no fold or new vias. Expected inventory is **34 terminals, 32 PTH hits
-(18 component +14 via), four NPTH, 52 IPC records; F.Mask 52, B.Mask 36,
-F.Paste 16**. These are design expectations, not a native-check result.
-Datasheet 5/20 kA impulse or terminal current ratings are
-**component** ratings, not assembled-board performance. Three paralleled EARTH
-pins remain connected, but are not a 72 A assembly rating. The 2 W resistor
-still dissipates about 0.50 W nominal; a wattage label is not cool-body or
-continuous potted qualification. TE 3521's [Data Sheet 9-1773463-5 Rev G, 02/2025](https://www.te.com/commerce/DocumentDelivery/DDEController?Action=showdoc&DocId=Data+Sheet%7F9-1773463-5%7FG1%7Fpdf%7FEnglish%7FENG_DS_9-1773463-5_G1.pdf)
-specifies **+/-100 ppm/C** at 2.2 kohm, -55 to +155 C operation and catalogue
-2 W at 70 C ambient derating to zero at 155 C. Its TCR method names room and
-minimum/maximum operating temperatures, not numeric reference/test endpoints.
-The model's **25 C reference, -30..125 C study and -55..125 C supported inputs
-are engineering assumptions**, not TE test conditions. The conditional screens
-remain **0.501018 W nominal / 0.756803 W upper per resistor**.
-TE's page 3 reference PCB has **four layers, 2 oz outer / 4 oz inner copper**;
-catalogue rating/derating transfer to this two-layer board is unverified, not a
-demonstrated failure. The family **250 V working / 500 V overload** ceilings
-do not override power/resistance limits: **66.33 V catalogue working** at
-2 W / 2.2 kohm is not a system rating. The cited TE sheet does not establish
-PS12's `2.5*RCWV` / five-second overload test; model test voltage/duration remain
-unknown. Do not transfer PS pulse curves or PR02 hot-spot/K/W/standoff data.
-Use DESIGN_BOUNDS for current screens; actual chip/pad/PCB and gel/cable interface
-temperatures require separate qualification for the intended population.
-
-Selected hole/pad sizes are KF128 2.00/3.20, KF129 2.00/2.80,
-B5G470L 1.40/2.80 and earth GDT 1.50/3.00 mm. These depend on the
-controlled pin/body/pattern envelopes in ASSEMBLY, including actual lot and
-forming acceptance. Minimum ring is 0.40. Do not restore smaller legacy holes
-or equate these file checks with insertion/solder approval. J_EARTH has 1.00 mm
-nominal / 1.30 mm tolerance-budgeted body overhang; no courtyard trimming.
-GDT forming/overpass standoff remains required. Old onsemi/MBE/PR02 footprints
-and axial resistor instructions are retired, not substitutes or order tasks;
-preserve their procurement history.
+[Reviewed Components](pcb/ASSEMBLY.md#reviewed-components) and
+[DFM evidence](pcb/DFM_EVIDENCE.md) distinguish implemented geometry from
+manufacturer recommendations and actual lot/process acceptance. Body containment
+is not exact land-pattern approval; component ratings are not assembly ratings.
+Use [DESIGN_BOUNDS](pcb/DESIGN_BOUNDS.md) for named current/thermal screens and
+their assumptions. Never transfer retired-part mounting/pulse data to the current
+population or claim measured temperatures from a wattage label or file check.
 
 ## 6. Functional And Documentation Rules
 
 - Keep 41 stations / 82 LEDs and the **same-end** six-independent-end TEST
-  matrix from REMEDIATION: Start A/C positive, Start B negative, End A/B/C each
+  [matrix in INSTALL](INSTALL.md#functional-matrix): Start A/C positive, Start B negative, End A/B/C each
   isolated. No direction selector, permanent End A/C strap or dual-B return.
 - User now accepts LED damage from accidental low-voltage installation polarity
   errors, with spare indicators; reversed flying-lead survival is not required.
@@ -319,34 +248,30 @@ preserve their procurement history.
   40-part investigation as a prerequisite or confuse reverse recovery with
   forward-clamp response. See ELECTRICAL section 9 and ASSEMBLY.
 - Energized cattle fencing is **prohibited near the entire 4 km boundary,
-  stations and hub**, as explicitly confirmed by the user. The earlier 0.5 m /
-  300 m parallel scenario is withdrawn; do not require testing a prohibited
+  stations and hub** under [INSTALL's policy](INSTALL.md#cattle-fence-prohibition).
+  The earlier close-parallel scenario is withdrawn; do not require testing a prohibited
   configuration or invent a safe separation distance. Verify and maintain the
   restriction, reassessing if land use changes. Ordinary RF/switching and
   nearby-lightning exposure, source recovery and site earthing remain relevant.
-- User-confirmed source allocation is **two ordered LRS-75-36: one TEST, one
-  disconnected spare**, not interconnected supplies. CA10.A364/current WAA364
-  is provisionally **eight-pole**, with extra poles unassigned and exact DC/
-  global transfer approval open. Reel markings CM03/05.100 and red/black/plain
-  green are confirmed; use the AMC 2026 V.3 evidence, not the older listing.
+- Use **one TEST source and one disconnected spare**, not interconnected supplies.
+  Follow [INSTALL's switch/source controls](INSTALL.md#switch-and-supply): exact
+  DC/global-transfer approval remains open and extra switch poles are unassigned.
+  Cable identity and red/black/plain-green colours are settled; use the current
+  [manufacturer evidence](pcb/ENVIRONMENT_EVIDENCE.md), not older listings.
 - Gel is **WISKA OneGel**, one-component/no mixing, not MP0100. Resolve its
   conflicting manufacturer cure/temperature fields; do not invent conductivity,
-  compatible materials or completed thermal qualification. The 35-37 V source
-  window is an unimplemented historical proposal. `design_bounds.py` now uses
-  a declared 35 V floor / 40.39597 V upper screen, not a guaranteed or enforced
-  window. The TE prototype +/-100 ppm/C screen assumes a 25 C reference; it is
-  not a verified TE TCR test condition or a Yageo qualification. Use
-  `pcb/DESIGN_BOUNDS.md` rather than duplicating stale derived values.
+  compatible materials or completed thermal qualification. Source/temperature
+  screens in [DESIGN_BOUNDS](pcb/DESIGN_BOUNDS.md) are declared assumptions, not
+  enforced operating limits or manufacturer test conditions. Do not revive a
+  historical source-window proposal or transfer prototype results to production.
 - Preserve WAGO through-splice/PCB-tap wiring. Normal perimeter current does
   not pass through every PCB. Surge current is a separate design case.
 - Normal TEST must be continuous-safe; do not substitute a timer. TEST/OFF
   disable containment, and restoring RUN is an operator action. OFF is not
   demonstrated storm isolation. Do not directly earth a core, switch PE or
   invent an unbonded-rod/DC-negative bonding design.
-- Synchronize source, local libraries, BOM, native-generated CPL, assembly and
-  electrical notes, README, ORDERING, MATERIALS and affected INSTALL/RISKS/
-  ACCEPTANCE whenever parts/routing/geometry or operation change. Update this
-  guide when tooling changes, and update REMEDIATION with actual evidence.
+- Follow [Documentation Maintenance](#10-documentation-maintenance) for
+  impact-based synchronization, and update REMEDIATION with actual evidence.
 - Preserve ORDERED/ON HAND history separately from increased requirements and
   unapproved candidates. Revision identifiers must agree across PCB, schematic,
   documents, release review and manifest. Only verified conditions close issues.
@@ -379,36 +304,55 @@ Apply the [master DFM policy](README.md#via-and-component-hole-dfm). Published
 guidance was reviewed through 2026-09-07; confirm the actual order. These checks
 supplement, not replace, electrical DRC.
 
-- Preserve all fourteen 1.00/1.80 mm stitching vias and protected copper.
-  An incompatible process needs an approved layout/process solution, not
-  smaller vias or an unreviewed exception.
-- Selected ordinary process: **untented both sides, no fill/plug/cap, ENIG**,
-  with nominal 1.80 mm circular mask openings and no via paste. Same-net
-  stitching annuli may intentionally overlap; this never excuses a component
-  mask/paste aperture over a hole. KiCad 9.0.7 uses flat `(tenting ...)` flags;
+- Read the [hole-fit](pcb/ASSEMBLY.md#hole-fit-evidence) and
+  [coordinate-based via controls](pcb/ASSEMBLY.md#stitching-via-identification)
+  before changes. Preserve protected drills/copper; no fill-by-diameter request,
+  via as a lead-insertion hole, forced insertion or reaming of finished PTHs.
+- The selected process is **untented both sides, no fill/plug/cap, ENIG**, with
+  no via paste. KiCad 9.0.7 uses flat `(tenting ...)` flags;
   nested side booleans and per-via mask-margin clauses fail native parsing.
-- Normal reliable tenting/ink plugging guidance is <=0.5 mm. Filled-and-capped
-  guides/table give 0.5/0.55 mm upper limits; neither establishes reliable
-  filling of 1.00 mm holes. Obtain written CAM acceptance for exceptions.
-  Tenting flags, a filling checkbox, opaque mask or gel do not prove a seal.
 - Compare full drill circles, annuli, copper and actual mask/paste apertures.
-  A neighbouring SMT pad can expose a nominally tented via. Inspect processed
-  Gerbers/stencil data too. The current relocation removes the historical
-  intersection; retained GDT land-pattern/process approval remains open.
-- Identify hole treatment by **function and coordinates**. Ordinary vias are
-  not lead-insertion holes. Legacy resistor holes are removed by SMT conversion;
-  retained connector/GDT holes stay open. Never request filling by diameter.
-  Confirm protected drills survive CAM.
-- Use maximum finished lead dimensions, including rectangular-pin diagonals.
-  Require `nominal hole - 0.08 mm >= maximum pin envelope + 0.10 mm` as the
-  starting diametral allowance after tolerance, with separate pin-pitch,
-  hole-position and forming allowances. Nominal diameter/pitch or C-code is
-  insufficient. Do not ream plated finished boards to repair insertion fit.
-- Recheck >=0.254 mm nominal component-PTH ring for two-layer/2 oz fabrication,
-  hole/copper/edge spacing and finished registration after resizing. Generic
-  via rules are not component rules. 70 micrometre surface copper is not barrel
-  copper; agree a required finished barrel minimum separately.
-- Record exact MPN/drawing revisions, tolerance calculations and accepted
-  process in assembly evidence; regenerate/inspect artifacts and run `make
-  check` for design changes. Documentation or DRC alone does not close physical
-  fit, manufacturing, enclosure or electrical qualification.
+  Same-net via-aperture overlap never excuses component mask/paste over a hole.
+  Inspect processed Gerbers/stencil too; native flags, opaque mask or gel do not
+  prove a seal. Surface copper is not a guaranteed barrel-copper minimum.
+- Preserve dimensional/tolerance evidence and supplier process holds in
+  ASSEMBLY/DFM_EVIDENCE. Regenerate/inspect artifacts and run `make check` after
+  design changes; documentation or DRC does not close physical acceptance.
+
+## 10. Documentation Maintenance
+
+Use the document responsibilities in **Start Here**. Maintain one authority per
+kind of claim, not one occurrence per fact:
+
+- REMEDIATION owns agreed requirements, issue/gate decisions and dated results;
+  `pcb/verification.json` enforces machine release/diagnostic reviews. A template,
+  model, stock listing or rewritten guide cannot close a hold.
+- MATERIALS owns purchases, cancellations, quantities, receipts and allocation
+  evidence. Do not propagate a purchase-status update into universal preambles.
+  Preserve existing ORDERED/ON HAND history and distinguish current population
+  from unimplemented production orders or candidates.
+- BOM/CAD/libraries own PCB population; ASSEMBLY owns human guardrails and
+  assembly requirements. Link their tables instead of maintaining overview copies.
+  INSTALL owns full operating/diagnostic tables; ACCEPTANCE still specifies every
+  test action, precondition, numerical acceptance criterion and required record.
+- ELECTRICAL owns circuit/model explanations and named historical comparisons;
+  DESIGN_BOUNDS owns current parametric screens; DFM/ENVIRONMENT notes own source
+  evidence. Preserve case inputs, provenance and unknowns, not just the number.
+- Keep concise local safety instructions, scope limitations, model assumptions,
+  risk consequences and inspect/stop/record duties where the work is performed.
+  They are intentional summaries, not permission to repeat purchasing narratives.
+- Preserve historical research and session evidence, including later dated errata.
+  Do not rewrite candidate calculations to match new purchases, freeze out real
+  corrections, or revive rejected circuits as prototype prerequisites.
+- Complete the destination before deleting a copy; check links and anchors and
+  review semantic preservation against the original. All seven controlled notes
+  ship flat, but root guides do not. Use shipped sibling links for essential
+  release context; mark supplementary root-guide links as repository-only.
+- Engineering changes still require all affected BOM/PCB/schematic/library,
+  datasheet/description metadata, model/test, assembly and operating/qualification
+  updates plus regenerated artifacts. This is impact-based, not a file-count cap.
+  `--sync-metadata` does not update Datasheet/Description or approval hashes.
+- Update this guide for tooling changes and REMEDIATION for actual verification.
+  Changed controlled notes need a new matching artifact snapshot; no automatic
+  annotation reapproval follows from Markdown edits. Run whole-workflow checks
+  exclusively, with prototype last if leaving a current prototype package.

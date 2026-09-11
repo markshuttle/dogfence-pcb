@@ -2,41 +2,44 @@
 
 **Hardware 1.2.0-dev; original research at checkpoint 97e202d on 2026-09-07; hybrid checkpoint 6ba2a07; catalogue-switch evidence updated 2026-09-07.**
 
-Controlled environment/hub evidence. The original bounded research edited only
-this file; the later documentation synchronization recorded the user's clarified
-site scope and the then-implemented PR02/BYG23T circuit using the design BOM and
-[DESIGN_BOUNDS.md](DESIGN_BOUNDS.md). The subsequent P2 switch continuation
-visually reads the manufacturer's catalogue contact graphic and rechecks its
-application restrictions; it does not change the circuit or assign hub wiring.
-No supplier acceptance, procurement allocation or physical qualification is
-recorded. **C4, C5, W3, W1 and W4 remain open.**
+Controlled site/material and catalogue-switch evidence, including later user
+corrections and the post-ad282e3 PR02/BYG23T history. The catalogue contact
+graphic is transcribed below, not assigned to DogFence wiring. No supplier
+acceptance, job allocation or physical qualification is recorded.
+**C4/C5/W3/W1/W4 remain open** in [verification.json](verification.json), deferred
+only for file-verified prototype artifacts, not production/field approval.
+[Artifact controls](ASSEMBLY.md#prototype-artifacts) explain that separation;
+switch/environmental and received-board qualification do not gate prototype files.
 
-**2026-09-11 resistor correction:** the prototype BOM only selects
-**TE Connectivity 35212K2FT / C4129105** (2512 SMT, 2.2 kohm / 2 W / 1%, AEC-Q200,
-in stock at JLCPCB). The user confirms **Yageo SR2512FK-7W2K2L /
-[C876850](https://jlcpcb.com/partdetail/C876850) ORDERED** with an advised 20-day
-wait for future production, not receipt, inspection or job allocation. The prior
-Uni-Royal PS12 order was cancelled/refunded due to stockout; [MATERIALS](../MATERIALS.md)
-preserves its historical 110-part order separately. Whole-BOM
-`allocation_verified` remains `false`. TE prototype results do not establish
-Yageo thermal qualification: [ORDERING](../ORDERING.md) requires separate
-production-part review, controlled BOM/CAD, library, model and note updates and
-reverification before production release.
+**2026-09-11 applicability correction:** [BOM.csv](BOM.csv) selects
+**TE Connectivity 35212K2FT / C4129105** for prototypes, not the unpopulated
+**Yageo SR2512FK-7W2K2L / C876850** production variant. TE results do not qualify
+Yageo; [Reviewed Components](ASSEMBLY.md#reviewed-components) requires independent
+part/model/process/thermal review and controlled source updates before its use.
+[DESIGN_BOUNDS](DESIGN_BOUNDS.md#evidence-and-inputs) records TE
+**9-1773463-5, Rev G, 02/2025**: +/-100 ppm/C at 2.2 kohm is supported, but the
+25 C reference and -30..125 C linear screen are **engineering assumptions**,
+not verified TE TCR test conditions. TE p3's **four-layer, 2 oz outer / 4 oz
+inner reference mounting** differs from the actual two-layer board; catalogue
+P70/derating transfer is conditional, not proof of two-layer failure.
+[ASSEMBLY](ASSEMBLY.md#2512-smt-resistors) controls the retained alternate lands
+and pending W4 placement/stencil/solder acceptance. PR02 thermal/mounting
+arithmetic below and PS12 overload/pulse data do not qualify TE or Yageo.
 
-Use [ELECTRICAL](ELECTRICAL.md) and [DESIGN_BOUNDS](DESIGN_BOUNDS.md) for current
-TE evidence from **9-1773463-5, Rev G, 02/2025**. Its +/-100 ppm/C at 2.2 kohm
-is supported; the retained 25 C reference and -30..125 C linear screen are
-engineering assumptions, not verified TE TCR test conditions. TE page 3's
-four-layer, 2 oz outer / 4 oz inner mounting/thermal reference differs from the
-actual two-layer board, so P70/derating transfer is conditional, not proof of
-two-layer failure. [ASSEMBLY](ASSEMBLY.md) controls the retained alternate
-project lands and pending supplier placement/stencil/solder acceptance.
-PR02 mounting/thermal arithmetic below and PS12 overload/pulse data are
-historical evidence, not TE or Yageo qualification. No new environmental or
-switch research, physical qualification or prototype-file gate is added.
+Purchases and allocations belong to [MATERIALS](../MATERIALS.md#resistor-procurement-and-history),
+an optional **repository-only** reference; root guides are not shipped with
+these notes. Changed note hashes need fresh artifact evidence, not an earlier
+package PASS. This consolidation adds no research or prototype-file prerequisite.
 
 ## User-Confirmed Corrections
 
+- **Site study boundary:** Isle of Man, less than 1 km from the coast, with
+  frequent rain, salt exposure and possible condensation. Observed outdoor
+  ambient is approximately **-10 to +30 C**; some boxes receive direct sun.
+  These observations are not lifetime extremes or maximum internal temperatures.
+  The raised route is mostly **0.3-1.0 m** above ground on timber fencing, with
+  no electrical connection to supporting metal wires; driveway/gate conduit can
+  become wet. No continuous submersion or proven solar/thermal envelope is assumed.
 - Cable core colours are **red, black and PLAIN green**, not green/yellow.
   The user subsequently confirmed actual reel labels **CM03/05.100** and
   **"3 CORE (3 x 35/0.30) TINNED BLACK 100 MTR"**. V.3 identifies CM03/05 as
@@ -47,11 +50,10 @@ switch research, physical qualification or prototype-file gate is added.
 - **Kraus & Naimer CA10.A364** replaces CA10.A362 as the provisional switch
   candidate. Its current catalogue naming and pole count need the correction
   below; it is not an approved switch or pinout.
-- **Two Mean Well LRS-75-36 supplies are ORDERED; one TEST, one disconnected spare.**
-  Do not describe them as merely proposed upgrades. ORDERED does not establish
-  receipt, inspection, output settings, or serial-number assignment to those roles.
-  No parallel, series, separate-channel or opposite-end supply connection is
-  specified. Preserve earlier procurement history separately.
+- **One Mean Well LRS-75-36 serves TEST; the second remains a disconnected spare.**
+  Receipt/nameplates, output settings and serial-number assignment still need
+  verification. No parallel, series, separate-channel or opposite-end supply
+  connection is specified; the spare contributes no working capacity.
 - **Energized cattle fencing is prohibited near the entire 4 km boundary cable,
   every station and the hub**, not only the shed. The user explicitly withdrew
   the former **0.5 m / up to 300 m parallel exposure**; it is historical, not a
@@ -292,16 +294,14 @@ standardized for every type. `CA10.A364` alone is not the missing complete code.
 
 Eight available poles can in principle accommodate six independent cable ends,
 but that observation does not approve the actual program or link arrangement.
-The required **source-side functional ties only** remain:
-
-| Mode | Required boundary connections |
-| :--- | :--- |
-| RUN | Start A/B/C each switched to T1; End A/B/C each switched to T2. |
-| OFF | All six ends separately isolated. |
-| TEST | Start A/C to TEST positive, Start B to TEST negative; End A/B/C separately isolated. |
-
-No permanent field-end ties, opposite-end B return, second B return, direction
-selector, or new use of the two ordered PSUs follows from choosing eight poles.
+Required ties remain **source-side only**: RUN switches each Start core to T1
+and each End core to T2; OFF isolates all six separately. **Same-end TEST feeds
+Start A/C positive and Start B negative, with End A/B/C individually isolated**.
+No permanent field-end ties, End A/C strap, opposite-end or second B return,
+direction selector or interconnected supplies follow from choosing eight poles.
+The full [INSTALL functional matrix](../INSTALL.md#functional-matrix) is a
+supplemental **repository-only** operating reference, not the catalogue schedule
+or an approved physical pinout.
 
 **Global break-before-make is not verified by these sources.** Require all
 old-source paths to open before any new-source path makes across the complete
@@ -399,10 +399,8 @@ failed text extraction (HTTP 422). No additional OneGel values are inferred
 from those inaccessible contents; "not found" above is bounded to the
 readable sources, not a claim that the manufacturer has no further evidence.
 
-Historical research validation:
+Original research validation, 2026-09-07:
 `git diff --no-index --check /dev/null pcb/ENVIRONMENT_EVIDENCE.md` passed.
 No KiCad, manufacturing, electrical-model or physical test was part of that
-research. The post-ad282e3 documentation update edits only README, INSTALL,
-RISKS, ACCEPTANCE, MATERIALS, ORDERING, LED, REVIEW and this file; parent owns
-AGENTS, REMEDIATION, ASSEMBLY, ELECTRICAL, the other research records and
-integrated native checks. No hold is closed or approval hash refreshed here.
+research. The later post-ad282e3 documentation synchronization was not an
+integrated/native or physical test, hold closure or approval-hash refresh.

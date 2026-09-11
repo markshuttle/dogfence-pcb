@@ -1,12 +1,14 @@
 # Source And GDT Protection Research
 
-P2 continuation, 2026-09-07. Checkpoint `97e202d`, hardware **1.2.0-dev**.
+P2 research began 2026-09-07 from checkpoint `97e202d`, hardware **1.2.0-dev**.
 
-**Research and proposed prototype architecture only. No design/BOM change,
-hold closure, procurement authorization, or hardware approval.** This record
-does not supersede `ELECTRICAL.md`, `ASSEMBLY.md`, or the release gates.
-Only this research file is owned by this work. Switch research is delegated
-to the environment workstream and is not a deliverable here.
+Added in **ad282e3**, this record includes later findings and dated corrections.
+**Its proposed circuits remain historical, unselected investigations**, with
+their original parts/calculations. Permit technical errata, not routine order
+rewrites; [MATERIALS](../MATERIALS.md#assembly-and-quantity-allocation) owns purchases/
+allocation (**repository-only**, not shipped). [ELECTRICAL](ELECTRICAL.md) owns the
+implemented circuit record; [ENVIRONMENT_EVIDENCE](ENVIRONMENT_EVIDENCE.md#ca10a364-switch)
+owns the separate catalogue-switch evidence.
 
 **Historical integration after checkpoint ad282e3:** the PCB then had the simple
 16-part PR02/BYG23T indicator hybrid, not any GDT/source replacement proposed
@@ -19,32 +21,27 @@ PR02/40.39597 V normal-load screen could reach 1.561876 A, above the minimum
 limit of the old proposed 8-kohm TPS26600 setting. See current ELECTRICAL and
 DESIGN_BOUNDS, not the older hub circuit as a ready-to-populate design.
 
-**2026-09-11 resistor correction:** the unchanged-topology 16-part hybrid uses
-**TE Connectivity 35212K2FT / C4129105 2512 SMT** (in stock at JLCPCB) in the
-prototype BOM only. The user confirms **Yageo SR2512FK-7W2K2L /
-[C876850](https://jlcpcb.com/partdetail/C876850) ORDERED** with an advised 20-day
-wait for future production, not receipt or allocation. The prior Uni-Royal PS12
-order was cancelled/refunded due to stockout; [MATERIALS](../MATERIALS.md)
-preserves its historical 110-part order. Whole-BOM `allocation_verified` remains
-`false`; **C4/C5/W3/W1/W4 remain open**. TE prototype results do not qualify Yageo
-thermal behavior. Separate production-part review and controlled BOM/CAD,
-library, model and note updates, followed by reverification, are required before
-production release under [ORDERING](../ORDERING.md).
+**2026-09-11 applicability correction:** [BOM.csv](BOM.csv) selects **TE Connectivity
+35212K2FT / C4129105 2512 SMT** for the unchanged-topology 16-part prototype.
+The unpopulated **Yageo SR2512FK-7W2K2L / C876850** needs independent part/model/
+process/thermal review and controlled source updates; TE results do not qualify
+it. [DESIGN_BOUNDS](DESIGN_BOUNDS.md#evidence-and-inputs) records TE
+**9-1773463-5 Rev G, 02/2025**: the **25 C reference / -30..125 C linear screen
+are engineering assumptions**, not TE TCR test conditions. Catalogue-rating
+transfer from TE's four-layer reference to this two-layer board is unverified,
+not proof of failure; the [alternative lands](ASSEMBLY.md#2512-smt-resistors)
+still need placement/stencil/solder acceptance. **PR02 thermal/standoff and PS12
+overload/pulse data do not qualify TE or Yageo.**
 
-PR02 figures above are historical. Current TE **9-1773463-5, Rev G, 02/2025**
-evidence and conditional screens are in [ELECTRICAL](ELECTRICAL.md) and
-[DESIGN_BOUNDS](DESIGN_BOUNDS.md): reference-board/P70 transfer is conditional,
-and the retained 25 C reference / -30..125 C linear screen is an engineering
-assumption, not verified TE TCR test conditions. Do not transfer PS12 overload
-or pulse data. [ASSEMBLY](ASSEMBLY.md) controls the retained alternate project
-lands and their supplier placement/stencil/solder hold, not a manufacturer-exact
-fit claim. No source/GDT replacement below is selected or required to generate
-Gate P files; all five holds are deferred for files, not closed.
+**C4/C5/W3/W1/W4 remain open**, deferred only for Gate P files, not closed.
+No source/GDT replacement below is a prototype-file prerequisite. [Artifact controls](ASSEMBLY.md#prototype-artifacts)
+retain supplier/qualification holds and source-hash requirements; the historical
+execution records below are not fresh artifact verification.
 
 ## Decision
 
-There is a credible bounded prototype path, but **no retrieved small bare-GDT
-datasheet proves recovery on the complete powered fence merely because
+The investigation identified a bounded evaluation path, but **no retrieved small
+bare-GDT datasheet proves recovery on the complete powered fence merely because
 36 V is below its 135 V holdover entry**. This is a specific network mismatch,
 not a claim that these tubes certainly remain conducting at 36 V.
 
@@ -79,8 +76,7 @@ electrical, fit and process gates.
 
 ## 1. Fixed Inputs
 
-- **Two MEAN WELL `LRS-75-36` units are ORDERED**, per the user in this session.
-  The user subsequently allocated **one to TEST and one as a disconnected spare**.
+- **One MEAN WELL `LRS-75-36` serves TEST; the second is a disconnected spare**.
   Delivered nameplates/settings remain to inspect. The circuit uses **one**
   source, never a parallel, series, opposite-end or second-channel connection.
 - TEST remains same-end: Start A/C positive, Start B negative; End A/B/C each
@@ -593,9 +589,9 @@ state is another valid disposition, not ruled out by energy arithmetic alone.
 
 ## 8. Quantities And Remaining Evidence
 
-Quantities below are engineering population counts, not orders, allocations or
-assembler attrition allowances. The 36 standard boards retain their earth
-tubes. Alternatives are mutually exclusive, not additive.
+Quantities below are historical candidate population counts, not orders,
+allocations or assembler attrition allowances. The 36 standard boards retain
+their earth tubes. Alternatives are mutually exclusive, not additive.
 
 | Item / Architecture | Per board | Five prototypes | 41 field boards | Unique prototype + field requirement |
 | :--- | ---: | ---: | ---: | :--- |
@@ -604,7 +600,7 @@ tubes. Alternatives are mutually exclusive, not additive.
 | Compact: `2027-47-BLF` core/EARTH | 3 | 15 | 123 | 126..138 |
 | Stack alternative: `B88069X1993B501` | 6 | 30 | 246 | 252..276 |
 | Stack alternative: `C4520X7R3D471K130KA` | 18 | 90 | 738 | 756..828 |
-| One-source hub: `LRS-75-36` | Not per board | One TEST source | One TEST source | **2 ordered: one TEST, one disconnected spare** |
+| One-source hub: `LRS-75-36` | Not per board | One TEST source | One TEST source | **2 units: one TEST, one disconnected spare** |
 | Hub evaluation: `TPS26600PWPR`, `REF5025ID`, `TLV1701AIDBVR` | Not per board | 1 each per proposed hub | 1 each per proposed hub | Hub reuse/spares not allocated |
 
 Unique-board range is **42..46**, assuming no extra process/spare samples:
@@ -692,9 +688,9 @@ No manufacturer was contacted and no supplier acceptance was obtained.
 
 ## 10. Work Performed
 
-Read AGENTS, all of REMEDIATION including the handoff, ELECTRICAL, and the
-relevant assembly/population records. Starting tracked worktree was clean at
-`97e202d`. Other workstreams subsequently added `pcb/ENVIRONMENT_EVIDENCE.md`
+Original investigation: read AGENTS, all of REMEDIATION including the handoff,
+ELECTRICAL, and the relevant assembly/population records. Starting tracked
+worktree was clean at `97e202d`. Other workstreams subsequently added `pcb/ENVIRONMENT_EVIDENCE.md`
 and `pcb/DFM_EVIDENCE.md`; neither was edited by this work.
 
 One read-only DC study was run against the unchanged persistent script:
@@ -714,5 +710,5 @@ Output was to the session only; no build/staging or design files were changed.
 passed for the added note; this is a whitespace check, not electrical validation.
 
 No KiCad/build/manufacturing command, hardware test, upload, order, commit,
-approval-hash refresh or release-hold modification was performed. The optional
-research note is the only intended repository edit from this work.
+approval-hash refresh or release-hold modification was performed in that
+investigation; this research note was its only intended repository edit.
