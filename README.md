@@ -251,10 +251,10 @@ Production targets retain their holds and win mixed goals; unresolved External
 sourcing blocks both modes. See the [latest handoff](REMEDIATION.md#session-handoff)
 for actual results, not a reused PASS from an earlier note snapshot.
 
-Native/file checks and publication for the **2026-09-14 SMT GDT_AC/rear-B change
-are pending**. The earlier prototype package represents the old source until a
-new matching snapshot is verified; the unchanged `1.2.0-dev` label does not make
-that package current. REMEDIATION owns the subsequent verification results.
+Native/file checks and real serial/parallel prototype publication for the
+**2026-09-14 SMT GDT_AC/rear-B change passed**. [SMT AC Conversion](REMEDIATION.md#smt-ac-conversion)
+records the matching snapshot and remaining holds; the unchanged `1.2.0-dev`
+label does not make an older package current.
 
 Require matching `build/status.json` and `build/manifest.json` with validated
 revision/source/artifact hashes and **status=prototype, mode=prototype**, or

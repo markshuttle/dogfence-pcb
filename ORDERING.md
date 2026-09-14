@@ -50,7 +50,7 @@ Apply [AGENTS' verification/publication workflow](AGENTS.md#3-verification-and-p
 
 `make check` verifies without publication; `make prototype` / `make gerbers` may publish **FILE-VERIFIED PROTOTYPE ONLY** after all file/sourcing checks. Unresolved external sourcing blocks both modes; file parity or public stock is not job allocation. Production targets retain all engineering holds and win mixed goals. Detailed native commands, diagnostic reviews, locking and evidence-preserving cleanup belong to AGENTS.
 
-Use the latest revision-specific [session handoff](REMEDIATION.md#session-handoff) and matching manifest, not a part-selection statement or an old PASS. **Native/file verification and publication for the 2026-09-14 SMT GDT_AC/rear-B change are pending**; the earlier prototype package represents old source, despite retaining `1.2.0-dev`. Changed source or controlled-note hashes require fresh artifact evidence; this guide does not reverify an earlier Gate P package.
+Use the latest revision-specific [SMT AC handoff](REMEDIATION.md#smt-ac-conversion) and matching manifest, not a part-selection statement or an old PASS. **Native/file verification and actual serial/parallel prototype publication for the 2026-09-14 SMT GDT_AC/rear-B change passed.** Changed source or controlled-note hashes require fresh artifact evidence; the unchanged `1.2.0-dev` label does not reverify an earlier Gate P package.
 
 | Intended file | Use after verification |
 | :--- | :--- |

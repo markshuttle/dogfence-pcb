@@ -4,7 +4,7 @@ Prepared: 2026-09-06. Reviewed hardware baseline: v1.1.0.
 Implementation handoff: **2026-09-14, hardware 1.2.0-dev**.
 
 **The user-approved SMT GDT_AC conversion and exactly 6.00 mm rear B rail are
-implemented; fresh integrated verification is pending.** See
+implemented and file-verified; fresh Gate P prototype files are published.** See
 [SMT AC Conversion](#smt-ac-conversion) for this source and its verification
 status. Earlier results apply only to their recorded snapshots. The
 next board priority remains the five-prototype **P3/P4 supplier queue**, not renewed
@@ -40,9 +40,9 @@ Preparation already completed:
 | P1 | Complete-project staging, strict native checks, fail-closed geometry/net/artifact validation, warning reviews, locked transactions and negative fixtures. | Maintain the checks for future supported geometry/tool changes; no broad warning suppression. |
 | P2 | [Implemented prototype circuit](pcb/ELECTRICAL.md#1-implemented-model), preserving one-way rungs, six-end TEST and all six GDT endpoint connections. AC now uses the same SMT Ruilon as AB/BC; the DC model is unchanged. [DESIGN_BOUNDS](pcb/DESIGN_BOUNDS.md) distinguishes the conditional copper-area comparison from thermal qualification. | Actual clamp/RF/transient performance, powered recovery/fault containment, continuous thermal/source limits and exact switch approval remain separate production/field holds, not Gate P prerequisites. No new circuit or hub numbering is selected. |
 | P3 | Approved SMT AC/front-B/rear-B conversion and minimal return-stem move implemented. [ASSEMBLY](pcb/ASSEMBLY.md#physical-guardrails) owns layer-specific guardrails, alternate-land requirements and remaining fit/forming inventories. | Actual allocated-lot/variant/pattern, earth-GDT forming, SMT placement/stencil/solder, finished-etch gaps, overhang and support acceptance remain in the [board queue](ORDERING.md#board-finalization-queue). Enclosure dry-fit follows receipt, not Gate P files. |
-| P4 | **Fresh Gate P verification/publication pending** for SMT AC/rear B. [Documentation Cleanup](#documentation-cleanup) preserves the previous package's evidence, not approval of the changed source. | Public stock is not receipt/inspection or job allocation; `allocation_verified` remains false. Actual supplier centroids, allocation, panel, process and CAM acceptance remain order tasks. |
-| P5 | Canonical owners and linked consumer guidance consolidated under [the approved plan](DeduplicationPlan.md); independent semantic/link review preserves historical evidence and local work controls. | Future engineering changes remain impact-based; documentation review is not hardware approval. |
-| P6 | New geometry/native rule and artifact-classification regressions are implemented; integrated suite and workflow results are pending under [SMT AC Conversion](#smt-ac-conversion). Earlier 208-test results belong to [Documentation Cleanup](#documentation-cleanup). | Actual processed CAM, allocated parts and physical qualification are **not performed**. File-verified prototype artifacts do not close production or field qualification. |
+| P4 | **Fresh Gate P prototype package published and verified**, including actual serial/parallel publication for SMT AC/rear B. [SMT AC Conversion](#smt-ac-conversion) identifies the current evidence and matching snapshot. | Public stock is not receipt/inspection or job allocation; `allocation_verified` remains false. Actual supplier centroids, allocation, panel, process and CAM acceptance remain order tasks. |
+| P5 | Canonical owners and linked consumer guidance consolidated under [Documentation Cleanup](#documentation-cleanup); independent semantic/link review preserves historical evidence and local work controls. | Future engineering changes remain impact-based; documentation review is not hardware approval. |
+| P6 | **224 tests PASS with seven native probes; native checks, production-refusal and actual serial/parallel prototype-publication comparisons PASS.** [SMT AC Conversion](#smt-ac-conversion) records this snapshot. Earlier 208-test results belong to [Documentation Cleanup](#documentation-cleanup). | Actual processed CAM, allocated parts and physical qualification are **not performed**. File-verified prototype artifacts do not close production or field qualification. |
 
 ## Agreed Requirements
 
@@ -175,7 +175,7 @@ correction, supplier acceptance and physical qualification are distinct.
 | W3 | Nominal 0.50 W/resistor and a wattage label do not prove closed-OneGel temperature or continuous safety. | **TE 2512 SMT IMPLEMENTED; thermal hold remains, deferred for Gate P.** The TE prototype screen gives **0.756803 W/resistor at 40.39597 V** using an assumed 25 C reference and temperature inputs, not TE-confirmed test endpoints or measured chip/pad/PCB temperatures. TE's reference PCB is four-layer, 2 oz outer / 4 oz inner; rating transfer to this two-layer board is unverified, not demonstrated failure. Yageo production needs separate review and qualification. Require accepted source limits and instrumented duty evidence; no PR02 thermal/standoff transfer. See DESIGN_BOUNDS. |
 | W4 | Original connector/earth-GDT holes lacked tolerance margin; part/process and sourcing acceptance remain incomplete. | **BOUNDED FILE DESIGN IMPLEMENTED; lot/fit/process hold remains, deferred for Gate P.** Retained hole/land geometry and minimum ring 0.40 remain. Accept the project-alternate resistor lands, actual placement/stencil/heavy-copper solder process, GDT forming and E/pattern lots. J_EARTH needs **1.00 nominal / 1.30 budgeted overhang**. Use the [reviewed prototype population](pcb/ASSEMBLY.md#reviewed-components) and [separate procurement ledger](MATERIALS.md#resistor-procurement-and-history); stock or an order is not job allocation or W4 closure. |
 | W5 | Former LED torque was too high; complete enclosure fit and raised GDT geometry were unproven. | **Instructions corrected:** 0.20-0.25 Nm subject to exact APEM model. The old whole-span overpass drawing is preserved as history; SMT AC removes only its lead-forming/height-gauge task. **OPEN:** earth-GDT forming tolerances, SMT seating/workmanship, Essentra thickness fit, COMBI dry-fit and material/process tests. |
-| W6 | Legacy legend, incomplete checks and inconsistent libraries/metadata undermined verification. | **File-level guards retained and extended:** native 1.00/0.15 legend, strict effective rules, nine active local footprints/six symbols and matched BOM metadata. Fresh SMT AC native/parity/artifact verification is pending below. Reviewed warnings remain visible and narrowly bound; no project severity ignores or exclusions. |
+| W6 | Legacy legend, incomplete checks and inconsistent libraries/metadata undermined verification. | **File-level correction verified:** native 1.00/0.15 legend, strict rear-core/effective rules, nine active local footprints/six symbols, matched BOM metadata and fresh SMT AC native/parity/artifact checks below. Reviewed warnings remain visible and narrowly bound; no project severity ignores or exclusions. |
 | W7 | Legacy fault, RF, earthing, environmental/lifetime and five-board sign-off claims were overstated. | **Scope/documentation corrected.** PSU allocation, cable identity/colours, OneGel identity and A364 program family resolved. Entire-boundary energized-cattle fencing is prohibited; verify/maintain that restriction rather than qualify the withdrawn parallel run. **OPEN:** actual source/switch approval, cable/environmental applicability, OneGel/thermal conflicts, RF, earthing and physical qualification. |
 
 The source stackup now totals 1.600 mm (1.440 core + two 0.070 copper + two
@@ -294,7 +294,7 @@ Files: `Makefile`, `pcb/BOM.csv`, `pcb/CPL.csv`, small export/validation helpers
 - [x] Export native assembly PDF, placement text, coordinate-based via CSV and controlled engineering notes. Implement and test release-manifest revision/tool/source/artifact hashes and results; no generated files are hand-edited.
 - [x] Implement separate `gerbers`/`prototype` and production modes, production precedence for mixed goals, explicit mode/status manifests and generated scope/hold README text inside both transferable ZIPs. No diagnostic, geometry or sourcing gate is waived.
 - [x] Resolve the selected prototype resistor identity with user-approved **TE Connectivity 35212K2FT / C4129105** (in stock at JLCPCB); record Yageo SR2512FK-7W2K2L production pre-order and Uni-Royal PS12 cancellation.
-- [ ] Publish the new SMT AC / 6.00 rear-B **Gate P prototype** snapshot after native/file checks and real serial/parallel prototype comparison. C4/C5/W3/W1/W4 remain deferred, not closed; **SMT AC Conversion** controls current results, not earlier TE/PS12 or documentation-only snapshots.
+- [x] Publish the new SMT AC / 6.00 rear-B **Gate P prototype** snapshot after native/file checks and real serial/parallel prototype comparison. C4/C5/W3/W1/W4 remain deferred, not closed; **SMT AC Conversion** controls current results, not earlier TE/PS12 or documentation-only snapshots.
 - [ ] Publish a **production** manifest/package only after an evidence-backed file-release review closes the production holds. Gate P authorization does not satisfy this item.
 - [ ] Obtain order-specific acceptance for 2 oz/ENIG mixed SMT/THT assembly, actual part allocation/attrition, heavy-copper soldering, and GDT lead forming. Current public guidance permits THT under both Economic and Standard in principle; verify the exact quote instead of asserting a universal service restriction.
 - [ ] Approve manufacturer-added rails, fiducials, tooling, and depanelization without cuts/holes in protected functional copper. Standard PCBA's processing-size requirement may require panelization for this 63 x 56 mm board. Do not assume the old 73 x 76 mm panel or automatic rail removal, and distinguish five individual boards from five multi-up panels.
@@ -303,7 +303,7 @@ Files: `Makefile`, `pcb/BOM.csv`, `pcb/CPL.csv`, small export/validation helpers
 
 **Exit:** Verified production data is generated reproducibly and is unambiguous for assembly. Bare-board flying-probe continuity is not advertised as assembled functional or surge testing.
 
-**Current exit: SMT AC / rear-B prototype reverification pending.** Earlier publication results are historical. Production remains held. Supplier placement, CAM, panel, allocated parts and process approvals remain order tasks; they are not replaced by artifact verification or physical environmental/switch tests.
+**Current exit: SMT AC / rear-B Gate P files published and verified, including actual serial/parallel comparison.** Earlier publication results are historical. Production remains held. Supplier placement, CAM, panel, allocated parts and process approvals remain order tasks; they are not replaced by artifact verification or physical environmental/switch tests.
 
 ### P5: Documentation
 
@@ -327,9 +327,9 @@ protection design. Repeat synchronization after any circuit/part/process change.
 
 ### P6: Validation
 
-- [ ] Run full stdlib/native tests and `make check` for the SMT AC / rear-B snapshot, including the unchanged electrical/design-bound models and new native layer-selector probes. Earlier 208-test results are historical. These are file/model tests, not hardware qualification.
-- [ ] Repeat separate clean `make all` and clean `make -j4 all`, preserving evidence and comparing validated geometry/connectivity/population. Require refusal solely for the same five open holds; comparison passes, not production publication.
-- [ ] Repeat actual serial/parallel **prototype publication** with `--target prototype`: clean, serial `make prototype`, clean and `make -j4 prototype` must all exit 0, with matching geometry, population, updated notes and manifest/mode/hold notices.
+- [x] Run full stdlib/native tests and `make check` for the SMT AC / rear-B snapshot: **224 PASS, no skips**, including unchanged electrical/design-bound models and seven native probes. Earlier 208-test results are historical. These are file/model tests, not hardware qualification.
+- [x] Repeat separate clean `make all` and clean `make -j4 all`, preserving evidence and comparing validated geometry/connectivity/population. Both refuse solely for the same five open holds; comparison passes, not production publication.
+- [x] Repeat actual serial/parallel **prototype publication** with `--target prototype`: clean, serial `make prototype`, clean and `make -j4 prototype` all exit 0, with matching geometry, population, updated notes and manifest/mode/hold notices.
 - [x] Exercise missing rules/project, wrong net, inadequate earth spacing, undersized diode hole, exposed via aperture, missing BOM/CPL part, reversed Y and missing layer fixtures, plus parser/export/race/staleness/diagnostic regressions. Invalid releases are blocked. Other THT maximum-pin fit remains an external evidence hold, not a claimed automatic fit check.
 - [x] Inspect rendered PCB/schematic/assembly data and validate native-generated copper/mask/paste/legend/drill geometry and archives. Retain supported-geometry and rendering limitations with the reports.
 - [ ] Review actual JLCPCB processed PCB/stencil and placement, including hole treatment, maximum-pin fit, forming/standoff and panel/tooling locations, before production approval.
@@ -341,8 +341,8 @@ protection design. Repeat synchronization after any circuit/part/process change.
 
 ## Release Gates
 
-**Current disposition: original A, B and C remain HELD; Gate P is PENDING for
-the changed SMT AC / rear-B source under [SMT AC Conversion](#smt-ac-conversion).
+**Current disposition: original A, B and C remain HELD; Gate P is MET for
+the SMT AC / rear-B snapshot under [SMT AC Conversion](#smt-ac-conversion).
 The earlier documentation-cleanup package verifies only its original snapshot.**
 The user explicitly permits prototype files without environmental, switching or
 completed hardware qualification. This does not close or rename any of the five
@@ -445,6 +445,7 @@ not make it current.
 | 2026-09-11, initial TE 35212K2FT prototype selection | Selected **TE Connectivity 35212K2FT / C4129105** for prototypes, retaining the Yageo production pre-order after PS12 cancellation. BOM/CAD/library metadata changed with **no layout change**. **207 tests and the recorded native/publication workflows passed for that snapshot**; all five holds remained. The claimed exact TE land match and inherited TCR/overload-test conditions were subsequently found unsupported and are corrected below. No commit, upload or agent order. | Superseded by **TE Review Corrections**; preserve this snapshot's actual verification evidence, not its rejected manufacturer-equivalence claims. |
 | 2026-09-11, TE review corrections | User confirmed production **Yageo SR2512FK-7W2K2L / C876850**, independently identity-checked. Corrected TE alternate-land/mounting evidence, TCR assumption provenance, unknown overload test, live guides and current-release pointers. No additional CAD/BOM/library/geometry or diagnostic-approval change. **208 tests PASS including native, `make check`/`make gerbers` PASS, real serial/parallel prototype publication and production-refusal comparisons PASS.** | Current corrected Gate P files are ready for separately authorized supplier review. Accept actual alternate-land/process, parts/allocation, GDT forming, models/panel/CAM; qualify the intended population separately. No hold closure, upload, order or commit. |
 | 2026-09-11, documentation cleanup from d60c83e | Implemented the approved plan across all 17 guides/notes: canonical owners, linked summaries and preserved historical/local controls. Independent semantic/link review, **208 native-enabled tests**, `make check`/`make gerbers`, production-refusal and real serial/parallel prototype comparison **PASS**. Source/artifact/mirror hashes and isolated-package context checked; no CAD/BOM/model/rule/approval change. | Current Gate P files contain the consolidated notes. Resume the separately authorized P3/P4 supplier queue; all engineering, job-allocation and physical acceptance holds remain. No upload, order or commit. |
+| 2026-09-14, SMT AC conversion from cbc3824 | Implemented Ruilon SMT AC, front-B stop, exactly 6.00 rear B and the necessary X=136.50 return stem. Added native B.Cu-only >=3.00 core isolation and independent exact geometry/artifact regressions. **224 tests PASS including seven native probes; `make check`/`make gerbers`, production-refusal and actual serial/parallel prototype comparison PASS.** Fresh diagnostic evidence was manually reviewed after schematic text cleanup; only its changed schematic approval hash was updated. | Current Gate P files are prototype-only. Resume separately authorized supplier/finished-etch/placement/CAM review; all five engineering holds, job allocation, earth-GDT forming and remaining W5/hardware acceptance remain open. No agent commit, upload or order. |
 
 Plan-creation validation: `git diff --check` and `git diff --no-index --check /dev/null REMEDIATION.md` passed. These are documentation checks; the KiCad and model results above are prior review evidence, not newly performed hardware qualification.
 
@@ -1098,7 +1099,7 @@ physical qualification, commit, upload or order was performed in this correction
 
 ### Documentation Cleanup
 
-The user approved implementation of [DeduplicationPlan.md](DeduplicationPlan.md)
+The user approved implementation of `DeduplicationPlan.md`
 on **2026-09-11**, beginning at **d60c83e** with clean tracked/staged diffs and
 only that plan untracked. This is **P5 documentation maintenance plus P6 file
 verification**, not new electrical, mechanical, supplier or physical qualification.
@@ -1111,13 +1112,19 @@ Named current screens remain in DESIGN_BOUNDS, model/historical comparisons in
 ELECTRICAL, and manufacturer evidence and dated research corrections in their
 controlled notes. AGENTS now defines impact-based documentation maintenance.
 
-The [plan's implementation record](DeduplicationPlan.md#8-implementation-record)
-tracks deleted sections, destinations and retained controls. The baseline audit
+The historical plan's implementation record (`DeduplicationPlan.md`, section 8)
+tracked deleted sections, destinations and retained controls. The baseline audit
 under **`tmp/deduplication-review/baseline-final/`** preserves the original 17
 documents, the approved plan and previous package manifest/status. Its SHA256
 comparison found **36/36 authoritative machine/analysis/test files unchanged**
 from d60c83e, with generated CPL also unchanged. That baseline comparison and
 the earlier prototype package are not renewed native or publication evidence.
+
+**2026-09-14 navigation erratum:** the session's untracked plan is absent from
+the current checkout, including baseline cbc3824. Its former local links are
+now explicit historical references, not links to a recreated document. The
+contemporaneous implementation/verification record here and preserved temporary
+evidence remain; no missing plan content or approval has been invented.
 
 Three independent read-only reviews covered physical/DFM guardrails,
 operation/acceptance/procurement, and electrical/model/research evidence against
@@ -1225,12 +1232,61 @@ Implemented source and evidence boundaries:
   assumptions/formulas; the normal DC/TE models remain unchanged. All five
   engineering holds, remaining earth-GDT forming and W5 acceptance remain open.
 
-**Integrated verification is pending.** Independent read-only source, guard and
-documentation reviews found no actionable defects in their scoped checks.
-Fresh annotation evidence/manual review, the complete native-enabled suite,
-`make check`, direct prototype publication and real production-refusal/prototype
-serial/parallel workflows still need revision-specific results here. No GUI,
-commit, upload, purchase, supplier acceptance or hardware test is implied.
+Independent read-only source, guard and documentation reviews found no actionable
+defects in their scoped checks. The native assembly and front/rear copper PDFs
+were inspected. The longer AC schematic value touched a section divider, so
+only its reference/value text moved to the left of the unchanged symbol and
+the crossover note was shortened; fonts, symbols, wires and pin connectivity
+were retained. The reviewed final schematic is
+`tmp/smt-ac-schematic-reviewed.pdf`; earlier previews and the front/rear copper
+PDFs remain under `tmp/smt-ac-*.pdf`. This is a drawing review, not supplier
+placement, physical fit or measured copper acceptance.
+
+| Exact command / review | Actual result and scope |
+| :--- | :--- |
+| `/snap/bin/kicad.kicad-cli --version` | **9.0.7**, executed headlessly; no sandbox-bypass parameter used. |
+| `python3 -B pcb/sync_libraries.py --sync-metadata`, then `--write`, then `--check` | **PASS**, nine active local footprints/six symbols. Repeated `--check` after the schematic text adjustment; retained definitions remain byte-identical to cbc3824. |
+| `TMPDIR=/tmp/opencode KICAD_TEST_CLI=/snap/bin/kicad.kicad-cli python3 -B -W error -m unittest discover -s tests` | Final **224 PASS, no skips**, Python 3.14.4; 91.134 s after the text cleanup. Includes seven native probes and eleven rear-layer selector controls. Earlier verbose run also passed 224 tests in 91.061 s before the text cleanup. Cleanup messages concern isolated fixtures, not the authoritative build. |
+| `python3 -B scripts/analyze_limits.py` and `python3 -B scripts/design_bounds.py` | Both **exit 0**; unchanged declared normal/cut/fault/TE screens, including 280 nominal clean-cut cases and 0.501018 W nominal /0.756803 W upper per-resistor losses. Not physical duty or surge qualification. |
+| `python3 -B scripts/review_annotation.py --cli /snap/bin/kicad.kicad-cli` | Final evidence **PASS**, `tmp/annotation-review/hybrid-m6jzbc__/report.json`. Baseline and inverse-numbered comparison files are byte-identical; duplicate, unassigned and property/instance mismatch controls are rejected. Earlier `hybrid-p57j7eh0` and `hybrid-lsc5emcx` evidence is retained for their pre-final-text inputs. |
+| Manual annotation review | Inspected the final report, all native command/diagnostic records and inverse-numbered comparison. Accepted only the exact known KiCad 9.0.7 XML warning, empty stderr and exit 0. Deliberately changed only the schematic hash and rationale in that diagnostic review; the other four approval hashes and eight-label review remain unchanged. No automatic reapproval or engineering-hold closure. |
+| `make check` | **PASS**, rerun after final schematic/annotation review: zero DRC violations, unconnected pads and footprint errors; ERC zero errors/eight exact reviewed warnings. Geometry, eight nets/34 terminals/52 IPC records, 16 parts, 30 PTH/four NPTH, F.Mask/B.Mask/F.Paste 52/34/18 and private archives checked. No publication from this target; generated CPL changed only AC's value/footprint fields. |
+| `make gerbers` | **Exit 0**, direct file-verified prototype publication with all five holds deferred and no file/sourcing bypass. |
+| `python3 -B scripts/verify_workflow.py --expect-holds C4 C5 W3 W1 W4` | **PASS of production refusal/comparison**, `tmp/workflow-validation/run-80f14zzd/report.json`: separate clean (0), `make all` (2), clean (0), `make -j4 all` (2). Both complete file checks and refuse solely for the same five holds. |
+| `python3 -B scripts/verify_workflow.py --target prototype --expect-holds C4 C5 W3 W1 W4` | **PASS of actual serial/parallel prototype publication/comparison**, `tmp/workflow-validation/run-0l8fm4ur/report.json`: both separate clean commands and both builds exit 0. Validated fabrication, connectivity, population, note copies, assembly datums and mode/hold notices match. PDFs are archived/hashed, not automatically render-diffed. |
+| `python3 -B -W error tmp/smt-ac-final-audit-20260914/audit.py --output report-navigation-fixed.json` | **Exit 0, no actionable findings.** All 32 manufacturing source hashes, 54 artifact hashes and both Gerber/CPL mirrors match; saved workflow comparisons and preserved evidence revalidate without invoking Make. All 570 local links across 17 Markdown documents resolve in the supported parser. The seven shipped notes have 158 package-local resolutions and 17 explicitly repository-only supplementary references, separately reviewed rather than counted as shipped links. |
+
+**Current package:** `build/status.json` and `build/manifest.json` identify
+**status=prototype, mode=prototype**, attempt **`attempt-9ka0apxc`**, hardware
+**1.2.0-dev**, base **cbc3824**, `worktree_dirty=true`. The PCB SHA256 is
+`84975df16c7241a78c24ba80c33dddadf3c091a93481e685fe0f58a5ed2e38eb`;
+the final schematic SHA256 is
+`9be1b7623656516a6350ddc4ddfe9fc819af1ec0a638019df1259a1392de57b3`.
+Gerber ZIP/mirror SHA256 is
+`3308268e1acfc111071bed7a8ff3dfad47d8c50a102b618e8860e202fe71bc7d`.
+Manifest SHA256 is
+`d25c31930f9956a89424be3db5ccb9930c7f50b9d8b07d9ce109fc00bf72a605`.
+The generated CPL retains all origins/rotations and the native signed-Y convention.
+
+Prototype ran last, leaving a current prototype package rather than a refusal
+report or stale filename. Both workflow runs preserve previous build/run evidence
+under their `before/` trees and separate serial/parallel snapshots; unrelated
+temporary evidence was preserved. **Gate P is met for these files only**;
+`allocation_verified=false`, C4/C5/W3/W1/W4 and A/B/C remain held. No GUI,
+upload, purchase, supplier acceptance or hardware test was performed.
+
+During final audit, externally created **92592bf** appeared and recorded the
+engineering changes. This assistant made no commit and did not alter that
+checkpoint. The published manifest correctly retains its creation-time cbc3824
+base/dirty-state provenance; all manufacturing source hashes still match the
+current design. Subsequent changes are only root-guide verification/navigation
+bookkeeping, not changed manufacturing inputs or manually edited artifacts.
+
+The final read-only audit is retained at
+`tmp/smt-ac-final-audit-20260914/report-navigation-fixed.json`. The earlier
+`report-final.json` retains its three pre-existing missing-plan navigation
+findings; they were corrected explicitly, not overwritten or relabelled as an
+earlier PASS. No external-URL, supplier or physical qualification is claimed.
 
 ### Next Bounded Work
 
