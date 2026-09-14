@@ -175,8 +175,15 @@ or unrestricted reuse/top-up of removed or contaminated gel.
   resistivity must not be conflated.
 - [G3] describes protection from rain, humidity, dust and animal intrusion;
   [G1] markets an IP68 junction-box filler. Neither is an IP68, hermetic,
-  structural-support or continuous-thermal qualification of DogFence. The
-  raised GDT's physical gap and W3 thermal hold remain unchanged.
+  structural-support or continuous-thermal qualification of DogFence.
+
+**2026-09-14 applicability erratum:** the earlier raised GDT_AC gap belongs to
+the retired B5G470L construction. The current [SMT AC crossover](ASSEMBLY.md#smt-ac-crossover)
+uses front A/C lands above rear B, separated by the modeled FR-4 core; it has no
+AC lead-forming or overpass-height requirement. This does not qualify laminate,
+mask or OneGel insulation. Earth-GDT forming, material/fit acceptance and the
+W3 continuous-thermal hold remain open; no new OneGel source or physical test
+is implied by this geometry change.
 
 The historical **16-part PR02 checkpoint schematic/PCB/BOM** specified **Vishay BCcomponents
 PR02000202201FA100**, copper-lead **2.2 kohm / 2 W / 1% / +/-250 ppm/K**, not the

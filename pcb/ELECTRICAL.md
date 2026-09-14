@@ -1,6 +1,6 @@
 # Electrical Engineering Record
 
-**Revision: 1.2.0-dev. TE evidence/provenance correction 2026-09-11. Electrical release HOLD.**
+**Revision: 1.2.0-dev. User-approved SMT GDT_AC conversion recorded 2026-09-14. Electrical release HOLD.**
 
 This record describes the implemented circuit, DC solver and fault interpretation.
 [DESIGN_BOUNDS](DESIGN_BOUNDS.md) owns detailed current parametric screens;
@@ -16,8 +16,11 @@ process holds remain open in [verification.json](verification.json), deferred
 only for file-verified prototype artifacts, not closed for production/field use.
 [Artifact controls](ASSEMBLY.md#prototype-artifacts) distinguish files from
 supplier acceptance and hardware qualification; no switch/environmental or
-physical-test prerequisite is added to Gate P. Earlier artifact PASS results
-apply to their old note hashes, not this edited record.
+physical-test prerequisite is added to Gate P. Native/file verification requires
+the current matching reports and artifact snapshot; earlier PASS results apply
+only to their recorded source/note hashes. The normal DC model/scripts and TE
+thermal screens are unchanged. Verifying those calculations or this note does
+not qualify the changed physical construction.
 
 The original axial hybrid followed **ad282e3**; later SMT selections retain its
 topology and **1.2.0-dev** revision. **One LRS-75-36 serves TEST; the other is a
@@ -48,17 +51,46 @@ External LED anode goes to terminal 1, cathode to terminal 2.
 
 GDT_AB, GDT_BC and GDT_AC connect the named core pairs **before** the indicator resistors. The three core/EARTH tubes connect to the separate EARTH bus. Thus the 2 W R1/R2 do not limit GDT source follow current. R1/R2 are **TE Connectivity 35212K2FT / C4129105**, 2512 SMT, 2.2k, 1%, **+/-100 ppm/C** [S18]. The **25 C resistance reference is a declared engineering model assumption**, not a TE-specified TCR test reference. D1-D4 remain **Vishay General Semiconductor BYG23T-M3/TR / C145454**, 1300 V repetitive reverse / 1 A catalogue rating, SMA [S14]. D3/D4 do not create a forward B-to-A/C path through the intact series diodes. They are not connected before R1/R2 or directly to EARTH.
 
-The retained GDT component evidence [S10] is distinct from system performance:
+The approved population has **three SMT inter-core tubes and three THT
+core/EARTH tubes**. GDT_AC now selects the same **Ruilon SMD5050-470NA /
+C39692533** as AB/BC; all six GDT endpoint connections remain unchanged. The
+component evidence [S10,S20,S21] is distinct from system performance:
 
-| Path / current part | Nominal DC sparkover | Component impulse rating, 8/20 us | Impulse sparkover at 1 kV/us |
+| Path / population applicability | DC sparkover | Component impulse rating, 8/20 us | Impulse sparkover at 1 kV/us |
 | :--- | :--- | :--- | :--- |
-| AB/BC: Ruilon SMD5050-470NA | 470 V | 5 kA | Up to 950 V |
-| AC: Bencent B5G470L | 470 V | 5 kA | 850 V for **99% of measured values** |
+| AB/BC/AC, current: Ruilon SMD5050-470NA / C39692533 | 470 V +/-30% (329..611 V) | 5 kA, +/-5 operations | 950 V maximum |
 | Core/EARTH: Ruilon 2R470TD-8 | 470 V | 20 kA | Up to 1100 V |
+| AC, **historical, retired**: Bencent B5G470L / C5337217 | 470 V +/-20% (376..564 V) | 5 kA, +/-5 operations | 850 V for **99% of measured values** |
+
+For the SMD5050/B5G comparison, both DC entries use **100 V/s**, at delivery,
+ionized conditions and **AQL 0.65, inspection level II** [S20,S21]. Ruilon also
+specifies **850 V maximum at 100 V/us**; Bencent's **800 V typical distribution
+at 1 kV/us** is not its 850 V / 99% entry, and neither is equivalent to Ruilon's
+950 V maximum. The change is not a like-for-like sparkover guarantee or an
+improved-clamping claim merely because both are nominally 470 V.
+
+Ruilon's **10 kA 8/20 us single operation**, **100 A 10/1000 us, 300 operations**
+and **5 Arms, 50 Hz, 1 s, 10 operations** are separate component tests [S20],
+not interchangeable pulse shapes, board ratings or required site exposures.
+Its **15 V typical arc at 1 A**, **135 V typical glow at 10 mA** and **<0.5 A
+glow-to-arc transition** do not specify holding current or extinction. Neither
+the Ruilon nor the retired Bencent sheet guarantees recovery on the actual
+powered DC fence. Ruilon's reflow profile has a **260 +0/-5 C peak**; its
+temporary post-reflow sparkover increase and **24-hour recovery** concern
+solder processing, **not powered surge recovery**. Actual profile acceptance
+belongs to [ASSEMBLY](ASSEMBLY.md#thickness-and-process) and
+[DFM_EVIDENCE](DFM_EVIDENCE.md#standard-process).
+
+Ruilon specifies **<=0.8 pF at 1 MHz** versus the retired Bencent's **<=1 pF
+at 1 MHz with 0.5 V bias**; these are not identical test conditions or an
+assembled RF-loading comparison. Both specify **>=1 Gohm at 100 VDC**.
 
 These cited test ratings do not establish an assembled surge rating, equal
 sharing, powered recovery or cable impulse withstand. **470 V DC sparkover is
 not a 470 V transient clamp**; unequal ignition and lead overshoot still matter.
+The [SMT AC conversion](#smt-ac-conversion) changes physical discharge/insulation
+paths, not the normal DC topology; its [copper screen](DESIGN_BOUNDS.md#ac-conversion-copper-screen)
+does not qualify those paths.
 
 The solver uses **same-end TEST: Start A/C positive, Start B negative, all three
 End cores individually isolated**. All six ends remain independent; required
@@ -270,6 +302,9 @@ An ideal short's zero modeled dissipation excludes real contact/arcing resistanc
 The alternatives and interface targets below preserve the earlier C5
 investigation. They are not a newly selected circuit or a prerequisite imposed
 by this SMT model update on prototype exports; C5 performance remains unresolved.
+The Ruilon/Bencent and raised-overpass references in that investigation retain
+their historical applicability; the current AC selection is the SMT Ruilon in
+section 1, not a new source-shutdown or holdover-qualified architecture.
 
 **Recovery in plain terms:** a GDT normally has very high resistance. A sufficiently
 large surge ionizes its gas and starts conduction; the conducting arc voltage is
@@ -389,6 +424,14 @@ No claim of 5/20 kA assembled performance, 72 A terminal capacity, equal transie
 
 Sources S1-S12 were retrieved during the earlier P2 session on 2026-09-06 using **webfetch only**; S13-S19 record later part reviews and identity evidence. APEM and TI HTML were readable directly. Where direct PDF fetching produced raw binary or a 403, text was obtained through `https://r.jina.ai/https://...` targeting the manufacturer document (or manufacturer-authored LCSC-hosted GDT document). That is an extraction aid, not a second manufacturer guarantee or proof the served revision is the latest. For the historical HP12 SMT conversion, the supplied research review visually confirmed S15 pages 1, 2, 4, 5, 6 and 8; that model update reread its TCR reference/test temperatures via webfetch text extraction, not a new visual land review. For the historical PS12 selection, the supplied research visually read S16 pages 1, 2, 4, 5, 6, 7 and 8 and verified the exact JLCPCB identity S17. The **2026-09-11 correction** uses the supplied TE drawing review plus fresh S18 text extraction (after direct webfetch returned PDF binary) and a fresh live S19 identity fetch. It confirms Rev G, 02/2025 and the stated TCR method/mounting text, not a new visual pad-leader inspection, vendor acceptance or physical qualification. ASSEMBLY/DFM controls the drawing/process review.
 
+**2026-09-14 GDT provenance:** this bounded note update uses the supplied
+prior-turn review of original manufacturer PDF page images: **S20 pages
+1, 2, 3, 5 and 6**, and **S21 pages 1-3**. It reuses that review and the existing
+[DFM drawing evidence](DFM_EVIDENCE.md#smt-land-resolution), not a new fetch or
+independent page-image inspection in this note task. The Bencent URL's
+20260514 upload path is not a new revision; its sheet remains **A2, 2018-01-03**.
+No supplier response, allocated-lot acceptance or powered-recovery test is inferred.
+
 | ID | Primary document / provenance | Relevant evidence |
 | :--- | :--- | :--- |
 | S1 | [APEM Q10F5SXXSG02E live product page](https://www.apem.com/led-indicators/professional-grade-panel-mount-led-indicators/q10/q10f5sxxsg02e) | No-resistor option, 1.8-3.3 V family listing, 20 mA max, 5 V reverse, -40 to +85 C, 20-25 cNm = 0.20-0.25 Nm. Exact SG I/V/pulse bounds absent from retrieved page. |
@@ -410,6 +453,8 @@ Sources S1-S12 were retrieved during the earlier P2 session on 2026-09-06 using 
 | S17 | [JLCPCB C2793873](https://jlcpcb.com/partdetail/C2793873) | Historical Uni-Royal PS122WF2201T4E identity. |
 | S18 | [TE Connectivity CGS 3521, Data Sheet 9-1773463-5 Rev G, 02/2025](https://www.te.com/commerce/DocumentDelivery/DDEController?Action=showdoc&DocId=Data+Sheet%7F9-1773463-5%7FG1%7Fpdf%7FEnglish%7FENG_DS_9-1773463-5_G1.pdf), [JLCPCB C4129105](https://jlcpcb.com/partdetail/C4129105) | **Selected 35212K2FT for prototype, 2512 2.2k/1%.** P1 catalogue 2 W at 70 C ambient, derating to zero at 155 C, -55..155 C operation; 250/500/500 V working/overload/dielectric ceilings; p2 RCWV formula. P3 recommended pads 1.50 x 3.00 mm, 5.00 inner gap / 6.50 pitch, with four-layer 2 oz outer / 4 oz inner mounting. P4 +/-100 ppm/C at 2.2k, room/min/max operating-temperature characterization (User Spec), without numeric TCR reference/endpoints. The overload ceiling supplies no short-time test voltage/duration. AEC-Q200 qualified, not board-qualified. |
 | S19 | [JLCPCB C876850](https://jlcpcb.com/partdetail/C876850) | **Yageo SR2512FK-7W2K2L**, 2.2k/2 W/1%/100 ppm/2512 identity independently confirmed. Unpopulated production variant; separate part/model/process/thermal review is required before a source/BOM switch, not a TE model substitute. |
+| S20 | [Ruilon SMD5050 Series, SP-GDT-006 A3, 2024-08-19](https://www.ruilon.com.cn/Uploads/pdf/06-smd5050%20series_a3.pdf) | Supplied 2026-09-14 original-page review, pp. 1/2/3/5/6; exact **SMD5050-470NA** electrical entries, body/land drawing and reflow/caution text. Current AB/BC/AC selection; component test conditions, not assembly or DC-recovery approval. |
+| S21 | [Bencent B5G470L, A2, 2018-01-03](https://www.bencent.com.cn/index/xiazai/name/_upfile_admin_file_20260514_2026051411072672523.pdf.html) | Supplied 2026-09-14 original-page review, pp. 1-3. **Historical retired AC part**: preserves its DC/impulse/probability, capacitance and process comparison; not the current AC population or equivalent guarantees to SMD5050. |
 
 ## 8. Continuation Decision, 2026-09-07
 
@@ -531,8 +576,9 @@ recovery experiment may precede field qualification; no such test was performed.
 ## 9. Simplified Indicator Direction
 
 User clarification and subsequent implementation, 2026-09-07, after checkpoint
-**ad282e3**, with TE prototype evidence corrected 2026-09-11. This is the current
-design, not an approved order/field release:
+**ad282e3**, with TE prototype evidence corrected 2026-09-11 and the user-approved
+SMT AC conversion recorded 2026-09-14. This is the current design direction,
+not an approved order/field release:
 
 - LED damage from **accidental low-voltage installation polarity reversal is
   accepted**, with spare indicators for replacement. This changes the required
@@ -548,11 +594,12 @@ design, not an approved order/field release:
   for the prohibited configuration or invent a universal safe separation.
   Confirm and maintain the exclusion; reassess if surrounding land use changes.
   Nearby lightning, ordinary switching and RUN behavior remain relevant.
-- The authorized **16-part hybrid now uses SMT R1/R2**: eight SMT and eight THT
-  electrical parts, plus four mounting footprints, on the unchanged board.
+- The authorized **16-part hybrid uses SMT R1/R2 and all three inter-core GDTs**:
+  **nine SMT and seven THT** electrical parts, plus four mounting footprints.
   Use the [reviewed prototype population](ASSEMBLY.md#reviewed-components), not
-  an automatic Yageo substitution. No active current stage, timer, new supply
-  connection or GDT replacement is fitted.
+  an automatic Yageo substitution. GDT_AC replaces the axial Bencent with the
+  same Ruilon SMT part as AB/BC, without changing any GDT net connections. No
+  active current stage, timer or new supply connection is fitted.
 
 ### Minimal Circuit And Layout
 
@@ -577,6 +624,44 @@ requires supplier placement/stencil/solder acceptance under W4. The
 [dated drawing correction](DFM_EVIDENCE.md#te-3521-body-and-lands-fit) is not
 supplier approval. Earlier folded-route and axial options are history, not
 pending choices.
+
+### SMT AC Conversion
+
+**Approved construction, 2026-09-14; physical qualification remains held.** GDT_AC uses
+origin **(125.80,122.50)**, with pad 1 on A at **(125.80,120.50)** and pad 2 on C
+at **(125.80,124.50)**. Its **F.Cu-only, 3.20 mm-wide** stubs at X=125.80 run
+from A **Y=114.88 to 120.00** and C **Y=130.12 to 125.00**, retaining **1.80 mm
+between connected copper**, not merely a land-to-land gap. The old AC pad pair's
+two **1.40 mm PTHs and their A/C interlayer links are removed**; dedicated rail
+stitches, J_IN and the core-side earth-GDT PTH links remain. The new A/C stubs
+are single-layer paths, not dual-layer copper credited by the old pad links.
+
+The **3.20 mm F.Cu B rail's centreline endpoint is X=121.00**. The rear B
+segment remains at **Y=122.50, X=106.00..131.00**, widened to **exactly 6.00 mm,
+not 6.40 mm**, retaining its own GDT_B_E input PTH at X=131.00 through the rear
+route. The existing B-return stem at X=135.50 actually left **2.10 mm**, not
+**>=3.00 mm**. The full-copper review identified the necessary minimal right shift to
+**X=136.50**, giving **3.10 mm stem clearance** and a source-geometry minimum
+of **3.02 mm between all rear A/B/C copper**; global core/EARTH minimum remains
+**3.25 mm**. These nominal geometry values are not finished-etch guarantees or
+insulation ratings. Apart from this stem shift and the specified AC/B edits,
+other component positions, circuit connections, all **14 vias**, A/C main
+rails, EARTH and indicator routing are unchanged. See
+[DESIGN_BOUNDS](DESIGN_BOUNDS.md#ac-conversion-copper-screen) for the exact
+6.00 mm metal-area/resistance tradeoff and interlayer-current limitations.
+
+There is **no formed AC air gap**. The adopted SMT body-height envelope is
+**5.21 mm before solder seating allowance**. Rear B copper passes beneath the
+**whole AC pad/body projection**, separated from front copper by the nominal
+**1.440 mm FR-4 core**, not qualified insulation. The supplied front inter-core
+minimum remains at the existing **0.80 mm** level, but the new local path and
+through-laminate exposure still need assessment for the actual transient,
+process and environmental conditions. Mask, gel and unchanged nominal gaps do
+not establish dielectric withstand. [ASSEMBLY](ASSEMBLY.md#physical-guardrails)
+and [DFM_EVIDENCE](DFM_EVIDENCE.md#smt-land-resolution) own the physical drawing,
+lands, seating and process acceptance; this record assigns no new board rating
+or guaranteed sharing through other GDTs. Rear B widening does not qualify
+resistor heat rejection, OneGel or continuous TEST.
 
 ### Selected SMT Resistors
 

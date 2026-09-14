@@ -10,3 +10,10 @@
 (rule "Earth isolation"
   (condition "(A.NetName == 'EARTH' && B.NetName != 'EARTH') || (B.NetName == 'EARTH' && A.NetName != 'EARTH')")
   (constraint clearance (min 3.0mm)))
+
+# Select the checked copper layer, including multilayer PTH pads, not A.Layer.
+# Front-only SMT lands retain their separately checked, smaller clearances.
+(rule "Rear core isolation"
+  (layer "B.Cu")
+  (condition "(A.NetName == 'WIRE_A' || A.NetName == 'WIRE_B' || A.NetName == 'WIRE_C') && (B.NetName == 'WIRE_A' || B.NetName == 'WIRE_B' || B.NetName == 'WIRE_C') && A.NetName != B.NetName")
+  (constraint clearance (min 3.0mm)))

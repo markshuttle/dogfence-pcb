@@ -4,6 +4,8 @@ Research date: **2026-09-07**. Original DFM baseline: **97e202d**; SMT-resistor
 review: **02661d8**, followed by the manufacturer-land correction retained below.
 **PS12 replacement review: 2026-09-08**, with no geometry change.
 **TE 3521 prototype evidence correction: 2026-09-11**, with no geometry change.
+**SMT AC crossover selection: 2026-09-14**, with the explicitly approved
+AC/front-B/rear-B and return-stem changes below.
 Hardware **1.2.0-dev**. Scope: P3/P4 board design and five assembled prototypes.
 
 Dimensions are millimetres unless explicitly marked inches. Global coordinates
@@ -16,7 +18,8 @@ indexes its assembly applicability and expected file inventory.
 envelope, but its lands remain a project alternative under **W4** and catalogue
 rating transfer to this mounting remains conditional under **W3**. The dated
 reviews below preserve those corrections and the historical PS12/HP12/axial
-investigations, not new population, routing or qualification decisions.
+investigations. The separately dated AC selection changes population/routing,
+not qualification status; it does not rewrite those earlier investigations.
 [Physical Guardrails](ASSEMBLY.md#physical-guardrails) controls preservation;
 [SMA assembly evidence](ASSEMBLY.md#indicator-sma-and-resistor-assembly) owns the
 retained Vishay 89429, 25-Feb-2020 p4 outline/land review. Historical diameter-only
@@ -37,6 +40,103 @@ history; [README's master DFM policy](../README.md#via-and-component-hole-dfm)
 remains normative. This note supports that policy with evidence and calculations;
 its sibling assembly controls and local acceptance duties remain usable without
 the root guides.
+
+## SMT AC Crossover Selection
+
+**2026-09-14, hardware 1.2.0-dev: user-approved selection, not a native or
+hardware PASS.** GDT_AC changes from Bencent B5G470L / C5337217 to the same
+**Ruilon SMD5050-470NA / C39692533** already selected for AB/BC. The original
+[manufacturer][ruilon-smt-m] and [distributed][ruilon-smt-l] **SP-GDT-006 A3,
+2024-08-19**, especially p3's body/land leaders, were already reviewed under
+[Figure Access](#figure-access) and [SMT Land Resolution](#smt-land-resolution).
+No footprint redesign, fresh manufacturer retrieval, corrected drawing, stock
+reservation or supplier approval is inferred from using it for the third tube.
+
+[ASSEMBLY](ASSEMBLY.md#smt-ac-crossover) controls current construction:
+unchanged AC origin **(125.80,122.50), 0 degrees**, new north/south A/C SMT
+lands, **F.Cu-only** takeoffs, front-B cutback, **exactly 6.00 mm rear B** and
+the necessary **1.00 mm rightward return-stem shift**. AB/BC parts/stubs,
+A/C main rails on both layers, EARTH, all fourteen dedicated vias, mounts and
+indicator routing remain unchanged. Only the two retired AC component holes
+and their barrel links are removed; retained input/earth-GDT PTHs and dedicated
+stitches still link layers. That is not preservation of every former parallel
+barrel path.
+
+The rear width is **6.00, not the proposed 6.40**. With 7.62 rail spacing and
+3.20 A/C widths, the nominal straight-rail edge gap is
+`7.62 - 6.00/2 - 3.20/2 = 3.02`; a 6.40 B strip would leave **2.82**, below
+the new **>=3.00 rear A/B/C copper requirement**. Width alone was insufficient:
+the full-source rear-copper analysis in repository-only scratch
+`tmp/gdt-ac-6mm-review.py` found the existing **X=135.50, 1.60-wide B-return
+stem** only **2.10** from the A/C rail ends, with either the old or widened B
+strip. Meeting the user's whole-back clearance requirement also requires moving
+the stem to **X=136.50**. This necessary localized routing adjustment was disclosed
+before implementation; all Y coordinates, widths and terminal endpoints remain.
+Five adjoining 1.60-wide segments change their stem-side coordinates only.
+The stem-to-A/C gap becomes **3.10**; the nominal whole-rear different-core
+minimum becomes **3.02**, while global fence/EARTH separation remains **3.25**.
+
+Require a **native >=3.00 different-A/B/C-net clearance rule on B.Cu only** and
+an independent full-source guard covering all rear copper, including tracks,
+PTH pads and vias, not just the three long strips. The independent **>=3.00
+fence/EARTH separation on both faces** remains unchanged. Fresh integrated
+native and export checks must verify the changed source; the source-shape
+calculation is not that result. The **0.02 mm
+nominal margin** over the rear design threshold is small: source coordinates
+do not guarantee **>=3.00 on the finished etched board**. Obtain accepted CAM,
+etch/registration tolerances and finished-gap acceptance evidence; do not
+silently widen B to recover area or lower the rule to obtain a PASS.
+
+Using nominal 0.070 mm exterior copper, the rear crossover strip has
+`6.00 * 0.070 = 0.420 mm^2`, **93.75%** of the former ideal dual-3.20 sum
+`2 * 3.20 * 0.070 = 0.448 mm^2`. This is a local ideal-area comparison, not
+restored full area, guaranteed finished copper, equal layer sharing, replacement
+barrel area or a board current/surge rating. [ELECTRICAL](ELECTRICAL.md) retains
+the circuit/protection limitations; [DESIGN_BOUNDS](DESIGN_BOUNDS.md) owns named
+current/thermal screens, not this drawing-only comparison.
+
+**2026-09-14 applicability erratum:** all B5G470L pin/body/hole/forming and
+overpass calculations retained below describe the **retired axial AC design**.
+They are not current supplier tasks or a reason to impose a raised gap on SMT
+AC. The former **>=2.00 gap, 2.50 +/-0.25 underside, <=8.50 complete height**
+process was never physically qualified; removal of that construction is not
+qualification closure. Only the three earth GDTs remain axial, with their
+existing forming/lot/process holds. All **C4/C5/W3/W1/W4** holds remain open.
+
+### Crossover Clearance Evidence
+
+These are **nominal approved source-shape dimensions**, not finished-board
+measurements, processed CAM acceptance or a new native DRC result. The shared
+SMD5050 pattern is unchanged: each **5.50 X x 1.20 Y** rectangular, undrilled
+F.Cu/F.Mask/F.Paste land uses zero effective mask/paste margins. At AC the A/C
+centres are **(125.80,120.50)/(125.80,124.50)**; both lands span
+**X=123.05..128.55**, with **Y=119.90..121.10 / 123.90..125.10** respectively.
+The retained project footprint has a **5.21 X x 4.50 Y** maximum-body box based
+on the already reviewed dimensions and a **6.00 X x 7.50 Y** project courtyard,
+not a manufacturer-specified assembly envelope. End-face height is **<=5.21
+before solder seating**, not the axial 4.2 dimension; this applies to all three
+SMT tubes.
+
+| Relationship | Nominal source evidence / clearance, mm |
+| :--- | :--- |
+| Opposite A/C copper under AC | New 3.20-wide takeoffs stop at **Y=120.00/125.00**, each 0.50 outward from its land centre. Round caps end at **121.60/123.40**, leaving **1.80** connected-copper gap, versus **2.80** between lands/mask/paste. |
+| Front-B cap to either AC land | Front-B endpoint **(121.00,122.50)**, radius 1.60: `sqrt(2.05^2 + 1.40^2) - 1.60 = 0.882438`. No right-hand front-B track stub is needed; GDT_B_E.1 retains its front PTH pad through the rear connection. |
+| Existing AB/BC B land to nearest AC land | **0.80**, from X=122.25 to X=123.05 where their Y spans overlap. This is a front-side component gap, not the >=3.00 rear-core rule. |
+| AB/BC courtyard to AC courtyard | **0.30**, X=122.50 to X=122.80. |
+| AC courtyard to GDT_B_E courtyard | **0.42**, X=128.80 to X=129.22. Drawing space, not proven rework/tool access. |
+| Nearest AC aperture to hole, GDT_B_E.1 | Hole at **(131.00,122.50)**, diameter 1.50: `sqrt(2.45^2 + 1.40^2) - 0.75 = 2.071790`. Full drill circle, not just the centre. |
+| Same AC aperture to full annulus/open mask | GDT_B_E.1 diameter 3.00: `sqrt(2.45^2 + 1.40^2) - 1.50 = 1.321790`. Compare actual processed apertures and registration, not only nominal pad copper. |
+| Front B to maximum AC body including pose | West body bound **125.80 - 5.21/2 - 0.10 = 123.095**; front-B cap reaches **122.60**. Minimum **0.495**, including 0.10 projected pose; no front B under that body envelope. |
+
+Rear B spans **Y=119.50..125.50**, below both complete AC lands and body,
+separated in the source stackup by **nominal 1.440 mm FR-4**. Removing front B
+from below the body is not removal of that through-board crossover. Neither
+the FR-4 model, nominal surface gaps nor mask/OneGel establish physical impulse
+qualification or approved insulation. Inspect seating/tilt, solder spread and
+the processed copper/mask/stencil; the existing **4.00 mm versus 0.165-inch
+discrepancy and W1 stencil/profile hold apply to all three SMT GDTs**. The
+[current assembly and acceptance controls](ASSEMBLY.md#acceptance-record) remain
+binding; no AC forming acceptance is newly claimed.
 
 ## TE 3521 Prototype Selection
 
@@ -298,8 +398,10 @@ land-pattern approval.
 - The retired Vishay MBE explicitly labels its **0.80 mm lead as nominal**.
   Bencent's original figure labels a **0.80 mm round lead without a tolerance**.
   Neither figure supplies a manufacturer-guaranteed finished lead maximum. A controlled
-  **0.90 mm finished acceptance envelope** was proposed for each; it remains
-  operative only for **B5G470L**, now with 1.40 mm holes. R1/R2 are SMT.
+  **0.90 mm finished acceptance envelope** was proposed for each; at that
+  checkpoint it remained operative only for **B5G470L**, with 1.40 mm holes.
+  **2026-09-14 applicability erratum:** B5G470L is now retired too; current
+  R1/R2 and GDT_AC are SMT. Neither historical E envelope is a current fit hold.
 - Ruilon **SMD5050-470NA**: **X1 is pad centre-to-centre spacing**, not the inner
   gap or outside span. The metric recommendation translates to **5.50 x 1.20 mm
   lands at local Y = +/-2.00** in this board's orientation. The 4.0 mm / 0.165 in
@@ -348,7 +450,7 @@ Original PDFs/images were not added to the workspace in this bounded task.
 | Cixi Kefa KF128-7.62-3P / C474957 | [Manufacturer drawing][k128-m] and [C474957 drawing][k128-l], title KF128-7.62, revision A, 21.03.13, one sheet. Manufacturer [product page][k128-page] links the 7.62 drawing separately from 7.5. | V: both sheets, pin leaders, PCB layout and general tolerance table. P=3 applied to the family drawing. |
 | Cixi Kefa KF129-5.08-2P / C475092 | [Manufacturer drawing][k129-m] and [C475092 drawing][k129-l], title KF129-5.08, revision A, 21.03.13, one sheet. [Product page][k129-page] identifies the 5.08 drawing. | V: both sheets. Different 0.95/0.90 pin-width labels despite identical revision/date; not silently reconciled. P=2. |
 | **Historical, retired:** Vishay MBE04140C2201FC100 / C1368610 | [Document 28766][vishay], revision 11-Jul-2018, p13 dimensions; p4 ordering and p7 construction/assembly. [Document 28721][vishay-pack], revision 16-Jan-2025, packaging. | V: 28766 p13. T: ordering, tin-plated copper construction and packaging. Packaging did not establish a missing lead-diameter maximum. Not a current procurement/forming requirement. |
-| Bencent B5G470L / C5337217 | [C5337217 PDF][bencent-l], A2 / 2018-01-03, p2. The current [manufacturer product page][bencent-page] supplies [this direct PDF download][bencent-m], also A2 / 2018-01-03. | V: p2 from both sources. The 20260514 upload pathname is not a new drawing revision. Lead diameter is printed directly on the figure, outside its A/B/C table. |
+| **Historical, retired 2026-09-14:** Bencent B5G470L / C5337217 | [C5337217 PDF][bencent-l], A2 / 2018-01-03, p2. The then-current [manufacturer product page][bencent-page] supplied [this direct PDF download][bencent-m], also A2 / 2018-01-03. | V: p2 from both sources. The 20260514 upload pathname is not a new drawing revision. Lead diameter is printed directly on the figure, outside its A/B/C table. |
 | Ruilon 2R470TD-8 / C2836978 | [Distributed SP-GDT-017][ruilon-tht-l], A3 / 2023-11-02, p3; [manufacturer SP-GDT-017][ruilon-tht-m], A6 / 2025-10-16, p5. Manufacturer listing [page 4][ruilon-page4] links A6 for 2R470TD-8. | V: both dimension figures, specifically the **TD axial** drawing, not the SD surface-mount drawing below it. Mechanical dimensions agree. |
 | Ruilon SMD5050-470NA / C39692533 | [Distributed SP-GDT-006][ruilon-smt-l] and [manufacturer SP-GDT-006][ruilon-smt-m], A3 / 2024-08-19, p3. Manufacturer listing [page 5][ruilon-page5] links that file for the exact non-BVL MPN. | V: both p3 figures/tables; X/X1/Y leaders and body axes resolved. T: p5 reflow and p6 solder-bridging caution. No BVL or NB substitution used. |
 
@@ -417,7 +519,7 @@ relative to the actual pin-pattern datum, not only the total body length.
 | Exact identity | Visually resolved dimensions | Finished-pin design treatment |
 | :--- | :--- | :--- |
 | **Historical, retired:** Vishay MBE04140C2201FC100 | p13's `d_nom = 0.80` is the round wire diameter. `D_max = 4.20` is body diameter; `L_max = 11.90` body length; `l_min = 31.0` each unformed lead; `M_min = 15.0` mounting pitch. | Former **E <=0.90 diameter**, including tin finish, roundness and forming distortion, was a nominal +0.10 design limit, not a Vishay guarantee. No current R1/R2 insertion or forming task. |
-| Bencent B5G470L | p2 lead is explicitly round, diameter **0.80**, with no +/- or maximum qualifier. A=62 +/-2 is unformed overall length; B=6 +/-0.20 is body length; C=diameter 5.50 +/-0.20 is body diameter including the end-electrode outline. Copper leads, matte-tin finish are stated. | **E <=0.90 diameter**, for the stated procurement rationale. A/B/C tolerances do not create a tolerance on the separate 0.80 lead callout. Former 1.20 holes passed diameter-only against this E, but not the complete fixed-pattern budget below; selected holes remain **1.40**. |
+| **Historical, retired 2026-09-14:** Bencent B5G470L | p2 lead is explicitly round, diameter **0.80**, with no +/- or maximum qualifier. A=62 +/-2 is unformed overall length; B=6 +/-0.20 is body length; C=diameter 5.50 +/-0.20 is body diameter including the end-electrode outline. Copper leads, matte-tin finish are stated. | **E <=0.90 diameter**, for the stated procurement rationale. A/B/C tolerances do not create a tolerance on the separate 0.80 lead callout. Former 1.20 holes passed diameter-only against this E, but not the complete fixed-pattern budget below; then-selected holes were **1.40**. No current AC insertion task. |
 | Ruilon 2R470TD-8 | TD figure in both revisions: lead diameter **1.00 +/-0.05**; body diameter **8.00 +/-0.20**; axial body length **6.00 +/-0.30**; unformed overall length **62 +/-2**. | Drawing-derived maximum **1.05 diameter**. Require the finished insertion section to remain <=1.05 after forming too; enlarged bends/burrs must not enter the barrel. THT finish is nickel plated in the retrieved manufacturer text. |
 
 The Ruilon A6 version-history text dates its A3 entry 2023-03-31, whereas the
@@ -430,7 +532,7 @@ library bounds below round **the larger converted upper value** outward:
 
 | Body dimension | Metric upper | Inch upper converted | Proposed bound |
 | :--- | ---: | ---: | ---: |
-| Bencent diameter | 5.700 | (0.217+0.008) x 25.4 = 5.715 | 5.72 |
+| Historical Bencent diameter | 5.700 | (0.217+0.008) x 25.4 = 5.715 | 5.72 |
 | Ruilon TD diameter | 8.200 | (0.315+0.008) x 25.4 = 8.2042 | 8.21 |
 | Ruilon SMT end-face A/B | 5.200 | (0.197+0.008) x 25.4 = 5.207 | 5.21 |
 
@@ -444,8 +546,9 @@ limit, `(0.039+0.002) x 25.4 = 1.0414`.
 All hole sizes here are **nominal finished component PTH dimensions**, not
 unplated tool diameters. Use ordinary round holes, not press-fit or slots.
 The first table is the **historical 97e202d diameter-only screen**, not the
-current hole schedule. The adopted Kefa/GDT position budget follows it; current
-R1/R2 have no holes.
+current hole schedule. The adopted Kefa/earth-GDT position budget follows it,
+with the retired AC case explicitly labelled; current R1/R2, D1-D4 and GDT_AC
+have no holes.
 
 ```text
 H_min = H_nom - 0.08
@@ -476,7 +579,7 @@ diametral assembly allowance cannot also pay for arbitrary pitch error.
 JLCPCB publishes hole position tolerance +/-0.05. Conservatively treating that
 as +/-0.05 on each board axis gives radial `e_h = sqrt(2)*0.05 = 0.070711`.
 
-The retained selected Kefa/GDT ordinary-process geometry follows, with a
+The retained selected Kefa/earth-GDT ordinary-process geometry follows, with a
 **separately controlled part-pattern limit `e_p <=0.050 mm radial` per pin**.
 This limit applies after one common rigid alignment of the complete pin pattern
 to the nominal footprint, through the full insertion length. It includes
@@ -492,14 +595,17 @@ Require H_nom - 0.08 - D_pin - 0.241421 >= 0.10
 | :--- | :--- | ---: | ---: | ---: |
 | J_IN, J_EARTH | **2.00 / 3.20** | 0.433393 | 0.191972 | 0.60 |
 | J_LED_A, J_LED_C | **2.00 / 2.80** | 0.396025 | 0.154604 | 0.40 |
-| GDT_AC | **1.40 / 2.80** | 0.420000 | 0.178579 | 0.70 |
+| **Historical GDT_AC / B5G470L, retired 2026-09-14** | **1.40 / 2.80** | 0.420000 | 0.178579 | 0.70 |
 | GDT_A_E, GDT_B_E, GDT_C_E | **1.50 / 3.00** | 0.370000 | 0.128579 | 0.75 |
 
-This is the conservative **bounded retained THT design**, not a
+**2026-09-14 applicability erratum:** the AC row preserves the former hole/ring
+case unchanged, not an SMT fit requirement. The current
+[hole schedule](ASSEMBLY.md#hole-fit-evidence) includes only Kefa and earth GDTs.
+For those retained parts this is the conservative **bounded THT design**, not a
 requirement to enlarge every hole this much regardless of actual part evidence.
 It deliberately trades more solder volume and fixture dependence for insertion
 margin without requiring tighter JLCPCB fabrication tolerances. The retained
-Kefa/GDT pad shapes, centres, nets and copper dimensions remain unchanged. The
+Kefa/earth-GDT pad shapes, centres, nets and copper dimensions remain unchanged. The
 minimum ring is 0.40, above 0.254. Nominal rings are not guarantees of finished
 registration, etch tolerance, solder fill or barrel copper.
 
@@ -511,9 +617,9 @@ Kefa drawings. Conversely, screening an ordinary lot to the explicit E/pattern
 limits is a legitimate alternative to waiting for a new manufacturer guarantee;
 do not claim the screen has already passed or that its yield is known.
 
-For the retained 15.24-pitch axial GDTs, the radial part-pattern bound limits
+For the retained 15.24-pitch axial earth GDTs, the radial part-pattern bound limits
 two-pin spacing error to at most 0.10. Inspect the actual formed pattern and
-overpass height after seating; larger holes must not permit collapse or tilt.
+accepted standoff/height after seating; larger holes must not permit collapse or tilt.
 The minimum-hole proof covers neither ceramic-seal bending stress nor pullout.
 
 ## Body Geometry
@@ -537,7 +643,7 @@ least 0.25 assembly margin, and existing pads plus 0.25 where pads dominate.
 | KF128 Input and Earth | **-6.00..5.40; -12.50..12.50** (E) | **-6.35..5.75; -12.85..12.85** |
 | KF129 LED A and C | **-5.10..6.40; -6.10..6.10** (E) | **-5.45..6.75; -6.45..6.45** |
 | TE 3521 prototype SMT resistor, retained alternate lands | **-3.225..3.225; -1.70..1.70** | **-4.05..4.05; -2.10..2.10** |
-| B5G470L north-south overpass | **-2.86..2.86; -3.10..3.10** | **-3.25..3.25; -9.30..9.30** |
+| **Historical B5G470L north-south overpass, retired 2026-09-14** | **-2.86..2.86; -3.10..3.10** | **-3.25..3.25; -9.30..9.30** |
 | 2R470TD-8 east-west | **-3.15..3.15; -4.105..4.105** | **-9.40..9.40; -4.46..4.46** |
 | SMD5050-470NA north-south electrode axis | **-2.605..2.605; -2.25..2.25** | **-3.00..3.00; -3.75..3.75**, retained |
 
@@ -549,7 +655,11 @@ Preserve protected vias, rails, earth copper,
 mounts and LEDs; native file verification and actual assembly acceptance remain
 different checks.
 
-Retained GDT/Kefa checkpoint-placement calculations, **not a new DRC run**:
+**2026-09-14 applicability erratum:** the B5G470L body/courtyard row is historical.
+The following checkpoint-placement calculations are preserved, **not a new DRC
+run**: the AC-related **0.05/0.17** gaps apply only to the old overpass. Use
+[Crossover Clearance Evidence](#crossover-clearance-evidence) for the selected
+SMT AC geometry; retained Kefa/earth-GDT controls still apply.
 
 - J_IN courtyard east becomes X=111.75; SMT west is X=116.50: **4.75 gap**.
 - SMT east becomes X=122.50; overpass west is X=122.55: **0.05 gap**.
@@ -579,6 +689,12 @@ the support/enclosure fit or the assembler's trimming process.
 
 ### Overpass Control
 
+**HISTORICAL, retired 2026-09-14: B5G470L only.** The requirements and arithmetic
+below record the former unqualified overpass, not current SMT instructions or
+current forming holds. The complete [historical drawing and method](ASSEMBLY.md#gdt_ac-forming-drawing)
+remain available; the [SMT AC crossover](ASSEMBLY.md#smt-ac-crossover) replaces
+this construction without closing physical protection/insulation qualification.
+
 Keep GDT_AC at X=125.80, north-south, pad Y=114.88/130.12, pitch 15.24.
 The whole raised body/electrode/lead span must retain **>=2.00 above the highest
 finished PCB surface** before encapsulation, as ASSEMBLY.md requires. A
@@ -594,6 +710,12 @@ support, bend radius, springback and soldering remain specific open facts.
 Gel does not preserve an air gap or replace insulation qualification.
 
 ## SMT Land Resolution
+
+**2026-09-14 applicability:** the reviewed local pattern/body/process evidence
+now applies to **AB, BC and AC** without a footprint change. The four-land
+global-coordinate, via-gap and old paste-area comparisons below remain specific
+to **AB/BC**, not a claim that AC was always SMT. AC's new coordinates and
+nearest component-hole clearances are in [Crossover Clearance Evidence](#crossover-clearance-evidence).
 
 In both original **SP-GDT-006 A3 / 2024-08-19 p3** figures:
 
@@ -629,7 +751,7 @@ orientation:
 
 Use zero extra mask/paste margins as the source baseline; no custom stencil
 process is implied. Inner land gap is **2.80**, outside span **5.20**, width
-**5.50**. At the existing origins, all four lands have X=116.75..122.25:
+**5.50**. At the retained AB/BC origins, their four lands have X=116.75..122.25:
 
 | Part / pad | Global Y bounds |
 | :--- | :--- |
@@ -644,13 +766,13 @@ translation when evaluated over C=3.9..4.5 and D=0.4..0.6. This is a geometric
 contact check, not a solder-fillet or paste-volume qualification. Transverse
 body maximum 5.21 plus +/-0.10 placement fits inside the 5.50 land width.
 
-**Keep the current 3.20-wide connection-stub endpoints** at
+**Keep the current AB/BC 3.20-wide connection-stub endpoints** at
 (119.50,116.19), (119.50,121.19), (119.50,123.81), (119.50,128.81).
 They still overlap the new lands with a full-width incoming section. Do not
 blindly extend these wide round-ended tracks to the new pad centres: their
 inner copper ends would then leave only 0.80 between opposite nets. Keeping
 the old endpoints preserves their existing **1.80 masked-copper gap** beneath
-each tube. The 2.80 figure above is the **land/mask/paste gap**, not the minimum
+each AB/BC tube. The 2.80 figure above is the **land/mask/paste gap**, not the minimum
 gap of all connected copper. Preserve mask over the extra stub copper and
 inspect the processed mask and stencil; no solder bridge may reduce the
 insulation distance beneath the arrester.
@@ -707,8 +829,10 @@ The PCBA FAQ says unused through-holes are protected during wave soldering, but
 that is not a coordinate-specific promise for these exposed stitching vias.
 Inspect solder ingress, loose beads, hole fill, wetting and cleanliness on actual
 boards. Do not depend on fill or mask opacity to make a process acceptable.
-Retain 3.20 full-width rails on both layers and the solid earth bus; no thermal
-spokes, slits or drill reduction to ease soldering.
+Retain the [protected rails/returns](ASSEMBLY.md#physical-guardrails) and solid
+earth bus, including the **2026-09-14 exact 6.00 rear B/front-B cutback** rather
+than the former all-3.20 dual-layer B geometry. No thermal spokes, slits or drill
+reduction to ease soldering.
 
 The published PCBA reflow table gives Economic 255 +/-5 degrees C and Standard
 240 +/-5 degrees C, whereas SP-GDT-006 lists a 260 +0/-5 peak profile. Those
@@ -725,6 +849,9 @@ without pretending that the manufacturer guarantees a new dimension.
 These are supplier/order and physical-acceptance controls, not additional
 qualification prerequisites for prototype artifact generation. Later enclosure,
 thermal and protection activities stay separate from the board file workflow.
+Current insertion checks apply to Kefa and the **three earth GDTs**; forming
+applies only to those earth GDTs, not the retired B5G470L. All three inter-core
+tubes instead need the selected SMT-land, seating and stencil/profile acceptance.
 
 1. Record the adopted finished-pin/body/pattern limits and exact
    drawing/MPN/lot on the procurement and assembly traveller. Obtain an ordinary
@@ -739,12 +866,13 @@ thermal and protection activities stay separate from the board file workflow.
 3. Independently measure the complete pin pattern through the insertion depth,
    using a calibrated optical fixture or suitable metrology. Confirm the
    separate 0.050 radial per-pin envelope, not just one nominal pitch. Formed
-   GDTs are inspected after forming; R1/R2 are undrilled SMT. A tight
-   nominal gauge that forces leads into place is not a valid inspection.
+   earth GDTs are inspected after forming; R1/R2 and all inter-core GDTs are
+   undrilled SMT. A tight nominal gauge that forces leads into place is not a
+   valid inspection.
 4. Check insertion with a dimensional fixture representing the chosen minimum
    finished holes and the accepted pattern budget, then on the actual boards.
-   Record free insertion, seating, body projection, lead protrusion and the
-   whole-span overpass height. Never ream plated boards or force ceramic seals
+   Record free insertion, seating, body projection, lead protrusion and accepted
+   earth-GDT standoff/height. Never ream plated boards or force ceramic seals
    to fit. Larger-hole solder fill/workmanship must be accepted independently.
 5. Measure body/end-key extents relative to pin-pattern datums and verify the
    proposed projected-body boxes, neighbour gaps, mounting keepouts and
@@ -755,6 +883,10 @@ thermal and protection activities stay separate from the board file workflow.
    untented vias and do not treat gel as a seal or the drawing as surge proof.
    Retain the unpotted reference and distinguish workmanship from P2/P6
    electrical, thermal, environmental and powered-recovery qualification.
+7. Accept the rear different-core finished-etch clearance and associated CAM
+   tolerances for the new crossover. **3.02 nominal is not a guaranteed 3.00
+   finished gap**. Compare full shapes, retained front GDT_B_E.1 pad and all
+   six SMT-GDT apertures; preserve the [approved takeoff/cutback geometry](ASSEMBLY.md#smt-ac-crossover).
 
 ### Remaining Supplier Facts
 
@@ -763,9 +895,9 @@ thermal and protection activities stay separate from the board file workflow.
 | Kefa / C474957 and C475092 | Which controlled KF129 A/21.03.13 pin-width variant is actually supplied: 0.90 or 0.95? What finished metal-pin tolerances, plating/burr inclusion, pitch/non-collinearity and pin-to-body datums are guaranteed? The rectangular axes, body projections, end keys and drawing general-tolerance bands **have been read**. Adopted E limits plus independent lot acceptance can replace an absent tighter guarantee for that limited lot, not for all future purchases. |
 | TE Connectivity / 35212K2FT / C4129105 | Exact prototype identity resolved; ten fitted parts plus attrition still need quote/job allocation. TE p2 body/bands and p3 recommended lands/reference PCB have been read. Accept the **retained alternative 1.35 x 3.70 lands at 6.25 pitch**, actual supplier model/placement, stencil and solder process under W4; W3 thermal transfer to the project's two-layer mounting remains conditional. Do not treat catalogue P70 or the family overload ceiling as assembled qualification. |
 | Yageo / SR2512FK-7W2K2L / C876850 | Identity confirmed, not current prototype population or allocation. Independently accept applicable manufacturer evidence/model, footprint/placement, stencil/solder process and thermal performance, then review the source/BOM update before a Yageo build. |
-| Bencent / B5G470L | Finished 0.80-wire tolerance and allowable forming/seal-support geometry. Public p2 really contains a round 0.80 callout without its tolerance. A2 body limits are resolved; the current manufacturer download did not supply a newer toleranced lead drawing. Control <=0.90 and accept the actual formed part against the selected envelope. |
+| **Historical, retired 2026-09-14:** Bencent / B5G470L | Finished 0.80-wire tolerance and allowable forming/seal-support geometry were not accepted. Public p2 really contains a round 0.80 callout without its tolerance. A2 body limits were resolved; the then-current manufacturer download did not supply a newer toleranced lead drawing. The <=0.90 E/forming controls are retained evidence, **not current procurement or assembly tasks**. |
 | Ruilon / 2R470TD-8 | Exact revision/production code allocated; allowed bend radius/seal setback, post-forming lead condition and ordinary nickel-lead solder process. The 1.05 lead maximum and 6.30/8.20 metric body maxima are **resolved in both drawings**, not unreadable. |
-| Ruilon / SMD5050-470NA | Formal resolution of X1=4.0 mm versus 0.165 in, preferably a corrected controlled drawing. Figure association and the selected metric-based implementation are resolved here, without claiming manufacturer correction or approval of the old 5.2 x 2 alternative. |
+| Ruilon / SMD5050-470NA | **All three inter-core tubes:** formal resolution of X1=4.0 mm versus 0.165 in, preferably a corrected controlled drawing; actual supplier model, processed stencil, seating and joint/profile acceptance. Figure association and the selected metric-based implementation are resolved here, without claiming manufacturer correction or approval of the old 5.2 x 2 alternative. Five boards require **15 fitted parts plus supplier-defined attrition**, not an established purchase/allocation. [MATERIALS](../MATERIALS.md) owns procurement history (**repository-only**). |
 | JLCPCB / actual assembly | Ordinary-service part allocation, retained drill data, processed mask/stencil, fitting/lead-forming capability, real solder profile and workmanship. Standard untented fabrication does not require a 1 mm fill exception. Any required finished-via/barrel minimum beyond published standard guarantees remains a separate design/supplier decision, not implicitly approved special processing. |
 
 ## Verification Scope
@@ -807,6 +939,29 @@ listing, corrects attribution/assumptions and preserves every physical guardrail
 No CAD/library/BOM/model/ledger or generated artifact is edited by this task.
 Native/build/workflow/annotation verification remains with the parent; this
 documentation correction is not a new native or hardware PASS and closes no hold.
+
+**2026-09-14 SMT AC documentation integration edits only ASSEMBLY.md and
+DFM_EVIDENCE.md.** Read agreed requirements, current holds, physical guardrails
+and existing source/evidence. `python3 -B tmp/gdt-ac-6mm-review.py` ran read-only
+on the pre-conversion source: the old stem left 2.10 with either rear width;
+the approved 6.00 / X=136.50 case left 3.02 rear-core minimum and 3.25 rear
+EARTH separation. The helper verified that its source bytes were unchanged.
+Other crossover dimensions above record the approved geometry handoff, not an
+additional native run or physical measurement. No fresh manufacturer review,
+CAD/library/BOM/ledger/approval edit, generated artifact, shared build workflow,
+supplier request, upload, order, commit or hardware test is performed by this
+documentation task. The parent owns integrated source/native/export checks,
+diagnostic review and current results; old PASS records do not verify this change.
+
+Documentation-only checks: `git diff --check -- pcb/ASSEMBLY.md pcb/DFM_EVIDENCE.md`
+passed. Reused the existing `tmp/deduplication-review/audit.py` parser/functions
+read-only, without its report-writing entry point: **101 local links resolve**;
+the flat-note source projection resolves **93**, with **eight explicitly labelled
+repository-only root-guide references** separately reviewed. No missing paths,
+fragments, parser warnings or removed legacy anchors were found. The original
+AC drawing/six-step method and DFM overpass calculations remain byte-identical,
+as do the existing TE/PS/HP reviews and assembly resistor/axial history. This is
+not an actual package audit, external-URL recheck, native result or hardware test.
 
 ## Direct Sources
 

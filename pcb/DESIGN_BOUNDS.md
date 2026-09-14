@@ -1,6 +1,7 @@
 # Conditional Design Bounds
 
-Hardware **1.2.0-dev**, TE evidence/provenance correction 2026-09-11. This note
+Hardware **1.2.0-dev**, SMT GDT_AC conversion recorded 2026-09-14; TE
+evidence/provenance correction retained from 2026-09-11. This note
 owns current parametric screens from `scripts/analyze_limits.py` and
 `scripts/design_bounds.py` for the **16-part TE 35212K2FT / BYG23T prototype
 circuit**. [BOM.csv](BOM.csv) selects **TE Connectivity 35212K2FT / C4129105**;
@@ -18,6 +19,12 @@ prerequisite is added to Gate P. [Artifact controls](ASSEMBLY.md#prototype-artif
 explain the separate file, supplier and qualification scopes. Purchase history
 is in [MATERIALS](../MATERIALS.md#resistor-procurement-and-history), an optional
 **repository-only** reference, not part of the flat engineering-note package.
+
+The user-approved AC conversion changes the tube and physical copper paths,
+not any of the six GDT endpoint connections. The [copper screen below](#ac-conversion-copper-screen)
+is separate arithmetic, not a change to either DC script or a thermal
+qualification. Native/file verification requires matching current reports and
+artifact hashes; earlier results do not verify this changed snapshot.
 
 ## Selected Circuit
 
@@ -361,6 +368,69 @@ minimum, **0.631876 W at 37 V** and **0.753190 W at 40.39597 V**, with its
 calling them 2512 limits. Neither retired resistor's analysis was physical qualification;
 their 20 C arithmetic is explicit in the historical test, not a compatibility
 mode in the selected-part helpers.
+
+## AC Conversion Copper Screen
+
+**2026-09-14, approved geometry, not a current or surge rating.**
+[ELECTRICAL: SMT AC Conversion](ELECTRICAL.md#smt-ac-conversion) records the
+front B cutback, **exactly 6.00 mm rear B**, minimal return-stem shift,
+single-layer A/C stubs and retained six-path connectivity.
+Assembly/DFM, not this arithmetic, controls
+actual copper, laminate and process acceptance under
+[Physical Guardrails](ASSEMBLY.md#physical-guardrails).
+
+Compare equal-length uniform conductors of the same material at the same
+initial temperature, using **nominal 0.070 mm surface copper**. The reference
+is the old **ideal equal-sharing pair of 3.20 mm rails**, or one ideal
+**6.40 mm** strip of the same thickness, **not the selected rear width**:
+
+```text
+S_old_ideal = 2 * 3.20 * 0.070 = 0.448 mm^2
+S_rear_B   =     6.00 * 0.070 = 0.420 mm^2
+S_rear_B / S_old_ideal = 0.9375
+R_rear_B / R_old_ideal = 0.448 / 0.420 = 16/15 ~= 1.0666667
+DeltaT_rear_B / DeltaT_old_ideal = (0.448 / 0.420)^2 = 256/225 ~= 1.1377778
+```
+
+Thus 6.00 mm retains **93.75% of the reference metal area**, with **6.6667%
+higher fixed-temperature resistance**. The **13.7778% higher low-rise adiabatic
+temperature rise** assumes the same total-current waveform/integral of I^2 dt,
+uniform current distribution, constant resistivity/heat capacity and negligible
+cooling during that rise. It is a cross-section ratio, not a prediction of
+actual pulse temperature, fusing, lifetime or equal transient sharing in the
+old dual-layer path. No pulse amplitude or site exposure is selected here.
+
+The last dedicated B stitching via at **X=115.50** and retained GDT_B_E
+core-side PTH at **X=131.00** bound the **15.50 mm rear-only strip** used in this
+separate resistance estimate. With **assumed annealed-copper resistivity at
+20 C of 1.724e-8 ohm*m**:
+
+```text
+L_strip = (131.00 - 115.50) mm = 15.50 mm
+R_strip_20 = rho_20 * L_strip / S_rear_B
+           = (1.724e-8 ohm*m) * (15.50e-3 m) / (0.420e-6 m^2)
+           = 0.000636238095... ohm = 0.636238... milliohm
+```
+
+This is **only that uniform strip**, not whole-path impedance or a guaranteed
+finished-copper, pin, solder or plated-barrel model. Existing component PTH
+leads/solder connect both layers as well as the dedicated stitches; **not all
+current is forced solely through the three B via barrels**. Removing the two
+AC PTHs removes those particular A/C interlayer links, not the remaining
+dedicated stitches, input and earth-GDT links. The new A/C stubs are also
+single-layer and cannot be credited with the old dual-layer area. Current
+crowding, inductance, real interlayer sharing, joints/barrel copper and actual
+thermal spreading remain outside these formulas. Do not credit other GDTs
+with guaranteed sharing to reduce stress in this path.
+
+The historical ignored `tmp/gdt-ac-smt-analysis-2026-09-14.py` (repository-only
+scratch evidence) compared **3.20/6.40 mm only**; it does **not** validate the
+selected 6.00 mm strip. The normal DC scripts, current screens and TE resistor
+loss/thermal results above remain unchanged; their model checks do not verify
+the copper's actual pulse performance. Widening B
+does not establish resistor cooling or OneGel/continuous-duty qualification;
+the new front/laminate insulation path and all **C4/C5/W3/W1/W4** and
+production/field holds remain open.
 
 ## Fault Screen
 

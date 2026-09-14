@@ -31,9 +31,32 @@ WISKA's published COMBI 308 IP66 membrane / specified IP67 gland arrangements ar
 
 ## 2. Prototype And Spare Allocation
 
-The initial requirement is **five individual fully assembled boards**, including all SMT and THT work, 2512 SMT resistor assembly and controlled GDT lead forming, with **no field soldering**. The authorized design specifies **16 electrical parts (eight SMT, eight THT)** plus four mounting footprints. Five boards therefore need **80 electrical parts before attrition**; these are design/population counts, not accepted assemblies or purchase quantities. Use the reviewed [PCB BOM](pcb/BOM.csv) for their identities and sourcing metadata.
+The initial requirement is **five individual fully assembled boards**, including all SMT and THT work, 2512 SMT resistor assembly and controlled earth-GDT lead forming, with **no field soldering**. The authorized design specifies **16 electrical parts (nine SMT, seven THT)** plus four mounting footprints. Five boards therefore need **80 electrical parts before attrition**; these are design/population counts, not accepted assemblies or purchase quantities. Use the reviewed [PCB BOM](pcb/BOM.csv) for their identities and sourcing metadata.
 
 D1-D4 remain **Vishay General Semiconductor BYG23T-M3/TR / C145454**: five boards need twenty fitted diodes before attrition; no new diode purchase is recorded.
+
+### GDT Procurement And History
+
+**Design-quantity update, 2026-09-14, not a purchase:** the user-approved
+GDT_AC conversion selects **Ruilon SMD5050-470NA / C39692533**, the same reviewed
+SMT identity as GDT_AB/BC. Five boards now require **15 fitted SMT GDTs instead
+of 10, plus actual supplier-specified attrition**. The extra five fitted parts
+are a requirement, not an order, receipt, stock quote or PCBA-job allocation.
+Reusing the reviewed code does not establish current stock or reserve parts.
+
+**Retired AC selection:** **Bencent B5G470L / C5337217**, formerly five fitted
+positions in the five-board plan. Removing those positions and their axial
+forming task does **not** cancel, return or reallocate any purchase; no such
+user-confirmed transaction is recorded for this change. Preserve any actual
+legacy purchase/receipt history separately from the revised requirement.
+
+The three **Ruilon 2R470TD-8 / C2836978 earth GDTs per board** remain axial:
+**15 fitted across five boards**, plus the supplier's actual attrition. Their
+forming/fit/process acceptance remains open. The existing Ruilon metric/inch,
+placement/stencil/profile hold also applies to the third SMT position; use
+[ORDERING's process queue](ORDERING.md#3-hole-via-and-solder-process), not an
+assumed approval from the repeated code. No new GDT purchase, cancellation or
+allocation is claimed here.
 
 ### Resistor Procurement And History
 
@@ -57,7 +80,7 @@ Current R1/R2 metadata is **manufacturer `TE Connectivity`, MPN `35212K2FT`, C41
 
 ### Assembly And Quantity Allocation
 
-Use the adopted [hole/pin and SMT-land schedule](ORDERING.md#3-hole-via-and-solder-process), [assembly envelopes](pcb/ASSEMBLY.md) and [DFM evidence](pcb/DFM_EVIDENCE.md) on the procurement traveller. TE 35212K2FT's **6.45 x 3.40 x 0.65 mm maximum body** fits the existing body envelope, but its recommended lands differ from the retained **alternate project lands**. Obtain supplier placement/stencil/solder acceptance for that difference, **not resistor holes, axial standoff or forming**; no exact-fit claim or geometry change follows. Retained Kefa/GDT **E pin/body and independent 0.050 mm radial per-pin pattern limits are controlled incoming requirements, not manufacturer guarantees or accepted lots**. Inspect every allocated controlled-envelope part, including attrition, with uncertainty and separate pattern/body checks. W4 actual lot fit, solder fill and GDT forming remain open. Budget J_EARTH's **1.30 mm pose/routed-edge overhang** in the panel and later complete-enclosure dry-fit; physical dry-fit is not a prerequisite to generating prototype files.
+Use the adopted [hole/pin and SMT-land controls](pcb/ASSEMBLY.md#physical-guardrails), [assembly envelopes](pcb/ASSEMBLY.md) and [DFM evidence](pcb/DFM_EVIDENCE.md) on the procurement traveller. TE 35212K2FT's **6.45 x 3.40 x 0.65 mm maximum body** fits the existing body envelope, but its recommended lands differ from the retained **alternate project lands**. Obtain supplier placement/stencil/solder acceptance for that difference, **not resistor holes, axial standoff or forming**; no exact-fit claim or geometry change follows from the TE evidence. Retained Kefa **E pin/body limits** and the independent **0.050 mm radial per-pin pattern limit for Kefa/earth GDTs** are controlled incoming requirements, not manufacturer guarantees or accepted lots. Inspect every allocated controlled-envelope part, including attrition, with uncertainty and separate pattern/body checks. W4 actual lot fit, solder fill and earth-GDT forming remain open. Budget J_EARTH's **1.30 mm pose/routed-edge overhang** in the panel and later complete-enclosure dry-fit; physical dry-fit is not a prerequisite to generating prototype files.
 
 - Retain at least **one unpotted reference**. Identify boards used for destructive tests, gel trials or earlier design revisions; do not automatically count them as field spares or installed boards.
 - Let **p** be same-release prototypes individually accepted and allocated to the field, and **s** the explicitly approved field-spare quantity. With one retained reference, **0 <= p <= 4**; more test retention/losses can reduce p. The follow-on assembled-board requirement is **41 - p + s**. Neither p nor s is yet allocated; TE-built prototypes are not automatically same-release Yageo field units.
@@ -135,5 +158,5 @@ All tools below were pending in the existing ledger unless explicitly identified
 - Inspect receipts/nameplates and qualified output settings for the **two ordered LRS-75-36s**, retaining **one TEST / one disconnected spare** allocation. Reconcile the old ordered switch; quote **CA10.A364/WAA364** only as a provisional eight-pole candidate, subject to DC/contact/global-transfer approval.
 - Record the cable's supplied manufacturing revision/lot and total usable length; confirm conditional standard-resistance applicability and resolve the strand-construction discrepancy, alongside environmental/impulse evidence, without reopening product identity or colours.
 - Reconcile OneGel cartridge count and usable yield against the **unverified historical 7-8 litres**, not a new purchase quantity. Resolve the manufacturer process/temperature conflicts and material compatibility, component/enclosure fit and site earthing design.
-- Obtain independent allocated-part E/pattern/body reports, GDT forming/solder-fill acceptance and the Ruilon metric/inch resolution. Include explicit placement/stencil/solder acceptance for TE on the retained alternate project lands and the BYG23T process. Design limits and standard untented fabrication are not lot/process approval; no special filling concession is requested.
-- Obtain **job-specific allocation of TE Connectivity 35212K2FT / C4129105**, including ten fitted resistors plus accepted attrition for five prototypes. Allocate later production/spares separately against the [production resistor order](#resistor-procurement-and-history) after quantity, receipt, inspection and production-part review/integration are established. Whole-BOM `allocation_verified` remains `false`. Cancelled, rejected and superseded selections in that history are not stock or current procurement tasks; no axial-resistor forming applies to SMT. Request the five-board JLCPCB quote and parts/attrition/CAM/placement/solder/GDT-forming approvals only after separate authorization to share/order; prototype file publication does not grant it.
+- Obtain independent allocated-part E/pattern/body reports, earth-GDT forming/solder-fill acceptance and the Ruilon metric/inch resolution for all three SMT GDT positions. Include explicit placement/stencil/solder acceptance for TE on the retained alternate project lands and the BYG23T process. Design limits and standard untented fabrication are not lot/process approval; no special filling concession is requested.
+- Obtain **job-specific allocation of ten fitted TE Connectivity 35212K2FT / C4129105 resistors and fifteen fitted Ruilon SMT GDTs**, plus accepted line-specific attrition for five prototypes; use the [GDT requirement/history update](#gdt-procurement-and-history), not the former ten-SMT-GDT budget or an assumed Bencent cancellation. Allocate later production/spares separately against the [production resistor order](#resistor-procurement-and-history) after quantity, receipt, inspection and production-part review/integration are established. Whole-BOM `allocation_verified` remains `false`. Cancelled, rejected and superseded selections in that history are not stock or current procurement tasks; no axial-resistor or GDT_AC forming applies to SMT. Request the five-board JLCPCB quote and parts/attrition/CAM/placement/solder/earth-GDT-forming approvals only after separate authorization to share/order; prototype file publication does not grant it.

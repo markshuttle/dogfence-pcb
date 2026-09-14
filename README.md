@@ -151,10 +151,20 @@ copper/via, isolation, polarity, placement, land, forming and tolerance inventor
 Preserve protected geometry and distinct local LED mappings; do not narrow copper,
 fold branches, add vias or trim courtyards to conceal an assembly problem.
 
+The **2026-09-14 user-approved change** makes GDT_AC the same top-side Ruilon
+SMT part as GDT_AB/BC and carries the B crossing on the rear layer. A/C main
+rails remain 3.20 mm on both faces; the rear B main rail is **exactly 6.00 mm**,
+with the approved front-B stop and minimal rear-return move controlled in
+ASSEMBLY. The new **>=3.00 mm A/B/C inter-core copper rule is B.Cu-only**, not
+a blanket front-layer rule. GDT_AC's axial overpass and two insertion holes are
+retired; only the three earth GDTs still require lead forming. The board
+dielectric at the crossing is not qualified impulse insulation. Circuit
+connectivity, RUN/TEST operation and the distinct LED mappings are unchanged.
+
 The [retained resistor lands](pcb/ASSEMBLY.md#2512-smt-resistors) are an
 alternative to the manufacturer's recommendation, not an exact-fit approval.
-Actual parts, stencil/solder process, GDT forming, overhang and enclosure/support
-fit remain separate acceptance tasks. Source stackup arithmetic is not a finished
+Actual parts, stencil/solder process, earth-GDT forming, overhang and
+enclosure/support fit remain separate acceptance tasks. Source stackup arithmetic is not a finished
 thickness guarantee; ENIG is not a hermetic seal. Use the controlled notes and
 [ORDERING](ORDERING.md#3-hole-via-and-solder-process) for the actual handoff.
 
@@ -173,7 +183,7 @@ The following limits concern the **hole**, not its copper pad:
 
 - Preserve **all 14 stitching vias at 1.0 mm drill / 1.8 mm pad** and the protected copper. Fix surrounding soldering geometry or seek an approved process/layout solution; do not delete or shrink vias to fit a covering option.
 - Inspect full drill circles and exposed annuli against actual `F.Mask`, `B.Mask`, and `F.Paste`, then the processed mask/stencil. [ASSEMBLY's SMT/via inventory](pcb/ASSEMBLY.md#smt-via-relocation) records the corrected aperture gaps and selected metric lands; the drawing discrepancy and actual solder-volume/profile acceptance remain held. Adjacent same-net rail-via mask circles intentionally overlap, but no component paste/mask aperture is excused over a via hole.
-- Identify treatment by **coordinates and hole function**, never diameter alone. Legacy resistor holes are removed by the SMT conversion. All retained connector/GDT insertion holes remain open. Ordinary via diameters may be adjusted in CAM; check that no protected nominal drill was reduced. No fill is requested.
+- Identify treatment by **coordinates and hole function**, never diameter alone. Legacy resistor/diode and GDT_AC insertion holes are retired. All retained connector/earth-GDT insertion holes remain open. Ordinary via diameters may be adjusted in CAM; check that no protected nominal drill was reduced. No fill is requested.
 - **70 micrometres of exterior copper is not 70 micrometres of barrel plating.** JLCPCB's published 18 micrometres average hole plating is not a guaranteed minimum in every barrel. Agree any finished minimum used in current/surge calculations separately. Nonconductive fill adds no conductive cross-section.
 - Tenting, plugging, opacity, or gel encapsulation does not prove hermetic sealing, freeze-thaw immunity, or an assembled ingress rating.
 
@@ -190,9 +200,9 @@ The last line uses JLCPCB's ordinary component-hole **+0.13/-0.08 mm** tolerance
 The exact [SMA lands/polarity](pcb/ASSEMBLY.md#indicator-sma-and-resistor-assembly),
 [resistor lands](pcb/ASSEMBLY.md#2512-smt-resistors) and
 [component hole/pad/pin schedule](pcb/ASSEMBLY.md#hole-fit-evidence) are controlled
-in ASSEMBLY. Diodes and resistors are SMT, not insertion or axial-forming parts.
-Allocated THT parts must pass free-insertion, GDT forming/standoff and solder
-inspection with separate position/pattern allowances. Supplier CAD or nominal
+in ASSEMBLY. Diodes, resistors and all three inter-core GDTs are SMT, not insertion
+or axial-forming parts. Allocated THT parts must pass free-insertion, earth-GDT
+forming/standoff and solder inspection with separate position/pattern allowances. Supplier CAD or nominal
 pitch is not actual lot acceptance.
 
 After drill changes, recheck pad sizes, hole/copper spacing, edge clearances and **at least 0.254 mm nominal component PTH annular ring for two-layer 2 oz fabrication**. Generic via-ring rules do not establish component-pad compliance. Finished-ring acceptance also requires hole and registration tolerances. Resolve fit in CAD, not by forced insertion or reaming plated boards.
@@ -240,6 +250,11 @@ all file/artifact checks pass. `make prototype` / `make gerbers` may publish
 Production targets retain their holds and win mixed goals; unresolved External
 sourcing blocks both modes. See the [latest handoff](REMEDIATION.md#session-handoff)
 for actual results, not a reused PASS from an earlier note snapshot.
+
+Native/file checks and publication for the **2026-09-14 SMT GDT_AC/rear-B change
+are pending**. The earlier prototype package represents the old source until a
+new matching snapshot is verified; the unchanged `1.2.0-dev` label does not make
+that package current. REMEDIATION owns the subsequent verification results.
 
 Require matching `build/status.json` and `build/manifest.json` with validated
 revision/source/artifact hashes and **status=prototype, mode=prototype**, or

@@ -43,9 +43,13 @@ MOUNTS = {"H1": (101.5, 99.0), "H2": (155.5, 99.0),
           "H3": (101.5, 146.0), "H4": (155.5, 146.0)}
 # Selected nominal holes, conditional on ASSEMBLY.md's separate lot/forming limits.
 COMPONENT_HOLE_MINIMA = {
-    "GDT_AC": 1.4,
     "GDT_A_E": 1.5, "GDT_B_E": 1.5, "GDT_C_E": 1.5,
     "J_IN": 2.0, "J_EARTH": 2.0, "J_LED_A": 2.0, "J_LED_C": 2.0,
+}
+SMT_GDTS = {
+    "GDT_AB": ((119.5, 118.69), ("WIRE_A", "WIRE_B")),
+    "GDT_BC": ((119.5, 126.31), ("WIRE_B", "WIRE_C")),
+    "GDT_AC": ((125.8, 122.5), ("WIRE_A", "WIRE_C")),
 }
 SMA_DIODES = {
     "D1": ((130.8, 104.5), 0, "LED_A_POS", "Net-(D1-A)"),
@@ -91,11 +95,14 @@ LIMITATIONS = [
     "Rule coverage models clearance and annular_width with string/NetCode comparisons, wildcards, "
     "parentheses and boolean operators; unsupported relevant conditions fail closed. "
     "Annular_width is unary (A only): B-dependent conditions are rejected, not evaluated with B=A. "
-    "Clearance is binary. Other custom constraints require native KiCad validation.",
+    "Clearance is binary. Layer selectors support F.Cu, B.Cu and unquoted outer/inner on this two-layer board. "
+    "A.Layer/B.Layer conditions are unsupported: item-layer comparisons do not select a PTH's checked layer. "
+    "Other custom constraints require native KiCad validation.",
     "Selected passive footprints/pad polarity, component-hole minima and nominal ring >=0.254 mm "
     "enforce the saved design, not "
     "actual lot pin/body/pattern acceptance, fabrication/registration, barrel plating, lead forming, "
-    "GDT_AC's >=2.0 mm physical standoff, thermal/surge performance or assembly process.",
+    "thermal/surge performance or assembly process. GDT_AC's front-B exclusion is a nominal "
+    "body/metal projection check, not a solder/placement tolerance or impulse-insulation qualification.",
 ]
 
 
@@ -285,14 +292,14 @@ class Item:
     center: tuple[float, float] = (0.0, 0.0)
     hole: Shape | None = None
 
-    def properties(self, layer):
+    def properties(self):
         net_field = self.node.one("net", required=False)
         return {"Type": "Pad" if self.kind in ("thru_hole", "np_thru_hole", "smd", "connect")
                 else "Via" if self.kind == "via" else "Track" if self.kind == "segment" else "Graphic",
                 "Pad_Type": {"thru_hole": "Through-hole", "np_thru_hole": "NPTH, mechanical",
                              "smd": "SMD", "connect": "Edge connector"}.get(self.kind, ""),
                 "NetName": self.net, "NetCode": int(net_field.atoms()[0]) if net_field else 0,
-                "Layer": layer, "Reference": self.reference,
+                "Reference": self.reference,
                 "Pad_Number": self.pad_number}
 
 
@@ -335,8 +342,11 @@ def condition(text: str, node: Node):
             while i < len(text) and (text[i].isalnum() or text[i] in "_."):
                 i += 1
             name = text[start:i]
+            if name in ("A.Layer", "B.Layer"):
+                raise Unsupported("A.Layer/B.Layer do not select the checked layer of multilayer pads; "
+                                  "use a (layer ...) rule selector", node)
             if name not in {f"{obj}.{prop}" for obj in ("A", "B") for prop in
-                            ("Type", "Pad_Type", "NetName", "NetCode", "Layer", "Reference", "Pad_Number")}:
+                            ("Type", "Pad_Type", "NetName", "NetCode", "Reference", "Pad_Number")}:
                 raise Unsupported(f"unsupported relevant rule expression at {text[start:]!r}", node)
             tokens.append(("property", name))
     at = 0
@@ -814,14 +824,16 @@ class GeometryCheck:
                         position_mm=list(pad.center), net=pad.net)
         return pad
 
-    def run_covered(self, start, end, width, net, layer):
+    def run_covered(self, start, end, width, net, layer, *, exact_width=False):
         axis = 0 if abs(start[1] - end[1]) <= EPS else 1
         other = 1 - axis
         low, high = sorted((start[axis], end[axis]))
         intervals = []
         for track in self.tracks:
             a, b = track.shape.core
-            if track.net == net and layer in track.layers and track.shape.radius * 2 >= width - EPS \
+            actual_width = track.shape.radius * 2
+            width_ok = abs(actual_width - width) <= EPS if exact_width else actual_width >= width - EPS
+            if track.net == net and layer in track.layers and width_ok \
                     and abs(a[other] - start[other]) <= EPS and abs(b[other] - start[other]) <= EPS:
                 intervals.append(sorted((a[axis], b[axis])))
         for a, b in sorted(intervals):
@@ -874,18 +886,51 @@ class GeometryCheck:
                         via.node)
 
         for net, y in RAILS.items():
+            if net == "WIRE_B":
+                continue  # The approved front cutback and exact 6.00 mm rear run are checked below.
             for layer in CU:
-                runs = [((106.0, y), (131.0, y))]
-                if net != "WIRE_B":
-                    runs.append(((131.0, y), (131.0, 113.5 if net == "WIRE_A" else 131.5)))
+                runs = [((106.0, y), (131.0, y)),
+                        ((131.0, y), (131.0, 113.5 if net == "WIRE_A" else 131.5))]
                 for a, b in runs:
-                    self.expect(self.run_covered(a, b, 3.2, net, layer), "RAIL_GEOMETRY",
-                                f"{net} requires continuous >=3.2 mm rail {a} to {b} on {layer}")
+                    self.expect(self.run_covered(a, b, 3.2, net, layer, exact_width=True), "RAIL_GEOMETRY",
+                                f"{net} requires continuous 3.20 mm rail {a} to {b} on {layer}")
+
+        b_runs = [("F.Cu", (106.0, 122.5), (121.0, 122.5), 3.2, "B_FRONT_CUTBACK"),
+                  ("B.Cu", (106.0, 122.5), (131.0, 122.5), 6.0, "B_REAR_GEOMETRY"),
+                  ("B.Cu", (131.0, 122.5), (136.5, 122.5), 1.6, "B_RETURN_GEOMETRY")]
+        for y in (121.19, 123.81):
+            b_runs.append(("F.Cu", (119.5, 122.5), (119.5, y), 3.2, "SMT_GDT_STUB"))
         for y, end_y in ((107.2, 103.0), (137.8, 142.0)):
-            for a, b in (((135.5, 122.5), (135.5, y)), ((135.5, y), (148.04, y)),
-                         ((148.04, y), (148.04, end_y)), ((131.0, 122.5), (135.5, 122.5))):
-                self.expect(self.run_covered(a, b, 1.6, "WIRE_B", "B.Cu"), "B_RETURN_GEOMETRY",
-                            f"protected B-return >=1.6 mm run {a} to {b} on B.Cu is missing")
+            for a, b in (((136.5, 122.5), (136.5, y)), ((136.5, y), (148.04, y)),
+                         ((148.04, y), (148.04, end_y))):
+                b_runs.append(("B.Cu", a, b, 1.6, "B_RETURN_GEOMETRY"))
+        for y, end_y in ((99.0, 103.0), (146.0, 142.0)):
+            for a, b in (((137.1, y), (148.04, y)), ((148.04, y), (148.04, end_y))):
+                b_runs.append(("F.Cu", a, b, 1.8, "B_RETURN_GEOMETRY"))
+        for layer, a, b, width, code in b_runs:
+            self.expect(self.run_covered(a, b, width, "WIRE_B", layer, exact_width=True), code,
+                        f"WIRE_B requires exact {width:.2f} mm run {a} to {b} on {layer}")
+        for track in self.tracks:
+            if track.net == "WIRE_B":
+                self.expect(any(layer in track.layers and abs(2 * track.shape.radius - width) <= EPS
+                                and all(point_segment(p, a, b) <= EPS for p in track.shape.core)
+                                for layer, a, b, width, _ in b_runs), "B_ROUTING_GEOMETRY",
+                            f"{track.label}: B routing leaves the exact front cutback/rear/return construction", track.node)
+        # Past the SMT-AB/BC lands, only the rounded cutback end and GDT_B_E.1
+        # remain on front B. The PTH pin is reached from the uninterrupted rear run.
+        crossing = pad_shape("rect", (10.25, 7.5), (127.375, 122.5), 0)
+        front_b = [c for c in self.copper if c.net == "WIRE_B" and "F.Cu" in c.layers]
+        allowed = (Shape(((106.0, 122.5), (121.0, 122.5)), 1.6), Shape(((131.0, 122.5),), 1.5))
+        for item in front_b:
+            if item.shape.overlaps(crossing):
+                self.expect(any(shape.contains(item.shape) for shape in allowed), "B_FRONT_CUTBACK",
+                            f"{item.label}: only the X=121.00 cutback and GDT_B_E.1 pad may enter the front crossing", item.node)
+        body = pad_shape("rect", (5.21, 4.5), (125.8, 122.5), 0)
+        body_gap = min((body.gap(item.shape) for item in front_b), default=None)
+        self.measurements["gdt_ac_front_b_body_clearance_mm"] = round(body_gap, 6) if body_gap is not None else None
+        self.expect(body_gap is not None and body_gap > EPS, "GDT_AC_BODY_EXCLUSION",
+                    "front B metal must remain outside GDT_AC's nominal 5.21 x 4.50 mm body/metal projection",
+                    measured_mm=body_gap)
 
         bus = pad_shape("roundrect", (13.26, 22.5), (150.62, 122.5), 0, 2.25 / 13.26)
         for item in self.copper:
@@ -944,14 +989,69 @@ class GeometryCheck:
                             f"{ref}: preserve body centre and 9.00 mm pitch", fp)
             self.pad_at_net(ref, "1", (131.0, y), net, "EARTH_GDT_PITCH")
             self.pad_at_net(ref, "2", (146.24, y), "EARTH", "EARTH_GDT_PITCH")
-        self.pad_at_net("GDT_AC", "1", (125.8, 114.88), "WIRE_A", "GDT_OVERPASS")
-        self.pad_at_net("GDT_AC", "2", (125.8, 130.12), "WIRE_C", "GDT_OVERPASS")
-        for ref, nets in (("GDT_AB", ("WIRE_A", "WIRE_B")), ("GDT_BC", ("WIRE_B", "WIRE_C"))):
+        gdts = []
+        for ref, (origin, nets) in SMT_GDTS.items():
+            fp = self.footprints.get(ref)
+            attr = fp.one("attr", required=False) if fp else None
+            self.expect(fp is not None and fp.values[0] == "DogFence:SMD5050-470NA"
+                        and scalar(fp, "layer") == "F.Cu" and attr is not None and attr.atoms() == ["smd"],
+                        "SMT_GDT_FOOTPRINT", f"{ref}: populated top-side SMD5050-470NA required", fp)
+            if fp:
+                xy, angle = position(fp)
+                self.expect(math.dist(xy, origin) <= EPS and abs(angle) <= EPS,
+                            "SMT_GDT_PLACEMENT", f"{ref}: require origin {origin} and zero rotation", fp)
+                self.expect(len(fp.children("pad")) == 2
+                            and sorted(p.pad_number for p in self.pads if p.reference == ref) == ["1", "2"],
+                            "SMT_GDT_PAD", f"{ref}: exactly two undrilled SMT pads required", fp)
+                for layer, half in (("F.Fab", (2.605, 2.25)), ("F.CrtYd", (3.0, 3.75))):
+                    boxes = [n for n in fp.children("fp_rect") if scalar(n, "layer") == layer]
+                    self.expect(len(boxes) == 1
+                                and math.dist(point(boxes[0], "start"), tuple(-v for v in half)) <= EPS
+                                and math.dist(point(boxes[0], "end"), half) <= EPS,
+                                "SMT_GDT_ENVELOPE", f"{ref}: require selected SMD5050 {layer} envelope", fp)
             for num, net in enumerate(nets, 1):
-                item = self.required_pad(ref, str(num))
-                if item:
-                    self.expect(item.kind == "smd" and item.net == net and item.layers & CU == {"F.Cu"},
-                                "SMT_GDT_PAD", f"{ref}.{num}: top SMT pad on {net} required", item.node)
+                dy = -2.0 if num == 1 else 2.0
+                center = (origin[0], origin[1] + dy)
+                pad = self.required_pad(ref, str(num))
+                if pad:
+                    local, angle = position(pad.node)
+                    self.expect(pad.kind == "smd" and pad.hole is None and pad.node.values[2] == "rect"
+                                and pad.net == net and pad.layers == {"F.Cu", "F.Mask", "F.Paste"}
+                                and math.dist(pad.center, center) <= EPS and abs(angle) <= EPS
+                                and math.dist(local, (0, dy)) <= EPS
+                                and math.dist(point(pad.node, "size"), (5.5, 1.2)) <= EPS,
+                                "SMT_GDT_PAD", f"{pad.label}: require undrilled top 5.50 x 1.20 mm rectangle at {center} on {net}", pad.node)
+                    expected = pad_shape("rect", (5.5, 1.2), center, 0)
+                    openings = [a for a in self.apertures if a.node is pad.node]
+                    self.expect(len(openings) == 2
+                                and {layer for a in openings for layer in a.layers} == {"F.Mask", "F.Paste"}
+                                and all(expected.contains(a.shape) and a.shape.contains(expected) for a in openings),
+                                "SMT_GDT_APERTURE", f"{pad.label}: require matching pad-owned F.Mask/F.Paste rectangles with zero effective margins", pad.node)
+                start = (origin[0], RAILS[net])
+                end = (origin[0], origin[1] + (-2.5 if num == 1 else 2.5))
+                self.expect(self.run_covered(start, end, 3.2, net, "F.Cu", exact_width=True), "SMT_GDT_STUB",
+                            f"{ref}.{num}: require exact 3.20 mm front-only stub {start} to {end}, not to the pad centre", fp)
+                low, high = sorted((start[1], end[1]))
+                for track in self.tracks:
+                    if track.net == net and all(abs(p[0] - origin[0]) <= EPS for p in track.shape.core) \
+                            and max(p[1] for p in track.shape.core) > low + EPS \
+                            and min(p[1] for p in track.shape.core) < high - EPS:
+                        self.expect(track.layers == {"F.Cu"} and abs(2 * track.shape.radius - 3.2) <= EPS
+                                    and all(point_segment(p, start, end) <= EPS for p in track.shape.core),
+                                    "SMT_GDT_STUB", f"{track.label}: {ref} stub must not extend or move to rear copper", track.node)
+            region = pad_shape("rect", (5.5, 5.2), origin, 0)
+            openings = [a for a in self.apertures if a.reference == ref
+                        or (a.layers & {"F.Mask", "F.Paste"} and a.shape.overlaps(region))]
+            self.expect(len(openings) == 4 and all(a.reference == ref for a in openings), "SMT_GDT_APERTURE",
+                        f"{ref}: only four pad-owned mask/paste apertures may cover the lands and inner gap", fp)
+            metal = [[c for c in self.copper if c.net == net and "F.Cu" in c.layers and c.shape.overlaps(region)]
+                     for net in nets]
+            gap = min((a.shape.gap(b.shape) for a, b in itertools.product(*metal)), default=None)
+            self.expect(gap is not None and abs(gap - 1.8) <= EPS, "SMT_GDT_COPPER_GAP",
+                        f"{ref}: require 1.80 mm connected-copper gap, distinct from the 2.80 mm land gap", fp,
+                        measured_mm=gap)
+            gdts.append({"reference": ref, "connected_copper_gap_mm": round(gap, 6) if gap is not None else None})
+        self.measurements["smt_gdt_copper_gaps"] = gdts
         diodes = []
         for ref, (origin, angle, cathode, anode) in SMA_DIODES.items():
             fp = self.footprints.get(ref)
@@ -1112,6 +1212,28 @@ class GeometryCheck:
                         b.node, measured_mm=round(gap, 6), required_mm=3.0,
                         items=[a.label, b.label], layers=sorted(a.layers & b.layers & CU))
         self.measurements["minimum_fence_earth_clearance_mm"] = round(minimum, 6) if math.isfinite(minimum) else None
+        rear, front_minimum = {}, math.inf
+        cores = [c for c in self.copper if c.net in RAILS]
+        for a, b in itertools.combinations(cores, 2):
+            if a.net == b.net:
+                continue
+            layers = a.layers & b.layers & CU
+            if not layers:
+                continue
+            gap = a.shape.gap(b.shape)
+            if "F.Cu" in layers:
+                front_minimum = min(front_minimum, gap)
+            if "B.Cu" in layers:
+                pair = tuple(sorted((a.net, b.net)))
+                rear[pair] = min(rear.get(pair, math.inf), gap)
+                self.expect(gap >= 3.0 - EPS, "REAR_CORE_CLEARANCE",
+                            f"{a.label} to {b.label}: rear A/B/C copper below 3.00 mm", b.node,
+                            measured_mm=round(gap, 6), required_mm=3.0,
+                            items=[a.label, b.label], nets=[a.net, b.net], layers=["B.Cu"])
+        self.measurements["rear_core_clearances"] = [
+            {"nets": list(pair), "minimum_mm": round(gap, 6)} for pair, gap in sorted(rear.items())]
+        self.measurements["minimum_rear_core_clearance_mm"] = round(min(rear.values()), 6) if rear else None
+        self.measurements["minimum_front_core_clearance_mm"] = round(front_minimum, 6) if math.isfinite(front_minimum) else None
         x0, y0, x1, y1 = BOARD_BOUNDS
         for item in self.copper:
             a, b, c, d = item.shape.bounds
@@ -1241,23 +1363,32 @@ class GeometryCheck:
                         pending.extend(child for child in part[1:] if isinstance(child, tuple))
                 value = constraint.one("min", required=False)
                 minimum = rule_dimension(value) if value else 0.0
-                layer = str(scalar(rule, "layer", "*"))
-                if layer not in ("*", "outer", "inner") and layer not in self.layers:
+                layer_node = rule.one("layer", required=False)
+                layer_token = layer_node.atoms(1)[0] if layer_node else None
+                layer = str(layer_token) if layer_token is not None else None
+                # KiCad treats quoted "outer"/"inner" as layer-name patterns,
+                # not the keyword groups; neither pattern selects copper here.
+                if layer is not None and (layer not in ("outer", "inner", "F.Cu", "B.Cu")
+                                          or (layer in ("outer", "inner") and layer_token.quoted)):
                     raise Unsupported(f"unsupported rule layer {layer}", rule)
                 severity = str(scalar(rule, "severity", "error"))
                 if severity not in ("error", "warning", "ignore", "exclusion"):
                     rule.fail("unknown rule severity")
                 relevant[kind].append((rule, tree, minimum, layer, severity))
 
-        def covered(kind, a, b, layer, required):
-            ap = a.properties(layer)
-            bp = b.properties(layer) if b is not None else None
+        def effective(kind, a, b, layer):
+            ap = a.properties()
+            bp = b.properties() if b is not None else None
             for rule, tree, minimum, rule_layer, severity in reversed(relevant[kind]):
-                if rule_layer not in ("*", "outer", layer):
+                if rule_layer not in (None, "outer", layer):
                     continue
                 if matches(tree, ap, bp) or (b is not None and matches(tree, bp, ap)):
-                    return minimum >= required - EPS and severity in ("error", "warning")
-            return False
+                    return minimum, severity
+            return 0.0, None
+
+        def covered(kind, a, b, layer, required):
+            minimum, severity = effective(kind, a, b, layer)
+            return minimum >= required - EPS and severity in ("error", "warning")
 
         for kind in relevant:
             self.expect(bool(relevant[kind]), "MISSING_CUSTOM_RULE", f"required {kind} custom rule is missing", nodes[0])
@@ -1275,6 +1406,21 @@ class GeometryCheck:
         for layer, anet, akind, bnet, bkind in sorted(failures):
             self.error("CUSTOM_RULE_COVERAGE", f"effective earth separation rule missing/weakened for "
                        f"{anet} {akind} to {bnet or '<unnetted>'} {bkind} on {layer}", nodes[0], required_mm=3.0)
+        failures = set()
+        for a, b in itertools.combinations((c for c in self.copper if c.net in RAILS), 2):
+            if a.net == b.net:
+                continue
+            layers = a.layers & b.layers & CU
+            if "B.Cu" in layers and not covered("clearance", a, b, "B.Cu", 3.0):
+                failures.add((a.net, a.kind, b.net, b.kind))
+            if "F.Cu" in layers:
+                minimum, severity = effective("clearance", a, b, "F.Cu")
+                self.expect(severity not in ("error", "warning") or minimum <= a.shape.gap(b.shape) + EPS,
+                            "CUSTOM_RULE_LAYER", "effective core clearance rule constrains the smaller front SMT gaps",
+                            nodes[0], items=[a.label, b.label], layer="F.Cu", required_mm=minimum)
+        for anet, akind, bnet, bkind in sorted(failures):
+            self.error("CUSTOM_RULE_COVERAGE", f"effective rear core separation rule missing/weakened for "
+                       f"{anet} {akind} to {bnet} {bkind} on B.Cu", nodes[0], required_mm=3.0)
 
 
 def strict_json(text):

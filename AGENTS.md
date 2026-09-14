@@ -22,7 +22,7 @@ Production/field release remains held; file checks are not hardware approval.
    not completed approval.
 5. [pcb/ELECTRICAL.md](pcb/ELECTRICAL.md) records the implemented DC model and
    unresolved protection architecture. [pcb/ASSEMBLY.md](pcb/ASSEMBLY.md) controls
-   placement, lead forming, dimensional/lot acceptance and process holds.
+   placement, SMT seating, earth-GDT lead forming, dimensional/lot acceptance and process holds.
    Do not populate a candidate protection part just because it is listed there.
    `pcb/DFM_EVIDENCE.md`, `pcb/ENVIRONMENT_EVIDENCE.md`, `pcb/DESIGN_BOUNDS.md`
    and the two `*_PROTECTION_RESEARCH.md` notes preserve source evidence and
@@ -41,7 +41,8 @@ Production/field release remains held; file checks are not hardware approval.
 ## 2. Headless Environment
 
 - Linux, Bash, GNU Make, git and Python standard library. Python 3.14.4 and
-  KiCad 9.0.7 were exercised in this session; no KiCad 7/8 compatibility is claimed.
+  KiCad 9.0.7 are the recorded tested environment; use REMEDIATION for current
+  verification results. No KiCad 7/8 compatibility is claimed.
 - The host Snap CLI is `/snap/bin/kicad.kicad-cli`. Bare `kicad-cli` need not exist.
   Do not launch `kicad`, `pcbnew`, `eeschema` or a desktop editor.
 - `scripts/manufacturing.py` resolves native, Snap and Flatpak invocations by
@@ -196,8 +197,13 @@ unavailable, record the actual failed version probe; do not claim DRC passed.
 All intentional custom geometry is under `pcb/DogFence.pretty/` with symbols
 in `pcb/DogFence.kicad_sym`. `fp-lib-table` / `sym-lib-table` use `${KIPRJMOD}`.
 Do not replace modified Kefa terminals, project-selected 2512 SMT lands, the cathode-right
-SMA diode, or the axial GDT overpass with similarly named stock-library objects.
+SMA diode, or the selected metric Ruilon SMT GDT lands with similarly named stock-library objects.
 Preserve global pad nets, positions and the two distinct local LED-terminal mappings.
+GDT_AC now uses the same top-only Ruilon footprint geometry as GDT_AB/BC at its
+retained origin. The retired Bencent local footprint and two AC insertion holes
+are not current library/population requirements; only the three earth GDTs remain
+formed axial parts. Use [ASSEMBLY's current inventory](pcb/ASSEMBLY.md#reviewed-components),
+not historical library/drill/export counts, when checking the active design.
 
 ```bash
 python3 -B pcb/sync_libraries.py --check
@@ -226,6 +232,24 @@ binding unless the user approves a reasoned physical design change. Preserve
 protected copper, mounts, all stitching vias, takeoffs, B returns, EARTH separation
 and the distinct LED mappings; do not fold branches, add vias or trim courtyards
 to conceal a fit problem. Keep independent executable geometry checks.
+
+The **2026-09-14 approved SMT GDT_AC/rear-B change** is layer-specific. Preserve
+the **3.20 mm A/C main rails on both faces**, the **exactly 6.00 mm rear B main
+rail (not 6.40)**, the approved front-B stop and minimally relocated rear B
+return stem at **X=136.50**, following ASSEMBLY's complete coordinate controls.
+Do not restore a blanket claim of full 3.20 mm A/B/C rails on both faces.
+Require both the native rule and independent geometry guard for **>=3.00 mm
+between different WIRE_A/WIRE_B/WIRE_C copper on B.Cu only**. Do not extend
+that rule to F.Cu's reviewed SMT gaps or weaken the independent **>=3.00 mm
+fence/EARTH separation on both faces**. All fourteen vias, A/C main rails,
+EARTH, mounts and indicator routing outside the approved rear-return move stay
+protected; a wider rear rail is not permission for extra vias or component moves.
+
+The AC crossing now uses the FR-4 core between front A/C and rear B, not the
+retired raised overpass. No AC lead-forming/height-gauge requirement remains;
+actual SMT seating, post-assembly insulation/workmanship and qualified transient
+checks still apply. Solder mask, gel and nominal core thickness do not qualify
+impulse insulation or close the remaining earth-GDT forming and W5 fit/process holds.
 
 [Reviewed Components](pcb/ASSEMBLY.md#reviewed-components) and
 [DFM evidence](pcb/DFM_EVIDENCE.md) distinguish implemented geometry from

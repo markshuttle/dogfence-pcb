@@ -197,21 +197,30 @@ class WorkflowTests(unittest.TestCase):
     def test_geometry_row_order_is_not_measurement_but_every_value_and_duplicate_is(self):
         data = {"inputs": {key: {"path": "/old/" + key, "sha256": key} for key in ("pcb", "project", "rules")},
                 "measurements": {"via_apertures": [{"layer": "F.Mask", "hole_gap_mm": 0.9},
-                                                  {"layer": "F.Paste", "hole_gap_mm": 0.9}]}}
+                                                  {"layer": "F.Paste", "hole_gap_mm": 0.9}],
+                                 "minimum_rear_core_clearance_mm": 3.02,
+                                 "gdt_ac_front_b_body_clearance_mm": 0.595,
+                                 "smt_gdt_copper_gaps": [{"reference": "GDT_AC", "connected_copper_gap_mm": 1.8}]}}
         expected = w.geometry_comparison(copy.deepcopy(data))
         reversed_rows = copy.deepcopy(data)
         reversed_rows["measurements"]["via_apertures"].reverse()
         reversed_rows["inputs"]["pcb"]["path"] = "/new/pcb"
         self.assertEqual(w.geometry_comparison(reversed_rows), expected)
-        for change in ("value", "duplicate", "hash"):
+        for change in ("value", "duplicate", "hash", "rear-clearance", "body-clearance", "smt-gap"):
             changed = copy.deepcopy(data)
             rows = changed["measurements"]["via_apertures"]
             if change == "value":
                 rows[0]["hole_gap_mm"] = 0.8
             elif change == "duplicate":
                 rows.append(rows[0].copy())
-            else:
+            elif change == "hash":
                 changed["inputs"]["pcb"]["sha256"] = "different"
+            elif change == "rear-clearance":
+                changed["measurements"]["minimum_rear_core_clearance_mm"] = 2.82
+            elif change == "body-clearance":
+                changed["measurements"]["gdt_ac_front_b_body_clearance_mm"] = 0
+            else:
+                changed["measurements"]["smt_gdt_copper_gaps"][0]["connected_copper_gap_mm"] = 1.3
             self.assertNotEqual(w.geometry_comparison(changed), expected)
 
     def test_preserves_every_owned_tree_and_link_without_following_it(self):

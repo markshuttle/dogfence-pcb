@@ -1,3 +1,4 @@
+from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 import contextlib
 import copy
@@ -1233,6 +1234,11 @@ class ManufacturingTests(unittest.TestCase):
 
     def test_real_assembly_datums_preserve_all_hybrid_terminals_and_unusual_axes(self):
         board = nets.read_board(REPO / "pcb" / "pcb.kicad_pcb")
+        libraries = {path.stem for path in (REPO / "pcb/DogFence.pretty").glob("*.kicad_mod")}
+        self.assertEqual(len(libraries), 9)
+        self.assertEqual({fp.name for fp in board.footprints.values()}, {"DogFence:" + name for name in libraries})
+        symbols = sync.parse((REPO / "pcb/DogFence.kicad_sym").read_text())
+        self.assertEqual(len(sync.children(symbols, "symbol")), 6)
         path = self.root / "native-pos.csv"
         path.write_text(native_positions(board))
         positions = m.check_placement(m.read_csv(path, m.POSITION_FIELDS), board, native=True)
@@ -1241,9 +1247,13 @@ class ManufacturingTests(unittest.TestCase):
             for key, expected in {"MPN": "35212K2FT", "Manufacturer": "TE Connectivity",
                                   "LCSC Part #": "C4129105", "Sourcing": "LCSC", "Sourcing Reference": ""}.items():
                 self.assertEqual(bom[ref][key], expected)
+        for ref in ("GDT_AB", "GDT_BC", "GDT_AC"):
+            for key, expected in {"MPN": "SMD5050-470NA", "Manufacturer": "Ruilon",
+                                  "LCSC Part #": "C39692533", "Footprint": "DogFence:SMD5050-470NA"}.items():
+                self.assertEqual(bom[ref][key], expected)
         text = m.assembly_reference(board, bom, positions, "1.2.0-dev")
         anchors, terminals = text.split("TERMINAL DATUMS\n")
-        self.assertIn("Population: 16 components; 8 SMT / 8 THT.", anchors)
+        self.assertIn("Population: 16 components; 9 SMT / 7 THT.", anchors)
         self.assertEqual(sum(line.startswith(tuple(ref + " | " for ref in bom)) for line in anchors.splitlines()), 16)
         rows = [line.split(" | ") for line in terminals.splitlines() if " | " in line][1:]
         self.assertEqual(len(rows), 34)
@@ -1258,8 +1268,8 @@ class ManufacturingTests(unittest.TestCase):
             ("D2", "1"): ("LED_C_POS", 132.9, 140.5, 0),
             ("D3", "1"): ("LED_A_POS", 132.9, 99.0, 0),
             ("D4", "1"): ("LED_C_POS", 132.9, 146.0, 0),
-            ("GDT_AC", "1"): ("WIRE_A", 125.8, 114.88, 1.4),
-            ("GDT_AC", "2"): ("WIRE_C", 125.8, 130.12, 1.4),
+            ("GDT_AC", "1"): ("WIRE_A", 125.8, 120.5, 0),
+            ("GDT_AC", "2"): ("WIRE_C", 125.8, 124.5, 0),
         }
         expected.update({(ref, pad.pin): (pad.net, pad.x, pad.y, pad.drill)
                          for ref in ("R1", "R2") for pad in board.footprints[ref].pads})
@@ -1457,6 +1467,82 @@ def m_target_names():
 
 @unittest.skipUnless(os.environ.get("KICAD_TEST_CLI"), "Set KICAD_TEST_CLI for isolated native CLI fixture probes")
 class NativeContractTests(unittest.TestCase):
+    def test_native_rear_core_layer_selector_covers_tracks_and_multilayer_pads_only_on_back(self):
+        from scripts.kicad_sexpr import parse, parse_many
+        from test_geometry import dump, remove, replace
+
+        parent = REPO / "tmp" / "native-manufacturing-tests"
+        parent.mkdir(parents=True, exist_ok=True)
+        rules = parse_many((REPO / "pcb/pcb.kicad_dru").read_text())
+        rear = next(rule for rule in rules[1:] if rule.values[0] == "Rear core isolation")
+        board = parse(BOARD.replace('"POWER"', '"WIRE_A"').replace('"Net-(D1-A)"', '"WIRE_B"'))
+        remove(board, "segment")
+        # R1's multilayer pads have a 0.80 mm edge gap. Separate front/back
+        # track pairs also have 0.80 mm gaps; J_LED_A/C are front-only SMT.
+        source = dump(board)[:-1] + '''
+          (segment (start 35 10) (end 45 10) (width 1) (layer "B.Cu") (net 1))
+          (segment (start 35 11.8) (end 45 11.8) (width 1) (layer "B.Cu") (net 2))
+          (segment (start 35 45) (end 45 45) (width 1) (layer "F.Cu") (net 1))
+          (segment (start 35 46.8) (end 45 46.8) (width 1) (layer "F.Cu") (net 2)))
+        '''
+        cases = (("rear-selector", '(layer "B.Cu")', None, True, True, False),
+                 ("bare-rear-selector", '(layer B.Cu)', None, True, True, False),
+                 ("missing", None, None, False, False, False),
+                 ("front-selector", '(layer "F.Cu")', None, False, True, True),
+                 ("bare-front-selector", '(layer F.Cu)', None, False, True, True),
+                 ("all-layers", None, None, True, True, True),
+                 ("outer-selector", '(layer outer)', None, True, True, True),
+                 ("inner-selector", '(layer inner)', None, False, False, False),
+                 ("quoted-outer", '(layer "outer")', None, False, False, False),
+                 ("quoted-inner", '(layer "inner")', None, False, False, False),
+                 ("rear-properties", None, "B.Cu", True, False, False))
+        with tempfile.TemporaryDirectory(prefix="native-rear-core-", dir=parent, delete=False) as temporary:
+            root = Path(temporary)
+            for name, selector, property_layer, back_tracks, pth, front in cases:
+                with self.subTest(case=name):
+                    case = root / name
+                    case.mkdir()
+                    make_project(case)
+                    project = case / "pcb"
+                    pcb = project / "pcb.kicad_pcb"
+                    pcb.write_text(source, encoding="utf-8")
+                    selected = copy.deepcopy(rear)
+                    remove(selected, "layer")
+                    if selector:
+                        replace(selected, selector)
+                    if property_layer:
+                        condition = selected.one("condition").atoms(1)[0]
+                        replace(selected, f'(condition "(A.Layer == \'{property_layer}\' && '
+                                f'B.Layer == \'{property_layer}\') && ({condition})")')
+                    actual_rules = [rule for rule in rules if rule is not rear]
+                    if name != "missing":
+                        actual_rules.append(selected)
+                    (project / "pcb.kicad_dru").write_text("\n".join(dump(rule) for rule in actual_rules) + "\n")
+                    output = case / "drc.json"
+                    command = [os.environ["KICAD_TEST_CLI"], "pcb", "drc", "--format", "json",
+                               "--severity-all", "--exit-code-violations", "--output", str(output), str(pcb)]
+                    result = subprocess.run(command, cwd=project, capture_output=True, text=True, timeout=120)
+                    m.write_json(case / "native-command.json", {"command": command, "returncode": result.returncode,
+                                                               "stdout": result.stdout, "stderr": result.stderr})
+                    self.assertEqual(result.returncode, 5, result.stdout + result.stderr)
+                    self.assertEqual(re.sub(m.WX_IMAGE_DEBUG, "", result.stderr), "")
+                    self.assertIsNone(re.search(r"(?im)^\s*(?:warning|error)\b", result.stdout))
+                    data = m.read_json(output)
+                    self.assertEqual(data["kicad_version"], "9.0.7")
+                    violations = [v for v in data["violations"]
+                                  if v["type"] == "clearance" and "Rear core isolation" in v["description"]]
+                    self.assertTrue(all(v["severity"] == "error" for v in violations), data)
+                    descriptions = "\n".join(item["description"] for v in violations for item in v["items"])
+                    for side, expected in (("B.Cu", back_tracks), ("F.Cu", front)):
+                        pairs = [v for v in violations if all(item["description"].startswith("Track ")
+                                 and f"on {side}" in item["description"] for item in v["items"])]
+                        self.assertEqual(bool(pairs), expected, data)
+                        self.assertTrue(all("clearance 3.0000 mm; actual 0.8000 mm" in v["description"]
+                                            for v in pairs), data)
+                    self.assertEqual(any({item["description"] for item in v["items"]} == {
+                        "PTH pad 1 [WIRE_A] of R1", "PTH pad 2 [WIRE_B] of R1"} for v in violations), pth, data)
+                    self.assertEqual("of J_LED_A" in descriptions, front, data)
+
     def test_native_current_source_fabrication_inventory(self):
         parent = REPO / "tmp" / "native-manufacturing-tests"
         parent.mkdir(parents=True, exist_ok=True)
@@ -1480,6 +1566,7 @@ class NativeContractTests(unittest.TestCase):
                  "--subtract-soldermask", "--output", str(gerbers) + "/", str(pcb)],
                 ["pcb", "export", "drill", "--format", "excellon", "--drill-origin", "absolute", "--excellon-units", "mm",
                  "--excellon-zeros-format", "decimal", "--excellon-separate-th", "--output", str(drills) + "/", str(pcb)],
+                ["pcb", "export", "ipcd356", "--output", str(root / "pcb.d356"), str(pcb)],
             ]
             for args in jobs:
                 command = [os.environ["KICAD_TEST_CLI"], *args]
@@ -1491,7 +1578,31 @@ class NativeContractTests(unittest.TestCase):
                 self.assertIsNone(re.search(r"(?im)^\s*(?:warning|error)\b", result.stdout))
             checked = {"source_hashes": hashes, "gerbers": m.validate_gerbers(gerbers, board),
                        "drills": {name: m.validate_drill(drills / name, board, name == "pcb-PTH.drl")
-                                  for name in sorted(m.DRILLS)}}
+                                  for name in sorted(m.DRILLS)},
+                       "ipc": nets.compare_ipc(root / "pcb.d356", board)}
+            checked["ipc"]["record_types"] = dict(Counter(
+                line[:3] for line in (root / "pcb.d356").read_text().splitlines()[3:-1]))
+            m.write_json(root / "validated.json", checked)
+            # SMT conversion changes access/classification, not the terminal count.
+            # Native IPC includes all four NPTH: 18 SMT + 30 plated + 4 NPTH = 52.
+            self.assertEqual(checked["ipc"]["records"], 52)
+            self.assertEqual(checked["ipc"]["record_types"], {"327": 18, "317": 30, "367": 4})
+            self.assertEqual((len(board.nets), sum(map(len, board.nets.values()))), (8, 34))
+            self.assertEqual(Counter(p.kind for p in board.pads),
+                             {"smd": 18, "thru_hole": 16, "via": 14, "np_thru_hole": 4})
+            self.assertEqual(checked["drills"], {"pcb-PTH.drl": 30, "pcb-NPTH.drl": 4})
+            for layer, count in (("F.Mask", 52), ("B.Mask", 34), ("F.Paste", 18)):
+                self.assertEqual(checked["gerbers"][layer]["flashes"], count)
+            for layer in ("F.Cu", "F.Mask", "F.Paste", "B.Cu", "B.Mask"):
+                flashes, tracks = m.parse_gerber(gerbers / m.LAYERS[layer][0], m.LAYERS[layer][1])
+                ac = [flash for flash in flashes if flash[6] == "GDT_AC"]
+                self.assertEqual(len(ac), 2 if layer.startswith("F.") else 0, layer)
+                for flash, y in zip(sorted(ac), (-124.5, -120.5)):
+                    self.assertEqual(flash[:6], (125.8, y, 5.5, 1.2, "R", 0), layer)
+                if layer in ("F.Cu", "B.Cu"):
+                    b_main = [track for track in tracks if track[:2] == (106, -122.5) and track[-1] == "WIRE_B"]
+                    self.assertEqual(b_main, [(106, -122.5, 121 if layer == "F.Cu" else 131,
+                                              -122.5, 3.2 if layer == "F.Cu" else 6, "WIRE_B")])
             for name, digest in hashes.items():
                 self.assertEqual(m.sha256(project / name), digest)
             vias = m.via_mask_settings(board)

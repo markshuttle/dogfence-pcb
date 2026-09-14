@@ -845,7 +845,7 @@
 		)
 		(uuid "44440001-0000-0000-0000-000000000007")
 	)
-	(text "Axial GDT_AC bridges Wire B"
+	(text "SMT GDT_AC: A to C"
 		(exclude_from_sim no)
 		(at 91.44 97.65 0)
 		(effects
@@ -902,7 +902,7 @@
 		)
 		(uuid "44440001-0000-0000-0000-000000000012")
 	)
-	(text "(>=2.0mm air gap standoff)"
+	(text "(6.00mm B.Cu rail below)"
 		(exclude_from_sim no)
 		(at 91.44 100.65 0)
 		(effects
@@ -2788,22 +2788,22 @@
 		(dnp no)
 		(uuid "62814837-b119-44ae-8f69-c2239ebf05f0")
 		(property "Reference" "GDT_AC"
-			(at 118.8 76.2 90)
+			(at 111 76.2 90)
 			(effects
 				(font
 					(size 1.27 1.27)
 					(bold yes)
 				)
-				(justify left)
+				(justify right)
 			)
 		)
-		(property "Value" "B5G470L"
-			(at 118.8 78.74 90)
+		(property "Value" "SMD5050-470NA"
+			(at 111 78.74 90)
 			(effects
 				(font
 					(size 1.016 1.016)
 				)
-				(justify left)
+				(justify right)
 			)
 		)
 		(property "Sourcing Reference" ""
@@ -2824,7 +2824,7 @@
 				(hide yes)
 			)
 		)
-		(property "Manufacturer" "Bencent"
+		(property "Manufacturer" "Ruilon"
 			(at 114.3 77.47 0)
 			(effects
 				(font
@@ -2833,7 +2833,7 @@
 				(hide yes)
 			)
 		)
-		(property "Footprint" "DogFence:B5G470L_P15.24mm_NS_Overpass"
+		(property "Footprint" "DogFence:SMD5050-470NA"
 			(at 114.3 77.47 90)
 			(effects
 				(font
@@ -2842,7 +2842,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "https://www.lcsc.com/datasheet/C5337217.pdf"
+		(property "Datasheet" "https://www.lcsc.com/datasheet/C39692533.pdf"
 			(at 114.3 77.47 0)
 			(effects
 				(font
@@ -2859,7 +2859,7 @@
 				)
 			)
 		)
-		(property "MPN" "B5G470L"
+		(property "MPN" "SMD5050-470NA"
 			(at 114.3 77.47 0)
 			(effects
 				(font
@@ -2868,7 +2868,7 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC" "C5337217"
+		(property "LCSC" "C39692533"
 			(at 114.3 77.47 0)
 			(effects
 				(font

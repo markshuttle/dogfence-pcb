@@ -20,7 +20,7 @@ sys.path.insert(0, str(ROOT))
 
 from scripts.check_geometry import (  # noqa: E402
     COMPONENT_HOLE_MINIMA, CU, GeometryCheck, MIN_MASK_BARRIER, PROJECT_MINIMA, PROTECTED_VIAS,
-    REQUIRED_ERROR_RULES, REQUIRED_VISIBLE_RULES, Shape, check_sources,
+    REQUIRED_ERROR_RULES, REQUIRED_VISIBLE_RULES, SMT_GDTS, Shape, check_sources,
     condition, matches, move, pad_shape,
 )
 from scripts.kicad_sexpr import Atom, Node, SExprError, parse, parse_many  # noqa: E402
@@ -33,6 +33,10 @@ RULES = """(version 1)
   (constraint annular_width (min 0.254mm)))
 (rule "earth separation"
   (condition "(A.NetName == 'EARTH' && B.NetCode != 0 && B.NetName != 'EARTH') || (B.NetName == 'EARTH' && A.NetCode != 0 && A.NetName != 'EARTH')")
+  (constraint clearance (min 3.0mm)))
+(rule "rear core separation"
+  (layer "B.Cu")
+  (condition "(A.NetName == 'WIRE_A' || A.NetName == 'WIRE_B' || A.NetName == 'WIRE_C') && (B.NetName == 'WIRE_A' || B.NetName == 'WIRE_B' || B.NetName == 'WIRE_C') && A.NetName != B.NetName")
   (constraint clearance (min 3.0mm)))
 """
 
@@ -175,32 +179,39 @@ class GeometryTests(unittest.TestCase):
 
     def test_nominal_positive_real_board_fixture(self):
         report = self.assert_pass()
+        self.assert_pass(self.report(rules=(ROOT / "pcb/pcb.kicad_dru").read_text()))
         self.assertEqual(len(report["measurements"]["protected_vias"]), 14)
         self.assertTrue(all(v["ok"] for v in report["measurements"]["protected_vias"]))
         self.assertAlmostEqual(report["measurements"]["minimum_fence_earth_clearance_mm"], 3.25)
+        self.assertEqual(report["measurements"]["minimum_rear_core_clearance_mm"], 3.02)
+        self.assertEqual(report["measurements"]["minimum_front_core_clearance_mm"], 0.8)
+        self.assertEqual(report["measurements"]["gdt_ac_front_b_body_clearance_mm"], 0.595)
+        self.assertEqual(report["measurements"]["smt_gdt_copper_gaps"], [
+            {"reference": ref, "connected_copper_gap_mm": 1.8} for ref in SMT_GDTS])
         self.assertEqual(report["qualification"]["physical_fit"], "not_verified")
         self.assertEqual(report["qualification"]["via_covering_cam"], "not_verified")
 
     def test_adopted_dfm_holes_lands_and_untented_vias(self):
         report = self.assert_pass(self.report(self.authoritative))
-        self.assertEqual(len(report["measurements"]["component_hole_design"]), 18)
-        self.assertEqual(len(report["measurements"]["component_rings"]), 18)
+        self.assertEqual(len(report["measurements"]["component_hole_design"]), 16)
+        self.assertEqual(len(report["measurements"]["component_rings"]), 16)
         self.assertAlmostEqual(min(row["nominal_ring_mm"] for row in report["measurements"]["component_rings"]), 0.4)
         self.assertEqual(report["measurements"]["via_count"], 14)
         checker = GeometryCheck(self.authoritative)
         checker.read_board()
         parts = [fp for fp in checker.footprints.values() if fp.one("attr").atoms() in (["smd"], ["through_hole"])]
         self.assertEqual(len(parts), 16)
-        self.assertEqual(sum(fp.one("attr").atoms() == ["smd"] for fp in parts), 8)
-        self.assertEqual(sum(p.kind == "thru_hole" for p in checker.pads), 18)
+        self.assertEqual(sum(fp.one("attr").atoms() == ["smd"] for fp in parts), 9)
+        self.assertEqual(sum(fp.one("attr").atoms() == ["through_hole"] for fp in parts), 7)
+        self.assertEqual(sum(p.kind == "thru_hole" for p in checker.pads), 16)
         self.assertEqual(sum(p.kind == "np_thru_hole" for p in checker.pads), 4)
-        self.assertEqual(sum(p.kind == "smd" for p in checker.pads), 16)
-        for layer, count in (("F.Mask", 52), ("B.Mask", 36), ("F.Paste", 16)):
+        self.assertEqual(sum(p.kind == "smd" for p in checker.pads), 18)
+        for layer, count in (("F.Mask", 52), ("B.Mask", 34), ("F.Paste", 18)):
             self.assertEqual(sum(layer in a.layers for a in checker.apertures), count)
         for via in checker.vias:
             self.assertFalse(checker.tented(via.node, "front"))
             self.assertFalse(checker.tented(via.node, "back"))
-        for ref in ("GDT_AB", "GDT_BC"):
+        for ref in SMT_GDTS:
             for num, y in (("1", -2.0), ("2", 2.0)):
                 item = pad(self.authoritative, ref, num)
                 self.assertEqual(list(map(float, item.one("size").atoms())), [5.5, 1.2])
@@ -209,6 +220,146 @@ class GeometryTests(unittest.TestCase):
                if row["aperture"].startswith(("GDT_AB.", "GDT_BC."))]
         self.assertAlmostEqual(min(row["hole_gap_mm"] for row in smt), 1.239713)
         self.assertAlmostEqual(min(row["annulus_gap_mm"] for row in smt), 0.839713)
+
+    def test_smt_gdt_footprints_and_placements_are_required(self):
+        for ref, (origin, _) in SMT_GDTS.items():
+            for change in ("missing", "library", "dnp", "type", "bottom", "origin", "rotation"):
+                with self.subTest(ref=ref, change=change):
+                    board = deepcopy(self.positive)
+                    fp = footprint(board, ref)
+                    if change == "missing":
+                        board.values.remove(fp)
+                    elif change == "library":
+                        fp.values[0] = Atom("Surge_Arrester:SMD5050", quoted=True)
+                    else:
+                        replace(fp, {"dnp": "(attr smd dnp)", "type": "(attr through_hole)",
+                                     "bottom": '(layer "B.Cu")',
+                                     "origin": f"(at {origin[0] + 0.1} {origin[1]})",
+                                     "rotation": f"(at {origin[0]} {origin[1]} 180)"}[change])
+                    self.assert_defect("SMT_GDT_PLACEMENT" if change in ("origin", "rotation")
+                                       else "SMT_GDT_FOOTPRINT", self.report(board))
+
+    def test_smt_gdt_pad_type_net_shape_size_and_numbering_cannot_drift(self):
+        for ref in SMT_GDTS:
+            for num in ("1", "2"):
+                for change in ("missing", "duplicate", "renumbered", "net", "pth", "drill", "oval",
+                               "(size 5.4 1.2)", "(size 5.5 1.3)", "(at 0 -2.1)", "(at 0 -2 90)"):
+                    with self.subTest(ref=ref, num=num, change=change):
+                        board = deepcopy(self.positive)
+                        fp, p = footprint(board, ref), pad(board, ref, num)
+                        if change == "missing":
+                            fp.values.remove(p)
+                        elif change == "duplicate":
+                            fp.values.append(deepcopy(p))
+                        elif change == "renumbered":
+                            p.values[0] = Atom("3", quoted=True)
+                        elif change == "net":
+                            set_net(board, p, "EARTH")
+                        elif change in ("pth", "drill"):
+                            replace(p, "(drill 1.4)")
+                            if change == "pth":
+                                p.values[1] = Atom("thru_hole")
+                                replace(p, '(layers "*.Cu" "*.Mask")')
+                        elif change == "oval":
+                            p.values[2] = Atom("oval")
+                        else:
+                            replace(p, change)
+                        self.assert_defect("SMT_GDT_PAD", self.report(board))
+
+    def test_smt_ac_rejects_restoring_retired_axial_holes(self):
+        fp = footprint(self.board, "GDT_AC")
+        fp.values[0] = Atom("DogFence:B5G470L_P15.24mm_NS_Overpass", quoted=True)
+        replace(fp, "(attr through_hole)")
+        for num, y in (("1", -7.62), ("2", 7.62)):
+            p = pad(self.board, "GDT_AC", num)
+            p.values[1:3] = [Atom("thru_hole"), Atom("circle")]
+            replace(p, f"(at 0 {y})")
+            replace(p, "(size 2.8 2.8)")
+            replace(p, "(drill 1.4)")
+            replace(p, '(layers "*.Cu" "*.Mask")')
+        report = self.report()
+        self.assert_defect("SMT_GDT_FOOTPRINT", report)
+        self.assert_defect("SMT_GDT_PAD", report)
+        self.assertNotIn("GDT_AC", COMPONENT_HOLE_MINIMA)
+
+    def test_smt_gdt_body_courtyard_and_apertures_cannot_shrink_or_grow(self):
+        for ref in SMT_GDTS:
+            for layer in ("F.Fab", "F.CrtYd"):
+                for delta in (-0.1, 0.1):
+                    with self.subTest(ref=ref, layer=layer, delta=delta):
+                        board = deepcopy(self.positive)
+                        box = next(n for n in footprint(board, ref).children("fp_rect")
+                                   if n.one("layer").atoms() == [layer])
+                        x, y = map(float, box.one("end").atoms())
+                        replace(box, f"(end {x + delta} {y})")
+                        self.assert_defect("SMT_GDT_ENVELOPE", self.report(board))
+            for change in ('(layers "F.Cu" "F.Mask")', '(layers "F.Cu" "F.Paste")',
+                           '(layers "B.Cu" "B.Mask" "B.Paste")', '(layers "F.Cu" "*.Mask" "F.Paste")',
+                           "(solder_mask_margin 0.1)", "(solder_paste_margin -0.1)",
+                           "(solder_paste_margin_ratio -0.05)"):
+                with self.subTest(ref=ref, change=change):
+                    board = deepcopy(self.positive)
+                    replace(pad(board, ref, "1"), change)
+                    self.assert_defect("SMT_GDT_APERTURE", self.report(board))
+            for field in ("solder_mask_margin", "solder_paste_margin", "solder_paste_ratio"):
+                with self.subTest(ref=ref, inherited=field):
+                    board = deepcopy(self.positive)
+                    fp = footprint(board, ref)
+                    replace(fp, f"({field} 0.1)")
+                    self.assert_defect("SMT_GDT_APERTURE", self.report(board))
+                    for p in fp.children("pad"):
+                        pad_field = "solder_paste_margin_ratio" if field == "solder_paste_ratio" else field
+                        replace(p, f"({pad_field} 0)")
+                    self.assert_pass(self.report(board))
+            for layer in ("F.Mask", "F.Paste"):
+                with self.subTest(ref=ref, extra=layer):
+                    board = deepcopy(self.positive)
+                    x, y = SMT_GDTS[ref][0]
+                    board.values.append(parse(f'''(gr_rect (start {x - 1} {y - 0.1}) (end {x + 1} {y + 0.1})
+                        (stroke (width 0) (type solid)) (fill solid) (layer "{layer}"))'''))
+                    self.assert_defect("SMT_GDT_APERTURE", self.report(board))
+
+    def test_smt_gdt_stubs_keep_full_width_front_layer_and_original_endpoints(self):
+        for ref, (origin, nets) in SMT_GDTS.items():
+            for num, net in enumerate(nets, 1):
+                end_y = origin[1] + (-2.5 if num == 1 else 2.5)
+                for change in ("missing", "narrow", "short", "pad-centre", "back", "extra-back"):
+                    with self.subTest(ref=ref, num=num, change=change):
+                        board = deepcopy(self.positive)
+                        stub = next(n for n in board.children("segment")
+                                    if math.dist(tuple(map(float, n.one("end").atoms())), (origin[0], end_y)) < 1e-6)
+                        if change == "missing":
+                            board.values.remove(stub)
+                        elif change == "narrow":
+                            replace(stub, "(width 3.1)")
+                        elif change in ("short", "pad-centre"):
+                            offset = (0.1 if change == "short" else -0.5) * (-1 if num == 1 else 1)
+                            replace(stub, f"(end {origin[0]} {end_y + offset})")
+                        else:
+                            if change == "extra-back":
+                                stub = deepcopy(stub)
+                                board.values.append(stub)
+                            replace(stub, '(layer "B.Cu")')
+                        report = self.report(board)
+                        self.assert_defect("SMT_GDT_STUB", report)
+                        if change == "pad-centre":
+                            self.assert_defect("SMT_GDT_COPPER_GAP", report)
+                        if ref == "GDT_AC" and change in ("back", "extra-back"):
+                            self.assert_defect("REAR_CORE_CLEARANCE", report)
+                            self.assertEqual(report["measurements"]["minimum_rear_core_clearance_mm"], 0)
+
+    def test_smt_ac_body_exclusion_checks_all_front_b_copper_not_just_main_track(self):
+        for layer in CU:
+            with self.subTest(layer=layer):
+                board = deepcopy(self.positive)
+                board.values.append(parse(f'''(gr_rect (start 125 122) (end 126 123)
+                    (stroke (width 0) (type solid)) (fill solid) (layer "{layer}") (net 2))'''))
+                report = self.report(board)
+                if layer == "F.Cu":
+                    self.assert_defect("GDT_AC_BODY_EXCLUSION", report)
+                    self.assert_defect("B_FRONT_CUTBACK", report)
+                else:
+                    self.assert_pass(report)  # Existing rear B legitimately crosses beneath the front body.
 
     def test_sma_series_and_shunt_lands_match_selected_geometry(self):
         report = self.assert_pass()
@@ -498,7 +649,7 @@ class GeometryTests(unittest.TestCase):
                 self.assert_defect("COMPONENT_FIT_DRILL", self.report(board))
 
     def test_body_courtyards_include_declared_pose_and_assembly_margin(self):
-        for ref in (*COMPONENT_HOLE_MINIMA, "GDT_AB", "GDT_BC", "D1", "D2", "D3", "D4", "R1", "R2"):
+        for ref in (*COMPONENT_HOLE_MINIMA, *SMT_GDTS, "D1", "D2", "D3", "D4", "R1", "R2"):
             with self.subTest(ref=ref):
                 fp = footprint(self.authoritative, ref)
                 boxes = {rect.one("layer").atoms()[0]: rect for rect in fp.children("fp_rect")}
@@ -531,8 +682,8 @@ class GeometryTests(unittest.TestCase):
                 self.assertAlmostEqual(coordinate, expected)
 
     def test_axial_forming_room_is_a_geometric_ceiling_not_bend_approval(self):
-        for ref, axis, wire, room in (("GDT_AC", 1, .90, 4.37), ("GDT_A_E", 0, 1.05, 4.32),
-                                     ("GDT_B_E", 0, 1.05, 4.32), ("GDT_C_E", 0, 1.05, 4.32)):
+        for ref, axis, wire, room in (("GDT_A_E", 0, 1.05, 4.32),
+                                      ("GDT_B_E", 0, 1.05, 4.32), ("GDT_C_E", 0, 1.05, 4.32)):
             with self.subTest(ref=ref):
                 fp = footprint(self.authoritative, ref)
                 body = next(rect for rect in fp.children("fp_rect") if rect.one("layer").atoms() == ["F.Fab"])
@@ -541,13 +692,12 @@ class GeometryTests(unittest.TestCase):
                 self.assertAlmostEqual(pins[1] - pins[0], 15.24)
                 available = min(low - pins[0], pins[1] - high) - .05 - .10
                 self.assertAlmostEqual(available, room)
-                self.assertAlmostEqual(available - wire / 2,
-                                       3.92 if ref == "GDT_AC" else 3.795)
+                self.assertAlmostEqual(available - wire / 2, 3.795)
 
     def test_adopted_pin_envelopes_include_independent_pattern_allowance(self):
         position_budget = 2 * (math.hypot(0.05, 0.05) + 0.05)
         envelopes = {"J_IN": math.hypot(1.1, 1.0), "J_LED_A": math.hypot(1.15, 1.0),
-                     "GDT_AC": 0.9, "GDT_A_E": 1.05}
+                     "GDT_A_E": 1.05}
         for ref, maximum in envelopes.items():
             with self.subTest(ref=ref):
                 hole = float(pad(self.authoritative, ref, "1").one("drill").atoms()[0])
@@ -565,19 +715,19 @@ class GeometryTests(unittest.TestCase):
         self.assertTrue(all(abs(d["measured_mm"] + 0.19) < 1e-6 for d in mask + paste))
 
     def test_component_fit_drill_and_ring_are_independent(self):
-        replace(pad(self.board, "GDT_AC", "2"), "(drill 1.3)")
+        replace(pad(self.board, "GDT_A_E", "2"), "(drill 1.4)")
         report = self.report()
         self.assert_defect("COMPONENT_FIT_DRILL", report)
         self.assertNotIn("COMPONENT_RING", {d["code"] for d in report["diagnostics"]})
-        replace(pad(self.board, "GDT_AC", "2"), "(drill 1.4)")
-        replace(pad(self.board, "GDT_AC", "2"), "(size 1.8 1.8)")
+        replace(pad(self.board, "GDT_A_E", "2"), "(drill 1.5)")
+        replace(pad(self.board, "GDT_A_E", "2"), "(size 1.8 1.8)")
         report = self.report()
         self.assert_defect("COMPONENT_RING", report)
         self.assertNotIn("COMPONENT_FIT_DRILL", {d["code"] for d in report["diagnostics"]})
 
     def test_offset_hole_uses_true_ring_not_min_size_only(self):
-        replace(pad(self.board, "GDT_AC", "1"), "(size 2.4 2.4)")
-        replace(pad(self.board, "GDT_AC", "1"), "(drill 1.4 (offset 0.35 0))")
+        replace(pad(self.board, "GDT_A_E", "1"), "(size 2.5 2.5)")
+        replace(pad(self.board, "GDT_A_E", "1"), "(drill 1.5 (offset 0.35 0))")
         self.assertAlmostEqual(self.assert_defect("COMPONENT_RING")[0]["measured_mm"], 0.15)
 
     def test_slot_ring_and_arbitrary_pad_rotation(self):
@@ -708,9 +858,9 @@ class GeometryTests(unittest.TestCase):
         replace(opening, "(solder_paste_margin 100)")
         replace(p, '(layers "F.Cu")')
         fp.values.append(opening)
-        self.assert_pass()
+        self.assert_pass(self.aperture_report())  # Generic aperture support, not a selected GDT land exception.
         replace(opening, "(at 0 -3.2)")  # Touches the copper only along one edge.
-        self.assert_defect("MISSING_SMT_APERTURE")
+        self.assert_defect("MISSING_SMT_APERTURE", self.aperture_report())
 
     def test_smd_roundrect_corner_and_rotation_at_via(self):
         # The drill misses the rounded corner but intersects the rotated square.
@@ -787,9 +937,89 @@ class GeometryTests(unittest.TestCase):
         self.board.values.append(other)
         self.assert_pass()
 
+    def test_rear_b_width_is_exact_six_not_a_minimum_and_6_4_breaks_core_clearance(self):
+        for width in (5.9, 6.01, 6.4):
+            with self.subTest(width=width):
+                board = deepcopy(self.positive)
+                rail = next(t for t in board.children("segment") if t.one("layer").atoms() == ["B.Cu"]
+                            and tuple(map(float, t.one("start").atoms())) == (106, 122.5))
+                replace(rail, f"(width {width})")
+                report = self.report(board)
+                self.assert_defect("B_REAR_GEOMETRY", report)
+                if width == 6.4:
+                    self.assert_defect("REAR_CORE_CLEARANCE", report)
+                    self.assertEqual(report["measurements"]["minimum_rear_core_clearance_mm"], 2.82)
+                else:
+                    self.assertNotIn("REAR_CORE_CLEARANCE", {d["code"] for d in report["diagnostics"]})
+
+    def test_rear_b_requires_complete_path_but_allows_reversed_split_segments(self):
+        for change in ("missing", "short", "front", "net", "split"):
+            with self.subTest(change=change):
+                board = deepcopy(self.positive)
+                rail = next(t for t in board.children("segment") if t.one("layer").atoms() == ["B.Cu"]
+                            and tuple(map(float, t.one("start").atoms())) == (106, 122.5))
+                if change == "missing":
+                    board.values.remove(rail)
+                elif change == "short":
+                    replace(rail, "(end 130.9 122.5)")
+                elif change == "front":
+                    replace(rail, '(layer "F.Cu")')
+                elif change == "net":
+                    set_net(board, rail, "WIRE_A")
+                else:
+                    other = deepcopy(rail)
+                    replace(rail, "(end 118 122.5)")
+                    replace(other, "(start 131 122.5)")
+                    replace(other, "(end 118 122.5)")
+                    board.values.append(other)
+                report = self.report(board)
+                if change == "split":
+                    self.assert_pass(report)
+                else:
+                    self.assert_defect("B_REAR_GEOMETRY", report)
+
+    def test_front_b_cutback_cannot_be_shortened_overextended_or_restored(self):
+        for end_x in (120.9, 121.1, 122.0, 131.0):
+            with self.subTest(end_x=end_x):
+                board = deepcopy(self.positive)
+                rail = next(t for t in board.children("segment") if t.one("layer").atoms() == ["F.Cu"]
+                            and tuple(map(float, t.one("start").atoms())) == (106, 122.5))
+                replace(rail, f"(end {end_x} 122.5)")
+                report = self.report(board)
+                self.assert_defect("B_FRONT_CUTBACK", report)
+                if end_x == 131:
+                    self.assert_defect("GDT_AC_BODY_EXCLUSION", report)
+
+    def test_unshifted_b_return_stem_independently_fails_rear_core_clearance(self):
+        changed = 0
+        for track in self.board.children("segment"):
+            if track.one("layer").atoms() != ["B.Cu"] or track.one("net").atoms() != ["2"]:
+                continue
+            moved = False
+            for end in ("start", "end"):
+                x, y = map(float, track.one(end).atoms())
+                if x == 136.5:
+                    replace(track, f"({end} 135.5 {y})")
+                    moved = True
+            changed += moved
+        self.assertEqual(changed, 5)
+        report = self.report()
+        self.assert_defect("B_RETURN_GEOMETRY", report)
+        self.assert_defect("REAR_CORE_CLEARANCE", report)
+        self.assertEqual(report["measurements"]["minimum_rear_core_clearance_mm"], 2.1)
+        self.assertEqual(report["measurements"]["minimum_fence_earth_clearance_mm"], 3.25)
+
+    def test_rear_core_distance_includes_multilayer_pads_not_only_track_pairs(self):
+        replace(pad(self.board, "GDT_A_E", "1"), "(at -7.62 2)")
+        report = self.report()
+        defects = self.assert_defect("REAR_CORE_CLEARANCE", report)
+        self.assertTrue(any("GDT_A_E.1" in d["items"] and d["measured_mm"] == 2.5 for d in defects))
+        self.assertTrue(all(d["layers"] == ["B.Cu"] for d in defects))
+        self.assertEqual(report["measurements"]["minimum_rear_core_clearance_mm"], 2.5)
+
     def test_lost_b_return_and_compressed_earth_gdt_pitch(self):
         return_track = next(t for t in self.board.children("segment")
-                            if t.one("start").atoms() == ["135.5", "107.2"])
+                            if tuple(map(float, t.one("start").atoms())) == (136.5, 107.2))
         self.board.values.remove(return_track)
         self.assert_defect("B_RETURN_GEOMETRY")
         replace(footprint(self.board, "GDT_A_E"), "(at 138.62 114)")
@@ -863,6 +1093,64 @@ class GeometryTests(unittest.TestCase):
                 self.assert_defect("CUSTOM_RULE_COVERAGE", self.report(rules=RULES + change))
         self.assert_defect("CUSTOM_RULE_COVERAGE", self.report(rules=RULES.replace("'EARTH'", "'MISSING_EARTH'")))
         self.assert_defect("CUSTOM_RULE_COVERAGE", self.report(rules=RULES.replace("(min 3.0mm)", "(min 2.9mm)")))
+
+    def test_rear_core_rule_requires_back_layer_all_core_nets_and_multilayer_coverage(self):
+        for change in ("missing", "weak", "front", "inner", "tracks-only", "no-vias", "no-c", "override"):
+            with self.subTest(change=change):
+                nodes = parse_many(RULES)
+                rear = nodes[-1]
+                expression = rear.one("condition").atoms()[0]
+                if change == "missing":
+                    nodes.remove(rear)
+                elif change == "weak":
+                    replace(rear, "(constraint clearance (min 2.99mm))")
+                elif change in ("front", "inner"):
+                    replace(rear, '(layer "F.Cu")' if change == "front" else '(layer inner)')
+                elif change == "override":
+                    override = deepcopy(rear)
+                    replace(override, "(constraint clearance (min 0.2mm))")
+                    nodes.append(override)
+                else:
+                    expression = {"tracks-only": f"({expression}) && (A.Type == 'Track' && B.Type == 'Track')",
+                                  "no-vias": f"({expression}) && (A.Type != 'Via' && B.Type != 'Via')",
+                                  "no-c": expression.replace("'WIRE_C'", "'MISSING_CORE'")}[change]
+                    replace(rear, f'(condition "{expression}")')
+                defects = self.assert_defect("CUSTOM_RULE_COVERAGE", self.report(rules="\n".join(dump(n) for n in nodes)))
+                self.assertTrue(any("rear core" in d["message"] and "B.Cu" in d["message"] for d in defects))
+                if change == "tracks-only":
+                    self.assertTrue(any("thru_hole" in d["message"] for d in defects))
+                if change == "no-vias":
+                    self.assertTrue(any("via" in d["message"] for d in defects))
+
+    def test_rear_rule_must_not_impose_three_mm_on_front_smt_gaps(self):
+        for selector in (None, "outer", "F.Cu"):
+            with self.subTest(selector=selector):
+                nodes = parse_many(RULES)
+                if selector is None:
+                    remove(nodes[-1], "layer")
+                else:
+                    replace(nodes[-1], '(layer outer)' if selector == "outer" else f'(layer "{selector}")')
+                self.assert_defect("CUSTOM_RULE_LAYER", self.report(rules="\n".join(dump(n) for n in nodes)))
+
+    def test_unsupported_layer_selectors_and_item_layer_conditions_fail_closed(self):
+        for selector in ("B.*", "*.Cu", "*", "F.Mask", "F.Cu,B.Cu", "In1.Cu", "outer", "inner"):
+            with self.subTest(selector=selector):
+                nodes = parse_many(RULES)
+                replace(nodes[-1], f'(layer "{selector}")')
+                self.assert_defect("UNSUPPORTED_GEOMETRY", self.report(rules="\n".join(dump(n) for n in nodes)))
+        for index in (1, 2):  # Quoted group names must not falsely approve ring or EARTH coverage either.
+            nodes = parse_many(RULES)
+            replace(nodes[index], '(layer "outer")')
+            self.assert_defect("UNSUPPORTED_GEOMETRY", self.report(rules="\n".join(dump(n) for n in nodes)))
+        for expression in ("A.Layer == 'B.Cu'", "B.Layer == 'B.Cu'", "!(A.Layer != 'B.Cu')",
+                           "A.NetName == 'WIRE_A' || B.Layer == 'B.Cu'"):
+            with self.subTest(expression=expression):
+                nodes = parse_many(RULES)
+                replace(nodes[-1], f'(condition "{expression}")')
+                self.assert_defect("UNSUPPORTED_GEOMETRY", self.report(rules="\n".join(dump(n) for n in nodes)))
+        nodes = parse_many(RULES)
+        nodes[-1].values.append(parse('(layer "F.Cu")'))
+        self.assert_defect("INVALID_STRUCTURE", self.report(rules="\n".join(dump(n) for n in nodes)))
 
     def test_annular_rules_reject_b_dependent_conditions(self):
         for expression in (
@@ -999,7 +1287,7 @@ class GeometryTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             report = json.loads(output.read_text())
             self.assertTrue(report["ok"])
-            self.assertEqual(len(report["measurements"]["component_hole_design"]), 18)
+            self.assertEqual(len(report["measurements"]["component_hole_design"]), 16)
             self.assertEqual(len(report["measurements"]["sma_diodes"]), 4)
             nodes = parse_many(RULES)
             replace(nodes[1], '(condition "B.Type == \'Pad\' && B.Pad_Type == \'Through-hole\'")')

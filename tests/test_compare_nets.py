@@ -1,4 +1,5 @@
 import contextlib
+from copy import deepcopy
 import io
 from pathlib import Path
 import tempfile
@@ -189,6 +190,26 @@ class NetComparisonTests(unittest.TestCase):
         result = nets.compare_ipc(self.write("pcb.d356", ipc_text(board)), board)
         self.assertEqual(result["records"], 10)
         self.assertEqual(result["aliases"]["Net-(D1-A)"], "NET-(D1-A)")
+
+    def test_current_smt_ac_ipc_rejects_stale_tht_access_holes_lands_and_coordinates(self):
+        board = nets.read_board(Path(__file__).resolve().parents[1] / "pcb/pcb.kicad_pcb")
+        result = nets.compare_ipc(self.write("current.d356", ipc_text(board)), board)
+        self.assertEqual(result["records"], 52)  # Includes 14 vias and all four NPTH, not only terminals.
+        self.assertEqual((len(board.nets), sum(map(len, board.nets.values()))), (8, 34))
+        pads = board.footprints["GDT_AC"].pads
+        self.assertEqual([(p.pin, p.net, p.kind, p.drill, p.x, p.y) for p in pads],
+                         [("1", "WIRE_A", "smd", 0, 125.8, 120.5), ("2", "WIRE_C", "smd", 0, 125.8, 124.5)])
+        for changes in ({"kind": "thru_hole", "drill": 1.4}, {"drill": 1.4}, {"y": 114.88},
+                        {"width": 2.8, "height": 2.8}, {"net": "WIRE_B"}):
+            stale = deepcopy(board)
+            for key, value in changes.items():
+                setattr(stale.footprints["GDT_AC"].pads[0], key, value)
+            with self.subTest(changes=changes), self.assertRaises(nets.VerificationError):
+                nets.compare_ipc(self.write("stale.d356", ipc_text(stale)), board)
+        text = ipc_text(board)
+        line = next(line for line in text.splitlines() if "GDT_AC-1" in line)
+        with self.assertRaisesRegex(nets.VerificationError, "access layer"):
+            nets.compare_ipc(self.write("back-access.d356", text.replace(line, line.replace("A01", "A02"))), board)
 
     def test_ipc_wrong_net_missing_record_and_flipped_y_fail(self):
         board = self.board()

@@ -33,6 +33,20 @@ not proof of failure; the [alternative lands](ASSEMBLY.md#2512-smt-resistors)
 still need placement/stencil/solder acceptance. **PR02 thermal/standoff and PS12
 overload/pulse data do not qualify TE or Yageo.**
 
+**2026-09-14 AC applicability erratum:** the approved GDT_AC selection is now
+**Ruilon SMD5050-470NA / C39692533**, the same SMT part as AB/BC, with all six
+GDT endpoint connections unchanged. The "all six original GDTs" statement and
+Bencent/15.24 mm raised-AC constraints below describe historical hardware or
+candidate assumptions, not current population/forming instructions. Use
+[ELECTRICAL's current component comparison](ELECTRICAL.md#1-implemented-model)
+and [SMT AC conversion](ELECTRICAL.md#smt-ac-conversion), including the supplied
+2026-09-14 manufacturer-page review. Historical candidate circuits, physical
+screens and K.12/source calculations below retain their original inputs; they
+are not silently updated to Ruilon or newly qualified by this substitution.
+Actual powered recovery remains unproved. This applicability note is not a
+native/artifact verification result; use a matching current file snapshot and
+reports under the artifact controls below.
+
 **C4/C5/W3/W1/W4 remain open**, deferred only for Gate P files, not closed.
 No source/GDT replacement below is a prototype-file prerequisite. [Artifact controls](ASSEMBLY.md#prototype-artifacts)
 retain supplier/qualification holds and source-hash requirements; the historical
