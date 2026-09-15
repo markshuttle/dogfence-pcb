@@ -1,6 +1,6 @@
 # Installation and Operation
 
-**Draft revision: 1.2.0-dev. Production/field release remains held; prototype-file authorization is not installation approval.**
+**Draft revision: 1.2.1-dev. Production/field release remains held; prototype-file authorization is not installation approval.**
 
 This manual applies the [agreed requirements](REMEDIATION.md#agreed-requirements) to installation and operation; it is not an approved hardware release. **Gate P permits file-verified prototype artifacts only**, not uploads, orders or installation. Supplier acceptance and production/field qualification remain separate under the [release gates](REMEDIATION.md#release-gates).
 

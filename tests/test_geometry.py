@@ -34,6 +34,10 @@ RULES = """(version 1)
 (rule "earth separation"
   (condition "(A.NetName == 'EARTH' && B.NetCode != 0 && B.NetName != 'EARTH') || (B.NetName == 'EARTH' && A.NetCode != 0 && A.NetName != 'EARTH')")
   (constraint clearance (min 3.0mm)))
+(rule "inter-GDT pad separation"
+  (layer "F.Cu")
+  (condition "A.Type == 'Pad' && B.Type == 'Pad' && A.Parent == 'GDT_*' && B.Parent == 'GDT_*' && A.Parent != B.Parent && A.NetName != B.NetName")
+  (constraint clearance (min 3.0mm)))
 (rule "rear core separation"
   (layer "B.Cu")
   (condition "(A.NetName == 'WIRE_A' || A.NetName == 'WIRE_B' || A.NetName == 'WIRE_C') && (B.NetName == 'WIRE_A' || B.NetName == 'WIRE_B' || B.NetName == 'WIRE_C') && A.NetName != B.NetName")
@@ -81,6 +85,12 @@ def historical_smt(board, *, land_height=2):
     for key in ("pad_to_mask_clearance", "pad_to_paste_clearance", "pad_to_paste_clearance_ratio"):
         replace(setup, f"({key} 0)")
     replace(setup, "(solder_mask_min_width 0)")
+    # Restore the old nine via positions as well as the old lands and tenting.
+    old_x = {109.0: 112.5, 110.5: 114.0, 112.0: 115.5}
+    for via in board.children("via"):
+        x, y = map(float, via.one("at").atoms())
+        if x in old_x:
+            replace(via, f"(at {old_x[x]:g} {y:g})")
     for ref, y in (("GDT_AB", 118.69), ("GDT_BC", 126.31)):
         fp = footprint(board, ref)
         replace(fp, f"(at 114 {y})")
@@ -133,6 +143,20 @@ class ParserTests(unittest.TestCase):
         self.assertFalse(matches(bracket, a, b))
         self.assertTrue(matches(bracket, a, dict(b, NetName="WIRE_[ABC]")))
 
+    def test_inter_gdt_rule_distinguishes_pads_parents_and_nets(self):
+        node = parse_many(RULES)[3].one("condition")
+        tree = condition(node.atoms()[0], node)
+        a = {"Type": "Pad", "Parent": "GDT_AC", "NetName": "WIRE_A"}
+        b = {"Type": "Pad", "Parent": "GDT_AB", "NetName": "WIRE_B"}
+        self.assertTrue(matches(tree, a, b))
+        self.assertTrue(matches(tree, a, dict(b, Parent="GDT_B_E")))
+        for change in ({"Type": "Track"}, {"Type": "Graphic"}, {"Parent": "J_IN"},
+                       {"Parent": "GDT_AC"}, {"NetName": "WIRE_A"}):
+            with self.subTest(change=change):
+                self.assertFalse(matches(tree, a, b | change))
+                self.assertFalse(matches(tree, b | change, a))
+        self.assertTrue(matches(condition("A.Parent != 'B.Reference'", node), a, b))
+
 
 class GeometryTests(unittest.TestCase):
     @classmethod
@@ -184,8 +208,10 @@ class GeometryTests(unittest.TestCase):
         self.assertTrue(all(v["ok"] for v in report["measurements"]["protected_vias"]))
         self.assertAlmostEqual(report["measurements"]["minimum_fence_earth_clearance_mm"], 3.25)
         self.assertEqual(report["measurements"]["minimum_rear_core_clearance_mm"], 3.02)
-        self.assertEqual(report["measurements"]["minimum_front_core_clearance_mm"], 0.8)
-        self.assertEqual(report["measurements"]["gdt_ac_front_b_body_clearance_mm"], 0.595)
+        self.assertEqual(report["measurements"]["minimum_front_core_clearance_mm"], 1.8)
+        self.assertEqual(report["measurements"]["minimum_inter_gdt_pad_clearance_mm"], 3.2)
+        self.assertEqual(report["measurements"]["gdt_ac_front_b_pad_clearance_mm"], 3.2)
+        self.assertEqual(report["measurements"]["gdt_ac_front_b_body_clearance_mm"], 3.195)
         self.assertEqual(report["measurements"]["smt_gdt_copper_gaps"], [
             {"reference": ref, "connected_copper_gap_mm": 1.8} for ref in SMT_GDTS])
         self.assertEqual(report["qualification"]["physical_fit"], "not_verified")
@@ -218,8 +244,89 @@ class GeometryTests(unittest.TestCase):
                 self.assertEqual(list(map(float, item.one("at").atoms())), [0.0, y])
         smt = [row for row in report["measurements"]["via_apertures"]
                if row["aperture"].startswith(("GDT_AB.", "GDT_BC."))]
-        self.assertAlmostEqual(min(row["hole_gap_mm"] for row in smt), 1.239713)
-        self.assertAlmostEqual(min(row["annulus_gap_mm"] for row in smt), 0.839713)
+        self.assertAlmostEqual(min(row["hole_gap_mm"] for row in smt), 0.735557)
+        self.assertAlmostEqual(min(row["annulus_gap_mm"] for row in smt), 0.335557)
+
+    def test_inter_gdt_clearance_excludes_same_tube_and_same_net_facing_pads(self):
+        checker = GeometryCheck(self.board)
+        checker.read_board()
+        checker.check_clearances()
+        self.assertEqual(checker.diagnostics, [])
+        for ref in SMT_GDTS:
+            self.assertAlmostEqual(checker.required_pad(ref, "1").shape.gap(
+                checker.required_pad(ref, "2").shape), 2.8)
+        self.assertAlmostEqual(checker.required_pad("GDT_AB", "2").shape.gap(
+            checker.required_pad("GDT_BC", "1").shape), 2.42)
+        for num in ("1", "2"):
+            self.assertAlmostEqual(checker.required_pad("GDT_AC", num).shape.gap(
+                checker.required_pad("GDT_B_E", "1").shape), 3.260514678)
+
+    def test_inter_gdt_clearance_rejects_original_eastward_and_below_threshold(self):
+        # 1.2.0 origins, then the rejected eastward alternative, not current geometry.
+        for ab_x, ac_x, expected in ((119.5, 125.8, 0.8), (123.5, 127.8, 0.0),
+                                    (115.0, 123.5, 3.0), (115.0, 123.49, 2.99)):
+            with self.subTest(ab_x=ab_x, ac_x=ac_x):
+                board = deepcopy(self.positive)
+                for ref, x in (("GDT_AB", ab_x), ("GDT_BC", ab_x), ("GDT_AC", ac_x)):
+                    replace(footprint(board, ref), f"(at {x} {SMT_GDTS[ref][0][1]})")
+                checker = GeometryCheck(board)
+                checker.read_board()
+                checker.check_clearances()  # No placement guard or native-rule evaluation.
+                self.assertEqual(checker.measurements["minimum_inter_gdt_pad_clearance_mm"], expected)
+                codes = {d["code"] for d in checker.diagnostics}
+                self.assertEqual("INTER_GDT_PAD_CLEARANCE" in codes, expected < 3.0)
+                self.assertEqual("GDT_AC_FRONT_B_CLEARANCE" in codes, expected < 3.0)
+                defects = [d for d in checker.diagnostics if d["code"] == "INTER_GDT_PAD_CLEARANCE"
+                           and set(d["items"]) == {"GDT_AC.1", "GDT_B_E.1"}]
+                self.assertEqual(len(defects), int(ab_x != 115.0))
+                if defects:
+                    self.assertAlmostEqual(defects[0]["measured_mm"], 1.32 if ab_x == 119.5 else 0.0, places=2)
+
+    def test_ac_pad_clearance_checks_all_front_b_copper_kinds_and_layers(self):
+        for kind in ("segment", "graphic", "smd", "thru_hole", "via"):
+            for layer in (("*.Cu",) if kind in ("thru_hole", "via") else ("F.Cu", "B.Cu")):
+                with self.subTest(kind=kind, layer=layer):
+                    board = deepcopy(self.positive)
+                    if kind == "segment":
+                        extra = f'''(segment (start 123.6 117.1) (end 123.8 117.1)
+                            (width 0.2) (layer "{layer}") (net 2))'''
+                    elif kind == "graphic":
+                        extra = f'''(gr_rect (start 123.6 117) (end 123.8 117.2)
+                            (stroke (width 0) (type solid)) (fill solid) (layer "{layer}") (net 2))'''
+                    elif kind == "via":
+                        extra = '''(via (at 123.7 116.3) (size 1.8) (drill 1)
+                            (layers "F.Cu" "B.Cu") (net 2))'''
+                    else:
+                        drill = "(drill 0.1)" if kind == "thru_hole" else ""
+                        extra = f'''(footprint "non-GDT fixture" (layer "F.Cu") (at 123.7 117.1)
+                            (property "Reference" "X_B")
+                            (pad "1" {kind} rect (at 0 0) (size 0.2 0.2) {drill}
+                                (layers "{layer}") (net 2 "WIRE_B")))'''
+                    board.values.append(parse(extra))
+                    checker = GeometryCheck(board)
+                    checker.read_board()
+                    checker.check_clearances()
+                    defects = [d for d in checker.diagnostics if d["code"] == "GDT_AC_FRONT_B_CLEARANCE"]
+                    self.assertEqual(bool(defects), layer != "B.Cu")
+                    if defects:
+                        self.assertTrue(any(d["measured_mm"] == 2.7 for d in defects))
+                        self.assertTrue(all(d["layers"] == ["F.Cu"] for d in defects))
+                    self.assertNotIn("INTER_GDT_PAD_CLEARANCE", {d["code"] for d in checker.diagnostics})
+
+    def test_ac_pad_clearance_threshold_outside_body_and_crossing_corridor(self):
+        for gap in (3.0, 2.99):
+            with self.subTest(gap=gap):
+                board = deepcopy(self.positive)
+                end_y = 119.9 - gap
+                board.values.append(parse(f'''(gr_rect (start 123.6 {end_y - 0.2}) (end 123.8 {end_y})
+                    (stroke (width 0) (type solid)) (fill solid) (layer "F.Cu") (net 2))'''))
+                report = self.report(board)
+                if gap == 3.0:
+                    self.assert_pass(report)
+                else:
+                    self.assert_defect("GDT_AC_FRONT_B_CLEARANCE", report)
+                    self.assertEqual({d["code"] for d in report["diagnostics"]}, {"GDT_AC_FRONT_B_CLEARANCE"})
+                self.assertEqual(report["measurements"]["gdt_ac_front_b_pad_clearance_mm"], gap)
 
     def test_smt_gdt_footprints_and_placements_are_required(self):
         for ref, (origin, _) in SMT_GDTS.items():
@@ -842,7 +949,7 @@ class GeometryTests(unittest.TestCase):
         self.assert_defect("W1_MASK_BARRIER", self.aperture_report())
 
     def test_mask_graphic_and_separate_apertures_are_checked(self):
-        self.board.values.append(parse('''(gr_rect (start 113.9 114.8) (end 114.1 115.1)
+        self.board.values.append(parse('''(gr_rect (start 110.4 114.8) (end 110.6 115.1)
             (stroke (width 0) (type solid)) (fill solid) (layer "F.Mask"))'''))
         self.assert_defect("W1_VIA_MASK")
 
@@ -865,7 +972,7 @@ class GeometryTests(unittest.TestCase):
     def test_smd_roundrect_corner_and_rotation_at_via(self):
         # The drill misses the rounded corner but intersects the rotated square.
         delta = move((1.8, 1.8), angle=31)
-        origin = (112.5 - delta[0], 114.88 - delta[1])
+        origin = (109.0 - delta[0], 114.88 - delta[1])
         extra = parse(f'''(footprint "corner fixture" (layer "F.Cu") (at {origin[0]} {origin[1]})
             (property "Reference" "X2")
             (pad "" smd roundrect (at 0 0 31) (size 3 3) (roundrect_rratio 0.5)
@@ -891,9 +998,21 @@ class GeometryTests(unittest.TestCase):
                 board.values.remove(via)
                 self.assert_defect("PROTECTED_VIA", self.report(board))
 
+    def test_rail_vias_cannot_return_to_original_or_eastward_coordinates(self):
+        for delta in (3.5, 7.5):
+            with self.subTest(delta=delta):
+                board = deepcopy(self.positive)
+                for via in board.children("via"):
+                    x, y = map(float, via.one("at").atoms())
+                    if PROTECTED_VIAS[x, y] != "EARTH":
+                        replace(via, f"(at {x + delta} {y})")
+                defects = self.assert_defect("PROTECTED_VIA", self.report(board))
+                self.assertEqual(len(defects), 9)
+                self.assertEqual({d["net"] for d in defects}, {"WIRE_A", "WIRE_B", "WIRE_C"})
+
     def test_via_size_drill_net_and_duplicate(self):
         via = self.board.children("via")[0]
-        for change in ("(size 1.7)", "(drill 0.9)", "(at 115.51 114.88)", "(net 4)"):
+        for change in ("(size 1.7)", "(drill 0.9)", "(at 112.01 114.88)", "(net 4)"):
             with self.subTest(change=change):
                 board = deepcopy(self.positive)
                 replace(board.children("via")[0], change)
@@ -978,15 +1097,21 @@ class GeometryTests(unittest.TestCase):
                 else:
                     self.assert_defect("B_REAR_GEOMETRY", report)
 
-    def test_front_b_cutback_cannot_be_shortened_overextended_or_restored(self):
-        for end_x in (120.9, 121.1, 122.0, 131.0):
-            with self.subTest(end_x=end_x):
+    def test_front_b_cutback_keeps_exact_endpoints_y_and_width(self):
+        for end_x, y, width in ((114.9, 122.5, 3.2), (115.1, 122.5, 3.2), (121.0, 122.5, 3.2),
+                                (131.0, 122.5, 3.2), (115.0, 122.6, 3.2), (115.0, 122.5, 3.1),
+                                (115.0, 122.5, 3.3)):
+            with self.subTest(end_x=end_x, y=y, width=width):
                 board = deepcopy(self.positive)
                 rail = next(t for t in board.children("segment") if t.one("layer").atoms() == ["F.Cu"]
                             and tuple(map(float, t.one("start").atoms())) == (106, 122.5))
-                replace(rail, f"(end {end_x} 122.5)")
+                replace(rail, f"(start 106 {y})")
+                replace(rail, f"(end {end_x} {y})")
+                replace(rail, f"(width {width})")
                 report = self.report(board)
-                self.assert_defect("B_FRONT_CUTBACK", report)
+                self.assert_defect("B_FRONT_CUTBACK" if end_x <= 115 else "B_ROUTING_GEOMETRY", report)
+                if end_x >= 121:
+                    self.assert_defect("GDT_AC_FRONT_B_CLEARANCE", report)
                 if end_x == 131:
                     self.assert_defect("GDT_AC_BODY_EXCLUSION", report)
 
@@ -1094,6 +1219,83 @@ class GeometryTests(unittest.TestCase):
         self.assert_defect("CUSTOM_RULE_COVERAGE", self.report(rules=RULES.replace("'EARTH'", "'MISSING_EARTH'")))
         self.assert_defect("CUSTOM_RULE_COVERAGE", self.report(rules=RULES.replace("(min 3.0mm)", "(min 2.9mm)")))
 
+    def test_parent_properties_identify_footprint_owned_pads_and_graphics(self):
+        owned = parse('''(fp_rect (start -0.2 -0.2) (end 0.2 0.2)
+            (stroke (width 0) (type solid)) (fill solid) (layer "F.Cu"))''')
+        unowned = parse('''(gr_rect (start 98 100) (end 99 101)
+            (stroke (width 0) (type solid)) (fill solid) (layer "F.Cu"))''')
+        footprint(self.board, "GDT_AC").values.append(owned)
+        self.board.values.append(unowned)
+        checker = GeometryCheck(self.board)
+        checker.read_board()
+        self.assertEqual(checker.diagnostics, [])
+        for node, parent in ((pad(self.board, "GDT_AC", "1"), "GDT_AC"),
+                             (pad(self.board, "GDT_B_E", "1"), "GDT_B_E"), (owned, "GDT_AC"), (unowned, "")):
+            item = next(c for c in checker.copper if c.node is node)
+            self.assertEqual(item.properties()["Parent"], parent)
+        self.assertTrue(checker.tracks and checker.vias)
+        self.assertTrue(all(item.properties()["Parent"] == "" for item in checker.tracks + checker.vias))
+        self.assertTrue(all("Reference" not in item.properties() for item in checker.copper))
+
+    def test_reference_conditions_fail_closed_not_counted_as_pad_rule_coverage(self):
+        current = parse_many(RULES)[3].one("condition").atoms()[0]
+        for expression in (current.replace("A.Parent", "A.Reference"),
+                           current.replace("B.Parent", "B.Reference"),
+                           current.replace(".Parent", ".Reference"),
+                           "A.Type == 'Pad' || B.Reference == 'GDT_*'",
+                           "A.Type == 'Footprint' && A.Reference != B.Reference"):
+            for override in (False, True):
+                with self.subTest(expression=expression, override=override):
+                    nodes = parse_many(RULES)
+                    rule = nodes[3]
+                    if override:
+                        rule = deepcopy(rule)
+                        nodes.append(rule)
+                    replace(rule, f'(condition "{expression}")')
+                    report = self.report(rules="\n".join(dump(n) for n in nodes))
+                    defects = self.assert_defect("UNSUPPORTED_GEOMETRY", report)
+                    self.assertTrue(any("Reference" in d["message"] and "footprint-only" in d["message"]
+                                        and "Parent" in d["message"] for d in defects))
+                    self.assertEqual(report["measurements"]["minimum_inter_gdt_pad_clearance_mm"], 3.2)
+
+    def test_inter_gdt_rule_requires_effective_front_coverage_not_name_or_distance(self):
+        for change in ("missing", "weak", "back", "inner", "no-ac", "same-net", "tracks-only", "smd-only",
+                       "override", "ignore", "exclusion"):
+            with self.subTest(change=change):
+                nodes = parse_many(RULES)
+                rule = nodes[3]
+                expression = rule.one("condition").atoms()[0]
+                if change == "missing":
+                    nodes.remove(rule)
+                elif change == "weak":
+                    replace(rule, "(constraint clearance (min 2.99mm))")
+                elif change in ("back", "inner"):
+                    replace(rule, '(layer "B.Cu")' if change == "back" else "(layer inner)")
+                elif change in ("override", "ignore", "exclusion"):
+                    override = deepcopy(rule)
+                    if change == "override":
+                        replace(override, "(constraint clearance (min 0.2mm))")
+                    else:
+                        replace(override, f"(severity {change})")
+                    nodes.append(override)
+                else:
+                    expression = {"no-ac": f"({expression}) && A.Parent != 'GDT_AC' && B.Parent != 'GDT_AC'",
+                                  "same-net": expression.replace("A.NetName != B.NetName", "A.NetName == B.NetName"),
+                                  "tracks-only": expression.replace("'Pad'", "'Track'"),
+                                  "smd-only": f"({expression}) && A.Pad_Type == 'SMD' && B.Pad_Type == 'SMD'"}[change]
+                    replace(rule, f'(condition "{expression}")')
+                report = self.report(rules="\n".join(dump(n) for n in nodes))
+                defects = self.assert_defect("CUSTOM_RULE_COVERAGE", report)
+                self.assertTrue(any("inter-GDT pad" in d["message"] and d["layer"] == "F.Cu" for d in defects))
+                self.assertEqual(report["measurements"]["minimum_inter_gdt_pad_clearance_mm"], 3.2)
+                self.assertNotIn("INTER_GDT_PAD_CLEARANCE", {d["code"] for d in report["diagnostics"]})
+
+    def test_inter_gdt_rule_must_not_constrain_same_tube_front_gaps(self):
+        nodes = parse_many(RULES)
+        expression = nodes[3].one("condition").atoms()[0].replace(" && A.Parent != B.Parent", "")
+        replace(nodes[3], f'(condition "{expression}")')
+        self.assert_defect("CUSTOM_RULE_LAYER", self.report(rules="\n".join(dump(n) for n in nodes)))
+
     def test_rear_core_rule_requires_back_layer_all_core_nets_and_multilayer_coverage(self):
         for change in ("missing", "weak", "front", "inner", "tracks-only", "no-vias", "no-c", "override"):
             with self.subTest(change=change):
@@ -1196,7 +1398,7 @@ class GeometryTests(unittest.TestCase):
         for ring in (
             "A.Type == 'Pad' && A.Pad_Type == 'Through-hole'",
             "!(A.Type != 'Pad') && 'Through-hole' == A.Pad_Type",
-            "A.Type == 'Pad' && A.Reference != 'B.Type'",  # A literal is not a B reference.
+            "A.Type == 'Pad' && A.Parent != 'B.Type'",  # A literal is not a B reference.
             None,
         ):
             for earth in (

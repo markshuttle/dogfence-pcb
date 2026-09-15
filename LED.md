@@ -1,6 +1,6 @@
 # External LED Indicators
 
-**Draft system revision 1.2.0-dev; external-indicator qualification remains open. Prototype files are not LED or installation approval.**
+**Draft system revision 1.2.1-dev; external-indicator qualification remains open. Prototype files are not LED or installation approval.**
 
 ## Selected Part
 

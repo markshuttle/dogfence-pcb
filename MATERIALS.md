@@ -1,6 +1,6 @@
 # Materials And Procurement Tracker
 
-**Draft hardware revision 1.2.0-dev; reviewed baseline 1.1.0. Procurement reconciliation: 2026-09-11.**
+**Draft hardware revision 1.2.1-dev; reviewed baseline 1.1.0. Procurement reconciliation: 2026-09-11.**
 
 This ledger preserves recorded **ORDERED**, **ON HAND**, existing and pending items. ORDERED alone does not mean delivered, inspected, suitable for the revised design, or allocated to a particular test/field unit. Only the user-confirmed corrections below update purchase history; this document places no order and claims no supplier allocation. Confirm receipts and usable quantities before ordering shortfalls.
 

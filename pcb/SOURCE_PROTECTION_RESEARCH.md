@@ -1,6 +1,7 @@
 # Source And GDT Protection Research
 
-P2 research began 2026-09-07 from checkpoint `97e202d`, hardware **1.2.0-dev**.
+Current hardware **1.2.1-dev**. P2 research began 2026-09-07 from checkpoint
+`97e202d`, under **1.2.0-dev**; candidate calculations remain historical.
 
 Added in **ad282e3**, this record includes later findings and dated corrections.
 **Its proposed circuits remain historical, unselected investigations**, with

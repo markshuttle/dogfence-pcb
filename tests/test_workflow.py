@@ -199,14 +199,17 @@ class WorkflowTests(unittest.TestCase):
                 "measurements": {"via_apertures": [{"layer": "F.Mask", "hole_gap_mm": 0.9},
                                                   {"layer": "F.Paste", "hole_gap_mm": 0.9}],
                                  "minimum_rear_core_clearance_mm": 3.02,
-                                 "gdt_ac_front_b_body_clearance_mm": 0.595,
+                                 "minimum_inter_gdt_pad_clearance_mm": 3.2,
+                                 "gdt_ac_front_b_pad_clearance_mm": 3.2,
+                                 "gdt_ac_front_b_body_clearance_mm": 3.195,
                                  "smt_gdt_copper_gaps": [{"reference": "GDT_AC", "connected_copper_gap_mm": 1.8}]}}
         expected = w.geometry_comparison(copy.deepcopy(data))
         reversed_rows = copy.deepcopy(data)
         reversed_rows["measurements"]["via_apertures"].reverse()
         reversed_rows["inputs"]["pcb"]["path"] = "/new/pcb"
         self.assertEqual(w.geometry_comparison(reversed_rows), expected)
-        for change in ("value", "duplicate", "hash", "rear-clearance", "body-clearance", "smt-gap"):
+        for change in ("value", "duplicate", "hash", "rear-clearance", "inter-gdt-clearance", "ac-b-clearance",
+                       "body-clearance", "smt-gap"):
             changed = copy.deepcopy(data)
             rows = changed["measurements"]["via_apertures"]
             if change == "value":
@@ -217,6 +220,10 @@ class WorkflowTests(unittest.TestCase):
                 changed["inputs"]["pcb"]["sha256"] = "different"
             elif change == "rear-clearance":
                 changed["measurements"]["minimum_rear_core_clearance_mm"] = 2.82
+            elif change == "inter-gdt-clearance":
+                changed["measurements"]["minimum_inter_gdt_pad_clearance_mm"] = 0.8
+            elif change == "ac-b-clearance":
+                changed["measurements"]["gdt_ac_front_b_pad_clearance_mm"] = 1.32
             elif change == "body-clearance":
                 changed["measurements"]["gdt_ac_front_b_body_clearance_mm"] = 0
             else:

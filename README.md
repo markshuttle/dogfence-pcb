@@ -1,6 +1,6 @@
 # Dog Fence Indicator & Surge Protection System
 
-**Draft hardware revision: 1.2.0-dev. Reviewed baseline: 1.1.0. File-verified prototype artifacts are authorized; production and field release remain on hold. No upload or order is authorized.**
+**Draft hardware revision: 1.2.1-dev. Reviewed baseline: 1.1.0. File-verified prototype artifacts are authorized; production and field release remain on hold. No upload or order is authorized.**
 
 This repository documents a 4 km DogWatch SmartFence boundary with local DC fault
 indicators and GDT surge paths. The implemented 16-part hybrid includes series
@@ -161,6 +161,13 @@ retired; only the three earth GDTs still require lead forming. The board
 dielectric at the crossing is not qualified impulse insulation. Circuit
 connectivity, RUN/TEST operation and the distinct LED mappings are unchanged.
 
+The subsequently approved **1.2.1-dev westward spacing change** relocates the
+nine rail vias and three SMT GDTs and shortens front B. The
+[current spacing controls](pcb/ASSEMBLY.md#smt-via-relocation) require **>=3.00 mm
+between unlike-net pads of different GDTs and between AC pads and front B
+copper**, with **3.20 mm nominal minimum**. Each tube's internal land/copper
+gaps are a separate scope; neither the new spacing nor DRC proves flashover immunity.
+
 The [retained resistor lands](pcb/ASSEMBLY.md#2512-smt-resistors) are an
 alternative to the manufacturer's recommendation, not an exact-fit approval.
 Actual parts, stencil/solder process, earth-GDT forming, overhang and
@@ -251,10 +258,10 @@ Production targets retain their holds and win mixed goals; unresolved External
 sourcing blocks both modes. See the [latest handoff](REMEDIATION.md#session-handoff)
 for actual results, not a reused PASS from an earlier note snapshot.
 
-Native/file checks and real serial/parallel prototype publication for the
-**2026-09-14 SMT GDT_AC/rear-B change passed**. [SMT AC Conversion](REMEDIATION.md#smt-ac-conversion)
-records the matching snapshot and remaining holds; the unchanged `1.2.0-dev`
-label does not make an older package current.
+Native/file checks and actual serial/parallel prototype publication for
+**1.2.1-dev westward GDT spacing passed**. [Westward GDT Spacing](REMEDIATION.md#westward-gdt-spacing)
+records the matching snapshot and remaining holds. The earlier SMT AC/rear-B
+publication applies only to its recorded `1.2.0-dev` inputs.
 
 Require matching `build/status.json` and `build/manifest.json` with validated
 revision/source/artifact hashes and **status=prototype, mode=prototype**, or

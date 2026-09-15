@@ -1,6 +1,6 @@
 # Electrical and Environmental Risks
 
-**Draft revision: 1.2.0-dev. Production/field-release hold; prototype-file authorization is not hardware approval.**
+**Draft revision: 1.2.1-dev. Production/field-release hold; prototype-file authorization is not hardware approval.**
 
 This is a risk register and qualification boundary, not a safety certificate or measured reliability prediction. [Agreed requirements](REMEDIATION.md#agreed-requirements), the [issue register](REMEDIATION.md#issue-register) and [release gates](REMEDIATION.md#release-gates) control decisions. The [implemented circuit](pcb/ELECTRICAL.md#1-implemented-model) and [reviewed population](pcb/ASSEMBLY.md#reviewed-components) define the design under assessment, not qualified hardware. **C4, C5, W3, W1 and W4 remain open.**
 

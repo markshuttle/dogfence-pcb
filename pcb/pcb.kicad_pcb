@@ -9,8 +9,8 @@
 	(paper "A4")
 	(title_block
 		(title "DogFence Milestone Indicator")
-		(date "2026-09-06")
-		(rev "1.2.0-dev")
+		(date "2026-09-14")
+		(rev "1.2.1-dev")
 		(company "DogFence Project")
 		(comment 1 "Development: protection, fit and process approval pending")
 	)
@@ -663,7 +663,7 @@
 	(footprint "DogFence:SMD5050-470NA"
 		(layer "F.Cu")
 		(uuid "3a1e8c5b-ef58-4e86-b9ee-513e8dde5739")
-		(at 119.5 118.69)
+		(at 115 118.69)
 		(path "/800a33dc-5627-4901-abfd-b5d6707cf2b1/ad6228bd-fcb9-4743-8610-3033fcef6975")
 		(attr smd)
 		(fp_rect
@@ -1635,7 +1635,7 @@
 			)
 		)
 		(property "Reference" "J_IN"
-			(at 3.5 0 90)
+			(at 0 -14 0)
 			(layer "B.SilkS")
 			(uuid "d368579d-219d-4ba7-94d0-3253084fdac2")
 			(effects
@@ -1742,16 +1742,35 @@
 				)
 			)
 		)
-		(fp_rect
+		(fp_line
 			(start -5.3 -11.43)
+			(end 5.2 -11.43)
+			(stroke
+				(width 0.15)
+				(type solid)
+			)
+			(layer "F.SilkS")
+			(uuid "e0b829e9-8fb1-49d8-a94e-3aa270940526")
+		)
+		(fp_line
+			(start -5.3 -11.43)
+			(end -5.3 11.43)
+			(stroke
+				(width 0.15)
+				(type solid)
+			)
+			(layer "F.SilkS")
+			(uuid "e0b829e9-8fb1-49d8-a94e-3aa270940527")
+		)
+		(fp_line
+			(start -5.3 11.43)
 			(end 5.2 11.43)
 			(stroke
 				(width 0.15)
 				(type solid)
 			)
-			(fill no)
 			(layer "F.SilkS")
-			(uuid "e0b829e9-8fb1-49d8-a94e-3aa270940526")
+			(uuid "e0b829e9-8fb1-49d8-a94e-3aa270940528")
 		)
 		(fp_rect
 			(start -6.35 -12.85)
@@ -2257,7 +2276,7 @@
 	(footprint "DogFence:SMD5050-470NA"
 		(layer "F.Cu")
 		(uuid "6774f1de-bcce-49ce-a959-5ae0f58c4530")
-		(at 125.8 122.5)
+		(at 123.7 122.5)
 		(path "/800a33dc-5627-4901-abfd-b5d6707cf2b1/62814837-b119-44ae-8f69-c2239ebf05f0")
 		(attr smd)
 		(fp_rect
@@ -2868,7 +2887,7 @@
 	(footprint "DogFence:SMD5050-470NA"
 		(layer "F.Cu")
 		(uuid "b6a5fe05-97eb-4250-8a19-09fd9f8bdc64")
-		(at 119.5 126.31)
+		(at 115 126.31)
 		(path "/800a33dc-5627-4901-abfd-b5d6707cf2b1/c44253b2-2ca9-4f5e-839a-a15faac68e9d")
 		(attr smd)
 		(fp_rect
@@ -3952,7 +3971,7 @@
 			)
 		)
 	)
-	(gr_text "DogFence 1.2.0-dev"
+	(gr_text "DogFence 1.2.1-dev"
 		(at 120.5 98.5 0)
 		(layer "F.SilkS")
 		(uuid "9390ae74-4c2c-4d5c-b5d7-2278a3b6e9c9")
@@ -3963,7 +3982,7 @@
 			)
 		)
 	)
-	(gr_text "DogFence 1.2.0-dev"
+	(gr_text "DogFence 1.2.1-dev"
 		(at 120.5 98.5 0)
 		(layer "B.SilkS")
 		(effects
@@ -4021,23 +4040,23 @@
 		(uuid "45a39dd9-5178-48c8-bb37-0bb36e3e47d4")
 	)
 	(segment
-		(start 119.5 114.88)
-		(end 119.5 116.19)
+		(start 115 114.88)
+		(end 115 116.19)
 		(width 3.2)
 		(layer "F.Cu")
 		(net 1)
 		(uuid "9937354c-bbda-4f5a-98c5-c72531b2e74b")
 	)
 	(segment
-		(start 125.8 114.88)
-		(end 125.8 120)
+		(start 123.7 114.88)
+		(end 123.7 120)
 		(width 3.2)
 		(layer "F.Cu")
 		(net 1)
 		(uuid "9b8c608b-97d7-4bf0-afd5-60bc94583598")
 	)
 	(via
-		(at 115.5 114.88)
+		(at 112 114.88)
 		(size 1.8)
 		(drill 1)
 		(layers "F.Cu" "B.Cu")
@@ -4045,7 +4064,7 @@
 		(uuid "59d1044f-0c00-4e94-9a36-2ce32481c5a1")
 	)
 	(via
-		(at 112.5 114.88)
+		(at 109 114.88)
 		(size 1.8)
 		(drill 1)
 		(layers "F.Cu" "B.Cu")
@@ -4053,7 +4072,7 @@
 		(uuid "7824bff5-ecf9-4ec2-9090-94f38f60b71e")
 	)
 	(via
-		(at 114 114.88)
+		(at 110.5 114.88)
 		(size 1.8)
 		(drill 1)
 		(layers "F.Cu" "B.Cu")
@@ -4077,8 +4096,8 @@
 		(uuid "a4c4b4dd-778c-4a2c-9e6d-9344cddccbf1")
 	)
 	(segment
-		(start 119.5 122.5)
-		(end 119.5 123.81)
+		(start 115 122.5)
+		(end 115 123.81)
 		(width 3.2)
 		(layer "F.Cu")
 		(net 2)
@@ -4086,22 +4105,22 @@
 	)
 	(segment
 		(start 106 122.5)
-		(end 121 122.5)
+		(end 115 122.5)
 		(width 3.2)
 		(layer "F.Cu")
 		(net 2)
 		(uuid "dbc9a0fe-6b95-4c97-a522-5c5f7959f7e3")
 	)
 	(segment
-		(start 119.5 122.5)
-		(end 119.5 121.19)
+		(start 115 122.5)
+		(end 115 121.19)
 		(width 3.2)
 		(layer "F.Cu")
 		(net 2)
 		(uuid "f51a0555-268c-47d7-affc-3cc2011cd4e3")
 	)
 	(via
-		(at 115.5 122.5)
+		(at 112 122.5)
 		(size 1.8)
 		(drill 1)
 		(layers "F.Cu" "B.Cu")
@@ -4109,7 +4128,7 @@
 		(uuid "9a130e32-8554-45c2-89cd-d1efce424758")
 	)
 	(via
-		(at 112.5 122.5)
+		(at 109 122.5)
 		(size 1.8)
 		(drill 1)
 		(layers "F.Cu" "B.Cu")
@@ -4117,7 +4136,7 @@
 		(uuid "ef148ef4-1555-45d4-b83e-0e21ac217b5d")
 	)
 	(via
-		(at 114 122.5)
+		(at 110.5 122.5)
 		(size 1.8)
 		(drill 1)
 		(layers "F.Cu" "B.Cu")
@@ -4189,16 +4208,16 @@
 		(uuid "d659258a-9a9c-463c-a94e-1af99938381d")
 	)
 	(segment
-		(start 119.5 130.12)
-		(end 119.5 128.81)
+		(start 115 130.12)
+		(end 115 128.81)
 		(width 3.2)
 		(layer "F.Cu")
 		(net 3)
 		(uuid "19a1893b-4396-4c0e-b03b-4b8854dd4d78")
 	)
 	(segment
-		(start 125.8 130.12)
-		(end 125.8 125)
+		(start 123.7 130.12)
+		(end 123.7 125)
 		(width 3.2)
 		(layer "F.Cu")
 		(net 3)
@@ -4229,7 +4248,7 @@
 		(uuid "7e2e9f44-ffdd-44f3-afed-de7f3107754e")
 	)
 	(via
-		(at 112.5 130.12)
+		(at 109 130.12)
 		(size 1.8)
 		(drill 1)
 		(layers "F.Cu" "B.Cu")
@@ -4237,7 +4256,7 @@
 		(uuid "2f2008c8-b160-4d2d-af7c-829b6169af6c")
 	)
 	(via
-		(at 115.5 130.12)
+		(at 112 130.12)
 		(size 1.8)
 		(drill 1)
 		(layers "F.Cu" "B.Cu")
@@ -4245,7 +4264,7 @@
 		(uuid "40c38742-5471-47b6-a652-0d9f6d86b6b3")
 	)
 	(via
-		(at 114 130.12)
+		(at 110.5 130.12)
 		(size 1.8)
 		(drill 1)
 		(layers "F.Cu" "B.Cu")

@@ -1,6 +1,6 @@
 # Conditional Design Bounds
 
-Hardware **1.2.0-dev**, SMT GDT_AC conversion recorded 2026-09-14; TE
+Hardware **1.2.1-dev**, westward GDT/via relocation recorded 2026-09-14; TE
 evidence/provenance correction retained from 2026-09-11. This note
 owns current parametric screens from `scripts/analyze_limits.py` and
 `scripts/design_bounds.py` for the **16-part TE 35212K2FT / BYG23T prototype
@@ -20,8 +20,8 @@ explain the separate file, supplier and qualification scopes. Purchase history
 is in [MATERIALS](../MATERIALS.md#resistor-procurement-and-history), an optional
 **repository-only** reference, not part of the flat engineering-note package.
 
-The user-approved AC conversion changes the tube and physical copper paths,
-not any of the six GDT endpoint connections. The [copper screen below](#ac-conversion-copper-screen)
+The user-approved AC conversion and subsequent westward placement change the
+physical copper paths, not any of the six GDT endpoint connections. The [copper screen below](#ac-conversion-copper-screen)
 is separate arithmetic, not a change to either DC script or a thermal
 qualification. Native/file verification requires matching current reports and
 artifact hashes; earlier results do not verify this changed snapshot.
@@ -371,7 +371,7 @@ mode in the selected-part helpers.
 
 ## AC Conversion Copper Screen
 
-**2026-09-14, approved geometry, not a current or surge rating.**
+**2026-09-14, 1.2.1-dev approved westward geometry, not a current or surge rating.**
 [ELECTRICAL: SMT AC Conversion](ELECTRICAL.md#smt-ac-conversion) records the
 front B cutback, **exactly 6.00 mm rear B**, minimal return-stem shift,
 single-layer A/C stubs and retained six-path connectivity.
@@ -400,17 +400,24 @@ cooling during that rise. It is a cross-section ratio, not a prediction of
 actual pulse temperature, fusing, lifetime or equal transient sharing in the
 old dual-layer path. No pulse amplitude or site exposure is selected here.
 
-The last dedicated B stitching via at **X=115.50** and retained GDT_B_E
-core-side PTH at **X=131.00** bound the **15.50 mm rear-only strip** used in this
-separate resistance estimate. With **assumed annealed-copper resistivity at
+The last dedicated B stitching via at **X=112.00** and retained GDT_B_E
+core-side PTH at **X=131.00** bound the **19.00 mm rear strip** used in this
+separate resistance estimate. This idealized length between interlayer datums
+does not imply that front copper is absent throughout the interval or that all
+current takes this path. With **assumed annealed-copper resistivity at
 20 C of 1.724e-8 ohm*m**:
 
 ```text
-L_strip = (131.00 - 115.50) mm = 15.50 mm
+L_strip = (131.00 - 112.00) mm = 19.00 mm
 R_strip_20 = rho_20 * L_strip / S_rear_B
-           = (1.724e-8 ohm*m) * (15.50e-3 m) / (0.420e-6 m^2)
-           = 0.000636238095... ohm = 0.636238... milliohm
+           = (1.724e-8 ohm*m) * (19.00e-3 m) / (0.420e-6 m^2)
+           = 0.000779904762... ohm = 0.779905... milliohm
 ```
+
+**Historical 1.2.0-dev comparison:** the former last B via at X=115.50 gave
+15.50 mm and **0.636238095 milliohm** under the same assumptions. The approved
+westward via move lengthens this modelled strip; the cross-section ratios above
+remain unchanged. Neither number is a measured whole-path resistance.
 
 This is **only that uniform strip**, not whole-path impedance or a guaranteed
 finished-copper, pin, solder or plated-barrel model. Existing component PTH

@@ -1,6 +1,6 @@
 # Controlled Assembly Notes
 
-Document: DF-ASM-1.2.0-dev. Updated 2026-09-14 for hardware **1.2.0-dev**.
+Document: DF-ASM-1.2.1-dev. Updated 2026-09-14 for hardware **1.2.1-dev**.
 
 **DEVELOPMENT / FIVE-BOARD PROTOTYPE SCOPE.** These instructions control the
 selected **16-part SMT-resistor/BYG23T hybrid**, not a qualified field protection
@@ -8,13 +8,16 @@ design. [Reviewed Components](#reviewed-components) identifies the active BOM
 and substitution restrictions; [Physical Guardrails](#physical-guardrails)
 indexes the binding placement, fit/forming and process controls.
 
-The **2026-09-14 user-approved SMT GDT_AC / 6.00 mm rear-B conversion** replaces
-the raised axial AC tube; it does not qualify the new crossover. Current
-instructions below specify that conversion; the [retired forming drawing](#gdt_ac-forming-drawing)
-and [dated DFM disposition](DFM_EVIDENCE.md#smt-ac-crossover-selection) preserve
-the change's history and evidence limits. Earlier native results do not verify
-this changed geometry or note; require fresh integrated results for the
-source-matched snapshot.
+The **2026-09-14 user-approved westward spacing change, hardware 1.2.1-dev**,
+moves the nine rail vias and three SMT GDTs with their existing front takeoffs,
+and shortens front B. It retains the **1.2.0-dev SMT AC / exactly 6.00 mm rear-B
+conversion**, not the raised axial AC tube. Current instructions below follow
+the [westward selection](DFM_EVIDENCE.md#westward-spacing-selection); the
+[initial SMT conversion](DFM_EVIDENCE.md#smt-ac-crossover-selection) and
+[retired forming drawing](#gdt_ac-forming-drawing) remain dated historical
+evidence. Earlier native results do not verify this changed geometry or note;
+require fresh integrated results for the source-matched snapshot. No hardware
+or crossover qualification follows from the new nominal gaps.
 
 ## Prototype Artifacts
 
@@ -68,11 +71,12 @@ Dimensions and coordinates follow [Drawing Conventions](#drawing-conventions).
 | :--- | :--- |
 | Board outline | **63.00 x 56.00**, from **(97.00,94.50) to (160.00,150.50)**. |
 | Mounting | Four **3.20 NPTH** at **(101.50,99.00), (155.50,99.00), (101.50,146.00), (155.50,146.00)**; nominal centres **4.50** from edges. Preserve **6.40-diameter keepout collar markings** and the larger **6.90-diameter / 3.45-radius front/back mechanical courtyards and copper keepouts**. Supports must not contact functional copper. |
-| Fence rails | A/C remain full **3.20 width on both F.Cu and B.Cu**, with unchanged paths. The approved B main segment at **Y=122.50** is **3.20 F.Cu, X=106.00..121.00**, and **EXACTLY 6.00 B.Cu, X=106.00..131.00**, not the proposed 6.40. Preserve all stitching vias and the [SMT AC crossover controls](#smt-ac-crossover); no waist relief or narrowed thermal spokes. |
+| Fence rails | A/C remain full **3.20 width on both F.Cu and B.Cu**, with unchanged paths. The approved B main segment at **Y=122.50** is **3.20 F.Cu, X=106.00..115.00**, and **EXACTLY 6.00 B.Cu, X=106.00..131.00**, not the proposed 6.40. Preserve all stitching vias at the [1.2.1 coordinates](#stitching-via-identification) and the [SMT AC crossover controls](#smt-ac-crossover); no waist relief or narrowed thermal spokes. |
 | EARTH bus | Matching solid **4.50-grid copper on both sides**, bounding **X=143.99..157.25, Y=111.25..133.75**. Preserve slit-free continuity, all five EARTH vias and the three paralleled J_EARTH pins. Do not add a blanket earth plane across the isolated fence nets. |
 | Fence/EARTH isolation | **>=3.00 copper separation on both F.Cu and B.Cu**; nominal source-analysis global minimum remains **3.25**. The earlier **8.44** clearance to earth-GDT input pins is a historical geometry comparison, not a new measurement; remeasure revised outputs. |
-| Rear core isolation and B returns | Require **>=3.00 between every different A/B/C net on B.Cu**, including pads and returns, in native rules and independent geometry checks. Approved nominal all-core minimum is **3.02**. The **1.60-wide** B-return stem shifts from **X=135.50 to 136.50**; its A/C gap becomes **3.10**. Keep all Y coordinates, widths and terminal endpoints, including **Y=107.20/137.80** return arms, unchanged. This is the necessary approved stem correction, not permission for another reroute. |
-| Legend | Native **1.00 height / 0.15 stroke**, with **0.15 pad clearance**; retain A/B/C/EARTH, polarity/cathode identification, underside references and **1.2.0-dev** identification. Inspect processed printing. |
+| Rear core isolation and B returns | Require **>=3.00 between every different A/B/C net on B.Cu**, including pads and returns, in native rules and independent geometry checks. Approved nominal all-core minimum remains **3.02**. Retain the **1.60-wide** B-return stem at **X=136.50**, with **3.10** A/C gap, following the 1.2.0-dev shift from X=135.50. Keep all Y coordinates, widths and terminal endpoints, including **Y=107.20/137.80** return arms, unchanged. The westward selection does not authorize another rear reroute. |
+| Front GDT spacing | The approved nominal **unlike-net inter-GDT pad minimum is 3.20**, not a blanket front-copper rule or a guaranteed finished 3.00 gap. Preserve the [selected stubs and metric lands](#smt-via-relocation), including each tube's **2.80 land / 1.80 connected-copper gap**. |
+| Legend | Native **1.00 height / 0.15 stroke**, with **0.15 pad clearance**; retain A/B/C/EARTH, polarity/cathode identification, underside references and **1.2.1-dev** identification. Inspect processed printing. |
 
 The two-layer/2 oz project rules also require track width **>=0.1651**, general
 copper clearance **0.20**, hole clearance **0.25**, copper-edge clearance **0.50**
@@ -96,9 +100,9 @@ Detailed inventories remain in their working sections, not in a second table her
 - [Hole Fit Evidence](#hole-fit-evidence) and
   [Body And Courtyard Evidence](#body-and-courtyard-evidence): hole/pad/ring
   schedule, pin/pattern/body envelopes, neighbour gaps and J_EARTH overhang.
-- [SMT Via Relocation](#smt-via-relocation): metric GDT lands, unchanged
-  AB/BC stub endpoints, aperture/connected-copper gaps and W1 process hold.
-- [SMT AC Crossover](#smt-ac-crossover): new front-only A/C takeoffs, front-B
+- [SMT Via Relocation](#smt-via-relocation): approved westward vias/AB/BC stubs,
+  unchanged stub Y endpoints, metric lands, aperture gaps and W1 process hold.
+- [SMT AC Crossover](#smt-ac-crossover): front-only A/C takeoffs, front-B
   cutback, rear-B crossover, removed AC barrels and source-only clearance limits.
 - [Stitching Via Identification](#stitching-via-identification): all **fourteen**
   protected **1.00 drill / 1.80 copper** vias by net/coordinate, both-side mask
@@ -162,7 +166,7 @@ actual continuous-safe TEST and protection qualification remain separate holds.
   pose and assembly allowances; a drawing stroke is not extra body tolerance.
   LED arrows indicate the required wire-opening direction.
 - Local footprint origins follow the placement table, including the authorized
-  R1/R2 and D1/D2 moves, retained AB/BC relocation and SMT AC conversion. Use the native
+  R1/R2 and D1/D2 moves and the 1.2.1 westward SMT-GDT placement. Use the native
   generated CPL, not a hand-maintained positive screen-Y table: native placement
   Y is negative for these positive board Y coordinates. Rotations -90 and 270
   degrees are equivalent. The assembler must
@@ -191,8 +195,8 @@ that native export, so no ineffective PCB plot-setting change is retained.
 | D1, D2 | (130.80, 104.50) / (130.80, 140.50), 0 deg | BYG23T SMA series diodes. Cathode band east/right, K1 at X=132.90 to LED_A_POS/LED_C_POS; A2 at X=128.70 to Net-(D1-A)/Net-(D2-A). No diode insertion holes remain. |
 | D3, D4 | (135.00, 99.00) / (135.00, 146.00), 180 deg | Same BYG23T-M3/TR SMA, **negative shunts**, not series parts. Cathode band west/left, K1 at X=132.90 to LED_A_POS/LED_C_POS; A2 at X=137.10 to WIRE_B. No EARTH connection. |
 | R1, R2 | (120.00, 104.50) / (120.00, 140.50), 0 deg | Nonpolar, top-side SMT. Pad 1 at X=116.875 to WIRE_A/WIRE_C; pad 2 at X=123.125 to Net-(D1-A)/Net-(D2-A). Use the [prototype BOM population](#reviewed-components) and accept its [alternate-land process](#2512-smt-resistors). No holes or axial standoff/forming. |
-| GDT_AB, GDT_BC | (119.50, 118.69) / (119.50, 126.31), 0 deg | Ruilon SMD5050-470NA. Pad 1 north, pad 2 south. AB connects A/B; BC connects B/C. Nonpolar tube, but preserve the specified footprint/net mapping. |
-| GDT_AC | (125.80, 122.50), 0 deg | Ruilon SMD5050-470NA, north-south electrode axis. Pad 1 A at **(125.80, 120.50)**; pad 2 C at **(125.80, 124.50)**. Same reviewed SMT geometry as AB/BC; inspect the [front-only takeoffs and rear-B crossover](#smt-ac-crossover), not axial forming. |
+| GDT_AB, GDT_BC | (115.00, 118.69) / (115.00, 126.31), 0 deg | Ruilon SMD5050-470NA. Pad 1 north, pad 2 south. AB connects A/B; BC connects B/C. Nonpolar tube, but preserve the specified footprint/net mapping. |
+| GDT_AC | (123.70, 122.50), 0 deg | Ruilon SMD5050-470NA, north-south electrode axis. Pad 1 A at **(123.70, 120.50)**; pad 2 C at **(123.70, 124.50)**. Same reviewed SMT geometry as AB/BC; inspect the [front-only takeoffs and rear-B crossover](#smt-ac-crossover), not axial forming. |
 | GDT_A_E, GDT_B_E, GDT_C_E | (138.62, 113.50), (138.62, 122.50), (138.62, 131.50), 0 deg | Ruilon 2R470TD-8, horizontal formed pitch 15.24. Pin 1 west at X=131.00 on A/B/C respectively; pin 2 east at X=146.24 on EARTH. Preserve 9.00 body-centre pitch; do not bend bodies together to ease insertion. |
 
 J_LED_A and J_LED_C intentionally have **different local pad-number mappings**.
@@ -490,6 +494,10 @@ tolerance stack and incoming inspection method.
 J_EARTH uses a three-sided silk aid: its west/rear silk edge would cross the
 intentional EARTH via mask openings, so that edge is omitted. The full F.Fab
 and courtyard envelopes are retained; no physical clearance is concealed.
+J_IN likewise omits only its east/rear silk edge where the relocated rail-via
+openings cross it. Its mirrored B.SilkS reference is at **(106.00,108.50)**,
+outside those openings. The input footprint's pads, F.Fab and complete courtyard
+are unchanged; a three-sided silk aid does not relax the body/fit controls.
 
 At J_EARTH the E body reaches **X=161.00**, 1.00 beyond the nominal east edge;
 pose increases this to **161.10**. Allow **1.30 overhang** against a routed edge
@@ -521,33 +529,47 @@ LED courtyards stop at X=151.95, 0.10 before H2/H4's protected courtyard bounds.
 
 ## SMT Via Relocation
 
-The source retains the prior **AB/BC relocation** and visually resolved metric
-land recommendation. The **2026-09-14 AC conversion uses that same reviewed
-footprint**, without a land redesign or speculative mask reduction. The shared
-land/process controls apply to **all six lands on all three SMT GDTs**; the
-AB/BC-specific via calculation below is not the new AC hole-clearance calculation.
+The **2026-09-14 approved westward selection, hardware 1.2.1-dev**, changes
+global placement, not local lands, body/courtyard geometry, parts or nets.
+Only J_IN's overlapping silk edge/reference are corrected in the source/local
+definition as described above. The **1.2.0-dev AC conversion** already adopted the same reviewed
+SMT footprint as AB/BC. The shared metric land/process controls still apply to
+**all six lands on all three SMT GDTs**. The AB/BC-specific via calculation below
+is separate from AC's clearance to the retained GDT_B_E hole/pad.
 
-- GDT_AB and GDT_BC remain at **X=119.50**, Y=118.69/126.31, zero rotation and
-  unchanged nets. All three SMT GDTs use **5.50 X x 1.20 Y rectangular lands
-  at local Y=+/-2.00** on F.Cu/F.Mask/F.Paste, undrilled, with zero effective
+- GDT_AB and GDT_BC are at **X=115.00**, moved **4.50 west from X=119.50**,
+  retaining Y=118.69/126.31, zero rotation and nets. All three SMT GDTs use
+  **5.50 X x 1.20 Y rectangular lands at local Y=+/-2.00** on
+  F.Cu/F.Mask/F.Paste, undrilled, with zero effective
   mask margin, paste margin and paste ratio. SP-GDT-006 A3 p3's
   X1 leader is centre spacing, not the inner gap. **Select its printed metric
   4.00 spacing explicitly**; the contradictory 0.165-inch entry is not a
   manufacturer-approved erratum. The decision and tolerance-overlap calculation
   are in DFM_EVIDENCE. Supplier confirmation/processed stencil remain open.
-- The four AB/BC connection stubs remain at X=119.50 and retain their **3.20
-  width**. All nine rail vias and five EARTH vias remain 1.00/1.80; A/C rails
-  and EARTH geometry remain unchanged. The only approved B rail/return changes
-  are the [physical guardrails](#physical-guardrails) and [AC crossover](#smt-ac-crossover).
+- The four **F.Cu-only** AB/BC connection stubs move with the parts to **X=115.00**
+  and retain **3.20 width**. The nine rail vias move **3.50 west**, from
+  X=112.50/114.00/115.50 to **109.00/110.50/112.00**, with all Y coordinates,
+  **1.00 drill / 1.80 copper** and untented process unchanged. All five EARTH
+  vias, A/C main rails and EARTH geometry are unchanged. AC's **2.10 west** move
+  and the front-B shortening follow the [crossover controls](#smt-ac-crossover);
+  the rear rail/return geometry is unchanged from 1.2.0-dev.
 - J_IN courtyard ends at global **X=111.75**, AB/BC courtyards begin at
-  **116.50**, gap **4.75**. Current AC neighbour gaps are recorded in
-  [Crossover Clearance Evidence](DFM_EVIDENCE.md#crossover-clearance-evidence),
-  not inferred from the retired axial courtyard.
-- Keep the four 3.20-wide stub endpoints at Y=116.19,121.19,123.81,128.81.
-  They overlap the new lands without extending the rounded copper further
-  beneath the tubes. The land/mask/paste inner gap is **2.80**; the underlying
+  **112.00**, leaving **0.25**, reduced from **4.75** in 1.2.0-dev. The user
+  explicitly approved this reduced drawing space; **no nominal courtyard clash
+  is indicated, but physical fit, soldering and tool access are not proven**.
+  Current AC neighbour gaps are in
+  [Westward Clearance Evidence](DFM_EVIDENCE.md#westward-clearance-evidence),
+  not inferred from either earlier AC placement.
+- Keep the four 3.20-wide stub endpoints at **(115.00,116.19), (115.00,121.19),
+  (115.00,123.81), (115.00,128.81)**. Their rail-side Y coordinates remain
+  **114.88, 122.50, 122.50, 130.12**, respectively. They overlap the retained
+  lands without extending the rounded copper further beneath the tubes.
+  The land/mask/paste inner gap is **2.80**; the underlying
   connected copper gap is **1.80**. These are different dimensions. Do not
-  blindly extend the tracks to the new pad centres and reduce that copper gap.
+  blindly extend the tracks to the pad centres and reduce that copper gap.
+  The **2.42** facing gap between **GDT_AB.2 and GDT_BC.1** is on the same
+  **WIRE_B**, not an unlike-net differential-flashover case. Neither that gap
+  nor the new **3.20 inter-GDT pad minimum** imposes a blanket front-side 3.00 rule.
 
 **Historical relocation, not current AC construction:** the former B5G470L
 moved from X=124.00 to 125.80, retaining A/C holes at Y=114.88/130.12 and 15.24
@@ -561,21 +583,39 @@ the original SMT aperture started at Y=115.19, overlapping the hole by **0.19**.
 The three X positions on each rail lay inside the old aperture's X extent.
 All nine rail holes were affected; the three B-rail holes faced both SMT parts.
 
-Each retained AB/BC aperture starts at X=116.75. For the nearest protected via at
-X=115.50, the nearest aperture corner is offset by dx=1.25 and dy=1.21:
+Each current AB/BC aperture starts at **X=112.25**. For the nearest protected
+via at **X=112.00**, the nearest aperture corner is offset by **dx=0.25, dy=1.21**:
 
 ```text
-corner distance                   = sqrt(1.25^2 + 1.21^2) = 1.739713
-nominal drill-circle to aperture  = 1.739713 - 0.50       = 1.239713
-nominal full annulus to aperture  = 1.739713 - 0.90       = 0.839713
+corner distance                  = sqrt(0.25^2 + 1.21^2) = 1.235556555
+nominal drill-circle to aperture  = distance - 0.50      = 0.735556555
+nominal full annulus to aperture  = distance - 0.90      = 0.335556555
 ```
 
 The same minimum applies to all four AB/BC pads for `F.Mask` and `F.Paste` in the
 saved zero-margin source. None exposes a protected via annulus. All vias now
-have intentional mask openings, so **0.839713** is the nominal open-annulus
+have intentional mask openings, so **0.335556555** is the nominal open-annulus
 to SMT-aperture budget, **not** a registration or solder-process guarantee.
 Recheck actual processed mask/stencil apertures,
 drill sizes, registration allowances and solder spread, not just pad centres.
+The earlier **1.239713 hole / 0.839713 annulus** proof is preserved as
+[1.2.0-dev historical evidence](DFM_EVIDENCE.md#smt-land-resolution), not the
+current clearance.
+
+At **X=109.00**, each first rail via is **3.00** from its J_IN pad centre at
+X=106.00. The nominal via-opening to component-mask gap is
+`3.00 - 0.90 - 1.60 = 0.50`; drill-circle to drill-circle gap is
+`3.00 - 0.50 - 1.00 = 1.50`. A via drill to the component-mask edge is **0.90**,
+not the drill-to-drill value. **Same-net component mask/paste is not exempt**
+from full-hole/aperture checks.
+
+The first two via centres on each rail, **X=109.00/110.50**
+(VA1/VA2, VB1/VB2, VC1/VC2), now lie under the conservative **J_IN body/courtyard
+projection**. Inspect complete openings/annuli, including the partial western
+annulus projection at X=112.00, against actual moulding, seating, solder ingress,
+drain-through and beads. No body-envelope drawing proves a physical collision
+or safe seating over solder. Obtain actual fit/process acceptance; do not tent,
+fill, shrink drills, trim courtyards or change the connector to hide a problem.
 
 **Remaining W1 order/process hold, all three SMT GDTs:** figure associations
 and the selected metric implementation are resolved, but the manufacturer's
@@ -587,32 +627,36 @@ acceptance for all three tubes, preserving the below-tube insulation space.
 
 ## SMT AC Crossover
 
-**Approved 2026-09-14, hardware 1.2.0-dev.** GDT_AC uses the same reviewed
-`DogFence:SMD5050-470NA` geometry as AB/BC, at the [specified origin and pin
+**Approved westward placement 2026-09-14, hardware 1.2.1-dev.** GDT_AC uses the
+same reviewed `DogFence:SMD5050-470NA` geometry as AB/BC, at the [specified origin and pin
 datums](#placement-and-polarity). Use the shared [metric land/process controls](#smt-via-relocation)
 and [body/pose envelope](#body-and-courtyard-evidence); do not form or raise this
 SMT part to recreate the retired overpass.
 
 | Feature | Current construction / inspection control |
 | :--- | :--- |
-| A takeoff | **F.Cu only, 3.20 wide, X=125.80, Y=114.88..120.00** from the unchanged A rail. |
-| C takeoff | **F.Cu only, 3.20 wide, X=125.80, Y=130.12..125.00** from the unchanged C rail. |
+| A takeoff | **F.Cu only, 3.20 wide, X=123.70, Y=114.88..120.00** from the unchanged A rail. |
+| C takeoff | **F.Cu only, 3.20 wide, X=123.70, Y=130.12..125.00** from the unchanged C rail. |
 | Takeoff endpoints | Each stops **0.50 outward from its land centre**; round ends leave **1.80 connected-copper gap** under AC, distinct from the **2.80 land/mask/paste gap**. Do not extend either track to the land centre or add a rear A/C takeoff. |
-| Front B cutback | Main **3.20** segment ends at **(121.00,122.50)**; its round cap reaches **X=122.60**. Retain **GDT_B_E pin 1's front PTH pad at (131.00,122.50)**, connected through the rear. No unnecessary right-hand front-B track stub is retained. |
+| Front B cutback | Main **3.20** segment ends at **(115.00,122.50)**, shortened from X=121.00; its round cap reaches **X=116.60**. Retain **GDT_B_E pin 1's front PTH pad at (131.00,122.50)**, connected through the rear. No unnecessary right-hand front-B track stub is retained. |
 | Rear B crossover | Main **6.00-wide B.Cu** segment remains **(106.00,122.50)..(131.00,122.50)**. It passes below **both AC lands and the entire body**, through nominal **1.440 FR-4**, not through an approved mask/gel insulation barrier. The return stem follows the approved **X=136.50** guardrail. |
-| Interlayer links | Both old AC component holes/barrel links at **(125.80,114.88/130.12)** are removed. All **14 dedicated stitching vias** remain unchanged, as do main A/C rails, input and earth-GDT PTH links. Removing the AC barrels is not the preservation of every former parallel path. |
+| Interlayer links | The 1.2.0-dev conversion removed both old AC component holes/barrel links at **(125.80,114.88/130.12)**; they remain absent. All **14 dedicated stitching vias** are retained, with the nine rail vias moved west under the [current inventory](#stitching-via-identification). The five EARTH vias, main A/C rails, input and earth-GDT PTH links are unchanged. Removing the old AC barrels was not preservation of every former parallel path. |
 
-No other component placement, AB/BC stub, A/C rail, EARTH copper, mount or
-indicator route changes are authorized by this conversion. The
-[dated clearance evidence](DFM_EVIDENCE.md#crossover-clearance-evidence) records
+AC and its two takeoffs move **2.10 west from X=125.80 to 123.70**, keeping all
+Y coordinates and zero part rotation. Together with the specified AB/BC/stub,
+nine rail-via and front-B changes, this exhausts the 1.2.1 placement/routing scope.
+No other component, A/C main rail, rear B/return, EARTH copper, mount or indicator
+route change is authorized. The
+[dated clearance evidence](DFM_EVIDENCE.md#westward-clearance-evidence) records
 full round-cap/land/hole/annulus and body-pose distances. In particular, no front
 B copper is under the AC body, including the **0.10 projected pose allowance**;
 this does not remove rear-B coupling or qualify the through-board crossover.
 
-Require the new **>=3.00 rear A/B/C copper rule** and independent full-source
+Retain the **>=3.00 rear A/B/C copper rule** and independent full-source
 geometry guard **on B.Cu only**; do not extend it to the reviewed F.Cu SMT gaps.
 The nominal **3.02** rear minimum has only **0.02** margin above that design
-threshold, not a guaranteed finished-etch gap. Accept actual processed CAM and
+threshold, not a guaranteed finished-etch gap. Likewise **3.20 nominal inter-GDT
+pad spacing is not a guaranteed finished 3.00 gap**. Accept actual processed CAM and
 fabrication tolerances, stencil, seating and workmanship before an order/assembly
 acceptance claim. See the [copper-area comparison](DFM_EVIDENCE.md#smt-ac-crossover-selection):
 6.00 rear B does not restore the old ideal dual-layer cross-section or establish
@@ -630,15 +674,15 @@ diameter alone.
 
 | ID | Net | X | Y |
 | :--- | :--- | ---: | ---: |
-| VA1 | WIRE_A | 112.50 | 114.88 |
-| VA2 | WIRE_A | 114.00 | 114.88 |
-| VA3 | WIRE_A | 115.50 | 114.88 |
-| VB1 | WIRE_B | 112.50 | 122.50 |
-| VB2 | WIRE_B | 114.00 | 122.50 |
-| VB3 | WIRE_B | 115.50 | 122.50 |
-| VC1 | WIRE_C | 112.50 | 130.12 |
-| VC2 | WIRE_C | 114.00 | 130.12 |
-| VC3 | WIRE_C | 115.50 | 130.12 |
+| VA1 | WIRE_A | 109.00 | 114.88 |
+| VA2 | WIRE_A | 110.50 | 114.88 |
+| VA3 | WIRE_A | 112.00 | 114.88 |
+| VB1 | WIRE_B | 109.00 | 122.50 |
+| VB2 | WIRE_B | 110.50 | 122.50 |
+| VB3 | WIRE_B | 112.00 | 122.50 |
+| VC1 | WIRE_C | 109.00 | 130.12 |
+| VC2 | WIRE_C | 110.50 | 130.12 |
+| VC3 | WIRE_C | 112.00 | 130.12 |
 | VE1 | EARTH | 150.00 | 114.88 |
 | VE2 | EARTH | 150.00 | 118.69 |
 | VE3 | EARTH | 150.00 | 122.50 |
@@ -646,7 +690,7 @@ diameter alone.
 | VE5 | EARTH | 150.00 | 130.12 |
 
 ```text
-TOP VIEW, X east ->          112.50  114.00  115.50           150.00
+TOP VIEW, X east ->          109.00  110.50  112.00           150.00
 Y south
  114.88  WIRE_A                VA1     VA2     VA3               VE1
  118.69                                                        VE2
@@ -659,7 +703,8 @@ Y south
 - No filling by size. R1/R2 and GDT_AC have **no holes** after their SMT
   conversions. All sixteen remaining component PTH holes stay open for insertion; hole function,
   not size, remains controlling and no via is an insertion pad.
-- Preserve all fourteen via locations, hole diameters and copper diameters.
+- Preserve all fourteen **1.2.1-dev** via locations, hole diameters and copper
+  diameters.
   Obtain written CAM agreement not to reduce the protected via drills under
   ordinary via-hole adjustment practices.
 - **Selected standard process: Untented, both sides, no fill/plug/cap.** Source
@@ -668,8 +713,9 @@ Y south
   overlap at 1.50 pitch; this is not an exception for a component paste opening
   over a hole. No reliable 1.00 tenting or special filling process is required.
 - Inspect processed openings/drills and qualify solder ingress, drain-through,
-  beads and cleanliness. Standard via drill adjustment is not authorized to
-  shrink the protected geometry. Neither untented ENIG nor OneGel seals a hole.
+  beads and cleanliness, including the [rail vias under J_IN's projection](#smt-via-relocation).
+  Standard via drill adjustment is not authorized to shrink the protected
+  geometry. Neither untented ENIG nor OneGel seals a hole.
 - 70 micrometre surface copper is **not** 70 micrometre barrel copper. Agree and
   record any required minimum finished barrel copper separately from exterior
   copper weight and the fabricator's published average plating value.
@@ -784,7 +830,8 @@ supplier-defined attrition**, for five boards; acceptance of **TE's alternate
 lands and the GDTs' selected metric lands**, stencil/solder process and actual placement;
 allocated Kefa/GDT drawing/E/pattern/body compliance; **earth-GDT forming**; KF129 variant
 and Ruilon metric/inch clarification; solder fill/profile; protected drills and
-any required barrel minimum; and J_EARTH's **1.30 tolerance-budgeted overhang**
+any required barrel minimum; actual J_IN seating/solder around the moved vias
+and its **0.25 courtyard gap** to AB/BC; and J_EARTH's **1.30 tolerance-budgeted overhang**
 in the panel/depanelization process. Untented fabrication is standard, not an
 unresolved 1.00 filling request. Apply the
 [population/substitution restrictions](#reviewed-components) and
@@ -810,7 +857,9 @@ PDF text extraction and public PDF-viewer page images are retrieval aids, not
 supplier approval. The earlier BYG23T outline/land review remains identified
 above. The **2026-09-14 AC selection** reuses the already reviewed Ruilon
 **SP-GDT-006 A3, 2024-08-19** geometry; no fresh manufacturer retrieval or
-approval is claimed. PS12/HP12/PR02/onsemi/MBE/B5G470L links preserve history,
+approval is claimed. The later **1.2.1-dev westward selection on the same date**
+changes only the approved global placement/routing, not those land/body sources
+or their qualification status. PS12/HP12/PR02/onsemi/MBE/B5G470L links preserve history,
 not current population instructions.
 
 - [Selected Vishay BYG23T-M3/TR, 89429, 25-Feb-2020](https://www.vishay.com/docs/89429/byg23t.pdf), [C145454 identity](https://www.lcsc.com/product-detail/C145454.html).

@@ -1,6 +1,6 @@
 # LED Protection Research
 
-**Research began 2026-09-07 from checkpoint 97e202d; hardware 1.2.0-dev. Research, not circuit selection or release approval.**
+**Research began 2026-09-07 from checkpoint 97e202d; current hardware 1.2.1-dev. Research, not circuit selection or release approval.**
 
 Added in **ad282e3**, this note includes later findings and dated corrections.
 Candidate calculations retain their original parts/circuits/assumptions;

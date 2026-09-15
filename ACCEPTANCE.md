@@ -1,6 +1,6 @@
 # Prototype and Field Acceptance
 
-**Draft revision: 1.2.0-dev. Test requirements, not test results or release approval.**
+**Draft revision: 1.2.1-dev. Test requirements, not test results or release approval.**
 
 This protocol separates basic acceptance of **five fully assembled prototypes** from qualification of the **41-station, 0-4000 m installation with 82 APEM indicators**. There are 40 spans, five earth-connected stations and 36 standard stations. Five basic bench passes do not authorize a perimeter production order, prove a board surge rating, or release the fence for animal containment.
 
@@ -19,7 +19,7 @@ Purchases and allocation, including [resistor procurement/history](MATERIALS.md#
 | **B: Original prototype-order gate** | Original Gate A plus exact part/fit, placement, GDT forming, solder/via process and CAM acceptance, and an approved, safely bounded test programme. Known manufacturing defects cannot be deferred silently. | **Held wherever supplier/process evidence or controlled scope is missing.** Prototype-dependent tests may be explicitly deferred, not passed; P alone does not close B or authorize an order. |
 | **C: Field release** | Required normal, selected negative-voltage protection, duty/thermal, visibility, full-hub, RF/site, fault/surge and material evidence; accepted earthing and maintained cattle-fence prohibition; documented performance limits. | **Held pending genuine qualification.** Excluded installation-polarity immunity is not a test PASS. |
 
-The live checklist, not this table, records subsequent evidence-backed closures. **P is separate from the original A/B/C production/field holds.** Switch/environmental qualification and enclosure dry-fit on received boards are not prerequisites to prototype-file generation. Board-specific MPN/fit, GDT forming, panel/process, supplier CAM/placement and allocation remain order tasks; whole-BOM `allocation_verified` remains `false`. `1.2.0-dev` identifies a draft target; record actual board markings and hashes rather than relabelling older hardware as tested.
+The live checklist, not this table, records subsequent evidence-backed closures. **P is separate from the original A/B/C production/field holds.** Switch/environmental qualification and enclosure dry-fit on received boards are not prerequisites to prototype-file generation. Board-specific MPN/fit, GDT forming, panel/process, supplier CAM/placement and allocation remain order tasks; whole-BOM `allocation_verified` remains `false`. `1.2.1-dev` identifies a draft target; record actual board markings and hashes rather than relabelling older hardware as tested.
 
 **TE prototype results do not qualify Yageo production.** Before production release, separately review the Yageo part's manufacturer/rating, land-pattern, thermal, pulse and process evidence, update the controlled BOM/CAD, libraries, models and notes, and reverify under the [population/substitution controls](pcb/ASSEMBLY.md#reviewed-components). Define the production configuration's required qualification and retained evidence explicitly; an order does not implement or approve a BOM variant.
 
@@ -27,7 +27,7 @@ The live checklist, not this table, records subsequent evidence-backed closures.
 
 Apply these to the corresponding **hardware test**, not Gate P artifact generation. Switch/field approval is needed for hub/site tests and OneGel acceptance for potting, not for unpowered incoming-board inspection. An isolated board bench test still needs its own approved electrical bounds and stop limits.
 
-1. Freeze the intended test configuration, including the revisions of this protocol and its referenced limits/tables. Record board serial numbers, source revision, schematic/BOM, as-built deviations, native placement/assembly drawing, fabrication manifest and report hashes. The population comes from the final BOM, not the legacy component count. The unchanged `1.2.0-dev` marking alone does not distinguish the **2026-09-14 SMT GDT_AC/rear-B change** from an earlier axial-AC board; keep those sample histories separate. Approve substitutions and rework explicitly; no field soldering is part of the installation plan.
+1. Freeze the intended test configuration, including the revisions of this protocol and its referenced limits/tables. Record board serial numbers, source revision, schematic/BOM, as-built deviations, native placement/assembly drawing, fabrication manifest and report hashes. The population comes from the final BOM, not the legacy component count. **1.2.1-dev identifies the westward GDT/via relocation.** Earlier axial-AC and SMT AC/rear-B snapshots both used `1.2.0-dev`; keep their hashes and sample histories separate, without transferring test results to the new layout. Approve substitutions and rework explicitly; no field soldering is part of the installation plan.
 2. Have the electrical reviewer supply **numerical acceptance bands before testing**: source minimum/nominal/maximum including accessible adjustment, tolerance and overshoot; verified cable resistance/temperature range; per-channel current and branch loading; LED forward/reverse limits; power/temperature derating and stop limits; protection trip/recovery behavior; and the intended surge/insulation test envelope. Missing bounds hold the corresponding test. Do not choose limits after seeing the result.
 3. Use **one MEAN WELL LRS-75-36 (36 V / 2.1 A / 75.6 W) for TEST; keep the second disconnected as a spare**. Verify receipt/nameplates and the TEST unit's qualified setting; no parallel, series, separate-channel or opposite-end feeding. Qualify the actual supply's hiccup/retry behavior with the actual **Littelfuse 0217002.MXP (2 A, 217 series)** and **Phoenix Contact UK 5-HESILED 60 / 3004139** holder and any revised source protection. Published DC interrupting capability is not clearing coordination.
 4. Confirm the exact six-end switch program and source-side wiring. **Kraus & Naimer CA10.A364** is provisional; current **WAA364 (formerly A364) is eight-pole, 1-0-2 centre-off, 60-degree switching, not six-pole**. The six-end matrix is unchanged; **two extra poles remain unassigned**. The [catalogue contact/link schedule](pcb/ENVIRONMENT_EVIDENCE.md#catalogue-contact-schedule) is verified static source evidence, not the supplied-switch pinout. Obtain manufacturer approval of the exact offered contact development, DC breaking suitability and **global break-before-make** sequence across the entire used program, in both directions. A 20 A thermal rating or a static continuity test cannot supply this evidence. Assign physical terminal numbers only in the subsequently accepted hardware drawing.
@@ -117,6 +117,15 @@ Perform and record these checks on **each** unpowered prototype before stress te
    uncertainty; missing forming/process limits leave that check **HELD**.
    Record results and defects per board. Retiring AC's forming task does not
    close W5's remaining forming, support/enclosure or material/process holds.
+   On both bare and assembled boards, verify **>=3.00 mm between unlike-net
+   pads of different GDTs and between AC pads and front B copper**, including
+   solder encroachment after assembly. Record minimum location, value and
+   uncertainty; require `measured minimum - U >= 3.00 mm`. The **3.20 mm nominal
+   source minimum** is not a finished-board guarantee. This does not impose 3 mm
+   within one tube or between the same-net AB/BC B pads, nor qualify flashover
+   withstand. Check J_IN seating/access at the **0.25 mm courtyard gap** and
+   inspect solder/beads and cleanliness at vias under its conservative body
+   projection; record hidden-inspection evidence or hold an inconclusive result.
 7. Inspect SMT seating/wetting, THT joints, shorts, contamination, damaged parts and excessive lead protrusion to the **agreed workmanship class and edition** (for example IPC-A-610 Class 2 when specified in the order). Obtain appropriate assembler evidence for internal barrel fill or hidden defects; an exterior fillet alone does not establish internal fill. Record any inspection requiring additional samples rather than sectioning the reference.
 8. Match processed mask/stencil data and actual SMT joints to the
    [Ruilon land/clearance controls](pcb/ASSEMBLY.md#smt-via-relocation) and

@@ -17,3 +17,10 @@
   (layer "B.Cu")
   (condition "(A.NetName == 'WIRE_A' || A.NetName == 'WIRE_B' || A.NetName == 'WIRE_C') && (B.NetName == 'WIRE_A' || B.NetName == 'WIRE_B' || B.NetName == 'WIRE_C') && A.NetName != B.NetName")
   (constraint clearance (min 3.0mm)))
+
+# Pad Parent is the footprint reference; Reference is a footprint-only property.
+# Different devices/nets only; each tube retains its reviewed internal lands.
+(rule "Inter-GDT pad isolation"
+  (layer "F.Cu")
+  (condition "A.Type == 'Pad' && B.Type == 'Pad' && A.Parent == 'GDT_*' && B.Parent == 'GDT_*' && A.Parent != B.Parent && A.NetName != B.NetName")
+  (constraint clearance (min 3.0mm)))

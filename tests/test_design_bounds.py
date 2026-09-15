@@ -69,6 +69,7 @@ class DesignBoundsTests(unittest.TestCase):
                       " ".join(self.report["limitations"]))
 
     def test_te_provenance_does_not_promote_assumptions_or_unknown_tests(self):
+        self.assertEqual(self.report["revision"], "1.2.1-dev")
         self.assertEqual(self.report["model_scope"], "prototype_only")
         resistor = self.report["resistor"]
         self.assertEqual(resistor["datasheet"],

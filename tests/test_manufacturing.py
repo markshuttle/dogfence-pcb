@@ -1251,7 +1251,7 @@ class ManufacturingTests(unittest.TestCase):
             for key, expected in {"MPN": "SMD5050-470NA", "Manufacturer": "Ruilon",
                                   "LCSC Part #": "C39692533", "Footprint": "DogFence:SMD5050-470NA"}.items():
                 self.assertEqual(bom[ref][key], expected)
-        text = m.assembly_reference(board, bom, positions, "1.2.0-dev")
+        text = m.assembly_reference(board, bom, positions, "1.2.1-dev")
         anchors, terminals = text.split("TERMINAL DATUMS\n")
         self.assertIn("Population: 16 components; 9 SMT / 7 THT.", anchors)
         self.assertEqual(sum(line.startswith(tuple(ref + " | " for ref in bom)) for line in anchors.splitlines()), 16)
@@ -1268,8 +1268,12 @@ class ManufacturingTests(unittest.TestCase):
             ("D2", "1"): ("LED_C_POS", 132.9, 140.5, 0),
             ("D3", "1"): ("LED_A_POS", 132.9, 99.0, 0),
             ("D4", "1"): ("LED_C_POS", 132.9, 146.0, 0),
-            ("GDT_AC", "1"): ("WIRE_A", 125.8, 120.5, 0),
-            ("GDT_AC", "2"): ("WIRE_C", 125.8, 124.5, 0),
+            ("GDT_AB", "1"): ("WIRE_A", 115.0, 116.69, 0),
+            ("GDT_AB", "2"): ("WIRE_B", 115.0, 120.69, 0),
+            ("GDT_BC", "1"): ("WIRE_B", 115.0, 124.31, 0),
+            ("GDT_BC", "2"): ("WIRE_C", 115.0, 128.31, 0),
+            ("GDT_AC", "1"): ("WIRE_A", 123.7, 120.5, 0),
+            ("GDT_AC", "2"): ("WIRE_C", 123.7, 124.5, 0),
         }
         expected.update({(ref, pad.pin): (pad.net, pad.x, pad.y, pad.drill)
                          for ref in ("R1", "R2") for pad in board.footprints[ref].pads})
@@ -1467,6 +1471,106 @@ def m_target_names():
 
 @unittest.skipUnless(os.environ.get("KICAD_TEST_CLI"), "Set KICAD_TEST_CLI for isolated native CLI fixture probes")
 class NativeContractTests(unittest.TestCase):
+    def test_native_inter_gdt_pad_rule_activation_and_scope(self):
+        from scripts.kicad_sexpr import Atom, parse, parse_many
+        from test_geometry import dump, remove, replace, set_net
+
+        parent = REPO / "tmp" / "native-manufacturing-tests"
+        parent.mkdir(parents=True, exist_ok=True)
+        rule_path = REPO / "pcb/pcb.kicad_dru"
+        rule_hash = m.sha256(rule_path)
+        rules = parse_many(rule_path.read_text())
+        rule = next(rule for rule in rules[1:] if rule.values[0] == "Inter-GDT pad isolation")
+        base = parse(BOARD.replace('"POWER"', '"WIRE_A"').replace('"Net-(D1-A)"', '"WIRE_B"'))
+        for tag in ("segment", "via"):
+            remove(base, tag)
+        # Keep disconnected non-GDT R1 and its 0.80 mm internal gap as a control.
+        for fp in base.children("footprint")[1:]:
+            base.values.remove(fp)
+        for ref, y, code, net in (("GDT_LEFT", 20, 1, "WIRE_A"), ("GDT_RIGHT", 24, 2, "WIRE_B")):
+            base.values.append(parse(f'''(footprint "Local:SMT" (layer "F.Cu") (at 20 {y})
+                (property "Reference" "{ref}") (property "Value" "Fixture") (attr smd)
+                (pad "1" smd rect (at 0 0) (size 5.5 1.2)
+                    (layers "F.Cu" "F.Mask" "F.Paste") (net {code} "{net}")))'''))
+        cases = (("source", True), ("missing", False), ("weak", False),
+                 ("wrong-a-type", False), ("wrong-b-type", False), ("same-device", False),
+                 ("same-net", False), ("non-gdt", False), ("rear-only", False), ("pth-smt", True),
+                 ("legacy-reference", False))
+        with tempfile.TemporaryDirectory(prefix="native-inter-gdt-", dir=parent, delete=False) as temporary:
+            root = Path(temporary)
+            for name, active in cases:
+                with self.subTest(case=name):
+                    case = root / name
+                    case.mkdir()
+                    make_project(case)
+                    project = case / "pcb"
+                    board, selected = copy.deepcopy(base), copy.deepcopy(rule)
+                    left, right = board.children("footprint")[1:]
+                    if name == "weak":
+                        replace(selected, "(constraint clearance (min 2.5mm))")
+                    elif name == "legacy-reference":
+                        # Reference belongs to footprints; pads expose the owner's reference as Parent.
+                        expression = selected.one("condition").atoms()[0].replace(".Parent", ".Reference")
+                        replace(selected, f'(condition "{expression}")')
+                    elif name in ("wrong-a-type", "wrong-b-type"):
+                        expression = selected.one("condition").atoms()[0]
+                        predicate = f"{'A' if name == 'wrong-a-type' else 'B'}.Type == 'Pad'"
+                        self.assertIn(predicate, expression)
+                        expression = expression.replace(predicate, predicate.replace("Pad", "Via"))
+                        replace(selected, f'(condition "{expression}")')
+                    elif name == "same-device":
+                        pad = right.children("pad")[0]
+                        pad.values[0] = Atom("2", quoted=True)
+                        replace(pad, "(at 0 4)")  # 2.80 mm inside one tube, not inter-device.
+                        left.values.append(pad)
+                        board.values.remove(right)
+                    elif name == "same-net":
+                        set_net(board, left.children("pad")[0], "WIRE_B")
+                        replace(right, "(at 20 23.62)")  # 2.42 mm between facing B lands.
+                    elif name == "non-gdt":
+                        right.children("property")[0].values[1] = Atom("J_CONTROL", quoted=True)
+                    elif name == "rear-only":
+                        for fp in (left, right):
+                            replace(fp, '(layer "B.Cu")')
+                            replace(fp.children("pad")[0], '(layers "B.Cu" "B.Mask" "B.Paste")')
+                    elif name == "pth-smt":
+                        left.values[0] = Atom("Local:THT", quoted=True)
+                        replace(left, "(attr through_hole)")
+                        pad = left.children("pad")[0]
+                        pad.values[1:3] = [Atom("thru_hole"), Atom("circle")]
+                        replace(pad, "(size 3 3)")
+                        replace(pad, "(drill 1.5)")
+                        replace(pad, '(layers "*.Cu" "*.Mask")')
+                        replace(right, "(at 20 24.9)")  # 2.80 mm from PTH annulus to SMT land.
+                    actual_rules = [node for node in rules if node is not rule]
+                    if name != "missing":
+                        actual_rules.append(selected)
+                    (project / "pcb.kicad_dru").write_text("\n".join(dump(node) for node in actual_rules) + "\n")
+                    pcb = project / "pcb.kicad_pcb"
+                    pcb.write_text(dump(board), encoding="utf-8")
+                    output = case / "drc.json"
+                    command = [os.environ["KICAD_TEST_CLI"], "pcb", "drc", "--format", "json",
+                               "--severity-all", "--exit-code-violations", "--output", str(output), str(pcb)]
+                    result = subprocess.run(command, cwd=project, capture_output=True, text=True, timeout=120)
+                    m.write_json(case / "native-command.json", {"command": command, "returncode": result.returncode,
+                                                               "stdout": result.stdout, "stderr": result.stderr})
+                    self.assertEqual(result.returncode, 5, result.stdout + result.stderr)
+                    self.assertEqual(re.sub(m.WX_IMAGE_DEBUG, "", result.stderr), "")
+                    self.assertIsNone(re.search(r"(?im)^\s*(?:warning|error)\b", result.stdout))
+                    data = m.read_json(output)
+                    self.assertEqual(data["kicad_version"], "9.0.7")
+                    violations = [v for v in data["violations"]
+                                  if v["type"] == "clearance" and "Inter-GDT pad isolation" in v["description"]]
+                    self.assertEqual(len(violations), int(active), data)
+                    for violation in violations:
+                        self.assertEqual(violation["severity"], "error")
+                        self.assertIn("clearance 3.0000 mm; actual 2.8000 mm", violation["description"])
+                        self.assertEqual({re.search(r"\bof (\S+)", item["description"]).group(1)
+                                          for item in violation["items"]}, {"GDT_LEFT", "GDT_RIGHT"})
+                        self.assertEqual(any(item["description"].startswith("PTH pad ")
+                                             for item in violation["items"]), name == "pth-smt")
+        self.assertEqual(m.sha256(rule_path), rule_hash)
+
     def test_native_rear_core_layer_selector_covers_tracks_and_multilayer_pads_only_on_back(self):
         from scripts.kicad_sexpr import parse, parse_many
         from test_geometry import dump, remove, replace
@@ -1598,10 +1702,10 @@ class NativeContractTests(unittest.TestCase):
                 ac = [flash for flash in flashes if flash[6] == "GDT_AC"]
                 self.assertEqual(len(ac), 2 if layer.startswith("F.") else 0, layer)
                 for flash, y in zip(sorted(ac), (-124.5, -120.5)):
-                    self.assertEqual(flash[:6], (125.8, y, 5.5, 1.2, "R", 0), layer)
+                    self.assertEqual(flash[:6], (123.7, y, 5.5, 1.2, "R", 0), layer)
                 if layer in ("F.Cu", "B.Cu"):
                     b_main = [track for track in tracks if track[:2] == (106, -122.5) and track[-1] == "WIRE_B"]
-                    self.assertEqual(b_main, [(106, -122.5, 121 if layer == "F.Cu" else 131,
+                    self.assertEqual(b_main, [(106, -122.5, 115 if layer == "F.Cu" else 131,
                                               -122.5, 3.2 if layer == "F.Cu" else 6, "WIRE_B")])
             for name, digest in hashes.items():
                 self.assertEqual(m.sha256(project / name), digest)

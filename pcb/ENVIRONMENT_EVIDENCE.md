@@ -1,6 +1,6 @@
 # Environment And Hub Evidence
 
-**Hardware 1.2.0-dev; original research at checkpoint 97e202d on 2026-09-07; hybrid checkpoint 6ba2a07; catalogue-switch evidence updated 2026-09-07.**
+**Hardware 1.2.1-dev; original research at checkpoint 97e202d on 2026-09-07; hybrid checkpoint 6ba2a07; catalogue-switch evidence updated 2026-09-07.**
 
 Controlled site/material and catalogue-switch evidence, including later user
 corrections and the post-ad282e3 PR02/BYG23T history. The catalogue contact

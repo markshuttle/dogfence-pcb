@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Provisional 1.2.0-dev TEST DC analysis, using only the standard library.
+"""Provisional 1.2.1-dev TEST DC analysis, using only the standard library.
 
 Run this file for a reproducible study or use simulate() for individual cases.
 Stations and cut spans are zero based: cut ("A", 0) opens A between stations
@@ -25,7 +25,7 @@ import json
 import math
 
 
-REVISION = "1.2.0-dev"
+REVISION = "1.2.1-dev"
 CORES = "ABC"
 CHANNELS = "AC"
 CUT_SETS = tuple("".join(c) for n in (1, 2, 3) for c in combinations(CORES, n))

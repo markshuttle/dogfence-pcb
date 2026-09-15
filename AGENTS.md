@@ -1,6 +1,6 @@
 # Dog Fence Agent And Developer Guide
 
-Hardware development revision: **1.2.0-dev**. Tested native CLI: **KiCad 9.0.7**.
+Hardware development revision: **1.2.1-dev**. Tested native CLI: **KiCad 9.0.7**.
 File-verified prototype artifacts are authorized, not uploads or orders.
 Production/field release remains held; file checks are not hardware approval.
 
@@ -199,8 +199,8 @@ in `pcb/DogFence.kicad_sym`. `fp-lib-table` / `sym-lib-table` use `${KIPRJMOD}`.
 Do not replace modified Kefa terminals, project-selected 2512 SMT lands, the cathode-right
 SMA diode, or the selected metric Ruilon SMT GDT lands with similarly named stock-library objects.
 Preserve global pad nets, positions and the two distinct local LED-terminal mappings.
-GDT_AC now uses the same top-only Ruilon footprint geometry as GDT_AB/BC at its
-retained origin. The retired Bencent local footprint and two AC insertion holes
+GDT_AC uses the same top-only Ruilon footprint geometry as GDT_AB/BC at its
+approved westward origin. The retired Bencent local footprint and two AC insertion holes
 are not current library/population requirements; only the three earth GDTs remain
 formed axial parts. Use [ASSEMBLY's current inventory](pcb/ASSEMBLY.md#reviewed-components),
 not historical library/drill/export counts, when checking the active design.
@@ -223,6 +223,13 @@ and [master DFM policy](README.md#via-and-component-hole-dfm). Project settings,
 not merely fabricator minima. Via-ring rules are not component-ring or pin-fit
 evidence. Do not weaken settings to obtain a PASS.
 
+KiCad 9 pad-rule selectors use **`A.Parent` / `B.Parent`** for the owning
+footprint reference. **`A.Reference` / `B.Reference` are footprint-only** and
+did not activate the inter-GDT pad rule in native negative probes; the independent
+parser rejects them rather than modelling a false alias. Retain native activation,
+THT/SMT and same-device/same-net scope controls for this rule, not just a clean
+DRC on a sufficiently spaced board.
+
 ## 5. Physical Guardrails
 
 **Before any PCB, footprint, placement, routing or process edit, read
@@ -244,6 +251,18 @@ that rule to F.Cu's reviewed SMT gaps or weaken the independent **>=3.00 mm
 fence/EARTH separation on both faces**. All fourteen vias, A/C main rails,
 EARTH, mounts and indicator routing outside the approved rear-return move stay
 protected; a wider rear rail is not permission for extra vias or component moves.
+
+The subsequently **user-approved 1.2.1-dev westward spacing change** relocates
+the nine rail vias to **X=109.00/110.50/112.00**, AB/BC and their stubs to
+**X=115.00**, and AC and its takeoffs to **X=123.70**; front B now stops at
+**X=115.00**. All Y coordinates, widths, via/pad sizes and other protected
+geometry remain unchanged. The original eastward proposal was rejected for
+actual pad shorts; do not reverse these moves. ASSEMBLY owns the complete
+current inventory, including the **0.25 mm J_IN courtyard margin** and relocated
+via/seating inspection duties. Require the native and independent **>=3.00 mm
+unlike-net inter-GDT pad** controls and independent **AC-pad-to-all-front-B
+copper** control. These do not impose 3 mm inside a single GDT or between
+same-net pads; nominal inter-device minimum is **3.20 mm**, not impulse approval.
 
 The AC crossing now uses the FR-4 core between front A/C and rear B, not the
 retired raised overpass. No AC lead-forming/height-gauge requirement remains;

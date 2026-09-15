@@ -1,6 +1,6 @@
 # Electrical Engineering Record
 
-**Revision: 1.2.0-dev. User-approved SMT GDT_AC conversion recorded 2026-09-14. Electrical release HOLD.**
+**Revision: 1.2.1-dev. User-approved westward GDT/via relocation recorded 2026-09-14. Electrical release HOLD.**
 
 This record describes the implemented circuit, DC solver and fault interpretation.
 [DESIGN_BOUNDS](DESIGN_BOUNDS.md) owns detailed current parametric screens;
@@ -22,8 +22,8 @@ only to their recorded source/note hashes. The normal DC model/scripts and TE
 thermal screens are unchanged. Verifying those calculations or this note does
 not qualify the changed physical construction.
 
-The original axial hybrid followed **ad282e3**; later SMT selections retain its
-topology and **1.2.0-dev** revision. **One LRS-75-36 serves TEST; the other is a
+The original axial hybrid followed **ad282e3**; later SMT selections and the
+**1.2.1-dev** spacing change retain its topology. **One LRS-75-36 serves TEST; the other is a
 disconnected spare**, not combined capacity. No physical switch pinout or
 powered-GDT shutdown is implemented. Section 9 controls the current simple
 circuit; older PS12/HP12/PR02/MBE and active/zener/source investigations remain
@@ -627,16 +627,17 @@ pending choices.
 
 ### SMT AC Conversion
 
-**Approved construction, 2026-09-14; physical qualification remains held.** GDT_AC uses
-origin **(125.80,122.50)**, with pad 1 on A at **(125.80,120.50)** and pad 2 on C
-at **(125.80,124.50)**. Its **F.Cu-only, 3.20 mm-wide** stubs at X=125.80 run
+**Approved construction, 2026-09-14, updated for 1.2.1-dev westward placement;
+physical qualification remains held.** GDT_AC uses origin **(123.70,122.50)**,
+with pad 1 on A at **(123.70,120.50)** and pad 2 on C at **(123.70,124.50)**.
+Its **F.Cu-only, 3.20 mm-wide** stubs at X=123.70 run
 from A **Y=114.88 to 120.00** and C **Y=130.12 to 125.00**, retaining **1.80 mm
 between connected copper**, not merely a land-to-land gap. The old AC pad pair's
 two **1.40 mm PTHs and their A/C interlayer links are removed**; dedicated rail
 stitches, J_IN and the core-side earth-GDT PTH links remain. The new A/C stubs
 are single-layer paths, not dual-layer copper credited by the old pad links.
 
-The **3.20 mm F.Cu B rail's centreline endpoint is X=121.00**. The rear B
+The **3.20 mm F.Cu B rail's centreline endpoint is X=115.00**. The rear B
 segment remains at **Y=122.50, X=106.00..131.00**, widened to **exactly 6.00 mm,
 not 6.40 mm**, retaining its own GDT_B_E input PTH at X=131.00 through the rear
 route. The existing B-return stem at X=135.50 actually left **2.10 mm**, not
@@ -644,21 +645,28 @@ route. The existing B-return stem at X=135.50 actually left **2.10 mm**, not
 **X=136.50**, giving **3.10 mm stem clearance** and a source-geometry minimum
 of **3.02 mm between all rear A/B/C copper**; global core/EARTH minimum remains
 **3.25 mm**. These nominal geometry values are not finished-etch guarantees or
-insulation ratings. Apart from this stem shift and the specified AC/B edits,
-other component positions, circuit connections, all **14 vias**, A/C main
-rails, EARTH and indicator routing are unchanged. See
+insulation ratings. The subsequent user-approved westward change moves AB/BC
+and their stubs, AC and its takeoffs, and the nine rail vias to the
+[controlled coordinates](ASSEMBLY.md#physical-guardrails). All **14 vias** remain
+at their original sizes; five EARTH vias, rear copper, mounts, other components,
+circuit connections, A/C main rails, EARTH and indicator routing are unchanged
+by that relocation. See
 [DESIGN_BOUNDS](DESIGN_BOUNDS.md#ac-conversion-copper-screen) for the exact
 6.00 mm metal-area/resistance tradeoff and interlayer-current limitations.
 
 There is **no formed AC air gap**. The adopted SMT body-height envelope is
 **5.21 mm before solder seating allowance**. Rear B copper passes beneath the
 **whole AC pad/body projection**, separated from front copper by the nominal
-**1.440 mm FR-4 core**, not qualified insulation. The supplied front inter-core
-minimum remains at the existing **0.80 mm** level, but the new local path and
-through-laminate exposure still need assessment for the actual transient,
-process and environmental conditions. Mask, gel and unchanged nominal gaps do
-not establish dielectric withstand. [ASSEMBLY](ASSEMBLY.md#physical-guardrails)
-and [DFM_EVIDENCE](DFM_EVIDENCE.md#smt-land-resolution) own the physical drawing,
+**1.440 mm FR-4 core**, not qualified insulation. The westward relocation raises
+the unlike-net inter-GDT pad minimum from **0.80 to 3.20 mm** and AC-to-B_E
+pad gap from **1.321790 to 3.260515 mm**. Each SMT tube still has **2.80 mm between
+its own lands and 1.80 mm between connected copper**; facing AB/BC B pads share
+one net and retain their 2.42 mm gap. This is not a blanket 3 mm front-layer
+minimum. Larger inter-device gaps address the identified geometry, not verified
+flashover immunity. Actual transient, contamination, solder/placement, process
+and environmental effects remain to qualify; mask and gel do not establish
+dielectric withstand. [ASSEMBLY](ASSEMBLY.md#physical-guardrails)
+and [DFM_EVIDENCE](DFM_EVIDENCE.md#westward-clearance-evidence) own the physical drawing,
 lands, seating and process acceptance; this record assigns no new board rating
 or guaranteed sharing through other GDTs. Rear B widening does not qualify
 resistor heat rejection, OneGel or continuous TEST.

@@ -198,9 +198,9 @@ class NetComparisonTests(unittest.TestCase):
         self.assertEqual((len(board.nets), sum(map(len, board.nets.values()))), (8, 34))
         pads = board.footprints["GDT_AC"].pads
         self.assertEqual([(p.pin, p.net, p.kind, p.drill, p.x, p.y) for p in pads],
-                         [("1", "WIRE_A", "smd", 0, 125.8, 120.5), ("2", "WIRE_C", "smd", 0, 125.8, 124.5)])
+                         [("1", "WIRE_A", "smd", 0, 123.7, 120.5), ("2", "WIRE_C", "smd", 0, 123.7, 124.5)])
         for changes in ({"kind": "thru_hole", "drill": 1.4}, {"drill": 1.4}, {"y": 114.88},
-                        {"width": 2.8, "height": 2.8}, {"net": "WIRE_B"}):
+                        {"x": 125.8}, {"width": 2.8, "height": 2.8}, {"net": "WIRE_B"}):
             stale = deepcopy(board)
             for key, value in changes.items():
                 setattr(stale.footprints["GDT_AC"].pads[0], key, value)

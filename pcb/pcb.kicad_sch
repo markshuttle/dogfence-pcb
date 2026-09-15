@@ -6,8 +6,8 @@
 	(paper "A4")
 	(title_block
 		(title "Universal Milestone Indicator & Surge PCB")
-		(date "2026-09-06")
-		(rev "1.2.0-dev")
+		(date "2026-09-14")
+		(rev "1.2.1-dev")
 		(company "DogFence Project")
 		(comment 1 "4km 3-Core DogWatch SmartFence Diagnostic & Surge System")
 		(comment 2 "Development baseline: protection, fit and process approval pending")
