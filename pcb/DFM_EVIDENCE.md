@@ -8,6 +8,8 @@ review: **02661d8**, followed by the manufacturer-land correction retained below
 1.2.0-dev AC/front-B/rear-B and return-stem changes retained below as history.
 **Westward GDT/via spacing selection: 2026-09-14**, with the explicitly approved
 placement/front-B changes below.
+**East board extension: 2026-09-15**, with the approved outline/H2/H4 changes
+recorded separately under [East Board Extension](#east-board-extension).
 Hardware **1.2.1-dev**. Scope: P3/P4 board design and five assembled prototypes.
 
 Dimensions are millimetres unless explicitly marked inches. Global coordinates
@@ -21,8 +23,10 @@ envelope, but its lands remain a project alternative under **W4** and catalogue
 rating transfer to this mounting remains conditional under **W3**. The dated
 reviews below preserve those corrections and the historical PS12/HP12/axial
 investigations. The separately dated AC selection changed population/routing;
-the later westward selection changes placement/routing only. Neither changes
-qualification status or rewrites those earlier investigations.
+the later westward selection changes placement/routing only. The east board
+extension changes only the outline and H2/H4, not copper, electrical components
+or part/datasheet evidence. None changes qualification status or rewrites those
+earlier investigations.
 [Physical Guardrails](ASSEMBLY.md#physical-guardrails) controls preservation;
 [SMA assembly evidence](ASSEMBLY.md#indicator-sma-and-resistor-assembly) owns the
 retained Vishay 89429, 25-Feb-2020 p4 outline/land review. Historical diameter-only
@@ -792,6 +796,13 @@ run**: the AC-related **0.05/0.17** gaps apply only to the old overpass. Use
 earlier AB/BC placement; it is now **0.25**. Retained Kefa/earth-GDT envelope,
 overhang and body-gap controls still apply.
 
+**2026-09-15 mechanical applicability erratum:** the LED/mount and J_EARTH
+edge calculations in this checkpoint list apply to the **old 63.00 x 56.00
+outline, east edge X=160.00 and H2/H4 centres X=155.50**. Preserve their
+**0.10 LED/mount gap and 1.30 conditional overhang** as historical evidence;
+[East Board Extension](#east-board-extension) records the new margins. The
+retained body/pose envelopes and earth-GDT body-gap controls are unchanged.
+
 - J_IN courtyard east becomes X=111.75; SMT west is X=116.50: **4.75 gap**.
 - SMT east becomes X=122.50; overpass west is X=122.55: **0.05 gap**.
   This is a small drawing-space margin, not demonstrated rework access.
@@ -802,21 +813,70 @@ overhang and body-gap controls still apply.
   `9.00 - 8.21 - 2*0.10 = 0.59`. This is **not a 1.00 mm air-gap guarantee**,
   nor an impulse-insulation qualification. Inspect the full bodies/electrodes.
 - LED courtyard global X is **139.05..151.95**. The protected H2/H4 courtyard
-  west boundary is X=152.05: **0.10 gap**. LED A global courtyard Y is
-  **96.25..108.45**; LED C is **136.55..148.75**. No pad/net remapping or
+  west boundary was X=152.05: **0.10 gap** with the old mount positions.
+  LED A global courtyard Y is **96.25..108.45**; LED C is **136.55..148.75**.
+  No pad/net remapping or
   connector rotation change is needed.
-- At unchanged J_EARTH=(155.00,122.50), 180 degrees, the accepted body envelope
-  reaches X=161.00 before pose allowance, or **161.10 after it**. Against a
-  regular routed east edge as far inward as 159.80, allow **1.30 overhang**,
-  not the former nominal 0.30. Its courtyard reaches X=161.35. Check ordinary
-  panel orientation/routed spacing and COMBI clearance using this envelope;
-  do not trim the outline or shift protected earth copper to hide the overhang.
+- At unchanged J_EARTH=(155.00,122.50), 180 degrees, the controlled E body envelope
+  reaches X=161.00 before pose allowance, or **161.10 after it**. With the old
+  nominal edge X=160.00, the pre-pose body overhang was **1.00**. The former
+  **CONDITIONAL 0.20 inward-route allowance** put the edge at **159.80**, requiring
+  **1.30 overhang including pose**, not the former nominal 0.30. That allowance
+  was not an accepted supplier tolerance or a guaranteed manufactured margin.
+  Its courtyard reaches X=161.35. The old panel/routed-spacing and COMBI review
+  needed that full envelope, not trimmed bodies/courtyards or shifted earth copper.
 
 The Kefa maximum body heights are 14.60 and 18.80 above their seating planes;
 seat standoff and solder/lead protrusions are separate. Assuming flush seating
 and the standard 1.44..1.76 board-thickness range, untrimmed lead protrusion is
 2.24..3.16 for KF128 and 2.74..3.66 for KF129. These calculations do not approve
 the support/enclosure fit or the assembler's trimming process.
+
+### East Board Extension
+
+**2026-09-15, hardware 1.2.1-dev: user-approved mechanical update, not a native,
+CAM or hardware PASS.** The staged PCB expands only the east edge **2.00**, from
+**X=160.00 to 162.00**, and moves H2/H4 **2.00 east**. This is distinct from the
+rejected eastward GDT proposal; the approved westward GDT/via placement remains.
+All copper, vias and electrical components stay in place. Local lands,
+body/courtyard shapes, drill sizes, stackup, population and part/datasheet evidence
+are unchanged; no fresh manufacturer retrieval or supplier acceptance is implied.
+
+- Board outline is now **65.00 x 56.00**, from **(97.00,94.50) to
+  (162.00,150.50)**; the west, north and south edges are unchanged.
+- **H2=(157.50,99.00), H4=(157.50,146.00)** replace their former X=155.50
+  positions. **H1=(101.50,99.00), H3=(101.50,146.00)** remain. All four centres
+  are nominally **4.50 from their adjacent edges**; **3.20 NPTH**, 6.40 collar
+  markings and **3.45-radius front/back mechanical courtyards/copper keepouts**
+  are unchanged.
+- J_EARTH remains **(155.00,122.50), 180 degrees**. Its existing controlled E
+  body maximum is **X=161.00**, **161.10 including 0.10 projected pose**, and its
+  retained courtyard maximum is **161.35**. These are the existing project
+  envelopes, not new manufacturer maxima or accepted-lot measurements.
+
+| Relationship | Current nominal or conditional arithmetic, mm |
+| :--- | :--- |
+| Posed body to nominal east edge | `162.00 - 161.10 = 0.90` |
+| Courtyard to nominal east edge | `162.00 - 161.35 = 0.65` |
+| Posed body with **CONDITIONAL 0.20 inward-route allowance** | Assumed edge `162.00 - 0.20 = 161.80`; `161.80 - 161.10 = 0.70` |
+| Courtyard with the same conditional allowance | `161.80 - 161.35 = 0.45` |
+| LED courtyard to H2/H4 courtyard west bound | `157.50 - 3.45 = 154.05`; `154.05 - 151.95 = 2.10` |
+
+The former **0.20 inward-route allowance remains CONDITIONAL**, not an accepted
+supplier outline tolerance. Neither the nominal **0.90/0.65** nor conditional
+**0.70/0.45** establishes guaranteed manufactured margins. Nominal envelope
+containment replaces the old drawn overhang, not outline/edge/hole-position,
+allocated-part/pose, panel/clamping/depanelization or enclosure/support/tool-fit
+acceptance. Use [Earth Terminal Edge Clearance](ASSEMBLY.md#earth-terminal-edge-clearance)
+for the canonical extents and local acceptance duties; do not trim envelopes,
+move copper or assume a courtyard is sufficient cutter clearance.
+
+All **C4/C5/W3/W1/W4** holds remain open and whole-BOM **`allocation_verified`
+remains `false`**. A fresh source-matched artifact snapshot is required; earlier
+checks and packages do not verify this mechanical or controlled-note change.
+Supplier/order and received-board qualification remain separate from Gate P
+files. This entry records the approved geometry and arithmetic, not fresh native
+checks, processed CAM, a physical fit result or hardware approval.
 
 ### Overpass Control
 
@@ -1014,7 +1074,10 @@ tubes instead need the selected SMT-land, seating and stencil/profile acceptance
    to fit. Larger-hole solder fill/workmanship must be accepted independently.
 5. Measure body/end-key extents relative to pin-pattern datums and verify the
    proposed projected-body boxes, neighbour gaps, mounting keepouts and
-   J_EARTH overhang. Inspect J_IN seating and solder/beads around the moved rail
+   [J_EARTH edge clearance](ASSEMBLY.md#earth-terminal-edge-clearance) against the
+   revised outline/mounts and accepted actual tolerances. Record the measurements
+   and uncertainty; nominal/conditional margins are not accepted supplier limits.
+   Inspect J_IN seating and solder/beads around the moved rail
    vias under its projection, and the reduced **0.25 courtyard gap** to AB/BC;
    nominal drawing space is not a physical-fit result.
    Perform the complete unpotted COMBI/WAGO/support/LED dry-fit,
@@ -1040,7 +1103,7 @@ tubes instead need the selected SMT-land, seating and stencil/profile acceptance
 | **Historical, retired 2026-09-14:** Bencent / B5G470L | Finished 0.80-wire tolerance and allowable forming/seal-support geometry were not accepted. Public p2 really contains a round 0.80 callout without its tolerance. A2 body limits were resolved; the then-current manufacturer download did not supply a newer toleranced lead drawing. The <=0.90 E/forming controls are retained evidence, **not current procurement or assembly tasks**. |
 | Ruilon / 2R470TD-8 | Exact revision/production code allocated; allowed bend radius/seal setback, post-forming lead condition and ordinary nickel-lead solder process. The 1.05 lead maximum and 6.30/8.20 metric body maxima are **resolved in both drawings**, not unreadable. |
 | Ruilon / SMD5050-470NA | **All three inter-core tubes:** formal resolution of X1=4.0 mm versus 0.165 in, preferably a corrected controlled drawing; actual supplier model, processed stencil, seating and joint/profile acceptance. Figure association and the selected metric-based implementation are resolved here, without claiming manufacturer correction or approval of the old 5.2 x 2 alternative. Five boards require **15 fitted parts plus supplier-defined attrition**, not an established purchase/allocation. [MATERIALS](../MATERIALS.md) owns procurement history (**repository-only**). |
-| JLCPCB / actual assembly | Ordinary-service part allocation, retained drill data, processed mask/stencil, fitting/lead-forming capability, real solder profile and workmanship. Standard untented fabrication does not require a 1 mm fill exception. Any required finished-via/barrel minimum beyond published standard guarantees remains a separate design/supplier decision, not implicitly approved special processing. |
+| JLCPCB / actual assembly | Ordinary-service part allocation, retained drill data, processed mask/stencil, fitting/lead-forming capability, real solder profile and workmanship. Accept the [revised outline/mounts and J_EARTH edge/panel/fit envelope](ASSEMBLY.md#earth-terminal-edge-clearance), including actual edge/hole-position tolerances and panel/depanelization clearances. Standard untented fabrication does not require a 1 mm fill exception. Any required finished-via/barrel minimum beyond published standard guarantees remains a separate design/supplier decision, not implicitly approved special processing. |
 
 ## Verification Scope
 

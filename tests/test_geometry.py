@@ -617,10 +617,14 @@ class GeometryTests(unittest.TestCase):
                         board = deepcopy(self.positive)
                         replace(pad(board, ref, num), change)
                         self.assert_defect("SMA_DIODE_APERTURE", self.report(board))
-            for field in ("solder_mask_margin", "solder_paste_margin", "solder_paste_ratio"):
+            for field in ("solder_mask_margin", "solder_paste_margin", "solder_paste_ratio",
+                          "solder_paste_margin_ratio"):
                 with self.subTest(ref=ref, inherited=field):
                     board = deepcopy(self.positive)
-                    replace(footprint(board, ref), f"({field} 0.1)")
+                    fp = footprint(board, ref)
+                    if field == "solder_paste_ratio":
+                        remove(fp, "solder_paste_margin_ratio")
+                    replace(fp, f"({field} 0.1)")
                     self.assert_defect("SMA_DIODE_APERTURE", self.report(board))
 
     def test_sma_explicit_zero_overrides_and_modulo_rotations_remain_valid(self):
@@ -629,7 +633,7 @@ class GeometryTests(unittest.TestCase):
             x, y, *angle = map(float, fp.one("at").atoms())
             rotation = (angle[0] if angle else 0) - 360
             replace(fp, f"(at {x} {y} {rotation})")
-            for field in ("solder_mask_margin", "solder_paste_margin", "solder_paste_ratio"):
+            for field in ("solder_mask_margin", "solder_paste_margin", "solder_paste_margin_ratio"):
                 replace(fp, f"({field} 0.2)")
             for p in fp.children("pad"):
                 px, py = p.one("at").atoms()[:2]
@@ -715,10 +719,13 @@ class GeometryTests(unittest.TestCase):
                         board = deepcopy(self.positive)
                         replace(pad(board, ref, num), change)
                         self.assert_defect("RESISTOR_APERTURE", self.report(board))
-            for field in ("solder_mask_margin", "solder_paste_margin", "solder_paste_ratio"):
+            for field in ("solder_mask_margin", "solder_paste_margin", "solder_paste_ratio",
+                          "solder_paste_margin_ratio"):
                 with self.subTest(ref=ref, inherited=field):
                     board = deepcopy(self.positive)
                     fp = footprint(board, ref)
+                    if field == "solder_paste_ratio":
+                        remove(fp, "solder_paste_margin_ratio")
                     replace(fp, f"({field} -0.1)")
                     self.assert_defect("RESISTOR_APERTURE", self.report(board))
                     pad_field = "solder_paste_margin_ratio" if field == "solder_paste_ratio" else field
@@ -780,13 +787,19 @@ class GeometryTests(unittest.TestCase):
 
         earth = footprint(self.authoritative, "J_EARTH")
         x, y, angle = map(float, earth.one("at").atoms())
-        for layer, bounds in (("F.Fab", (149.6, 110.0, 161.0, 135.0)),
-                              ("F.CrtYd", (149.25, 109.65, 161.35, 135.35))):
+        outline = next(n for n in self.authoritative.children("gr_rect")
+                       if n.one("layer").atoms() == ["Edge.Cuts"])
+        east_edge = float(outline.one("end").atoms()[0])
+        for layer, bounds, pose, margin in (("F.Fab", (149.6, 110.0, 161.0, 135.0), 0.1, 0.9),
+                                            ("F.CrtYd", (149.25, 109.65, 161.35, 135.35), 0, 0.65)):
             rect = next(item for item in earth.children("fp_rect") if item.one("layer").atoms() == [layer])
             points = [move(tuple(map(float, rect.one(edge).atoms())), (x, y), angle) for edge in ("start", "end")]
             actual = (*map(min, zip(*points)), *map(max, zip(*points)))
             for coordinate, expected in zip(actual, bounds):
                 self.assertAlmostEqual(coordinate, expected)
+            self.assertAlmostEqual(east_edge - actual[2] - pose, margin)
+            # Retain the declared inward-routing budget, not a guaranteed fabrication tolerance.
+            self.assertAlmostEqual(east_edge - 0.20 - actual[2] - pose, margin - 0.20)
 
     def test_axial_forming_room_is_a_geometric_ceiling_not_bend_approval(self):
         for ref, axis, wire, room in (("GDT_A_E", 0, 1.05, 4.32),
@@ -908,6 +921,67 @@ class GeometryTests(unittest.TestCase):
         self.assert_pass(self.aperture_report())  # Not the sum of board, footprint and pad overrides.
         remove(fp.children("pad")[0], "solder_mask_margin")
         self.assert_defect("W1_VIA_MASK", self.aperture_report())
+
+    def test_paste_ratio_aliases_inheritance_and_pad_overrides(self):
+        spellings = ("solder_paste_margin_ratio", "solder_paste_ratio")
+        cases = ((None, None, None, (0, 0)),
+                 (-0.2, None, None, (-0.2, -0.2)),
+                 (-0.2, -0.1, None, (-0.1, -0.1)),
+                 (-0.2, 0.1, None, (0.1, 0.1)),
+                 (-0.2, 0, None, (0, 0)),
+                 (-0.2, -0.1, 0, (0, -0.1)),
+                 (-0.2, 0, -0.1, (-0.1, 0)),
+                 (-0.2, None, 0, (0, -0.2)))
+        for spelling in spellings:
+            for setup_ratio, fp_ratio, pad_ratio, expected in cases:
+                with self.subTest(spelling=spelling, setup=setup_ratio, footprint=fp_ratio, pad=pad_ratio):
+                    board = deepcopy(self.positive)
+                    fp = footprint(board, "R1")
+                    for key in spellings:
+                        remove(fp, key)
+                    setup = board.one("setup")
+                    remove(setup, "pad_to_paste_clearance_ratio")
+                    if setup_ratio is not None:
+                        replace(setup, f"(pad_to_paste_clearance_ratio {setup_ratio})")
+                    if fp_ratio is not None:
+                        replace(fp, f"({spelling} {fp_ratio})")
+                    for p in fp.children("pad"):
+                        remove(p, "solder_paste_margin_ratio")
+                    if pad_ratio is not None:
+                        replace(pad(board, "R1", "1"), f"(solder_paste_margin_ratio {pad_ratio})")
+                    checker = GeometryCheck(board)
+                    checker.read_board()
+                    self.assertEqual(checker.diagnostics, [])
+                    openings = sorted((a for a in checker.apertures
+                                       if a.reference == "R1" and a.layers == {"F.Paste"}),
+                                      key=lambda a: a.pad_number)
+                    self.assertEqual(len(openings), 2)
+                    for opening, ratio in zip(openings, expected):
+                        x0, y0, x1, y1 = opening.shape.bounds
+                        self.assertAlmostEqual(x1 - x0, 1.35 * (1 + 2 * ratio))
+                        self.assertAlmostEqual(y1 - y0, 3.7 * (1 + 2 * ratio))
+
+    def test_malformed_and_duplicate_footprint_paste_aliases_fail_before_pad_overrides(self):
+        spellings = ("solder_paste_margin_ratio", "solder_paste_ratio")
+        for spelling in spellings:
+            cases = [f"({spelling} {bad})" for bad in
+                     ("", "bad", "nan", "inf", "-inf", "1e999", "1_0", "0 0", "(nested 0)")]
+            cases += [f"({spelling} 0) ({other} {value})" for other in spellings for value in (0, -0.1)]
+            for text in cases:
+                for override in (False, True):
+                    with self.subTest(text=text, pad_override=override):
+                        board = deepcopy(self.positive)
+                        fp = footprint(board, "R1")
+                        for key in spellings:
+                            remove(fp, key)
+                        fp.values.extend(parse_many(text))
+                        if override:
+                            for p in fp.children("pad"):
+                                replace(p, "(solder_paste_margin_ratio 0)")
+                        defects = self.assert_defect("INVALID_STRUCTURE", self.aperture_report(board))
+                        if len(parse_many(text)) > 1:
+                            self.assertTrue(any("duplicate footprint solder-paste ratio" in d["message"]
+                                                for d in defects))
 
     def test_mask_and_paste_are_independent(self):
         for field, code in (("solder_mask_margin", "W1_VIA_MASK"),
@@ -1178,8 +1252,12 @@ class GeometryTests(unittest.TestCase):
                                     if l.values[0] == "F.Cu"), "(thickness 0.035)"), "COPPER_WEIGHT"),
             (lambda b: b.one("layers").values.append(parse('(4 "In1.Cu" signal)')), "COPPER_LAYERS"),
             (lambda b: replace(next(n for n in b.children("gr_rect") if n.one("layer").atoms() == ["Edge.Cuts"]),
-                                "(end 161 150.5)"), "BOARD_OUTLINE"),
+                                "(end 163 150.5)"), "BOARD_OUTLINE"),
+            (lambda b: replace(next(n for n in b.children("gr_rect") if n.one("layer").atoms() == ["Edge.Cuts"]),
+                                "(end 160 150.5)"), "BOARD_OUTLINE"),
             (lambda b: replace(footprint(b, "H1"), "(at 101.6 99)"), "MOUNTING_HOLES"),
+            (lambda b: replace(footprint(b, "H2"), "(at 155.5 99)"), "MOUNTING_HOLES"),
+            (lambda b: replace(footprint(b, "H4"), "(at 155.5 146)"), "MOUNTING_HOLES"),
             (lambda b: replace(footprint(b, "H1").children("pad")[0], "(drill 3.1)"), "UNSUPPORTED_GEOMETRY"),
         )
         for mutate, code in mutations:
@@ -1187,6 +1265,39 @@ class GeometryTests(unittest.TestCase):
                 board = deepcopy(self.positive)
                 mutate(board)
                 self.assert_defect(code, self.report(board))
+
+    def test_east_expansion_preserves_corner_offsets_and_led_courtyard_margins(self):
+        outline = next(n for n in self.board.children("gr_rect") if n.one("layer").atoms() == ["Edge.Cuts"])
+        start, end = (tuple(map(float, outline.one(key).atoms())) for key in ("start", "end"))
+        self.assertEqual((start, end), ((97, 94.5), (162, 150.5)))
+        self.assertEqual((end[0] - start[0], end[1] - start[1]), (65, 56))
+        checker = GeometryCheck(self.board)
+        checker.read_board()
+        self.assertEqual(checker.diagnostics, [])
+        for ref, xy, corner in (("H1", (101.5, 99), start), ("H2", (157.5, 99), (end[0], start[1])),
+                                ("H3", (101.5, 146), (start[0], end[1])), ("H4", (157.5, 146), end)):
+            with self.subTest(ref=ref):
+                hole = next(p for p in checker.pads if p.reference == ref)
+                self.assertEqual(hole.center, xy)
+                self.assertEqual((hole.kind, hole.hole.radius), ("np_thru_hole", 1.6))
+                self.assertEqual(tuple(abs(a - b) for a, b in zip(xy, corner)), (4.5, 4.5))
+                fp = footprint(self.board, ref)
+                for layer in ("F.CrtYd", "B.CrtYd"):
+                    circle = next(n for n in fp.children("fp_circle") if n.one("layer").atoms() == [layer])
+                    center, edge = (tuple(map(float, circle.one(key).atoms())) for key in ("center", "end"))
+                    self.assertEqual(center, (0, 0))
+                    radius = math.dist(center, edge)
+                    self.assertAlmostEqual(radius, 3.45)
+                    self.assertAlmostEqual(4.5 - radius, 1.05)
+        for ref, led in (("H2", "J_LED_A"), ("H4", "J_LED_C")):
+            fp = footprint(self.board, led)
+            x, y, angle = map(float, fp.one("at").atoms())
+            courtyard = next(n for n in fp.children("fp_rect") if n.one("layer").atoms() == ["F.CrtYd"])
+            east = max(move(tuple(map(float, courtyard.one(key).atoms())), (x, y), angle)[0]
+                       for key in ("start", "end"))
+            mount_x = float(footprint(self.board, ref).one("at").atoms()[0])
+            self.assertAlmostEqual(east, 151.95)
+            self.assertAlmostEqual(mount_x - 3.45 - east, 2.10)
 
     def test_mounting_courtyard_and_copper_keepout(self):
         fp = footprint(self.board, "H1")

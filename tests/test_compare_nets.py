@@ -185,6 +185,47 @@ class NetComparisonTests(unittest.TestCase):
             with self.subTest(ratio=ratio), self.assertRaises(nets.VerificationError):
                 nets.read_board(self.write("bad.kicad_pcb", text))
 
+    def test_paste_ratio_aliases_inheritance_and_pad_overrides(self):
+        cases = ((None, None, None, (0, 0)),
+                 (-0.2, None, None, (-0.2, -0.2)),
+                 (-0.2, -0.1, None, (-0.1, -0.1)),
+                 (-0.2, 0.1, None, (0.1, 0.1)),
+                 (-0.2, 0, None, (0, 0)),
+                 (-0.2, -0.1, 0, (0, -0.1)),
+                 (-0.2, 0, -0.1, (-0.1, 0)),
+                 (-0.2, None, 0, (0, -0.2)))
+        for spelling in ("solder_paste_margin_ratio", "solder_paste_ratio"):
+            for setup_ratio, fp_ratio, pad_ratio, expected in cases:
+                with self.subTest(spelling=spelling, setup=setup_ratio, footprint=fp_ratio, pad=pad_ratio):
+                    source = BOARD
+                    if setup_ratio is not None:
+                        source = source.replace("(setup ", f"(setup (pad_to_paste_clearance_ratio {setup_ratio}) ", 1)
+                    if fp_ratio is not None:
+                        source = source.replace('(property "Reference" "J_LED_A")',
+                                                f'(property "Reference" "J_LED_A") ({spelling} {fp_ratio})', 1)
+                    if pad_ratio is not None:
+                        source = source.replace('(pad "1" smd rect',
+                                                f'(pad "1" smd rect (solder_paste_margin_ratio {pad_ratio})', 1)
+                    board = nets.read_board(self.write("ratio.kicad_pcb", source))
+                    self.assertEqual(tuple(p.paste_ratio for p in board.footprints["J_LED_A"].pads), expected)
+                    self.assertTrue(all(p.paste_ratio == (setup_ratio if setup_ratio is not None else 0)
+                                        for p in board.footprints["J_LED_C"].pads))
+
+    def test_malformed_and_duplicate_footprint_paste_aliases_fail_before_pad_overrides(self):
+        spellings = ("solder_paste_margin_ratio", "solder_paste_ratio")
+        for spelling in spellings:
+            cases = [f"({spelling} {bad})" for bad in
+                     ("", "bad", "nan", "inf", "-inf", "1e999", "1_0", "0 0", "(nested 0)")]
+            cases += [f"({spelling} 0) ({other} {value})" for other in spellings for value in (0, -0.1)]
+            for text in cases:
+                for override in (False, True):
+                    source = BOARD.replace('(property "Reference" "J_LED_A")',
+                                           f'(property "Reference" "J_LED_A") {text}', 1)
+                    if override:
+                        source = source.replace('(size 2 1)', '(size 2 1) (solder_paste_margin_ratio 0)', 2)
+                    with self.subTest(text=text, pad_override=override), self.assertRaises(nets.VerificationError):
+                        nets.read_board(self.write("bad-ratio.kicad_pcb", source))
+
     def test_ipc_resolves_truncated_led_references_and_case_aliases(self):
         board = self.board()
         result = nets.compare_ipc(self.write("pcb.d356", ipc_text(board)), board)

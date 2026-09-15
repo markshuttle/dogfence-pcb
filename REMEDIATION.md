@@ -1,13 +1,14 @@
 # Remediation Plan
 
 Prepared: 2026-09-06. Reviewed hardware baseline: v1.1.0.
-Implementation handoff: **2026-09-14, hardware 1.2.1-dev**.
+Implementation handoff: **2026-09-15, hardware 1.2.1-dev**.
 
-**The user-approved westward GDT/via spacing change is implemented and
+**The user-approved 2.00 mm east board extension and consistency fixes are
 file-verified; fresh 1.2.1-dev Gate P prototype files are published.** See
-[Westward GDT Spacing](#westward-gdt-spacing) for this source and its verification
-status. [SMT AC Conversion](#smt-ac-conversion) preserves the earlier 1.2.0-dev
-publication, not verification of the changed source. The
+[East Board Extension](#east-board-extension) for this source and its verification
+status. [Westward GDT Spacing](#westward-gdt-spacing) and
+[SMT AC Conversion](#smt-ac-conversion) preserve earlier snapshots, not
+verification of the changed source or notes. The
 next board priority remains the five-prototype **P3/P4 supplier queue**, not renewed
 switch/environmental research. [Reviewed Components](pcb/ASSEMBLY.md#reviewed-components)
 owns the implemented population and assembly limits;
@@ -19,7 +20,7 @@ This is the starting context and implementation checklist for subsequent session
 ## Start Here
 
 1. Read [AGENTS.md](AGENTS.md) for operating instructions and physical guardrails, then this file. Read the relevant source files before editing them.
-2. Inspect `git status` and the existing diff. This spacing session began on **92592bf** with existing README/ORDERING/REMEDIATION handoff edits; **116996c** appeared externally during the assessment and preserves that earlier work. This session made no commit. Preserve work by other contributors and all unrelated evidence; earlier worktree descriptions belong to their historical sessions. No commit, push, upload or order is authorized. See the latest handoff for preserved build evidence.
+2. Inspect `git status` and the existing diff. This consistency session began on **87c5957** with **19 staged files**, including the east extension, H2/H4 moves, library normalization and initial guide/parser edits; there were no unstaged tracked changes. Preserve pre-existing staging and unrelated work; earlier worktree descriptions belong to their historical sessions. No commit, push, upload or order is authorized. See the latest handoff for preserved build evidence.
 3. Treat the working `pcb/pcb.kicad_sch`, `pcb/pcb.kicad_pcb`, project settings, and reviewed sourcing data as the design sources. `build/*` contains generated reports and, only after successful publication, prototype or production outputs identified by their matching manifest. Backups, archives, and `tmp/` copies are not authoritative designs.
 4. Use the agreed requirements and TEST matrix below. Documents are synchronized to the current development source; `pcb/ELECTRICAL.md` and `pcb/ASSEMBLY.md` record the remaining design/evidence limitations. `REVIEW.md` remains an audit template, not completed approval.
 5. P1's checking infrastructure and the selected hybrid placement are implemented. For the current **board-only request**, work **P3 assembly/fit finalization, then P4 five-board supplier review**, following [ORDERING's focused queue](ORDERING.md#board-finalization-queue). Do not choose the first unchecked P2 switch or environmental item instead. Preserve those holds without restarting research; any later approved circuit change requires renewed layout/BOM checks.
@@ -40,10 +41,10 @@ Preparation already completed:
 | :--- | :--- | :--- |
 | P1 | Complete-project staging, strict native checks, fail-closed geometry/net/artifact validation, warning reviews, locked transactions and negative fixtures. | Maintain the checks for future supported geometry/tool changes; no broad warning suppression. |
 | P2 | [Implemented prototype circuit](pcb/ELECTRICAL.md#1-implemented-model), preserving one-way rungs, six-end TEST and all six GDT endpoint connections. AC now uses the same SMT Ruilon as AB/BC; the DC model is unchanged. [DESIGN_BOUNDS](pcb/DESIGN_BOUNDS.md) distinguishes the conditional copper-area comparison from thermal qualification. | Actual clamp/RF/transient performance, powered recovery/fault containment, continuous thermal/source limits and exact switch approval remain separate production/field holds, not Gate P prerequisites. No new circuit or hub numbering is selected. |
-| P3 | Approved westward GDT/via spacing and front-B stop implemented, preserving the prior SMT AC/rear-B conversion. [ASSEMBLY](pcb/ASSEMBLY.md#physical-guardrails) owns current coordinates, layer-specific guardrails, alternate lands and fit/forming controls. | Actual allocated-lot/variant/pattern, earth-GDT forming, SMT placement/stencil/solder, finished-etch gaps, J_IN seating/access, overhang and support acceptance remain in the [board queue](ORDERING.md#board-finalization-queue). Enclosure dry-fit follows receipt, not Gate P files. |
-| P4 | **Fresh 1.2.1-dev Gate P prototype package published and verified**, including actual serial/parallel comparison. [Westward GDT Spacing](#westward-gdt-spacing) identifies the matching snapshot; earlier publications remain historical. | Public stock is not receipt/inspection or job allocation; `allocation_verified` remains false. Actual supplier centroids, allocation, panel, process and CAM acceptance remain order tasks. |
+| P3 | Approved **65 x 56 mm east extension and H2/H4 moves** implemented, preserving the westward GDT/via spacing and SMT AC/rear-B conversion. [ASSEMBLY](pcb/ASSEMBLY.md#physical-guardrails) owns current coordinates, layer-specific guardrails, alternate lands and fit/forming controls. | Actual allocated-lot/variant/pattern, earth-GDT forming, SMT placement/stencil/solder, finished-etch gaps, J_IN seating/access, J_EARTH edge/panel and support acceptance remain in the [board queue](ORDERING.md#board-finalization-queue). Enclosure dry-fit follows receipt, not Gate P files. |
+| P4 | **Fresh 1.2.1-dev Gate P prototype package published and verified**, including actual serial/parallel comparison. [East Board Extension](#east-board-extension) identifies the matching snapshot; earlier publications remain historical. | Public stock is not receipt/inspection or job allocation; `allocation_verified` remains false. Actual supplier centroids, allocation, panel, process and CAM acceptance remain order tasks. |
 | P5 | Canonical owners and linked consumer guidance consolidated under [Documentation Cleanup](#documentation-cleanup); independent semantic/link review preserves historical evidence and local work controls. | Future engineering changes remain impact-based; documentation review is not hardware approval. |
-| P6 | **235 tests PASS including eight native probes**, with 11 inter-GDT rule controls; `make check`, production-refusal and real serial/parallel prototype-publication comparisons **PASS**. [Westward GDT Spacing](#westward-gdt-spacing) records this snapshot. | Actual processed CAM, allocated parts and physical qualification are **not performed**. File-verified prototype artifacts do not close production or field qualification. |
+| P6 | **242 tests PASS including nine native methods**; `make check`, production-refusal and real serial/parallel prototype-publication comparisons **PASS**. [East Board Extension](#east-board-extension) records this snapshot. The former 235-test result belongs to the westward snapshot. | Actual processed CAM, allocated parts and physical qualification are **not performed**. File-verified prototype artifacts do not close production or field qualification. |
 
 ## Agreed Requirements
 
@@ -70,6 +71,7 @@ Preparation already completed:
 | Simplified design direction | User authorized the **16-part SMT/BYG23T hybrid** and the [prototype/production part-selection split](MATERIALS.md#resistor-procurement-and-history). The implemented [prototype BOM and assembly requirements](pcb/ASSEMBLY.md#reviewed-components) are not a second production BOM. Preserve existing takeoffs, rails/vias, EARTH, B returns, LED mappings and straight cathode links under the physical guardrails; **no fold or new vias**. Any production substitution needs its own evidence/model/process/thermal review and deliberate source updates; prototype results do not qualify it. |
 | SMT AC crossover, 2026-09-14 | User authorizes **Ruilon SMD5050-470NA / C39692533** for GDT_AC, front-B cutback and **exactly 6.00 mm rear B, not 6.40**, provided rear A/B/C separation is **>=3.00 mm**. The main-strip gap is **3.02 nominal**. Meeting that requirement across all rear copper also requires the disclosed minimal B-return stem shift **X=135.50 to 136.50**, giving **3.10** there. [ASSEMBLY](pcb/ASSEMBLY.md#physical-guardrails) controls the complete coordinates and preserves all other geometry. The rule is **B.Cu-only**, separate from fence/EARTH isolation on both faces; no AC raised-gap requirement or hardware/insulation approval follows. |
 | Westward GDT spacing, 2026-09-14 | After the requested eastward moves proved shorting, user explicitly approves **rail vias 3.50 west, AB/BC and stubs 4.50 west, AC and takeoffs 2.10 west, front-B stop X=115.00**, under **1.2.1-dev**. All Y coordinates, widths, pad/via sizes, rear rails/returns, EARTH, mounts and indicator routing remain. Require **>=3.00 unlike-net inter-GDT pad spacing and AC-pad-to-front-B copper spacing**; nominal minima are **3.20** and AC-to-B_E **3.260515**. No blanket 3 mm inside one tube or between same-net B pads. The disclosed **0.25 J_IN courtyard margin**, relocated-via seating/process duties and physical/impulse holds remain. [ASSEMBLY](pcb/ASSEMBLY.md#smt-via-relocation) controls the full inventory. |
+| East board extension, 2026-09-15 | User approves **2.00 mm east expansion**, retaining **1.2.1-dev**: east edge **X=160.00 to 162.00**, **65.00 x 56.00** outline; H2/H4 **X=155.50 to 157.50**, keeping their Y coordinates and **4.50 edge-centre offsets**. All copper, vias, electrical components, drill sizes and local shapes remain. J_EARTH stays fixed; its body/pose and courtyard are nominally inside the new edge. [ASSEMBLY's edge controls](pcb/ASSEMBLY.md#earth-terminal-edge-clearance) distinguish nominal margins from the conditional inward-route budget and actual supplier/physical acceptance. This is not the rejected eastward GDT proposal. |
 | Earthing | User proposes sharing local earth between DogWatch protection and both shed-end boards. Confirm the connection to actual building PE/electrodes against regional OEM instructions and a qualified installer's site-specific earthing design. Do not add arbitrary unbonded rods, directly earth a fence core, or assume DC negative must be bonded to earth. Five earth-connected stations do not automatically require five independent electrodes. |
 
 The functional choices above are settled. Do not repeatedly ask the user to choose TEST direction, automatic identification, or a timeout. Remaining manufacturer, CAM, and physical-test evidence is tracked separately below.
@@ -175,7 +177,7 @@ correction, supplier acceptance and physical qualification are distinct.
 | W1 | Former nine rail-via holes overlapped all four SMT GDT apertures by 0.19 mm; 1.00 mm reliable covering was unsupported. | **FILE CORRECTION IMPLEMENTED; order/process hold remains.** Selected metric 5.50 x 1.20 lands apply to AB/BC/AC; 1.2.1-dev relocated-via gaps are **0.735557 hole / 0.335557 annulus** at AB/BC. All fourteen vias remain standard untented, no fill/plug/cap. Printed 4.00 mm versus 0.165-inch contradiction, processed stencil/profile, retained drills, J_IN seating/solder inspection and finished etch/assembly gaps remain supplier facts; 3.02 rear / 3.20 inter-device nominal are not guaranteed finished minima. |
 | W2 | DC sparkover, component impulse ratings, heavy copper and parallel pins do not establish transient clamp limits, sharing or a board rating. | **Claims corrected; qualification OPEN.** No assembled surge/current/lifetime rating is assigned. Coordinate the actual protection/cable/earth paths and complete defined transient and recovery tests. |
 | W3 | Nominal 0.50 W/resistor and a wattage label do not prove closed-OneGel temperature or continuous safety. | **TE 2512 SMT IMPLEMENTED; thermal hold remains, deferred for Gate P.** The TE prototype screen gives **0.756803 W/resistor at 40.39597 V** using an assumed 25 C reference and temperature inputs, not TE-confirmed test endpoints or measured chip/pad/PCB temperatures. TE's reference PCB is four-layer, 2 oz outer / 4 oz inner; rating transfer to this two-layer board is unverified, not demonstrated failure. Yageo production needs separate review and qualification. Require accepted source limits and instrumented duty evidence; no PR02 thermal/standoff transfer. See DESIGN_BOUNDS. |
-| W4 | Original connector/earth-GDT holes lacked tolerance margin; part/process and sourcing acceptance remain incomplete. | **BOUNDED FILE DESIGN IMPLEMENTED; lot/fit/process hold remains, deferred for Gate P.** Retained hole/land geometry and minimum ring 0.40 remain. Accept the project-alternate resistor lands, actual placement/stencil/heavy-copper solder process, GDT forming and E/pattern lots. J_EARTH needs **1.00 nominal / 1.30 budgeted overhang**. Use the [reviewed prototype population](pcb/ASSEMBLY.md#reviewed-components) and [separate procurement ledger](MATERIALS.md#resistor-procurement-and-history); stock or an order is not job allocation or W4 closure. |
+| W4 | Original connector/earth-GDT holes lacked tolerance margin; part/process and sourcing acceptance remain incomplete. | **BOUNDED FILE DESIGN IMPLEMENTED; lot/fit/process hold remains, deferred for Gate P.** Retained hole/land geometry and minimum ring 0.40 remain. Accept the project-alternate resistor lands, actual placement/stencil/heavy-copper solder process, GDT forming and E/pattern lots. The east extension removes J_EARTH's nominal drawn overhang, not [edge/panel/fit acceptance](pcb/ASSEMBLY.md#earth-terminal-edge-clearance); conditional margins are not accepted supplier tolerances. Use the [reviewed prototype population](pcb/ASSEMBLY.md#reviewed-components) and [separate procurement ledger](MATERIALS.md#resistor-procurement-and-history); stock or an order is not job allocation or W4 closure. |
 | W5 | Former LED torque was too high; complete enclosure fit and raised GDT geometry were unproven. | **Instructions corrected:** 0.20-0.25 Nm subject to exact APEM model. The old whole-span overpass drawing is preserved as history; SMT AC removes only its lead-forming/height-gauge task. **OPEN:** earth-GDT forming tolerances, SMT seating/workmanship, Essentra thickness fit, COMBI dry-fit and material/process tests. |
 | W6 | Legacy legend, incomplete checks and inconsistent libraries/metadata undermined verification. | **File-level correction verified:** native 1.00/0.15 legend, strict rear-core/effective rules, nine active local footprints/six symbols, matched BOM metadata and fresh SMT AC native/parity/artifact checks below. Reviewed warnings remain visible and narrowly bound; no project severity ignores or exclusions. |
 | W7 | Legacy fault, RF, earthing, environmental/lifetime and five-board sign-off claims were overstated. | **Scope/documentation corrected.** PSU allocation, cable identity/colours, OneGel identity and A364 program family resolved. Entire-boundary energized-cattle fencing is prohibited; verify/maintain that restriction rather than qualify the withdrawn parallel run. **OPEN:** actual source/switch approval, cable/environmental applicability, OneGel/thermal conflicts, RF, earthing and physical qualification. |
@@ -269,6 +271,7 @@ Files: `pcb/pcb.kicad_pcb`, schematic footprint assignments, project-local libra
 - [ ] Agree finished-thickness convention/tolerance in the actual quote and verify Essentra hole/panel-thickness engagement, including fabrication tolerance.
 - [x] Replace the AC raised overpass with the controlled SMT crossover and exact front-B/rear-B/takeoff/return geometry. Preserve the old >=2.00 gap / 15.24-pitch drawing and inspection method as historical evidence, not a current AC requirement.
 - [x] Bound retained earth-GDT forming room and J_EARTH panel envelope against source geometry, with regressions. Former PR02 and B5G470L forming calculations remain history only; SMT removes those order tasks. Required earth-GDT supplier drawing fields remain explicit.
+- [x] Implement the approved east outline/H2/H4 extension without moving copper or electrical components; synchronize current edge/mount controls and retain the old overhang as historical evidence. Native/file publication status is recorded under [East Board Extension](#east-board-extension).
 - [ ] Approve earth-GDT forming tolerances/process and actual SMT seating for assembly. After receipt, perform full COMBI 308 dry-fit with actual WAGOs, cable bends/glands, earth wires, supports, lid LEDs and screwdriver access. CAD does not replace physical fit; received-board dry-fit does not gate prototype files.
 
 **Exit:** Layout and library checks pass with genuine geometry. Part-fit evidence and the chosen via/solder process are either accepted or explicitly held for CAM, never assumed from DRC.
@@ -296,16 +299,17 @@ Files: `Makefile`, `pcb/BOM.csv`, `pcb/CPL.csv`, small export/validation helpers
 - [x] Export native assembly PDF, placement text, coordinate-based via CSV and controlled engineering notes. Implement and test release-manifest revision/tool/source/artifact hashes and results; no generated files are hand-edited.
 - [x] Implement separate `gerbers`/`prototype` and production modes, production precedence for mixed goals, explicit mode/status manifests and generated scope/hold README text inside both transferable ZIPs. No diagnostic, geometry or sourcing gate is waived.
 - [x] Resolve the selected prototype resistor identity with user-approved **TE Connectivity 35212K2FT / C4129105** (in stock at JLCPCB); record Yageo SR2512FK-7W2K2L production pre-order and Uni-Royal PS12 cancellation.
-- [x] Publish the **1.2.1-dev westward-spacing Gate P prototype** snapshot after native/file checks and real serial/parallel comparison. C4/C5/W3/W1/W4 remain deferred, not closed; [Westward GDT Spacing](#westward-gdt-spacing) controls current results. The prior SMT AC / rear-B publication remains historical evidence.
+- [x] Publish the historical **1.2.1-dev westward-spacing Gate P prototype** snapshot after native/file checks and real serial/parallel comparison. C4/C5/W3/W1/W4 remain deferred, not closed; [Westward GDT Spacing](#westward-gdt-spacing) preserves those results, not verification of the east extension.
+- [x] Refresh Gate P files and actual serial/parallel comparison for the east extension and consistency fixes; use [East Board Extension](#east-board-extension) for current results.
 - [ ] Publish a **production** manifest/package only after an evidence-backed file-release review closes the production holds. Gate P authorization does not satisfy this item.
 - [ ] Obtain order-specific acceptance for 2 oz/ENIG mixed SMT/THT assembly, actual part allocation/attrition, heavy-copper soldering, and GDT lead forming. Current public guidance permits THT under both Economic and Standard in principle; verify the exact quote instead of asserting a universal service restriction.
-- [ ] Approve manufacturer-added rails, fiducials, tooling, and depanelization without cuts/holes in protected functional copper. Standard PCBA's processing-size requirement may require panelization for this 63 x 56 mm board. Do not assume the old 73 x 76 mm panel or automatic rail removal, and distinguish five individual boards from five multi-up panels.
+- [ ] Approve manufacturer-added rails, fiducials, tooling, and depanelization without cuts/holes in protected functional copper. Standard PCBA's processing-size requirement may require panelization for this 65 x 56 mm board. Do not assume the old 73 x 76 mm panel or automatic rail removal, and distinguish five individual boards from five multi-up panels.
 - [x] Provide exact coordinate-based identification of all 14 stitching vias in `pcb/ASSEMBLY.md` and generated `ViaTreatment.csv`, including required 1.00 / 1.80 mm geometry and no fill-by-diameter instruction.
 - [ ] Obtain actual via-treatment/CAM acceptance, confirm protected drill sizes were not reduced, and agree any required minimum finished barrel copper separately. The published average is not a minimum guarantee; retained connector/GDT holes remain open and resistor holes are removed.
 
 **Exit:** Verified production data is generated reproducibly and is unambiguous for assembly. Bare-board flying-probe continuity is not advertised as assembled functional or surge testing.
 
-**Current exit: 1.2.1-dev westward-spacing Gate P files published and verified, including real serial/parallel comparison.** Earlier publication results are historical. Production remains held. Supplier placement, CAM, panel, allocated parts and process approvals remain order tasks; they are not replaced by artifact verification or physical environmental/switch tests.
+**Current exit: east-extension Gate P files published and verified, including actual serial/parallel comparison.** Earlier publication results are historical. Production remains held. Supplier placement, CAM, panel, allocated parts and process approvals remain order tasks; they are not replaced by artifact verification or physical environmental/switch tests.
 
 ### P5: Documentation
 
@@ -329,9 +333,9 @@ protection design. Repeat synchronization after any circuit/part/process change.
 
 ### P6: Validation
 
-- [x] Run full stdlib/native tests and `make check` for the westward-spacing snapshot: **235 PASS, no skips**, including eight native probes. Earlier 224-test results belong to 1.2.0-dev. These are file/model tests, not hardware qualification.
-- [x] Repeat separate clean `make all` and clean `make -j4 all` for 1.2.1-dev, preserving evidence and comparing validated geometry/connectivity/population. Both refuse solely for the same five open holds; comparison passes, not production publication.
-- [x] Repeat actual serial/parallel **prototype publication** with `--target prototype` for 1.2.1-dev: clean, serial `make prototype`, clean and `make -j4 prototype` all exit 0, with matching geometry, population, notes and manifest/mode/hold notices.
+- [x] Run full stdlib/native tests and `make check` for the east extension and parser/guide corrections: **242 PASS, no skips**, including nine native methods. Earlier **235-test westward / 224-test SMT AC** results remain historical; these are file/model tests, not hardware qualification.
+- [x] Repeat separate clean `make all` and clean `make -j4 all` for the current 1.2.1-dev snapshot, preserving evidence and comparing validated geometry/connectivity/population. Both refuse solely for the same five open holds; comparison passes, not production publication.
+- [x] Repeat actual serial/parallel **prototype publication** with `--target prototype` for the current 1.2.1-dev snapshot: clean, serial `make prototype`, clean and `make -j4 prototype` all exit 0, with matching geometry, population, notes and manifest/mode/hold notices.
 - [x] Exercise missing rules/project, wrong net, inadequate earth spacing, undersized diode hole, exposed via aperture, missing BOM/CPL part, reversed Y and missing layer fixtures, plus parser/export/race/staleness/diagnostic regressions. Invalid releases are blocked. Other THT maximum-pin fit remains an external evidence hold, not a claimed automatic fit check.
 - [x] Inspect rendered PCB/schematic/assembly data and validate native-generated copper/mask/paste/legend/drill geometry and archives. Retain supported-geometry and rendering limitations with the reports.
 - [ ] Review actual JLCPCB processed PCB/stencil and placement, including hole treatment, maximum-pin fit, forming/standoff and panel/tooling locations, before production approval.
@@ -343,9 +347,9 @@ protection design. Repeat synchronization after any circuit/part/process change.
 
 ## Release Gates
 
-**Current disposition: original A, B and C remain HELD; Gate P is MET for
-the 1.2.1-dev source under [Westward GDT Spacing](#westward-gdt-spacing).
-The earlier SMT AC / rear-B package verifies only its original snapshot.**
+**Current disposition: original A, B and C remain HELD; Gate P is MET for the
+1.2.1-dev snapshot under [East Board Extension](#east-board-extension).
+Earlier packages verify only their original snapshots.**
 The user explicitly permits prototype files without environmental, switching or
 completed hardware qualification. This does not close or rename any of the five
 ledger holds. `make gerbers` and `make prototype` retain **C4, C5, W3, W1 and W4 as deferred**,
@@ -379,9 +383,10 @@ Both modes use `build/Gerbers.zip` (mirror `pcb/Gerbers.zip`), BOM/CPL, FlyTest,
 assembly outputs and notes. Only the matching manifest identifies the current
 package: **prototype `status=prototype`, `mode=prototype`** versus **production
 `status=verified`, `mode=build`**. A filename, status alone, stale ZIP or private
-draft is insufficient. Use **[Westward GDT Spacing](#westward-gdt-spacing)** for
-this session's publication results. SMT AC Conversion, PS12 Selection, both TE
-handoffs and Documentation Cleanup retain their earlier snapshot evidence.
+draft is insufficient. Use **[East Board Extension](#east-board-extension)** for
+this session's publication results. Westward GDT Spacing, SMT AC Conversion,
+PS12 Selection, both TE handoffs and Documentation Cleanup retain their earlier
+snapshot evidence.
 
 The build's success message should mean **"manufacturing data verified for this revision"**, not **"20 kA lightning protection verified."**
 
@@ -426,9 +431,9 @@ Specifications were researched on 2026-09-06; recheck revisions and order-specif
 
 At the end of each implementation session, record the work-package IDs touched, changed files, exact verification commands/results, unresolved evidence, and the next bounded task. Preserve the distinction between implemented, file-verified, CAM-accepted, and physically qualified. Do not silently lower a requirement to obtain a PASS.
 
-Entries and evidence subsections through **SMT AC Conversion**, including
+Entries and evidence subsections through **Westward GDT Spacing**, including
 **PS12 Selection** and both TE handoffs, are historical records for their named snapshots.
-**[Westward GDT Spacing](#westward-gdt-spacing)** and the current
+**[East Board Extension](#east-board-extension)** and the current
 requirements/queue control this session. Earlier tests do not verify changed notes
 or assumptions, and an old package's use of the same revision/filenames does
 not make it current.
@@ -449,6 +454,7 @@ not make it current.
 | 2026-09-11, documentation cleanup from d60c83e | Implemented the approved plan across all 17 guides/notes: canonical owners, linked summaries and preserved historical/local controls. Independent semantic/link review, **208 native-enabled tests**, `make check`/`make gerbers`, production-refusal and real serial/parallel prototype comparison **PASS**. Source/artifact/mirror hashes and isolated-package context checked; no CAD/BOM/model/rule/approval change. | Current Gate P files contain the consolidated notes. Resume the separately authorized P3/P4 supplier queue; all engineering, job-allocation and physical acceptance holds remain. No upload, order or commit. |
 | 2026-09-14, SMT AC conversion from cbc3824 | Implemented Ruilon SMT AC, front-B stop, exactly 6.00 rear B and the necessary X=136.50 return stem. Added native B.Cu-only >=3.00 core isolation and independent exact geometry/artifact regressions. **224 tests PASS including seven native probes; `make check`/`make gerbers`, production-refusal and actual serial/parallel prototype comparison PASS.** Fresh diagnostic evidence was manually reviewed after schematic text cleanup; only its changed schematic approval hash was updated. | Current Gate P files are prototype-only. Resume separately authorized supplier/finished-etch/placement/CAM review; all five engineering holds, job allocation, earth-GDT forming and remaining W5/hardware acceptance remain open. No agent commit, upload or order. |
 | 2026-09-14, westward GDT spacing, 1.2.1-dev | Rejected the shorting eastward proposal; implemented the explicitly approved westward vias/GDTs and front-B stop. Added independent pad/copper guards and native Parent-based inter-GDT rule with activation/scope negatives. Corrected only J_IN silk where relocated vias clipped it. **235 tests PASS, `make check`/`make gerbers` PASS, production-refusal and actual serial/parallel prototype comparisons PASS.** | Current Gate P files are prototype-only; supplier/finished-etch/placement/CAM, J_IN seating/process, allocation and all five engineering/physical holds remain open. No agent commit, upload or order. |
+| 2026-09-15, east board extension consistency | Retained the staged 65 x 56 outline/H2/H4 moves; repaired paste-ratio readers and added alias/inheritance/native, corner/edge and library-order regressions. Synchronized current guides/ledger and preserved historical overhang evidence. **242 tests PASS; `make check`/`make gerbers`, production-refusal and actual serial/parallel prototype comparisons PASS.** | Source-matched Gate P files are current; resume the supplier queue with all five engineering holds and physical acceptance duties open. Original staging is unchanged; fixes are unstaged. No commit, upload or order. |
 
 Plan-creation validation: `git diff --check` and `git diff --no-index --check /dev/null REMEDIATION.md` passed. These are documentation checks; the KiCad and model results above are prior review evidence, not newly performed hardware qualification.
 
@@ -1296,6 +1302,9 @@ earlier PASS. No external-URL, supplier or physical qualification is claimed.
 
 ### Westward GDT Spacing
 
+**Historical snapshot; [East Board Extension](#east-board-extension) controls
+the later outline/mount and consistency changes.**
+
 **2026-09-14, hardware 1.2.1-dev; P1/P3/P4/P5/P6, not circuit qualification.**
 The assessment began at **92592bf** with the user's handoff changes present.
 **116996c** appeared externally during this work, preserving the earlier SMT
@@ -1405,6 +1414,90 @@ met for these files only**; `allocation_verified=false`, C4/C5/W3/W1/W4 and
 original A/B/C remain held. No supplier response, hardware/thermal/impulse test,
 upload, order, GUI use or agent commit occurred.
 
+### East Board Extension
+
+**2026-09-15, hardware 1.2.1-dev; P1/P3/P4/P5/P6 consistency work.** The session
+began at **87c5957** with the reviewed **19 staged files** and no unstaged tracked
+changes. The approved east outline and H2/H4 translations were already present;
+this follow-up leaves the PCB, schematic, copper, electrical placement, BOM and
+library geometry untouched. Existing staging and temporary evidence are preserved.
+The unrelated untracked `HubImplementationPlan.md` was present at the start but
+no longer present during verification; this session did not edit, remove or
+restore it. No commit, upload or order is authorized.
+
+[ASSEMBLY's guardrails](pcb/ASSEMBLY.md#physical-guardrails) and
+[Earth Terminal Edge Clearance](pcb/ASSEMBLY.md#earth-terminal-edge-clearance)
+control the 65 x 56 outline, corner mounts and unchanged J_EARTH envelopes.
+[DFM's dated extension](pcb/DFM_EVIDENCE.md#east-board-extension) preserves the
+old 0.10 LED/mount gap and 1.30 conditional overhang separately from current
+nominal and conditional margins. Actual routed-edge/hole/part tolerances,
+panel/depanelization, support/enclosure and wire/tool access remain acceptance
+tasks; the prior 0.20 inward-route allowance is not an accepted supplier tolerance.
+
+Consistency corrections:
+
+- Both independent source readers now resolve canonical footprint
+  `solder_paste_margin_ratio` and legacy `solder_paste_ratio`, preserving
+  **pad > footprint > setup** precedence and explicit zero. Duplicate declarations,
+  including equal aliases, and malformed numbers fail even behind pad overrides.
+  The former R1 `-0.1` canonical-field false PASS is covered: modeled and native
+  paste are **1.08 x 2.96**, not **1.35 x 3.70**, and the required-zero source guard
+  rejects that change. Positive ratios and inheritance have native controls too.
+- Geometry/native regressions check the new outline and east mounts, reject their
+  old coordinates, and retain body/courtyard budgets and unchanged protected
+  electrical geometry. A library-sync regression accepts harmless instance-item
+  reordering but rejects geometry, duplicate-pad and metadata drift.
+- Live guides link current edge/fit controls rather than requiring the retired
+  overhang. Only W4's reason changes in `pcb/verification.json`; all five hold IDs,
+  diagnostic reviews and approval hashes remain unchanged. No schematic/project/
+  symbol-library/table input changed, so no annotation reapproval is performed.
+
+Initial focused implementation checks, before integrated verification:
+
+| Exact command | Actual result |
+| :--- | :--- |
+| `TMPDIR=/tmp/opencode python3 -B -W error -m unittest discover -s tests -p test_geometry.py -v` | **89 PASS**, including current corner/edge, alias/inheritance and invalid-input controls. |
+| `TMPDIR=/tmp/opencode python3 -B -W error -m unittest discover -s tests -p test_compare_nets.py -v` | **18 PASS**. |
+| `TMPDIR=/tmp/opencode KICAD_TEST_CLI=/snap/bin/kicad.kicad-cli python3 -B -W error -m unittest discover -s tests -p test_manufacturing.py -v` | **72 PASS**, including nine native methods. New 16-case alias/inheritance evidence: `tmp/native-manufacturing-tests/native-paste-ratio-2zc8eeqr/`. |
+
+Final integrated verification, with **KiCad 9.0.7**:
+
+| Exact command / review | Actual result and scope |
+| :--- | :--- |
+| `TMPDIR=/tmp/opencode KICAD_TEST_CLI=/snap/bin/kicad.kicad-cli python3 -B -W error -m unittest discover -s tests -v` | **242 PASS, no skips, 121.301 s**; nine native methods including the new 16-case paste-ratio contract. Isolated-fixture cleanup messages did not remove authoritative build outputs. |
+| `python3 -B pcb/sync_libraries.py --check` | **PASS**, nine local footprints and six symbols; no new CAD/library rewrite or part substitution. |
+| `make check` | **PASS**, initial `attempt-izlwos77`: zero DRC violations, unconnected pads and footprint/parity errors; ERC zero errors/eight exact reviewed warnings. Geometry, eight nets/34 terminals/52 IPC records, 16-part population, 30 PTH/four NPTH, 52/34/18 front-mask/rear-mask/paste apertures and private archives verified. No publication by this target. |
+| `python3 -B scripts/analyze_limits.py` and `python3 -B scripts/design_bounds.py` | Both **exit 0**; unchanged DC/TE assumptions and numerical screens, including 280 clean-cut cases and 0.501018 W nominal / 0.756803 W upper resistor loss. Not physical thermal, source or surge qualification. |
+| `make gerbers` | **Exit 0**, direct prototype publication `attempt-upz4xg07`; all five holds deferred and no file/sourcing gate bypassed. Its native assembly PDF was inspected with the new corners and in-board J_EARTH envelope. |
+| `python3 -B scripts/verify_workflow.py --expect-holds C4 C5 W3 W1 W4` | **PASS of production refusal/comparison**, `tmp/workflow-validation/run-g6l2nfzd/report.json`: clean (0), `make all` (2), clean (0), `make -j4 all` (2). Both complete file checks and refuse solely for the five expected holds. |
+| `python3 -B scripts/verify_workflow.py --target prototype --expect-holds C4 C5 W3 W1 W4` | **PASS of actual serial/parallel prototype publication/comparison**, `tmp/workflow-validation/run-27fkpcd2/report.json`: both cleans and both builds exit **0**. Geometry, connectivity, population, notes, assembly datums and mode/hold notices match. |
+| `python3 -B -W error tmp/gdt-spacing-release-audit.py` | Reused read-only audit **PASS** against the current package: **32 source / 54 artifact hashes**, mirrors, geometry, archives and notes agree. Checkout/flat-note links resolve; **184 shipped-note links** and **17 repository-only context references** are distinguished, not claimed all to ship. No external-URL or full Markdown-renderer verification. |
+| Independent review and whitespace | Read-only review found no remaining scoped parser/documentation defect. Staged and unstaged whitespace checks pass. PCB/schematic/BOM/library sources, generated CPL and all diagnostic approval fields remain unchanged from the reviewed staged snapshot; only W4's descriptive hold reason changes. |
+
+**Current package:** `build/status.json` and `build/manifest.json` identify
+**status=prototype, mode=prototype**, attempt **`attempt-u8repjxz`**, hardware
+**1.2.1-dev**, base **87c5957**, `worktree_dirty=true`. Snapshot identities:
+
+| File | SHA-256 |
+| :--- | :--- |
+| PCB | `4d884ed90bae01f74aa7954916d8e5d715dad277440a4c0303d2e636281ac80b` |
+| Schematic | `24c5ec4710344bdc6faaa74261f2891028a117ae71a0e1ee84d04a5ec15574e5` |
+| Manifest | `7908ef5a4b2c896860833ea16eb8b8f7913402f98d3c0fce9a89e12cdad4147b` |
+| Gerber ZIP and mirror | `5744a3c054c0b80a21e04fe8fa192b78f9dd22078522438a8f1d5abd8dacc909` |
+
+Prototype workflow ran last, leaving a current **FILE-VERIFIED PROTOTYPE ONLY**
+package. Both workflows retain prior runs/reports in their `before/` trees and
+separate serial/parallel evidence. The production workflow's `before/` preserves
+the initial check and direct prototype above. Unrelated temporary evidence is
+unchanged. Root-guide handoff updates do not alter the 32 manifest inputs or
+shipped notes; the final read-only audit confirms the same package after them.
+
+All **C4/C5/W3/W1/W4** remain deferred, not closed; whole-BOM
+**`allocation_verified=false`** and original A/B/C remain held. No supplier
+response, physical fit, thermal/impulse test, new part selection, upload, order,
+GUI use or commit is implied. The original 19 staged files remain as supplied;
+these consistency fixes are unstaged working-tree changes.
+
 ### Next Bounded Work
 
 **Current scope: board design/finalization only, for five fully assembled
@@ -1426,8 +1519,9 @@ spending this board package on their research.
    explicit; supplier and physical acceptance remain unperformed.
 3. **P4, C2/W1/W4:** review actual supplier models against the generated sixteen
    anchors / 34 pin datums, then the panel, processed PCB/stencil and protected
-   drills. Use J_EARTH's **X=161.35 courtyard** and **1.30 budgeted body
-   overhang**; do not default to five panels or insert tooling into functional
+   drills. Use the revised outline/mounts and
+   [J_EARTH edge/panel/fit controls](pcb/ASSEMBLY.md#earth-terminal-edge-clearance);
+   do not default to five panels or insert tooling into functional
    geometry. Obtain the exact five-individual-board quote, including attrition.
 4. After any further source change, rerun `make check`, `make gerbers` and
    `python3 -B scripts/verify_workflow.py --target prototype --expect-holds C4 C5 W3 W1 W4`.

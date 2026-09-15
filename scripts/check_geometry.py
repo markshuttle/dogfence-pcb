@@ -33,14 +33,14 @@ CU = frozenset(("F.Cu", "B.Cu"))
 MASK = frozenset(("F.Mask", "B.Mask"))
 PASTE = frozenset(("F.Paste", "B.Paste"))
 CRITICAL_LAYERS = CU | MASK | PASTE | {"Edge.Cuts"}
-BOARD_BOUNDS = (97.0, 94.5, 160.0, 150.5)
+BOARD_BOUNDS = (97.0, 94.5, 162.0, 150.5)
 RAILS = {"WIRE_A": 114.88, "WIRE_B": 122.5, "WIRE_C": 130.12}
 PROTECTED_VIAS = {
     **{(x, y): net for net, y in RAILS.items() for x in (109.0, 110.5, 112.0)},
     **{(150.0, y): "EARTH" for y in (114.88, 118.69, 122.5, 126.31, 130.12)},
 }
-MOUNTS = {"H1": (101.5, 99.0), "H2": (155.5, 99.0),
-          "H3": (101.5, 146.0), "H4": (155.5, 146.0)}
+MOUNTS = {"H1": (101.5, 99.0), "H2": (157.5, 99.0),
+          "H3": (101.5, 146.0), "H4": (157.5, 146.0)}
 # Selected nominal holes, conditional on ASSEMBLY.md's separate lot/forming limits.
 COMPONENT_HOLE_MINIMA = {
     "GDT_A_E": 1.5, "GDT_B_E": 1.5, "GDT_C_E": 1.5,
@@ -576,7 +576,7 @@ class GeometryCheck:
         schema(fp, {"layer", "uuid", "tstamp", "at", "property", "path", "sheetname", "sheetfile",
                     "descr", "tags", "attr", "locked", "placed", "tedit", "version", "generator",
                     "generator_version", "autoplace_cost90", "autoplace_cost180", "solder_mask_margin",
-                    "solder_paste_margin", "solder_paste_ratio", "clearance",
+                    "solder_paste_margin", "solder_paste_ratio", "solder_paste_margin_ratio", "clearance",
                     "zone_connect", "thermal_width", "thermal_gap", "pad", "fp_text", "fp_text_box",
                     "fp_line", "fp_rect", "fp_circle", "fp_poly", "fp_arc", "fp_curve", "model",
                     "embedded_fonts", "embedded_files", "private_layers", "net_tie_pad_groups"}, 1,
@@ -591,12 +591,17 @@ class GeometryCheck:
         if scalar(fp, "layer") != "F.Cu":
             raise Unsupported(f"{ref}: back-side/flipped footprints are not supported", fp)
         origin, angle = position(fp)
+        # Reject even equal aliases and validate before any pad override can hide bad data.
+        ratio_fields = fp.children("solder_paste_margin_ratio") + fp.children("solder_paste_ratio")
+        if len(ratio_fields) > 1:
+            fp.fail("duplicate footprint solder-paste ratio declarations")
+        fp_paste_ratio = numeric(ratio_fields[0].atoms(1)[0], ratio_fields[0]) if ratio_fields else None
         for prop in fp.children("property"):
             if prop.one("layer", required=False) and scalar(prop, "layer") in CRITICAL_LAYERS:
                 raise Unsupported(f"{ref}: property text on a geometry-bearing layer", prop)
         for child in fp.children():
             if child.tag == "pad":
-                self.attempt(self.read_pad, child, fp, ref, origin, angle)
+                self.attempt(self.read_pad, child, fp, ref, origin, angle, fp_paste_ratio)
             elif child.tag.startswith("fp_"):
                 self.attempt(self.read_graphic, child, origin, angle, ref)
 
@@ -607,7 +612,7 @@ class GeometryCheck:
                 return numeric(field.atoms(1)[0], field)
         return 0.0
 
-    def read_pad(self, pad, fp, ref, origin, angle):
+    def read_pad(self, pad, fp, ref, origin, angle, fp_paste_ratio):
         schema(pad, {"at", "size", "drill", "layers", "net", "uuid", "tstamp", "locked",
                      "remove_unused_layers", "keep_end_layers", "roundrect_rratio", "solder_mask_margin",
                      "solder_paste_margin", "solder_paste_margin_ratio", "clearance", "zone_connect",
@@ -675,13 +680,14 @@ class GeometryCheck:
                 mx = my = self.margin(pad, fp, "solder_mask_margin", "pad_to_mask_clearance") if has_copper else 0
             else:
                 margin = self.margin(pad, fp, "solder_paste_margin", "pad_to_paste_clearance") if has_copper else 0
-                # Footprint syntax uses solder_paste_ratio; pad syntax uses ..._margin_ratio.
                 ratio_field = pad.one("solder_paste_margin_ratio", required=False)
-                if ratio_field is None:
-                    ratio_field = fp.one("solder_paste_ratio", required=False)
-                if ratio_field is None:
+                if ratio_field is None and fp_paste_ratio is None:
                     ratio_field = self.setup.one("pad_to_paste_clearance_ratio", required=False)
-                paste_ratio = numeric(ratio_field.atoms(1)[0], ratio_field) if ratio_field and has_copper else 0
+                paste_ratio = fp_paste_ratio if fp_paste_ratio is not None else 0.0
+                if ratio_field is not None:
+                    paste_ratio = numeric(ratio_field.atoms(1)[0], ratio_field)
+                if not has_copper:
+                    paste_ratio = 0.0
                 mx, my = margin + size[0] * paste_ratio, margin + size[1] * paste_ratio
             aperture_size = (size[0] + 2 * mx, size[1] + 2 * my)
             if not all(math.isfinite(v) and abs(v) <= 2147.483647 for v in aperture_size):
@@ -725,8 +731,12 @@ class GeometryCheck:
             if field.children():
                 raise Unsupported("KiCad 9.0.7 requires flat tenting flags, not nested side booleans", field)
             values = field.atoms()
-            if len(values) != len(set(values)) or any(v not in ("front", "back") for v in values):
+            if len(values) != len(set(values)) or any(v not in ("front", "back", "none") for v in values):
                 field.fail("invalid tenting flags")
+            if "none" in values:
+                if len(values) != 1:
+                    field.fail("invalid tenting flags")
+                return False
             return side in values
         raise Unsupported(f"cannot resolve {side} via tenting from source settings", via)
 
@@ -871,7 +881,7 @@ class GeometryCheck:
                 if a > low + EPS:
                     break
                 low = max(low, b)
-            self.expect(low >= high - EPS, "BOARD_OUTLINE", "63 x 56 mm protected board outline is incomplete")
+            self.expect(low >= high - EPS, "BOARD_OUTLINE", "65 x 56 mm protected board outline is incomplete")
 
         protected = []
         for xy, net in PROTECTED_VIAS.items():

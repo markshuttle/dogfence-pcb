@@ -1,12 +1,19 @@
 # Controlled Assembly Notes
 
-Document: DF-ASM-1.2.1-dev. Updated 2026-09-14 for hardware **1.2.1-dev**.
+Document: DF-ASM-1.2.1-dev. Updated 2026-09-15 for hardware **1.2.1-dev**.
 
 **DEVELOPMENT / FIVE-BOARD PROTOTYPE SCOPE.** These instructions control the
 selected **16-part SMT-resistor/BYG23T hybrid**, not a qualified field protection
 design. [Reviewed Components](#reviewed-components) identifies the active BOM
 and substitution restrictions; [Physical Guardrails](#physical-guardrails)
 indexes the binding placement, fit/forming and process controls.
+
+The **2026-09-15 user-approved east board extension** moves only the east outline
+and H2/H4 **2.00 east**, leaving all copper and electrical components unmoved.
+[Earth Terminal Edge Clearance](#earth-terminal-edge-clearance) controls the
+current nominal/conditional margins and panel/fit acceptance; the dated
+[East Board Extension](DFM_EVIDENCE.md#east-board-extension) records the mechanical
+change without new part or datasheet claims.
 
 The **2026-09-14 user-approved westward spacing change, hardware 1.2.1-dev**,
 moves the nine rail vias and three SMT GDTs with their existing front takeoffs,
@@ -15,7 +22,7 @@ conversion**, not the raised axial AC tube. Current instructions below follow
 the [westward selection](DFM_EVIDENCE.md#westward-spacing-selection); the
 [initial SMT conversion](DFM_EVIDENCE.md#smt-ac-crossover-selection) and
 [retired forming drawing](#gdt_ac-forming-drawing) remain dated historical
-evidence. Earlier native results do not verify this changed geometry or note;
+evidence. Earlier native results do not verify the changed outline or this note;
 require fresh integrated results for the source-matched snapshot. No hardware
 or crossover qualification follows from the new nominal gaps.
 
@@ -69,8 +76,8 @@ Dimensions and coordinates follow [Drawing Conventions](#drawing-conventions).
 
 | Feature | Protected geometry / control |
 | :--- | :--- |
-| Board outline | **63.00 x 56.00**, from **(97.00,94.50) to (160.00,150.50)**. |
-| Mounting | Four **3.20 NPTH** at **(101.50,99.00), (155.50,99.00), (101.50,146.00), (155.50,146.00)**; nominal centres **4.50** from edges. Preserve **6.40-diameter keepout collar markings** and the larger **6.90-diameter / 3.45-radius front/back mechanical courtyards and copper keepouts**. Supports must not contact functional copper. |
+| Board outline | **65.00 x 56.00**, from **(97.00,94.50) to (162.00,150.50)**. |
+| Mounting | Four **3.20 NPTH**: **H1=(101.50,99.00), H2=(157.50,99.00), H3=(101.50,146.00), H4=(157.50,146.00)**; all nominal centres **4.50** from their adjacent board edges. Preserve **6.40-diameter keepout collar markings** and the larger **6.90-diameter / 3.45-radius front/back mechanical courtyards and copper keepouts**. Supports must not contact functional copper. |
 | Fence rails | A/C remain full **3.20 width on both F.Cu and B.Cu**, with unchanged paths. The approved B main segment at **Y=122.50** is **3.20 F.Cu, X=106.00..115.00**, and **EXACTLY 6.00 B.Cu, X=106.00..131.00**, not the proposed 6.40. Preserve all stitching vias at the [1.2.1 coordinates](#stitching-via-identification) and the [SMT AC crossover controls](#smt-ac-crossover); no waist relief or narrowed thermal spokes. |
 | EARTH bus | Matching solid **4.50-grid copper on both sides**, bounding **X=143.99..157.25, Y=111.25..133.75**. Preserve slit-free continuity, all five EARTH vias and the three paralleled J_EARTH pins. Do not add a blanket earth plane across the isolated fence nets. |
 | Fence/EARTH isolation | **>=3.00 copper separation on both F.Cu and B.Cu**; nominal source-analysis global minimum remains **3.25**. The earlier **8.44** clearance to earth-GDT input pins is a historical geometry comparison, not a new measurement; remeasure revised outputs. |
@@ -99,7 +106,9 @@ Detailed inventories remain in their working sections, not in a second table her
   is retained **only as historical B5G470L evidence**, not a current forming hold.
 - [Hole Fit Evidence](#hole-fit-evidence) and
   [Body And Courtyard Evidence](#body-and-courtyard-evidence): hole/pad/ring
-  schedule, pin/pattern/body envelopes, neighbour gaps and J_EARTH overhang.
+  schedule, pin/pattern/body envelopes and neighbour gaps.
+- [Earth Terminal Edge Clearance](#earth-terminal-edge-clearance): J_EARTH
+  extents, nominal/conditional edge margins and revised-outline/panel/fit acceptance.
 - [SMT Via Relocation](#smt-via-relocation): approved westward vias/AB/BC stubs,
   unchanged stub Y endpoints, metric lands, aperture gaps and W1 process hold.
 - [SMT AC Crossover](#smt-ac-crossover): front-only A/C takeoffs, front-B
@@ -499,11 +508,30 @@ openings cross it. Its mirrored B.SilkS reference is at **(106.00,108.50)**,
 outside those openings. The input footprint's pads, F.Fab and complete courtyard
 are unchanged; a three-sided silk aid does not relax the body/fit controls.
 
-At J_EARTH the E body reaches **X=161.00**, 1.00 beyond the nominal east edge;
-pose increases this to **161.10**. Allow **1.30 overhang** against a routed edge
-as far inward as X=159.80. The courtyard reaches **161.35**. Approve panel,
-depanelization, COMBI and wire/tool access for that envelope, not the former
-nominal 0.30 figure. Do not trim the body/courtyard or move earth copper.
+Earth-GDT maximum projected gap is bounded below by
+`9.00 - 8.21 - 2*0.10 = 0.59`; courtyard gap is 0.08. This is a dimensional
+acceptance condition, **not a 1.00 air gap or an impulse-insulation claim**.
+LED courtyards stop at **X=151.95**; H2/H4's protected courtyard west bounds are
+now **X=157.50 - 3.45 = 154.05**, leaving **2.10 nominal gap**.
+
+### Earth Terminal Edge Clearance
+
+The **2026-09-15 approved mechanical extension** leaves J_EARTH at
+**(155.00,122.50), 180 degrees**, with its existing E body reaching **X=161.00**,
+or **161.10 including 0.10 projected pose**. Against the revised nominal east
+edge **X=162.00**, the body including pose has **0.90 nominal margin**; the
+retained courtyard at **X=161.35** has **0.65 nominal margin**. Both envelopes
+are inside the nominal outline, not proven inside every manufactured board.
+The [dated extension record](DFM_EVIDENCE.md#east-board-extension) distinguishes
+this geometry from the old edge/mount calculations.
+
+Retain the prior **CONDITIONAL 0.20 inward-route allowance** as a calculation
+case only: an edge at **X=161.80** leaves **0.70 body margin including pose**
+and **0.45 courtyard margin**. The 0.20 is **not an accepted supplier outline
+tolerance**; these conditional margins are not guaranteed manufactured margins
+or hardware approval. Obtain actual outline/edge and hole-position tolerances,
+part/pose and panel/process acceptance before relying on them. Do not trim the
+body/courtyard or move earth copper.
 
 Use these **top-view PCB-coordinate** extents on the supplier's panel drawing:
 
@@ -513,19 +541,14 @@ Use these **top-view PCB-coordinate** extents on the supplier's panel drawing:
 | Body including 0.10 projected pose | 149.50..161.10 | 109.90..135.10 |
 | Retained F.CrtYd assembly envelope | 149.25..161.35 | 109.65..135.35 |
 
-The nominal east board edge is X=160.00. Show the full courtyard outside that
-edge in the panel, clamping and depanelization review; the native assembly PDF
-now exposes it. A rail, adjacent board, clamp or cutter sweep must not occupy
-the envelope during the relevant assembly/depanelization operation. The
+Use the full courtyard and revised outline/mounts in the panel, clamping and
+depanelization review, together with source-matched assembly outputs. A rail,
+adjacent board, clamp or cutter sweep must not occupy the envelope during the
+relevant assembly/depanelization operation. The
 assembler must specify any larger tool/wire/screwdriver clearance; the courtyard
 alone is not a machining clearance or an approved panel design. Preserve the
 four mounting keepouts and all functional copper. Five individual boards, not
 five panels, remain the quantity requirement.
-
-Earth-GDT maximum projected gap is bounded below by
-`9.00 - 8.21 - 2*0.10 = 0.59`; courtyard gap is 0.08. This is a dimensional
-acceptance condition, **not a 1.00 air gap or an impulse-insulation claim**.
-LED courtyards stop at X=151.95, 0.10 before H2/H4's protected courtyard bounds.
 
 ## SMT Via Relocation
 
@@ -644,9 +667,11 @@ SMT part to recreate the retired overpass.
 
 AC and its two takeoffs move **2.10 west from X=125.80 to 123.70**, keeping all
 Y coordinates and zero part rotation. Together with the specified AB/BC/stub,
-nine rail-via and front-B changes, this exhausts the 1.2.1 placement/routing scope.
-No other component, A/C main rail, rear B/return, EARTH copper, mount or indicator
-route change is authorized. The
+nine rail-via and front-B changes, this exhausts the **2026-09-14 westward
+placement/routing scope**. No other component, A/C main rail, rear B/return,
+EARTH copper or indicator route change is authorized. The later
+[east board extension](DFM_EVIDENCE.md#east-board-extension) changes only the east
+outline and H2/H4; all other mounting controls remain protected. The
 [dated clearance evidence](DFM_EVIDENCE.md#westward-clearance-evidence) records
 full round-cap/land/hole/annulus and body-pose distances. In particular, no front
 B copper is under the AC body, including the **0.10 projected pose allowance**;
@@ -775,8 +800,10 @@ without changing the protected 3.20 mounting holes.
    criteria for the agreed process. Escalate an incompatible process to design
    review instead of altering surge geometry in CAM.
 5. Approve manufacturer-added panel rails, fiducials, tooling and depanelization
-   clearance, including J_EARTH overhang. No cuts/holes are permitted in protected
-   copper or mounting keepouts. Check the actual processed top paste and mask,
+   clearance for the [revised outline and mounts](#physical-guardrails), including
+   [J_EARTH edge-clearance acceptance](#earth-terminal-edge-clearance).
+   No cuts/holes are permitted in protected copper or mounting keepouts.
+   Check the actual processed top paste and mask,
    separate PTH/NPTH drills and placement model; raw exports alone are not CAM
    acceptance. Retain the agreed coordinate transform and sign convention.
 
@@ -795,9 +822,10 @@ simulated by DRC.
    Include cable bend radii, conductor stripping/ferrules if approved, wire
    opening directions, screwdriver reach, lid travel and service slack.
 2. Measure minimum lid-to-component/lead clearance, actual seated SMT-GDT and
-   formed earth-GDT heights, connector overhang and support engagement. Nothing
-   may press on the tubes, seals, solder joints or PCB. Record photographs and toleranced measurements;
-   do not infer fit from a 63 x 56 bare-board rectangle.
+   formed earth-GDT heights, [J_EARTH body-to-edge clearance](#earth-terminal-edge-clearance)
+   and support engagement. Nothing may press on the tubes, seals, solder joints
+   or PCB. Record photographs and toleranced measurements;
+   do not infer fit from a 65 x 56 bare-board rectangle.
 3. Keep each A/B/C through-splice intact and connect the PCB as a tap, not a
    serial perimeter-current link. Keep EARTH separate from fence conductors and
    connect it only under the approved site bonding design. Do not directly bond
@@ -818,10 +846,13 @@ simulated by DRC.
 
 Before an actual prototype order, retain the accepted exact BOM/sourcing route,
 applicable part drawings/fit limits, GDT forming and mixed-assembly process,
-placement-model approval, processed CAM/stencil/drill review and panel plan.
+placement-model approval, processed CAM/stencil/drill review, panel plan and
+accepted outline/edge/hole-position tolerances.
 After assembly, record board serial/revision, BOM/lot, measured forming/pitch/
-height, solder/workmanship and electrical inspection results. Record later
-support/enclosure, continuous-duty and protection results under their separate
+height, outline/mount positions, J_EARTH body-to-edge clearance with measurement
+uncertainty, solder/workmanship and electrical inspection results. Compare with
+the accepted limits; stop and resolve any unaccepted fit or process conflict.
+Record later support/enclosure, continuous-duty and protection results under their separate
 acceptance scopes, not as prerequisites for generating prototype files.
 
 Open supplier facts are specific: quote/job allocation of **ten fitted TE
@@ -831,9 +862,10 @@ lands and the GDTs' selected metric lands**, stencil/solder process and actual p
 allocated Kefa/GDT drawing/E/pattern/body compliance; **earth-GDT forming**; KF129 variant
 and Ruilon metric/inch clarification; solder fill/profile; protected drills and
 any required barrel minimum; actual J_IN seating/solder around the moved vias
-and its **0.25 courtyard gap** to AB/BC; and J_EARTH's **1.30 tolerance-budgeted overhang**
-in the panel/depanelization process. Untented fabrication is standard, not an
-unresolved 1.00 filling request. Apply the
+and its **0.25 courtyard gap** to AB/BC; and the revised outline/mounts and
+[J_EARTH edge/panel/fit acceptance](#earth-terminal-edge-clearance), not a
+guaranteed finished margin from nominal or conditional arithmetic.
+Untented fabrication is standard, not an unresolved 1.00 filling request. Apply the
 [population/substitution restrictions](#reviewed-components) and
 [artifact scope](#prototype-artifacts). No lot, supplier email, CAM acceptance
 or hardware PASS is implied; basic workmanship on five boards is not field or
@@ -859,7 +891,9 @@ above. The **2026-09-14 AC selection** reuses the already reviewed Ruilon
 **SP-GDT-006 A3, 2024-08-19** geometry; no fresh manufacturer retrieval or
 approval is claimed. The later **1.2.1-dev westward selection on the same date**
 changes only the approved global placement/routing, not those land/body sources
-or their qualification status. PS12/HP12/PR02/onsemi/MBE/B5G470L links preserve history,
+or their qualification status. The **2026-09-15 east board extension** changes
+only the outline and H2/H4, with no fresh part/datasheet or supplier approval.
+PS12/HP12/PR02/onsemi/MBE/B5G470L links preserve history,
 not current population instructions.
 
 - [Selected Vishay BYG23T-M3/TR, 89429, 25-Feb-2020](https://www.vishay.com/docs/89429/byg23t.pdf), [C145454 identity](https://www.lcsc.com/product-detail/C145454.html).

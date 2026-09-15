@@ -161,6 +161,14 @@ def read_board(path):
         footprint = Footprint(fp[1], props, x, y, rotation,
                               "top" if layer == "F.Cu" else "bottom", attributes)
         footprints[ref] = footprint
+        # Both footprint spellings are valid, but duplicates (even equal) are not.
+        ratio_fields = children(fp, "solder_paste_margin_ratio") + children(fp, "solder_paste_ratio")
+        require(len(ratio_fields) <= 1, f"Duplicate footprint solder-paste ratio declarations on {ref}")
+        fp_paste_ratio = None
+        if ratio_fields:
+            ratio_text = value(fp, ratio_fields[0][0])
+            require(re.fullmatch(r"[0-9+\-.eE]+", ratio_text), f"Invalid footprint solder-paste ratio on {ref}")
+            fp_paste_ratio = numbers([ratio_text])[0]  # Validate even when every pad overrides it.
         for pad in children(fp, "pad"):
             require(len(pad) >= 4 and pad[2] in ("thru_hole", "np_thru_hole", "smd", "connect"),
                     f"Unsupported/malformed pad on {ref}")
@@ -196,7 +204,8 @@ def read_board(path):
                 require(not net_name, f"NPTH assigned to electrical net: {ref}.{pin}")
             mask = value(pad, "solder_mask_margin", value(fp, "solder_mask_margin", value(setup, "pad_to_mask_clearance", "0")))
             paste = value(pad, "solder_paste_margin", value(fp, "solder_paste_margin", value(setup, "pad_to_paste_clearance", "0")))
-            ratio = value(pad, "solder_paste_margin_ratio", value(fp, "solder_paste_ratio", value(setup, "pad_to_paste_clearance_ratio", "0")))
+            ratio = value(pad, "solder_paste_margin_ratio", fp_paste_ratio if fp_paste_ratio is not None
+                          else value(setup, "pad_to_paste_clearance_ratio", "0"))
             roundrect_ratio = numbers([value(pad, "roundrect_rratio", "0.25")])[0]
             require(0 <= roundrect_ratio <= 0.5, f"Invalid roundrect ratio: {ref}.{pin}")
             terminal = Pad(ref, pin, net_name, px, py, kind, drill, *size,

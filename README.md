@@ -168,9 +168,15 @@ between unlike-net pads of different GDTs and between AC pads and front B
 copper**, with **3.20 mm nominal minimum**. Each tube's internal land/copper
 gaps are a separate scope; neither the new spacing nor DRC proves flashover immunity.
 
+The approved **2 mm east board extension**, still **1.2.1-dev**, makes the
+outline **65 x 56 mm** and moves H2/H4 east without moving J_EARTH or functional
+copper. [J_EARTH's edge-clearance controls](pcb/ASSEMBLY.md#earth-terminal-edge-clearance)
+own the nominal-versus-budgeted body/pose and courtyard margins; neither is
+supplier-tolerance or measured-fit approval.
+
 The [retained resistor lands](pcb/ASSEMBLY.md#2512-smt-resistors) are an
 alternative to the manufacturer's recommendation, not an exact-fit approval.
-Actual parts, stencil/solder process, earth-GDT forming, overhang and
+Actual parts, stencil/solder process, earth-GDT forming, edge clearance and
 enclosure/support fit remain separate acceptance tasks. Source stackup arithmetic is not a finished
 thickness guarantee; ENIG is not a hermetic seal. Use the controlled notes and
 [ORDERING](ORDERING.md#3-hole-via-and-solder-process) for the actual handoff.
@@ -255,13 +261,13 @@ make prototype
 all file/artifact checks pass. `make prototype` / `make gerbers` may publish
 **FILE-VERIFIED PROTOTYPE ONLY** with all five ledger holds deferred, not closed.
 Production targets retain their holds and win mixed goals; unresolved External
-sourcing blocks both modes. See the [latest handoff](REMEDIATION.md#session-handoff)
-for actual results, not a reused PASS from an earlier note snapshot.
+sourcing blocks both modes. The [east-extension handoff](REMEDIATION.md#east-board-extension)
+controls current verification status and the matching source/controlled-note snapshot.
 
-Native/file checks and actual serial/parallel prototype publication for
-**1.2.1-dev westward GDT spacing passed**. [Westward GDT Spacing](REMEDIATION.md#westward-gdt-spacing)
-records the matching snapshot and remaining holds. The earlier SMT AC/rear-B
-publication applies only to its recorded `1.2.0-dev` inputs.
+The earlier [westward-spacing checks](REMEDIATION.md#westward-gdt-spacing) and
+SMT AC/rear-B publication remain historical evidence for their recorded inputs.
+They do not verify the east extension or changed controlled notes, even where
+the **1.2.1-dev** identifier is unchanged.
 
 Require matching `build/status.json` and `build/manifest.json` with validated
 revision/source/artifact hashes and **status=prototype, mode=prototype**, or

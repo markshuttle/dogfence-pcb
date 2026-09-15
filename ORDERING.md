@@ -20,7 +20,7 @@ select a different circuit.
 | **SMT job allocation** | Accept **ten fitted TE prototype resistors and fifteen fitted Ruilon SMT GDTs, each plus supplier-specified attrition**, for five boards; record packaging and exact job allocation under [Parts And Allocation](#4-parts-and-allocation). No resistor or GDT_AC lead forming/insertion-hole approval is needed. |
 | **Remaining part/fit acceptance** | Exact KF129 variant and allocated Kefa/earth-GDT pin/body/pattern limits; accepted forming drawings for the three axial earth GDTs. The retained hole/body envelopes are already implemented, not still awaiting a CAD resize; actual lot acceptance remains open. |
 | **SMT and THT process** | Accept the retained **alternate project resistor lands for TE**, not a claimed manufacturer-exact pattern, and the selected metric Ruilon/SMA lands. Resolve Ruilon's 4.00 mm/0.165-inch conflict and approve actual placement, processed stencil and heavy-copper solder/inspection process for **all three SMT GDT positions**, including GDT_AC. |
-| **Panel and drill preservation** | Drawing for five finished individual boards, retaining all fourteen 1.00/1.80 untented vias, four mounts, outline and protected copper; account for J_EARTH's courtyard through X=161.35 and 1.30 budgeted body overhang. |
+| **Panel and drill preservation** | Drawing for five finished individual boards with the [revised outline and four mount positions](pcb/ASSEMBLY.md#physical-guardrails), retaining all fourteen 1.00/1.80 untented vias and protected copper; apply [J_EARTH's edge/fit requirements](pcb/ASSEMBLY.md#earth-terminal-edge-clearance). |
 | **Placement approval** | Compare all sixteen anchors and 34 terminal datums in generated Assembly.txt with exact supplier models, using the pad-outline/courtyard Assembly.pdf. Pin numbers/nets are explicit in the text; native PDF pad numbering is not assumed. Record any supported model transform; do not hand-edit CPL or PCB pads to fix import conventions. |
 
 This is a **supplier-response checklist, not an order authorization or a claim
@@ -51,7 +51,7 @@ Apply [AGENTS' verification/publication workflow](AGENTS.md#3-verification-and-p
 
 `make check` verifies without publication; `make prototype` / `make gerbers` may publish **FILE-VERIFIED PROTOTYPE ONLY** after all file/sourcing checks. Unresolved external sourcing blocks both modes; file parity or public stock is not job allocation. Production targets retain all engineering holds and win mixed goals. Detailed native commands, diagnostic reviews, locking and evidence-preserving cleanup belong to AGENTS.
 
-Use the latest revision-specific [westward-spacing handoff](REMEDIATION.md#westward-gdt-spacing) and matching manifest, not a part-selection statement or an old PASS. **Native/file verification and actual serial/parallel prototype publication for 1.2.1-dev passed.** The earlier SMT AC/rear-B checks apply to their recorded `1.2.0-dev` snapshot; any further source or controlled-note change requires fresh artifact evidence.
+Current verification for the approved **2 mm east board extension**, still **1.2.1-dev**, is controlled by the [east-extension handoff](REMEDIATION.md#east-board-extension). Require a fresh matching source/controlled-note snapshot and manifest; the earlier [westward-spacing](REMEDIATION.md#westward-gdt-spacing) and SMT AC/rear-B checks are historical and do not verify the changed geometry or notes. A shared revision label, part selection or old PASS is not current release evidence.
 
 | Intended file | Use after verification |
 | :--- | :--- |
@@ -76,7 +76,7 @@ JLCPCB offers **standard two-layer FR-4 with 2 oz copper on both sides and ENIG*
 | :--- | :--- |
 | Quantity | **Five individual usable boards, all five fully assembled**. State panel-to-individual-board conversion explicitly. |
 | Material | Readily available standard **FR-4**. Do not impose High-Tg 170, a particular Shengyi grade, or a claimed lifetime requirement without an approved engineering need. |
-| Layers / size | **Two layers, 63 x 56 mm** per individual board. Both layers carry isolated fence and earth copper; B.Cu is not a blanket ground plane. |
+| Layers / size | **Two layers, 65 x 56 mm** per individual board. Both layers carry isolated fence and earth copper; B.Cu is not a blanket ground plane. |
 | Thickness | **Nominal 1.6 mm finished board**. Confirm supplier measurement convention, including over-mask thickness, tolerance and support fit against the [controlled stackup/acceptance requirements](pcb/ASSEMBLY.md#thickness-and-process), not just the nominal arithmetic. |
 | Copper | **2 oz / 70 micrometres on both F.Cu and B.Cu**. This does not specify finished barrel plating or an assembled surge rating. |
 | Finish / mask | **ENIG, green soldermask default**. Record actual finish specification; do not mandate 2-microinch gold or claim a pore-free environmental seal. |
@@ -120,7 +120,7 @@ Independently inspect every allocated controlled-envelope part for the five prot
 
 Neither controlled maximum-body boxes, CAM acceptance nor a good 3D render replaces physical [COMBI 308 dry-fit](pcb/ASSEMBLY.md#combi-dry-fit-hold), support-thickness fit or solder/earth-GDT-forming inspection. Retiring the AC overpass removes only its specific forming/height task, **not W5's remaining forming, support/enclosure and material/process acceptance**. Full enclosure dry-fit follows prototype receipt; it is not a Gate P artifact prerequisite.
 
-The KF128 J_EARTH **E body envelope reaches X=161.00 mm**, **1.00 mm beyond the nominal east edge**. With pose and a routed edge as far inward as X=159.80, budget **1.30 mm overhang**; the courtyard reaches **X=161.35 mm**. Include the [controlled envelope](pcb/ASSEMBLY.md#body-and-courtyard-evidence) in panel, depanelization, enclosure and screwdriver/wire-access acceptance; do not trim the body/courtyard or move protected earth copper to hide it.
+J_EARTH remains fixed; its body/pose envelope and full courtyard are **nominally inside the extended east edge**. Apply [ASSEMBLY's edge-clearance and inspection requirements](pcb/ASSEMBLY.md#earth-terminal-edge-clearance) to panel, depanelization, enclosure and screwdriver/wire-access acceptance. Obtain and record actual routed-edge tolerance and required tool clearances; nominal or conditional budgeted margins are not supplier acceptance or measured fit. Do not trim the body/courtyard or move protected earth copper to conceal interference.
 
 ## 4. Parts And Allocation
 

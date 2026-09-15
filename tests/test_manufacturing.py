@@ -939,6 +939,43 @@ class ManufacturingTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertEqual([path.read_bytes() for path in paths], after)
 
+    def test_sync_check_ignores_item_order_not_geometry_or_metadata(self):
+        project = self.root / "pcb"
+        for name in ("pcb.kicad_pcb", "pcb.kicad_sch", "DogFence.kicad_sym"):
+            shutil.copy2(REPO / "pcb" / name, project / name)
+        shutil.copytree(REPO / "pcb" / "DogFence.pretty", project / "DogFence.pretty")
+        pcb = project / "pcb.kicad_pcb"
+        board = sync.parse(pcb.read_text())
+        resistors = [fp for fp in sync.children(board, "footprint") if fp[1] == '"DogFence:R_2512_6332Metric"']
+        self.assertEqual(len(resistors), 2)
+        target = board.index(resistors[1])  # Leave the first instance's generated library order intact.
+        resistors[1][2:] = reversed(resistors[1][2:])
+        pcb.write_text(sync.format_node(board) + "\n", encoding="utf-8")
+        with patch.object(sync, "__file__", str(project / "sync_libraries.py")), \
+                patch.object(sync.sys, "argv", ["sync_libraries.py", "--check"]), \
+                contextlib.redirect_stdout(io.StringIO()):
+            before = pcb.read_bytes()
+            sync.main()
+            self.assertEqual(pcb.read_bytes(), before)
+            for defect in ("pad-size", "pad-position", "duplicate-pad", "mpn"):
+                with self.subTest(defect=defect):
+                    changed = copy.deepcopy(board)
+                    fp = changed[target]
+                    pad = sync.children(fp, "pad")[0]
+                    if defect == "pad-size":
+                        sync.child(pad, "size")[1] = "1.36"
+                    elif defect == "pad-position":
+                        sync.child(pad, "at")[1] = "3.2"
+                    elif defect == "duplicate-pad":
+                        fp.append(copy.deepcopy(pad))
+                    else:
+                        next(p for p in sync.children(fp, "property") if p[1] == '"MPN"')[2] = '"WRONG"'
+                    pcb.write_text(sync.format_node(changed) + "\n", encoding="utf-8")
+                    before = pcb.read_bytes()
+                    with self.assertRaisesRegex(ValueError, "Different geometry/metadata shares footprint name"):
+                        sync.main()
+                    self.assertEqual(pcb.read_bytes(), before)
+
     def test_missing_exported_cpl_file_or_designator_blocks(self):
         for defect in ("missing-cpl", "missing-cpl-ref"):
             with self.subTest(defect=defect):
@@ -1694,6 +1731,8 @@ class NativeContractTests(unittest.TestCase):
             self.assertEqual((len(board.nets), sum(map(len, board.nets.values()))), (8, 34))
             self.assertEqual(Counter(p.kind for p in board.pads),
                              {"smd": 18, "thru_hole": 16, "via": 14, "np_thru_hole": 4})
+            self.assertEqual({p.ref: (p.x, p.y) for p in board.pads if p.kind == "np_thru_hole"},
+                             {"H1": (101.5, 99), "H2": (157.5, 99), "H3": (101.5, 146), "H4": (157.5, 146)})
             self.assertEqual(checked["drills"], {"pcb-PTH.drl": 30, "pcb-NPTH.drl": 4})
             for layer, count in (("F.Mask", 52), ("B.Mask", 34), ("F.Paste", 18)):
                 self.assertEqual(checked["gerbers"][layer]["flashes"], count)
@@ -1707,6 +1746,10 @@ class NativeContractTests(unittest.TestCase):
                     b_main = [track for track in tracks if track[:2] == (106, -122.5) and track[-1] == "WIRE_B"]
                     self.assertEqual(b_main, [(106, -122.5, 115 if layer == "F.Cu" else 131,
                                               -122.5, 3.2 if layer == "F.Cu" else 6, "WIRE_B")])
+            outline = m.parse_gerber(gerbers / m.LAYERS["Edge.Cuts"][0], m.LAYERS["Edge.Cuts"][1])[1]
+            self.assertEqual({segment[:4] for segment in outline},
+                             {(97, -94.5, 162, -94.5), (162, -150.5, 162, -94.5),
+                              (97, -150.5, 162, -150.5), (97, -150.5, 97, -94.5)})
             for name, digest in hashes.items():
                 self.assertEqual(m.sha256(project / name), digest)
             vias = m.via_mask_settings(board)
@@ -1790,6 +1833,83 @@ class NativeContractTests(unittest.TestCase):
                     m.write_json(case / "native-command.json", {"command": command, "returncode": result.returncode,
                                                                "stdout": result.stdout, "stderr": result.stderr})
                     self.assertEqual(result.returncode, status, result.stdout + result.stderr)
+
+    def test_native_footprint_paste_ratio_aliases_and_inheritance(self):
+        from scripts.check_geometry import GeometryCheck
+        from scripts.kicad_sexpr import parse
+        from test_geometry import dump, footprint, pad, remove, replace
+
+        parent = REPO / "tmp" / "native-manufacturing-tests"
+        parent.mkdir(parents=True, exist_ok=True)
+        source = REPO / "pcb" / "pcb.kicad_pcb"
+        source_hash = m.sha256(source)
+        base = parse(source.read_text())
+        spellings = ("solder_paste_margin_ratio", "solder_paste_ratio")
+        cases = (("default", None, None, None, ((1.35, 3.7), (1.35, 3.7))),
+                 ("setup", -0.2, None, None, ((0.81, 2.22), (0.81, 2.22))),
+                 ("footprint", -0.2, -0.1, None, ((1.08, 2.96), (1.08, 2.96))),
+                 ("positive", -0.2, 0.1, None, ((1.62, 4.44), (1.62, 4.44))),
+                 ("footprint-zero", -0.2, 0, None, ((1.35, 3.7), (1.35, 3.7))),
+                 ("pad-zero", -0.2, -0.1, 0, ((1.35, 3.7), (1.08, 2.96))),
+                 ("pad-override", -0.2, 0, -0.1, ((1.08, 2.96), (1.35, 3.7))),
+                 ("pad-over-setup", -0.2, None, 0, ((1.35, 3.7), (0.81, 2.22))))
+        with tempfile.TemporaryDirectory(prefix="native-paste-ratio-", dir=parent, delete=False) as temporary:
+            root = Path(temporary)
+            for spelling in spellings:
+                for name, setup_ratio, fp_ratio, pad_ratio, dimensions in cases:
+                    with self.subTest(spelling=spelling, case=name):
+                        case = root / f"{spelling}-{name}"
+                        project = case / "pcb"
+                        project.mkdir(parents=True)
+                        for filename in ("pcb.kicad_pro", "pcb.kicad_dru"):
+                            shutil.copy2(REPO / "pcb" / filename, project / filename)
+                        board = copy.deepcopy(base)
+                        fp = footprint(board, "R1")
+                        for key in spellings:
+                            remove(fp, key)
+                        setup = board.one("setup")
+                        remove(setup, "pad_to_paste_clearance_ratio")
+                        if setup_ratio is not None:
+                            replace(setup, f"(pad_to_paste_clearance_ratio {setup_ratio})")
+                        if fp_ratio is not None:
+                            replace(fp, f"({spelling} {fp_ratio})")
+                        for p in fp.children("pad"):
+                            remove(p, "solder_paste_margin_ratio")
+                        if pad_ratio is not None:
+                            replace(pad(board, "R1", "1"), f"(solder_paste_margin_ratio {pad_ratio})")
+                        pcb = project / "pcb.kicad_pcb"
+                        pcb.write_text(dump(board), encoding="utf-8")
+                        checker = GeometryCheck(board)
+                        checker.read_board()
+                        self.assertEqual(checker.diagnostics, [])
+                        directory = case / "gerbers"
+                        directory.mkdir()
+                        command = [os.environ["KICAD_TEST_CLI"], "pcb", "export", "gerbers",
+                                   "--layers", ",".join(m.LAYERS), "--precision", "6", "--no-protel-ext",
+                                   "--subtract-soldermask", "--output", str(directory) + "/", str(pcb)]
+                        result = subprocess.run(command, cwd=project, capture_output=True, text=True, timeout=120)
+                        m.write_json(case / "native-command.json", {"command": command, "returncode": result.returncode,
+                                                                   "stdout": result.stdout, "stderr": result.stderr})
+                        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                        self.assertEqual(re.sub(m.WX_IMAGE_DEBUG, "", result.stderr), "")
+                        self.assertIsNone(re.search(r"(?im)^\s*(?:warning|error)\b", result.stdout))
+                        validated = m.validate_gerbers(directory, nets.read_board(pcb))
+                        flashes = sorted(f for f in m.parse_gerber(directory / "pcb-F_Paste.gbr", "Paste,Top")[0]
+                                         if f[6] == "R1")
+                        openings = sorted((a for a in checker.apertures
+                                           if a.reference == "R1" and a.layers == {"F.Paste"}),
+                                          key=lambda a: a.pad_number)
+                        self.assertEqual((len(flashes), len(openings)), (2, 2))
+                        for flash, opening, expected in zip(flashes, openings, dimensions):
+                            self.assertEqual(flash[:2], (opening.center[0], -opening.center[1]))
+                            x0, y0, x1, y1 = opening.shape.bounds
+                            for actual, required, modeled in zip(flash[2:4], expected, (x1 - x0, y1 - y0)):
+                                self.assertAlmostEqual(actual, required, places=6)
+                                self.assertAlmostEqual(actual, modeled, places=6)
+                            self.assertAlmostEqual(flash[5], opening.shape.radius, places=6)
+                        m.write_json(case / "validated.json", {"source_sha256": source_hash,
+                                                              "gerbers": validated, "R1_paste": flashes})
+        self.assertEqual(m.sha256(source), source_hash)
 
     def test_native_roundrect_and_rect_margins(self):
         parent = REPO / "tmp" / "native-manufacturing-tests"

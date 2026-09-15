@@ -198,6 +198,7 @@ def main():
             for candidate in (a, b):
                 for prop in children(candidate, "property"):
                     prop[:] = prop[:3]
+                candidate[4:] = sorted(candidate[4:], key=lambda x: (x[0], str(x)))
             if a != b:
                 raise ValueError(f"Different geometry/metadata shares footprint name {name}")
         else:

@@ -78,6 +78,13 @@ It checks complete terminal membership, BOM identities/population, signed-Y CPL,
 fabrication geometry, drill classification and archive contents. Unsupported
 geometry fails closed; extend and test the validator rather than ignore it.
 
+The source readers accept KiCad 9's footprint `solder_paste_margin_ratio` and
+legacy `solder_paste_ratio`, with **pad > footprint > setup** inheritance and
+explicit zero overrides. Duplicate footprint declarations, including equal
+aliases, and malformed numbers fail closed even when pads override them. Keep
+the independent readers and native aperture regressions consistent; allowing a
+field in the geometry schema without resolving its value is not support.
+
 - Readable and JSON DRC/ERC reports are retained at `build/drc_report.*` and
   `build/erc_report.*` on success and failure. Additional logs, geometry and
   verification results are in `build/reports/`; `build/status.json` identifies
@@ -216,6 +223,8 @@ LCSC fields without changing values or footprints; run `--write`, `--check` and
 `make check` afterward. Never use synchronization to conceal an accidental
 geometry or part substitution. Reference/value text placement can differ per
 instance; shared geometry and sourcing metadata must agree.
+Same-name instance comparisons ignore top-level item ordering, not nested pad
+geometry, duplicates or metadata values; generated definitions remain byte-checked.
 
 Before editing rules, read the [project guardrails](pcb/ASSEMBLY.md#physical-guardrails)
 and [master DFM policy](README.md#via-and-component-hole-dfm). Project settings,
@@ -263,6 +272,15 @@ via/seating inspection duties. Require the native and independent **>=3.00 mm
 unlike-net inter-GDT pad** controls and independent **AC-pad-to-all-front-B
 copper** control. These do not impose 3 mm inside a single GDT or between
 same-net pads; nominal inter-device minimum is **3.20 mm**, not impulse approval.
+
+The **2026-09-15 user-approved east board extension**, still **1.2.1-dev**, changes
+only the east outline **X=160.00 to 162.00** and H2/H4 **X=155.50 to 157.50**.
+The board is **65.00 x 56.00**; all hole Y coordinates, **3.20 NPTH**, collars,
+courtyard radii and **4.50 edge-centre offsets** remain protected. All copper,
+vias and electrical components remain unmoved. Use
+[Earth Terminal Edge Clearance](pcb/ASSEMBLY.md#earth-terminal-edge-clearance)
+for current nominal/conditional margins and panel/fit duties; the former
+J_EARTH overhang is historical, not a current requirement or a closed W4 hold.
 
 The AC crossing now uses the FR-4 core between front A/C and rear B, not the
 retired raised overpass. No AC lead-forming/height-gauge requirement remains;
@@ -353,7 +371,8 @@ supplement, not replace, electrical DRC.
   via as a lead-insertion hole, forced insertion or reaming of finished PTHs.
 - The selected process is **untented both sides, no fill/plug/cap, ENIG**, with
   no via paste. KiCad 9.0.7 uses flat `(tenting ...)` flags;
-  nested side booleans and per-via mask-margin clauses fail native parsing.
+  `(tenting none)` explicitly opens both sides, as does an empty flat list.
+  Nested side booleans and per-via mask-margin clauses fail native parsing.
 - Compare full drill circles, annuli, copper and actual mask/paste apertures.
   Same-net via-aperture overlap never excuses component mask/paste over a hole.
   Inspect processed Gerbers/stencil too; native flags, opaque mask or gel do not

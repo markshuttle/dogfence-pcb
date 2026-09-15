@@ -456,7 +456,7 @@
 	(footprint "DogFence:MountingHole_3.2mm"
 		(layer "F.Cu")
 		(uuid "22222222-2222-2222-2222-222222222222")
-		(at 155.5 99)
+		(at 157.5 99)
 		(property "Reference" "H2"
 			(at -4.5 0 0)
 			(layer "B.SilkS")
@@ -1093,7 +1093,7 @@
 	(footprint "DogFence:MountingHole_3.2mm"
 		(layer "F.Cu")
 		(uuid "44444444-4444-4444-4444-444444444444")
-		(at 155.5 146)
+		(at 157.5 146)
 		(property "Reference" "H4"
 			(at -4.5 0 0)
 			(layer "B.SilkS")
@@ -3987,7 +3987,7 @@
 	)
 	(gr_rect
 		(start 97 94.5)
-		(end 160 150.5)
+		(end 162 150.5)
 		(stroke
 			(width 0.15)
 			(type solid)
