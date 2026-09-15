@@ -455,6 +455,8 @@ not make it current.
 | 2026-09-14, SMT AC conversion from cbc3824 | Implemented Ruilon SMT AC, front-B stop, exactly 6.00 rear B and the necessary X=136.50 return stem. Added native B.Cu-only >=3.00 core isolation and independent exact geometry/artifact regressions. **224 tests PASS including seven native probes; `make check`/`make gerbers`, production-refusal and actual serial/parallel prototype comparison PASS.** Fresh diagnostic evidence was manually reviewed after schematic text cleanup; only its changed schematic approval hash was updated. | Current Gate P files are prototype-only. Resume separately authorized supplier/finished-etch/placement/CAM review; all five engineering holds, job allocation, earth-GDT forming and remaining W5/hardware acceptance remain open. No agent commit, upload or order. |
 | 2026-09-14, westward GDT spacing, 1.2.1-dev | Rejected the shorting eastward proposal; implemented the explicitly approved westward vias/GDTs and front-B stop. Added independent pad/copper guards and native Parent-based inter-GDT rule with activation/scope negatives. Corrected only J_IN silk where relocated vias clipped it. **235 tests PASS, `make check`/`make gerbers` PASS, production-refusal and actual serial/parallel prototype comparisons PASS.** | Current Gate P files are prototype-only; supplier/finished-etch/placement/CAM, J_IN seating/process, allocation and all five engineering/physical holds remain open. No agent commit, upload or order. |
 | 2026-09-15, east board extension consistency | Retained the staged 65 x 56 outline/H2/H4 moves; repaired paste-ratio readers and added alias/inheritance/native, corner/edge and library-order regressions. Synchronized current guides/ledger and preserved historical overhang evidence. **242 tests PASS; `make check`/`make gerbers`, production-refusal and actual serial/parallel prototype comparisons PASS.** | Source-matched Gate P files are current; resume the supplier queue with all five engineering holds and physical acceptance duties open. Original staging is unchanged; fixes are unstaged. No commit, upload or order. |
+| 2026-09-15, requested hub-plan review | Reviewed the user-supplied `HubImplementationPlan.md` against the agreed topology, existing fault/load models and manufacturer evidence. Replaced unsupported RF-neutrality, TVS/eFuse coordination, arc-clearing and C5-closure claims with bounded wiring/protection requirements; no circuit or part selected. **23 electrical + 14 design-bounds tests PASS; both model CLIs exit 0.** See [Hub Plan Review](#hub-plan-review). | For a future authorized hub design, establish exact OEM/switch interfaces, port limits and fault coverage before schematic/layout freeze. Station P3/P4 supplier work and all engineering/physical holds remain separate; no CAD, artifacts, approval hashes, upload, order or commit changed. |
+| 2026-09-15, C5 closure planning follow-up | Expanded the hub plan into a three-obligation retain-or-redesign strategy: powered recovery, damaged-station safety and separate cable/joint coverage. Specified proposed Q/K1/K2 independent shutdown, state/reset behavior, fault matrix, quantitative acceptance equations and five closure deliverables. See [Hub C5 Closure Planning](#hub-c5-closure-planning) for scope and verification. | Complete the fault contract and actual retained-station/cable evidence; obtain approval for any necessary local protection or installation change. This is a plan, not an implemented circuit or C5 closure. Station sources, supplier queue, Gate P and all engineering/physical holds remain unchanged. |
 
 Plan-creation validation: `git diff --check` and `git diff --no-index --check /dev/null REMEDIATION.md` passed. These are documentation checks; the KiCad and model results above are prior review evidence, not newly performed hardware qualification.
 
@@ -1497,6 +1499,86 @@ All **C4/C5/W3/W1/W4** remain deferred, not closed; whole-BOM
 response, physical fit, thermal/impulse test, new part selection, upload, order,
 GUI use or commit is implied. The original 19 staged files remain as supplied;
 these consistency fixes are unstaged working-tree changes.
+
+### Hub Plan Review
+
+**2026-09-15, explicitly requested P2/P5 document review**, separate from the
+station board-finalization queue. The worktree began with no tracked/staged diff
+and an untracked user-supplied `HubImplementationPlan.md`. Updated that plan and
+this handoff only; no hub implementation, station-source change or new approval.
+
+The [reviewed hub plan](HubImplementationPlan.md) recommends retaining the
+SmartFence `LOOP` pair's OEM-protected path directly to RUN source-side contacts,
+while consolidating six separate field paths and a segregated TEST interface on
+one proposed PCB. Those field paths still carry RF in RUN. A separate communications
+antenna belongs to neither the rotary switch nor this PCB. Exact OEM protector/
+earthing and supplied-switch DC/global-transfer acceptance remain open.
+
+The plan records the 0.979810 A total / 2.602168 W conditional remote fault missed
+by a 1.5 A trip, the incompatible SMCJ58CA/TPS26600 clamp assumptions, corrected
+device timing/thermal data, separate input-reversal/output-surge/miswire duties,
+and isolated future hub build paths. **C5 is not resolved by this proposal.**
+The current station BOM, geometry, all five ledger holds and original A/B/C gates
+are unchanged; no new hub prerequisite is imposed on station Gate P files.
+
+Actual read-only verification: `python3 -B scripts/analyze_limits.py` and
+`python3 -B scripts/design_bounds.py` both exit 0;
+`TMPDIR=/tmp/opencode python3 -B -W error -m unittest discover -s tests -p test_electrical.py -v`
+passes **23**, and the same command with `-p test_design_bounds.py` passes **14**.
+Independent engineering/link/tooling reviews found no remaining scoped defects
+after correcting implied fuse-coordination approval. `git diff --check` and
+`git diff --no-index --check /dev/null HubImplementationPlan.md` pass.
+These reproduce existing conditional models, not physical recovery or a new hub
+circuit. No native KiCad/build/publication was run because only root documents
+changed; controlled notes, generated artifacts and existing package evidence were
+left untouched. No supplier response, hardware test, order, upload or commit.
+
+### Hub C5 Closure Planning
+
+**2026-09-15, user-requested follow-up to address C5 fully in the implementation
+plan.** Preserved the preceding uncommitted hub-plan/handoff edits. This session
+changes only `HubImplementationPlan.md` and this record; no circuit/BOM/geometry,
+controlled note, approval hash, generated artifact or release-hold change.
+
+The [expanded C5 plan](HubImplementationPlan.md#32-remote-fault-coverage) requires
+three independent safety dispositions: actual powered GDT recovery, credible
+damaged-station/protector failures, and cable/splice faults. It gives retention of
+the current station the first evaluation path, with an explicit local-redesign
+decision if that fails, not assumed permanent hub-only sufficiency. TDK DC-rated
+stacks and series GDT/MOV cells are ordered evaluation alternatives, not selected
+parts or drop-ins; local thermal/DC/impulse and physical acceptance remain necessary.
+
+The proposed hub now has independent two-pole K1/K2 disconnect paths behind Q,
+fault/state/reset and common-cause requirements. It does not credit those actuators
+with detecting remote faults that overlap permitted loads. The plan also rejects
+residual-current, learned-baseline or periodic-blanking shortcuts as full baseline
+C5 coverage. Healthy TEST remains steady, continuous-safe and compatible with
+the existing six-end matrix and clean-cut diagnoses. PE and OEM RF protection stay
+outside TEST switching; no new feed, mode, station module or field sensing is approved.
+
+[C5 limits and release evidence](HubImplementationPlan.md#35-c5-limits-and-release-evidence)
+defines numerical-contract, retained-station, cable/joint, hub-implementation and
+integrated-qualification deliverables. An unknown/unprotected hazardous class
+blocks C5 closure; an independently protected prototype may still carry explicit
+qualification deferrals. Actual closure needs implemented safeguards and evidence,
+not this document. Existing station P3/P4 work and Gate P files are unaffected.
+
+Fresh follow-up verification, after the plan expansion:
+
+| Exact command or review | Actual result and scope |
+| :--- | :--- |
+| `python3 -B scripts/analyze_limits.py` | Exit 0; 280 nominal clean-cut cases and the existing below-threshold fault screens reproduced. |
+| `python3 -B scripts/design_bounds.py` | Exit 0; current 1.536239 A healthy upper screen and the distinct 1.320771 A / 16.052665 W near-source resistive-fault case reproduced with their declared inputs. |
+| `TMPDIR=/tmp/opencode python3 -B -W error -m unittest discover -s tests -p test_electrical.py -v` | **23 PASS**, including 615 prospective inter-core fault subcases, all nominal cuts, floating/earth paths and legacy masking controls. |
+| `TMPDIR=/tmp/opencode python3 -B -W error -m unittest discover -s tests -p test_design_bounds.py -v` | **14 PASS**, including conditional fault/thermal bounds, asymmetric cuts and source/provenance limitations. |
+| Independent technical and static reviews | Three-obligation coverage, Q/K1/K2 independence/state/reset, equations, local manufacturer evidence and scope reviewed with no remaining technical findings. All plan local paths/fragments and 18 reference-link definitions resolve. The static review's missing-follow-up-results finding is addressed by this table. No full Markdown-renderer or external-link reachability check claimed. |
+| `git diff --check` and `git diff --no-index --check /dev/null HubImplementationPlan.md` | PASS, including the untracked plan. |
+
+These are fresh runs of unchanged models/tests, not a new hub simulation or actual
+recovery, interruption, thermal or surge qualification. No native KiCad, build,
+publication, hardware test, manufacturer acceptance, upload, order or commit was
+performed. Station design sources, controlled notes and generated package evidence
+remain untouched; all five machine holds and original A/B/C gates remain open.
 
 ### Next Bounded Work
 
