@@ -18,8 +18,9 @@ pcb/CPL.csv is a generated reference mirror, not an input or independent source.
 pcb/verification.json records narrowly reviewed warnings and design-release
 holds. Prototype exports do not approve or clear production/qualification holds.
 
-Placement uses mm, absolute origin, native signed Y, native footprint anchors and
-rotations modulo 360. No unreviewed JLCPCB centroid/rotation corrections are made.
+Placement uses mm, absolute origin, native signed Y and native footprint anchors.
+Kefa CPL rotations and supplier-pin mappings use exact-part/footprint-bound reviews
+in pcb/DFM_EVIDENCE.md; angles are modulo 360. No centroid corrections are made.
 The supported fabrication subset is KiCad 9 two-layer, circular drills, ordinary
 pad flashes and straight copper/outline segments. Unsupported geometry fails
 closed and needs a tested validator extension, not an ignore switch. Supplier
@@ -92,9 +93,27 @@ ROUNDRECT_PRIMITIVES = [
     "20,1,$1+$1,$2,$3,$4,$5,0*", "20,1,$1+$1,$4,$5,$6,$7,0*",
     "20,1,$1+$1,$6,$7,$8,$9,0*", "20,1,$1+$1,$8,$9,$2,$3,0*",
 ]
+# 2026-10-14 catalogue-axis review, not approval of a JLCPCB job's placement model.
+# Exact library/model UUIDs, data revision IDs and source URLs:
+# pcb/DFM_EVIDENCE.md#kefa-orientation-evidence
+# pin_map lists PCB pad numbers in SUPPLIER pin order (1, 2, ...).
+JLCPCB_PLACEMENT_REVIEWS = {
+    "DogFence:KF128_7.62_3P_Input": {
+        "mpn": "KF128-7.62-3P", "lcsc": "C474957", "offset": 270.0, "pin_map": ("1", "2", "3"),
+    },
+    "DogFence:KF128_7.62_3P_Earth": {
+        "mpn": "KF128-7.62-3P", "lcsc": "C474957", "offset": 270.0, "pin_map": ("1", "2", "3"),
+    },
+    "DogFence:KF129_5.08_2P_LED_A": {
+        "mpn": "KF129-5.08-2P", "lcsc": "C475092", "offset": 90.0, "pin_map": ("2", "1"),
+    },
+    "DogFence:KF129_5.08_2P_LED_C": {
+        "mpn": "KF129-5.08-2P", "lcsc": "C475092", "offset": 90.0, "pin_map": ("1", "2"),
+    },
+}
 SCOPE = {
     "claim": "Manufacturing file verification only; not surge certification or order approval.",
-    "placement": "mm; absolute (0,0); X=PCB X, Y=-PCB Y; angles modulo 360; no centroid corrections",
+    "placement": "mm; absolute (0,0); X=PCB X, Y=-PCB Y; angles modulo 360 with exact-part/footprint-bound Kefa C474957 (+270 deg) / C475092 (+90 deg) EasyEDA 0-deg axis offsets; J_LED_A supplier pins 1/2 map to PCB pads 2/1; see DFM_EVIDENCE.md#kefa-orientation-evidence; no centroid corrections",
     "placement_tolerance_mm": 0.00001,
     "rotation_tolerance_degrees": 0.00001,
     "bom_fields": "Exact MPN, Manufacturer and sourcing in schematic/PCB; CSV 'LCSC Part #' accepts source 'LCSC' or 'LCSC Part #'; conflicting aliases fail. Absent Sourcing defaults to LCSC, not External. Only External XML may omit an empty LCSC field.",
@@ -356,6 +375,34 @@ def validate_bom(path, xml_path, board):
     return bom
 
 
+def jlcpcb_placement_review(fp):
+    """Fail on changed terminal identity/frame rather than silently reuse an offset."""
+    review = JLCPCB_PLACEMENT_REVIEWS.get(fp.name)
+    codes = [fp.properties[key] for key in ("LCSC", "LCSC Part #") if key in fp.properties]
+    ref = fp.properties["Reference"]
+    if review is None:
+        require(not any(fp.properties.get("MPN") == item["mpn"] or item["lcsc"] in codes
+                        for item in JLCPCB_PLACEMENT_REVIEWS.values()),
+                f"Unreviewed JLCPCB terminal footprint: {ref}; review the part/model transform")
+        return None
+    require(fp.properties.get("MPN") == review["mpn"]
+            and fp.properties.get("Manufacturer") == "Cixi Kefa Elec"
+            and codes and all(code == review["lcsc"] for code in codes)
+            and fp.properties.get("Sourcing", "LCSC") == "LCSC"
+            and fp.properties.get("Sourcing Reference", "") == "",
+            f"JLCPCB placement review identity differs: {ref}; review the part/model transform")
+    require(fp.side == "top" and fp.attributes == {"through_hole"}
+            and all(pad.kind == "thru_hole" for pad in fp.pads)
+            and sorted(pad.pin for pad in fp.pads) == sorted(review["pin_map"]),
+            f"JLCPCB placement review frame/pins differ: {ref}")
+    return review
+
+
+def cpl_rotation(fp):
+    review = jlcpcb_placement_review(fp)
+    return (fp.rotation + (review["offset"] if review else 0.0)) % 360
+
+
 def check_placement(rows, board, native=False):
     fields = POSITION_FIELDS if native else CPL_FIELDS
     ref_col, val_col, package_col, x_col, y_col, rot_col, side_col = fields
@@ -371,11 +418,13 @@ def check_placement(rows, board, native=False):
         x, y, rot = numbers((row[x_col], row[y_col], row[rot_col]))
         require(abs(x - fp.x) <= 0.00001 and abs(y + fp.y) <= 0.00001,
                 f"CPL origin/handedness/position differs: {ref}")
-        require(abs((rot - fp.rotation + 180) % 360 - 180) <= 0.00001, f"CPL rotation differs: {ref}")
+        export_rot = cpl_rotation(fp)
+        expected_rot = fp.rotation if native else export_rot
+        require(abs((rot - expected_rot + 180) % 360 - 180) <= 0.00001, f"CPL rotation differs: {ref}")
         require(row[side_col] == fp.side and row[val_col] == fp.properties["Value"], f"CPL side/value differs: {ref}")
         package = fp.name.split(":", 1)[-1] if native else fp.name
         require(row[package_col] == package, f"CPL footprint differs: {ref}")
-        found[ref] = [ref, row[val_col], fp.name, f"{x:.6f}", f"{y:.6f}", f"{rot % 360:.6f}", fp.side]
+        found[ref] = [ref, row[val_col], fp.name, f"{x:.6f}", f"{y:.6f}", f"{export_rot:.6f}", fp.side]
     expected = {ref for ref, fp in board.footprints.items() if fp.populated}
     require(set(found) == expected, f"Missing CPL designators: {sorted(expected - found.keys())}")
     return found
@@ -404,10 +453,25 @@ def assembly_reference(board, bom, positions, revision):
              "Confirm exact-part model origins, rotations and polarity with the assembler.",
              "ASSEMBLY.md controls body envelopes, SMT mounting, GDT forming and panel overhang.", "",
              "PLACEMENT ANCHORS",
-             "Reference | MPN | Footprint | PCB X mm | PCB Y mm | CPL X mm | CPL Y mm | Rotation deg | Side"]
+              "Reference | MPN | Footprint | PCB X mm | PCB Y mm | PCB rotation deg | CPL X mm | CPL Y mm | CPL rotation deg | Side"]
     for ref in sorted(positions):
         fp, row = board.footprints[ref], positions[ref]
-        lines.append(" | ".join([ref, bom[ref]["MPN"], fp.name, f"{fp.x:.6f}", f"{fp.y:.6f}", *row[3:]]))
+        lines.append(" | ".join([ref, bom[ref]["MPN"], fp.name, f"{fp.x:.6f}", f"{fp.y:.6f}",
+                                 f"{fp.rotation % 360:.6f}", *row[3:]]))
+    reviews = [(ref, jlcpcb_placement_review(board.footprints[ref])) for ref in sorted(positions)]
+    if any(review for _, review in reviews):
+        lines += ["", "KEFA SUPPLIER PIN MAPPING",
+                  "JLCEDA/EasyEDA Official Library: see DFM_EVIDENCE.md#kefa-orientation-evidence.",
+                  "Apply these mappings when comparing the supplier model to the PCB terminal datums below.",
+                  "J_LED_A opens NORTH; its supplier pin 1 is EAST on PCB pad 2 (WIRE_B).",
+                  "Do not rotate J_LED_A to make supplier pin 1 coincide with PCB pad 1.",
+                  "Both LED connectors retain PCB pad 1 (+) WEST and PCB pad 2 (B return) EAST."]
+        for ref, review in reviews:
+            if review:
+                pads = {pad.pin: pad for pad in board.footprints[ref].pads}
+                mapping = "; ".join(f"supplier pin {pin} -> PCB pad {num} ({pads[num].net})"
+                                    for pin, num in enumerate(review["pin_map"], 1))
+                lines.append(f"- {ref} ({review['lcsc']}): {mapping}.")
     lines += ["", "TERMINAL DATUMS",
               "Compare ALL pins with the supplier model; a nonpolar part can still have the wrong physical axis.",
               "Hole diameter is nominal finished component PTH; zero means an undrilled terminal.",

@@ -108,6 +108,9 @@ LIMITATIONS = [
     "Front >=3.00 mm guards apply to unlike-net pads of different GDTs and GDT_AC pads versus "
     "all WIRE_B copper, not every front core pair. Same-GDT 2.80 mm land / 1.80 mm connected-copper "
     "gaps and same-net AB/BC B pads remain distinct scopes.",
+    "Kefa opening arrows require a shaft and two arrowhead lines on both F.SilkS and F.Fab, "
+    "pointing west/east/north/south for J_IN/J_EARTH/J_LED_A/J_LED_C. This verifies source "
+    "markings, not rendered/processed printing or the supplier's physical placement.",
 ]
 
 
@@ -1196,6 +1199,51 @@ class GeometryCheck:
         self.measurements["component_rings"] = rings
         self.attempt(self.check_mounts)
 
+    def check_terminal_markings(self):
+        """Measure arrowhead direction, independently of CPL offsets and line ordering."""
+        arrows = []
+        for ref, outward in (("J_IN", (-1, 0)), ("J_EARTH", (1, 0)),
+                             ("J_LED_A", (0, -1)), ("J_LED_C", (0, 1))):
+            fp = self.footprints.get(ref)
+            if fp is None:
+                self.error("TERMINAL_OPENING_ARROW", f"{ref}: terminal marking footprint missing")
+                continue
+            origin, angle = position(fp)
+            three_pin = ref in ("J_IN", "J_EARTH")
+            xs, rows, head_length, half_width = ((-4.1, -2.2), (-7.62, 0, 7.62), 0.7, 0.6) if three_pin \
+                else ((1, 4), (0,), 1, 0.75)
+            for layer in ("F.SilkS", "F.Fab"):
+                lines = [(point(line, "start"), point(line, "end")) for line in fp.children("fp_line")
+                         if scalar(line, "layer") == layer
+                         and scalar(line.one("stroke"), "type") == "solid"
+                         and number(line.one("stroke"), "width") >= 0.15 - EPS]
+
+                def single_line(a, b):
+                    return sum((math.dist(a, p) <= EPS and math.dist(b, q) <= EPS)
+                               or (math.dist(a, q) <= EPS and math.dist(b, p) <= EPS)
+                               for p, q in lines) == 1
+
+                for y in rows:
+                    a, b = (xs[0], y), (xs[1], y)
+                    candidates = []
+                    if single_line(a, b):
+                        # A shaft alone is undirected. Locate its two fins at exactly one end.
+                        for tail, tip in ((a, b), (b, a)):
+                            sign = 1 if tip[0] > tail[0] else -1
+                            if all(single_line(tip, (tip[0] - sign * head_length, y + dy))
+                                   for dy in (-half_width, half_width)):
+                                candidates.append((move((sign, 0), angle=angle), move(tip, origin, angle)))
+                    good = len(candidates) == 1 and math.dist(candidates[0][0], outward) <= EPS
+                    self.expect(good, "TERMINAL_OPENING_ARROW",
+                                f"{ref}: require one complete {layer} opening arrow at local Y={y:g}, "
+                                f"pointing {outward} in PCB coordinates", fp)
+                    arrows.append({"reference": ref, "layer": layer, "local_y_mm": y, "ok": good,
+                                   "direction_pcb": [round(v, 6) for v in candidates[0][0]]
+                                   if len(candidates) == 1 else None,
+                                   "tip_pcb_mm": [round(v, 6) for v in candidates[0][1]]
+                                   if len(candidates) == 1 else None})
+        self.measurements["terminal_opening_arrows"] = arrows
+
     def check_mounts(self):
         npth = [p for p in self.pads if p.kind == "np_thru_hole"]
         self.expect(len(npth) == 4, "MOUNTING_HOLES", "exactly four protected NPTH mounting holes required")
@@ -1519,7 +1567,8 @@ def check_sources(pcb_text, project_text, rules_text, paths=None):
                                            "file": paths["pcb"], "message": str(exc)})
         else:
             checker.attempt(checker.read_board)
-            for operation in (checker.check_guardrails, checker.check_clearances, checker.check_apertures):
+            for operation in (checker.check_guardrails, checker.check_terminal_markings,
+                              checker.check_clearances, checker.check_apertures):
                 checker.attempt(operation)
             if "project" in parsed:
                 checker.attempt(checker.check_project, parsed["project"], paths["project"])

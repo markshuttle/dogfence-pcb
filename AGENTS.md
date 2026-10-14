@@ -159,6 +159,18 @@ review, not approved centroid corrections. Flying-probe inputs describe
 **bare-board continuity**, not an assembled functional or surge test. Never
 hand-edit generated artifacts.
 
+Kefa placement follows [ASSEMBLY's supplier-pin mapping](pcb/ASSEMBLY.md#kefa-supplier-pin-mapping)
+and the exact catalogue/model records in [DFM evidence](pcb/DFM_EVIDENCE.md#kefa-orientation-evidence).
+`manufacturing.py` validates native rotations first and applies the reviewed CPL
+offset once, bound to footprint/manufacturer/MPN/LCSC and top-side THT pin inventory.
+Unknown frames or changed/missing/conflicting identities require review, not a
+zero-offset fallback. `Assembly.txt` separates PCB/CPL angles and lists supplier
+pins versus PCB pads; **J_LED_A supplier pins 1/2 map to PCB pads 2/1**. Preserve
+its north-facing opening and west-positive PCB pad mapping. The independent
+geometry gate checks complete outward arrows on both F.SilkS/F.Fab, including
+head direction after rotation. Keep reversal/missing/double-head negative tests
+and native export checks; these do not approve the actual JLCPCB job placement.
+
 ```bash
 make test
 TMPDIR=/tmp/opencode KICAD_TEST_CLI=/snap/bin/kicad.kicad-cli python3 -B -W error -m unittest discover -s tests -v

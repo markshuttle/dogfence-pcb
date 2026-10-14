@@ -10,6 +10,8 @@ review: **02661d8**, followed by the manufacturer-land correction retained below
 placement/front-B changes below.
 **East board extension: 2026-09-15**, with the approved outline/H2/H4 changes
 recorded separately under [East Board Extension](#east-board-extension).
+**Kefa orientation review: 2026-10-14**, with catalogue axes, pin mapping and
+marking corrections under [Kefa Orientation Evidence](#kefa-orientation-evidence).
 Hardware **1.2.1-dev**. Scope: P3/P4 board design and five assembled prototypes.
 
 Dimensions are millimetres unless explicitly marked inches. Global coordinates
@@ -47,6 +49,73 @@ history; [README's master DFM policy](../README.md#via-and-component-hole-dfm)
 remains normative. This note supports that policy with evidence and calculations;
 its sibling assembly controls and local acceptance duties remain usable without
 the root guides.
+
+## Kefa Orientation Evidence
+
+**2026-10-14, hardware 1.2.1-dev.** The user reports that the received prototype
+J_IN and J_EARTH wire openings face inward, 180 degrees from the intended
+placement. This establishes an assembly-orientation defect; the received boards
+alone do not establish whether the CPL import, placement review or THT assembly
+instruction caused it. The earlier three-sided silk bracket was ambiguous.
+
+The catalogue-axis review used the **JLCEDA/EasyEDA Official Library**
+([JLCEDA](https://lceda.cn/), [EasyEDA](https://easyeda.com)), retrieved through the
+public product/component API on **2026-10-14**. These are digital library records,
+not revisions of Kefa's manufacturer drawings or acceptance of JLCPCB's actual
+job placement model. Exact retained identifiers:
+
+| Part / source | Footprint identity and data revision | Associated 3D model UUID |
+| :--- | :--- | :--- |
+| Cixi Kefa Elec **KF128-7.62-3P / C474957**, [API record](https://easyeda.com/api/products/C474957/components?version=6.4.19.5) | `CONN-TH_3P-P7.62_KF128-7.62-3P`; footprint UUID `5cd4cd68421849528fdafcfbeefb7e46`; `datastrid=3c443ee9e28f4852890129fcf35d054c`; `updateTime=1607501150` | `5610d4bd782145f282dfe1c639a87759` |
+| Cixi Kefa Elec **KF129-5.08-2P / C475092**, [API record](https://easyeda.com/api/products/C475092/components?version=6.4.19.5) | `CONN-TH_P5.08_KF129-5.08-2P`; footprint UUID `64dc452e22ba4654b34e7f2a1aa1cc95`; `datastrid=04e0a957941e416cbbf42e6d8d8effa1`; `updateTime=1607502778` | `ed544082b1ef4543b9c15adf4ac9ebcc` |
+
+Both footprint records declare editor version **6.4.7** and associated-model
+rotation `0,0,0`. The source component/symbol UUIDs are respectively
+`421d2b39dcdf4672ae1527a4110b7b84` and `6001626d931f4c08b3d7ed0ec3ebd37c`;
+these are distinct from the footprint and 3D model IDs above. The API query
+version is not a frozen library revision; a later retrieval must be compared with
+the retained identifiers and geometry before reusing this review.
+
+At zero degrees the pin row is horizontal, numbered west to east. Relative to
+the library's pin-row-centre origin, KF128 pins 1/2/3 are **(-7.62,0), (0,0),
+(7.62,0)**; KF129 pins 1/2 are **(-2.54,0), (2.54,0)**. Raw library origins are
+`(4015,3000)` and `(3990,3000)`, with 30-unit and 20-unit pitches respectively;
+the coordinates above use **0.254 mm per library unit**. These pin datums are
+not body or pick-and-place centroids.
+
+The reviewed footprint front-lip convention identifies the zero-degree opening
+side as **south (+Y in the top-view PCB frame)**. With [JLCPCB's positive-CCW
+CPL angles](https://jlcpcb.com/help/article/pick-place-file-for-pcb-assembly),
+an angle `theta` transforms that opening vector to `(sin(theta), cos(theta))`
+in PCB coordinates (Y south). A pin-row offset `(x,0)` transforms to
+`(x*cos(theta), -x*sin(theta))`. The selected CPL angles **270/90/180/0 degrees**
+therefore give west/east/north/south openings for **J_IN/J_EARTH/J_LED_A/J_LED_C**.
+The [assembly mapping](ASSEMBLY.md#kefa-supplier-pin-mapping) explicitly records
+J_LED_A's supplier 1/2 -> PCB 2/1 exception; the other three mappings preserve
+number order. Matching supplier pin numbers directly to PCB numbers would turn
+J_LED_A inward. No PCB pad or net change is required.
+
+`scripts/manufacturing.py` binds the catalogue offsets and pin maps to each
+reviewed local footprint and its exact **manufacturer/MPN/LCSC** identity,
+top-side THT frame and pin inventory. Missing/conflicting aliases, identity
+changes, or a reviewed terminal identity on an unknown footprint fail closed.
+The generated assembly text carries separate native-PCB/CPL angles and all four
+supplier-pin mappings. Builds use this retained review without a live network
+lookup; they cannot establish that JLCPCB's job model still uses these axes.
+Confirm actual model origins, all mapped pins, wire openings and manual-THT
+instructions with the assembler and retain the accepted placement data.
+
+**Marking correction after staged-change review:** the initial KF128 arrows
+pointed inward (insertion motion), while the LED arrows pointed outward (opening
+direction). Both `F.SilkS` and `F.Fab` now use outward opening arrows consistently.
+[ASSEMBLY's marking geometry](ASSEMBLY.md#body-and-courtyard-evidence) controls
+the double-line lips and segmented rear edges, and corrects J_EARTH's former
+0.50 mm silk-edge claim to **1.70 mm centreline / 1.625 mm stroke-edge margin**.
+The independent geometry gate checks complete arrowheads and their global
+directions; malformed, reversed, missing and double-headed markings are tested.
+All pads, drills, copper, placements, maximum-body boxes and courtyards remain
+the retained design. Catalogue-axis and file verification do not close C2's
+actual supplier placement acceptance or any engineering/physical hold.
 
 ## Westward Spacing Selection
 
@@ -142,12 +211,13 @@ full openings, drain-through, wetting and solder beads, not just the absence of
 a GDT/connector courtyard overlap. No new body clearance, process approval or
 physical qualification is claimed, and no courtyard/land reduction is selected.
 
-Native integration exposed two J_IN silk/mask clashes caused by the relocated
-openings. The source and local input footprint now omit only the east/rear
-F.SilkS edge; the mirrored B.SilkS reference moves to **(106.00,108.50)**.
-Pads, the F.Fab maximum-body box and full courtyard remain unchanged. This is
-a legend correction, not via covering, body-clearance relief or physical fit
-approval. The other eight local footprint definitions are unchanged.
+The September native integration exposed two J_IN silk/mask clashes caused by
+the relocated openings. At that snapshot the source/local input footprint
+omitted its east/rear F.SilkS edge, and the mirrored B.SilkS reference moved to
+**(106.00,108.50)**. Pads, the F.Fab maximum-body box and full courtyard stayed
+unchanged. The later [2026-10-14 orientation correction](#kefa-orientation-evidence)
+adds segmented rear edges and outward-opening cues; it does not change the
+westward placement, via treatment, body clearance or physical-fit status.
 
 Rear different-core minimum remains **3.02**, including the retained **3.10**
 return gap; fence/EARTH minimum remains **3.25 on both faces**. The native and

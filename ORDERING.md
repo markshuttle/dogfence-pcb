@@ -150,16 +150,16 @@ Intentional custom footprints must be supplied as reproducible project-local def
 
 Native KiCad output describes **footprint placement origins**, which need checking against actual assembly centroids. Prefer the retained absolute Gerber/drill origin and **native signed-Y** convention in mm. For example, the baseline LED origins at board Y = +103 / +142 mm export as **-103 / -142 mm**, not positive screen coordinates. Never repair handedness with `abs(Y)` or by rotating/moving PCB pads.
 
-Include every required SMT/THT part, exclude mechanical/DNP items, and normalize rotations **modulo 360**: -90 and 270 degrees are equivalent. Any origin-to-centroid or supplier-model rotation correction must be evidence-backed, keyed to the exact part/footprint, consistently transformed and recorded with the approved placement.
+Include every required SMT/THT part, exclude mechanical/DNP items, and normalize rotations **modulo 360**: -90 and 270 degrees are equivalent. Any origin-to-centroid or supplier-model rotation correction must be evidence-backed, keyed to the exact part/footprint, consistently transformed and recorded with the approved placement. For the four Kefa screw terminals (`C474957` and `C475092`), `scripts/manufacturing.py` applies the [reviewed JLCEDA/EasyEDA Official Library axes](pcb/DFM_EVIDENCE.md#kefa-orientation-evidence), bound to the exact local footprint, manufacturer, MPN and LCSC identity. An identity/frame change requires a fresh review. The local footprints provide segmented rear silk, double-line outward lips and **outward-pointing opening arrows** on `F.SilkS`/`F.Fab`; these arrows describe the opening direction, not wire-insertion motion.
 
 Compare every supplier model with [ASSEMBLY's exact origins, rotations and terminal nets](pcb/ASSEMBLY.md#placement-and-polarity) and the generated sixteen-anchor/34-terminal drawings. The following are order-review cautions, not an unverified upload-angle table:
 
 | Part | Physical orientation to confirm |
 | :--- | :--- |
-| J_LED_A | North/top connector opens outward north; footprint rotation 90 degrees. Pad 1 positive is left; pad 2 B return right in the top view. |
-| J_LED_C | South/bottom connector opens outward south; footprint rotation 270 degrees. Same left-positive/right-return global pad mapping. |
-| J_IN | Opens left, baseline rotation 0 degrees; A/B/C pins north-to-south. |
-| J_EARTH | Opens right, baseline rotation 180 degrees; all three pins on EARTH, not a multiplied current rating. |
+| J_LED_A | North/top connector opens outward north; PCB footprint rotation 90 degrees, `CPL.csv` rotation **180 degrees**. **Supplier pin 1 -> PCB pad 2 (B, east); supplier pin 2 -> PCB pad 1 (+, west).** Do not rotate the connector to match the two numbering systems. |
+| J_LED_C | South/bottom connector opens outward south; PCB footprint rotation 270 degrees, `CPL.csv` rotation **0 degrees**. Same left-positive/right-return global pad mapping. |
+| J_IN | Opens left (west), PCB footprint rotation 0 degrees, `CPL.csv` rotation **270 degrees**; A/B/C pins north-to-south. |
+| J_EARTH | Opens right (east), PCB footprint rotation 180 degrees, `CPL.csv` rotation **90 degrees**; all three pins on EARTH, not a multiplied current rating. |
 | D1, D2 | 0 degrees, **cathode bands right toward LED positive; anodes left to resistor outputs**. Check actual pad/net mapping and the BYG23T model. |
 | D3, D4 | 180 degrees, **cathodes left to LED positive; anodes right to B**. They use the local cathode-right footprint rotated, not matching global diode orientations. |
 | R1, R2 | 0 degrees, nonpolar SMT on the retained alternate project lands, pending supplier placement/stencil/solder acceptance; no insertion holes, axial standoff or lead forming. |
@@ -167,7 +167,13 @@ Compare every supplier model with [ASSEMBLY's exact origins, rotations and termi
 | GDT_AB, GDT_BC | Centred on the revised SMT land pattern with correct electrode orientation and processed paste volume. |
 | Earth GDTs | Retain 9.00 mm centre pitch and the controlled 8.21 mm body-diameter envelope with 0.10 mm per-side projected pose allowance. The resulting 0.59 mm budgeted body gap is not a 1.00 mm air-gap or impulse-insulation guarantee. Inspect the actual formed bodies and lid clearance. |
 
-A viewer offset/rotation is not evidence of a correct machine placement file. Resolve discrepancies with the assembler and retain the corrected approved placement data; do not rely on silkscreen or a CAM engineer to silently fix all orientation errors.
+Use [ASSEMBLY's supplier-pin mapping](pcb/ASSEMBLY.md#kefa-supplier-pin-mapping) and
+the matching `Assembly.txt`, which separates PCB and CPL rotations. Confirm all
+four physical opening directions and mapped contacts in the actual JLCPCB job
+preview and THT assembly instructions. A viewer offset/rotation is not evidence
+of a correct machine placement file. Resolve discrepancies with the assembler
+and retain the corrected approved placement data; do not rely on silkscreen or
+a CAM engineer to silently fix all orientation errors.
 
 ## 6. Separate Approvals
 

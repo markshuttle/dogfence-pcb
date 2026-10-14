@@ -1,6 +1,6 @@
 # Controlled Assembly Notes
 
-Document: DF-ASM-1.2.1-dev. Updated 2026-09-15 for hardware **1.2.1-dev**.
+Document: DF-ASM-1.2.1-dev. Updated 2026-10-14 for hardware **1.2.1-dev**.
 
 **DEVELOPMENT / FIVE-BOARD PROTOTYPE SCOPE.** These instructions control the
 selected **16-part SMT-resistor/BYG23T hybrid**, not a qualified field protection
@@ -173,19 +173,32 @@ actual continuous-safe TEST and protection qualification remain separate holds.
   are **controlled procurement envelopes**, not newly invented manufacturer
   guarantees. Inspect actual parts against them. Courtyards include the stated
   pose and assembly allowances; a drawing stroke is not extra body tolerance.
-  LED arrows indicate the required wire-opening direction.
+  LED and input/earth terminal arrows on `F.Fab` and `F.SilkS` indicate the
+  required **outward wire-opening direction**, not the wire-insertion motion.
+  Arrowheads point west at J_IN, east at J_EARTH, north at J_LED_A and south at
+  J_LED_C. The independent geometry gate checks each shaft and both arrowhead
+  lines after the footprint's rotation on both layers.
 - Local footprint origins follow the placement table, including the authorized
-  R1/R2 and D1/D2 moves and the 1.2.1 westward SMT-GDT placement. Use the native
+  R1/R2 and D1/D2 moves and the 1.2.1 westward SMT-GDT placement. Use the native-derived
   generated CPL, not a hand-maintained positive screen-Y table: native placement
   Y is negative for these positive board Y coordinates. Rotations -90 and 270
-  degrees are equivalent. The assembler must
-  approve its actual model origin, orientation and any centroid correction.
+  degrees are equivalent. For the four Kefa screw terminals (`J_IN`, `J_EARTH`,
+  `J_LED_A`, `J_LED_C`), `CPL.csv` applies the JLCEDA/EasyEDA 0-degree footprint
+  axis offsets (`+270 deg` for `KF128_7.62_3P_Input`/`KF128_7.62_3P_Earth`,
+  `+90 deg` for `KF129_5.08_2P_LED_A`/`KF129_5.08_2P_LED_C`) so that `CPL.csv`
+  exports `J_IN=270.000000`, `J_EARTH=90.000000`, `J_LED_A=180.000000` and
+  `J_LED_C=0.000000` under the [reviewed catalogue convention](DFM_EVIDENCE.md#kefa-orientation-evidence).
+  These corrections are bound to the exact footprint, manufacturer, MPN and
+  LCSC identity; a changed identity/frame requires a new review. The assembler
+  must still approve its actual job-model origin, orientation and any centroid correction.
 
 The native-generated **Assembly.pdf** overlays F.Fab, pad outlines, F.SilkS,
 F.CrtYd and Edge.Cuts. **Assembly.txt** lists all sixteen
-footprint anchors with exact MPN/footprint identity and all **34 electrical
-terminal centres**, in both PCB and signed-Y fabrication coordinates. Use these
-together to compare every supplier-model pin, not just its displayed centre.
+footprint anchors with exact MPN/footprint identity, separate **PCB and CPL
+rotation columns**, the [Kefa supplier-pin mappings](#kefa-supplier-pin-mapping),
+and all **34 electrical terminal centres**, in both PCB and signed-Y fabrication
+coordinates. Use these together to compare every mapped supplier-model pin,
+not just its displayed centre or an assumed equality of supplier and PCB numbering.
 Neither a courtyard midpoint nor a body-envelope midpoint is an approved
 pick-and-place centroid. No centroid correction has been applied to the CPL.
 Use the text's explicit pin numbers/nets: the tested KiCad 9.0.7 PDF
@@ -197,10 +210,10 @@ that native export, so no ineffective PCB plot-setting change is retained.
 
 | References | Origin / rotation | Required placement and inspection |
 | :--- | :--- | :--- |
-| J_IN | (106.00, 122.50), 0 deg | Wire openings west. Pin 1 A at (106.00, 114.88), pin 2 B at (106.00, 122.50), pin 3 C at (106.00, 130.12). |
-| J_EARTH | (155.00, 122.50), 180 deg | Wire openings east. Pin 1 at Y=130.12, pin 2 at Y=122.50, pin 3 at Y=114.88; all X=155.00 and all on EARTH. |
-| J_LED_A | (145.50, 103.00), 90 deg | Openings north. Pin 1 LED_A_POS at (142.96, 103.00); pin 2 WIRE_B return at (148.04, 103.00). Embedded local pad tuples: pin 1 **(0,-2.54,90)**, pin 2 **(0,2.54,90)**. |
-| J_LED_C | (145.50, 142.00), 270 deg | Openings south. Pin 1 LED_C_POS at (142.96, 142.00); pin 2 WIRE_B return at (148.04, 142.00). Embedded local pad tuples: pin 1 **(0,2.54,270)**, pin 2 **(0,-2.54,270)**. |
+| J_IN | (106.00, 122.50), 0 deg | Wire openings west (CPL rotation 270 deg). Pin 1 A at (106.00, 114.88), pin 2 B at (106.00, 122.50), pin 3 C at (106.00, 130.12). |
+| J_EARTH | (155.00, 122.50), 180 deg | Wire openings east (CPL rotation 90 deg). Pin 1 at Y=130.12, pin 2 at Y=122.50, pin 3 at Y=114.88; all X=155.00 and all on EARTH. |
+| J_LED_A | (145.50, 103.00), 90 deg | Openings north (CPL rotation 180 deg). Pin 1 LED_A_POS at (142.96, 103.00); pin 2 WIRE_B return at (148.04, 103.00). Embedded local pad tuples: pin 1 **(0,-2.54,90)**, pin 2 **(0,2.54,90)**. |
+| J_LED_C | (145.50, 142.00), 270 deg | Openings south (CPL rotation 0 deg). Pin 1 LED_C_POS at (142.96, 142.00); pin 2 WIRE_B return at (148.04, 142.00). Embedded local pad tuples: pin 1 **(0,2.54,270)**, pin 2 **(0,-2.54,270)**. |
 | D1, D2 | (130.80, 104.50) / (130.80, 140.50), 0 deg | BYG23T SMA series diodes. Cathode band east/right, K1 at X=132.90 to LED_A_POS/LED_C_POS; A2 at X=128.70 to Net-(D1-A)/Net-(D2-A). No diode insertion holes remain. |
 | D3, D4 | (135.00, 99.00) / (135.00, 146.00), 180 deg | Same BYG23T-M3/TR SMA, **negative shunts**, not series parts. Cathode band west/left, K1 at X=132.90 to LED_A_POS/LED_C_POS; A2 at X=137.10 to WIRE_B. No EARTH connection. |
 | R1, R2 | (120.00, 104.50) / (120.00, 140.50), 0 deg | Nonpolar, top-side SMT. Pad 1 at X=116.875 to WIRE_A/WIRE_C; pad 2 at X=123.125 to Net-(D1-A)/Net-(D2-A). Use the [prototype BOM population](#reviewed-components) and accept its [alternate-land process](#2512-smt-resistors). No holes or axial standoff/forming. |
@@ -223,6 +236,29 @@ routing**. Straight D1-D3 / D2-D4 cathode links at **X=132.90** are each
 **140.50..146.00** respectively. Shunt anode-to-B routes to **J_LED_A/C pin 2**
 are **1.80 wide on F.Cu**. Preserve the B.Cu returns and full-width rails/EARTH
 under [Physical Guardrails](#physical-guardrails): **no folded branch or new via**.
+
+### Kefa Supplier Pin Mapping
+
+The pin numbers in the placement table and `Assembly.txt` terminal datums are
+**PCB pad numbers**. The JLCEDA/EasyEDA Official Library model has a separate
+pin-number frame; its exact footprint/model IDs and review inputs are retained in
+[Kefa Orientation Evidence](DFM_EVIDENCE.md#kefa-orientation-evidence).
+For the outward orientations in the placement table, compare pins as follows:
+
+| Reference | Supplier-model pin -> PCB pad | Required mouth direction |
+| :--- | :--- | :--- |
+| J_IN | 1 -> 1 (WIRE_A), 2 -> 2 (WIRE_B), 3 -> 3 (WIRE_C) | West |
+| J_EARTH | 1 -> 1, 2 -> 2, 3 -> 3 (all EARTH) | East |
+| J_LED_A | **1 -> 2 (WIRE_B, east); 2 -> 1 (LED_A_POS, west)** | **North** |
+| J_LED_C | 1 -> 1 (LED_C_POS, west); 2 -> 2 (WIRE_B, east) | South |
+
+**Do not rotate J_LED_A to align supplier pin 1 with PCB pad 1.** The north-facing
+connector's independent contacts intentionally use the reversed numbering map.
+Both LED connectors still have **PCB pad 1 / `+` west and PCB pad 2 / B return east**;
+check the actual net/marking before connecting indicator leads. This mapping
+does not change any pad, net or schematic pin. During the JLCPCB placement/manual-THT
+review, confirm the actual mouth direction and every mapped pin against the
+source-matched drawing, and retain the accepted job placement and inspection record.
 
 ## Indicator SMA And Resistor Assembly
 
@@ -500,13 +536,20 @@ Courtyards include this projection plus >=0.25 assembly margin. The silk is a
 placement aid, not the maximum-body envelope. DFM_EVIDENCE contains the complete
 tolerance stack and incoming inspection method.
 
-J_EARTH uses a three-sided silk aid: its west/rear silk edge would cross the
-intentional EARTH via mask openings, so that edge is omitted. The full F.Fab
-and courtyard envelopes are retained; no physical clearance is concealed.
-J_IN likewise omits only its east/rear silk edge where the relocated rail-via
-openings cross it. Its mirrored B.SilkS reference is at **(106.00,108.50)**,
-outside those openings. The input footprint's pads, F.Fab and complete courtyard
-are unchanged; a three-sided silk aid does not relax the body/fit controls.
+J_EARTH and J_IN close their rear (inward, local X=+5.20) `F.SilkS` edges using
+segmented vertical lines between the intentional EARTH and rail via mask openings,
+while adding a double-line front bevel (local X=-5.30 and -4.40) and three
+outward-pointing wire-opening arrows on the outward side (`F.SilkS` and `F.Fab`).
+Each KF128 arrow runs from local X=-2.20 toward its tip at X=-4.10; its two fins
+end at X=-3.40, Y=mouth centre +/-0.60. The three mouth centres are Y=-7.62/0/+7.62.
+J_LED_A and J_LED_C likewise include a double-line front bevel (local X=+5.70
+and +5.00) and outward wire-opening arrow on both `F.SilkS` and `F.Fab`.
+J_IN's mirrored B.SilkS reference remains at **(106.00,108.50)**, outside the
+via openings. All pads, `F.Fab` maximum-body boxes and complete courtyards are
+unchanged; these silkscreen aids do not relax the body/fit controls.
+J_EARTH's outward silk centreline is at global **X=160.30**: **1.70** from the
+X=162.00 outline, or **1.625** to the outer edge of the 0.15-wide stroke. This
+silk margin is separate from the body/pose and courtyard margins below.
 
 Earth-GDT maximum projected gap is bounded below by
 `9.00 - 8.21 - 2*0.10 = 0.59`; courtyard gap is 0.08. This is a dimensional
@@ -554,8 +597,8 @@ five panels, remain the quantity requirement.
 
 The **2026-09-14 approved westward selection, hardware 1.2.1-dev**, changes
 global placement, not local lands, body/courtyard geometry, parts or nets.
-Only J_IN's overlapping silk edge/reference are corrected in the source/local
-definition as described above. The **1.2.0-dev AC conversion** already adopted the same reviewed
+Kefa silkscreen orientation markings and J_IN's rear segmented silk edge/reference
+are maintained in the source/local definitions as described above. The **1.2.0-dev AC conversion** already adopted the same reviewed
 SMT footprint as AB/BC. The shared metric land/process controls still apply to
 **all six lands on all three SMT GDTs**. The AB/BC-specific via calculation below
 is separate from AC's clearance to the retained GDT_B_E hole/pad.

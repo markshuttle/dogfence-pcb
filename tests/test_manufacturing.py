@@ -5,6 +5,7 @@ import copy
 import csv
 import io
 import json
+import math
 import os
 from pathlib import Path
 import re
@@ -1261,7 +1262,7 @@ class ManufacturingTests(unittest.TestCase):
         self.assertIn("DRAFT: not an accepted JLCPCB placement model or production approval.", text)
         self.assertIn("Population: 3 components; 2 SMT / 1 THT.", text)
         self.assertNotIn("PR02", text)
-        self.assertIn("R1 | R1K | Local:THT | 10.000000 | 20.000000 | 10.000000 | -20.000000 | 0.000000 | top", text)
+        self.assertIn("R1 | R1K | Local:THT | 10.000000 | 20.000000 | 0.000000 | 10.000000 | -20.000000 | 0.000000 | top", text)
         self.assertIn("R1 | 1 | POWER | thru_hole | 8.500000 | 20.000000 | 8.500000 | -20.000000 | 1.000000", text)
         for ref in ("H1", "R_DNP", "VIA"):
             self.assertNotRegex(text, rf"(?m)^{ref} \|")
@@ -1278,7 +1279,21 @@ class ManufacturingTests(unittest.TestCase):
         self.assertEqual(len(sync.children(symbols, "symbol")), 6)
         path = self.root / "native-pos.csv"
         path.write_text(native_positions(board))
-        positions = m.check_placement(m.read_csv(path, m.POSITION_FIELDS), board, native=True)
+        cpl_path = self.root / "CPL.csv"
+        positions = m.generate_cpl(path, cpl_path, board)
+        self.assertEqual(m.check_placement(m.read_csv(cpl_path, m.CPL_FIELDS), board), positions)
+        kefa_rotations = {"J_IN": "270.000000", "J_EARTH": "90.000000",
+                          "J_LED_A": "180.000000", "J_LED_C": "0.000000"}
+        for ref, rot in kefa_rotations.items():
+            self.assertEqual(positions[ref][5], rot)
+            wrong = m.read_csv(cpl_path, m.CPL_FIELDS)
+            next(row for row in wrong if row["Designator"] == ref)["Rotation"] = f"{board.footprints[ref].rotation:.6f}"
+            with self.subTest(ref=ref), self.assertRaisesRegex(nets.VerificationError, f"CPL rotation differs: {ref}"):
+                m.check_placement(wrong, board)
+            native_wrong = m.read_csv(path, m.POSITION_FIELDS)
+            next(row for row in native_wrong if row["Ref"] == ref)["Rot"] = rot
+            with self.subTest(native_ref=ref), self.assertRaisesRegex(nets.VerificationError, f"CPL rotation differs: {ref}"):
+                m.check_placement(native_wrong, board, native=True)
         bom = m.read_bom(REPO / "pcb" / "BOM.csv")
         for ref in ("R1", "R2"):
             for key, expected in {"MPN": "35212K2FT", "Manufacturer": "TE Connectivity",
@@ -1323,6 +1338,99 @@ class ManufacturingTests(unittest.TestCase):
                     self.assertEqual(tuple(map(float, row[4:])), (x, y, x, -y, drill))
         self.assertIn("35212K2FT", anchors)
         self.assertIn("Footprint anchors and terminal centres are NOT measured package centroids.", text)
+
+    def test_kefa_placement_review_is_bound_to_identity_footprint_and_frame(self):
+        board = nets.read_board(REPO / "pcb/pcb.kicad_pcb")
+        for ref in ("J_IN", "J_EARTH", "J_LED_A", "J_LED_C"):
+            original = board.footprints[ref]
+            for alias in ("LCSC", "LCSC Part #", "both"):
+                fp = copy.deepcopy(original)
+                code = fp.properties.pop("LCSC")
+                fp.properties.update({key: code for key in (("LCSC", "LCSC Part #") if alias == "both" else (alias,))})
+                self.assertEqual(m.cpl_rotation(fp), m.cpl_rotation(original))
+            for defect in ("mpn", "manufacturer", "missing_mpn", "missing_manufacturer",
+                           "code", "empty_code", "missing_code", "conflicting_alias",
+                           "external", "source_reference", "footprint", "bottom", "smd", "smd_pad",
+                           "missing_pad", "duplicate_pad"):
+                changed = copy.deepcopy(board)
+                fp = changed.footprints[ref]
+                if defect == "mpn":
+                    fp.properties["MPN"] += "-substitute"
+                elif defect == "manufacturer":
+                    fp.properties["Manufacturer"] = "Other manufacturer"
+                elif defect in ("missing_mpn", "missing_manufacturer"):
+                    del fp.properties["MPN" if defect == "missing_mpn" else "Manufacturer"]
+                elif defect in ("code", "empty_code"):
+                    fp.properties["LCSC"] = "C123" if defect == "code" else ""
+                elif defect == "missing_code":
+                    del fp.properties["LCSC"]
+                elif defect == "conflicting_alias":
+                    fp.properties["LCSC Part #"] = "C123"
+                elif defect == "external":
+                    fp.properties["Sourcing"] = "External"
+                elif defect == "source_reference":
+                    fp.properties["Sourcing Reference"] = "https://example.com/other-part"
+                elif defect == "footprint":
+                    fp.name += "_Unreviewed"
+                elif defect == "bottom":
+                    fp.side = "bottom"
+                elif defect == "smd":
+                    fp.attributes = {"smd"}
+                elif defect == "smd_pad":
+                    fp.pads[0].kind = "smd"
+                elif defect == "missing_pad":
+                    fp.pads.pop()
+                else:
+                    fp.pads.append(copy.deepcopy(fp.pads[0]))
+                native_rows = list(csv.DictReader(io.StringIO(native_positions(changed))))
+                for native in (True, False):
+                    rows = native_rows if native else [dict(zip(m.CPL_FIELDS, (
+                        row["Ref"], row["Val"], changed.footprints[row["Ref"]].name, row["PosX"], row["PosY"],
+                        row["Rot"], row["Side"]))) for row in native_rows]
+                    # Correct every CPL angle first so an unrelated rotation mismatch cannot mask the identity gate.
+                    if not native:
+                        for row in rows:
+                            row["Rotation"] = str(m.cpl_rotation(board.footprints[row["Designator"]]))
+                    with self.subTest(ref=ref, defect=defect, native=native), self.assertRaisesRegex(
+                            nets.VerificationError, rf"JLCPCB .*{ref}"):
+                        m.check_placement(rows, changed, native=native)
+
+    def test_kefa_cpl_axes_and_pin_mapping_match_reviewed_supplier_datums(self):
+        # Independent catalogue datums, not values derived from the exporter offset table.
+        # Provenance: pcb/DFM_EVIDENCE.md#kefa-orientation-evidence, retrieved 2026-10-14.
+        board = nets.read_board(REPO / "pcb/pcb.kicad_pcb")
+        native = list(csv.DictReader(io.StringIO(native_positions(board))))
+        positions = m.check_placement(native, board, native=True)
+        expected = {"J_IN": ((-7.62, 0, 7.62), ("1", "2", "3"), (-1, 0)),
+                    "J_EARTH": ((-7.62, 0, 7.62), ("1", "2", "3"), (1, 0)),
+                    "J_LED_A": ((-2.54, 2.54), ("2", "1"), (0, -1)),
+                    "J_LED_C": ((-2.54, 2.54), ("1", "2"), (0, 1))}
+        text = m.assembly_reference(board, m.read_bom(REPO / "pcb/BOM.csv"), positions, "1.2.1-dev")
+        self.assertIn("PCB rotation deg | CPL X mm | CPL Y mm | CPL rotation deg", text)
+        for ref, (supplier_xs, pin_map, outward) in expected.items():
+            fp = board.footprints[ref]
+            theta = math.radians(float(positions[ref][5]))
+            # Zero-degree supplier mouth faces +Y (south); positive CPL angles are CCW.
+            self.assertAlmostEqual(math.sin(theta), outward[0])
+            self.assertAlmostEqual(math.cos(theta), outward[1])
+            pads = {pad.pin: pad for pad in fp.pads}
+            mapping = []
+            for pin, (x, num) in enumerate(zip(supplier_xs, pin_map), 1):
+                pad = pads[num]
+                self.assertAlmostEqual(fp.x + x * math.cos(theta), pad.x)
+                self.assertAlmostEqual(fp.y - x * math.sin(theta), pad.y)
+                mapping.append(f"supplier pin {pin} -> PCB pad {num} ({pad.net})")
+            self.assertIn(f"- {ref} ({fp.properties['LCSC']}): " + "; ".join(mapping) + ".", text)
+        self.assertIn("Do not rotate J_LED_A to make supplier pin 1 coincide with PCB pad 1.", text)
+        for delta in (-720, -360, 360, 720):
+            wrapped = copy.deepcopy(native)
+            for row in wrapped:
+                row["Rot"] = str(float(row["Rot"]) + delta)
+            self.assertEqual(m.check_placement(wrapped, board, native=True), positions)
+            cpl = [dict(zip(m.CPL_FIELDS, row)) for row in positions.values()]
+            for row in cpl:
+                row["Rotation"] = str(float(row["Rotation"]) + delta)
+            self.assertEqual(m.check_placement(cpl, board), positions)
 
     def test_via_treatment_csv_reports_source_requested_front_and_back(self):
         path = self.root / "pcb" / "pcb.kicad_pcb"
@@ -1708,6 +1816,8 @@ class NativeContractTests(unittest.TestCase):
                 ["pcb", "export", "drill", "--format", "excellon", "--drill-origin", "absolute", "--excellon-units", "mm",
                  "--excellon-zeros-format", "decimal", "--excellon-separate-th", "--output", str(drills) + "/", str(pcb)],
                 ["pcb", "export", "ipcd356", "--output", str(root / "pcb.d356"), str(pcb)],
+                ["pcb", "export", "pos", "--format", "csv", "--units", "mm", "--side", "both",
+                 "--output", str(root / "native-pos.csv"), str(pcb)],
             ]
             for args in jobs:
                 command = [os.environ["KICAD_TEST_CLI"], *args]
@@ -1749,7 +1859,29 @@ class NativeContractTests(unittest.TestCase):
             outline = m.parse_gerber(gerbers / m.LAYERS["Edge.Cuts"][0], m.LAYERS["Edge.Cuts"][1])[1]
             self.assertEqual({segment[:4] for segment in outline},
                              {(97, -94.5, 162, -94.5), (162, -150.5, 162, -94.5),
-                              (97, -150.5, 162, -150.5), (97, -150.5, 97, -94.5)})
+                               (97, -150.5, 162, -150.5), (97, -150.5, 97, -94.5)})
+            positions = m.generate_cpl(root / "native-pos.csv", root / "CPL.csv", board)
+            checked["kefa_cpl_rotations"] = {ref: float(positions[ref][5])
+                                             for ref in ("J_IN", "J_EARTH", "J_LED_A", "J_LED_C")}
+            self.assertEqual(checked["kefa_cpl_rotations"],
+                             {"J_IN": 270, "J_EARTH": 90, "J_LED_A": 180, "J_LED_C": 0})
+            silk = m.parse_gerber(gerbers / m.LAYERS["F.SilkS"][0], m.LAYERS["F.SilkS"][1])[1]
+            # Independent physical arrow datums, transformed only to the Gerber's signed Y.
+            expected_arrows = []
+            for y in (114.88, 122.5, 130.12):
+                for tip, tail, fin in ((101.9, 103.8, 102.6), (159.1, 157.2, 158.4)):
+                    expected_arrows.extend([((tail, y), (tip, y)),
+                                            ((fin, y - .6), (tip, y)), ((fin, y + .6), (tip, y))])
+            for tip_y, tail_y, fin_y in ((99, 102, 100), (146, 143, 145)):
+                expected_arrows.extend([((145.5, tail_y), (145.5, tip_y)),
+                                        ((144.75, fin_y), (145.5, tip_y)), ((146.25, fin_y), (145.5, tip_y))])
+            segments = Counter(tuple(sorted(((round(x1, 6), round(-y1, 6)),
+                                             (round(x2, 6), round(-y2, 6)))))
+                               for x1, y1, x2, y2, width, _ in silk if abs(width - .15) < 1e-6)
+            for a, b in expected_arrows:
+                key = tuple(sorted(tuple(round(v, 6) for v in point) for point in (a, b)))
+                self.assertEqual(segments[key], 1, key)
+            checked["outward_silk_arrow_segments"] = len(expected_arrows)
             for name, digest in hashes.items():
                 self.assertEqual(m.sha256(project / name), digest)
             vias = m.via_mask_settings(board)

@@ -188,6 +188,14 @@ class GeometryTests(unittest.TestCase):
         return {"ok": ok, "status": "pass" if ok else "fail", "diagnostics": checker.diagnostics,
                 "measurements": checker.measurements}
 
+    def marking_report(self, board):
+        checker = GeometryCheck(board)
+        checker.attempt(checker.read_board)
+        checker.attempt(checker.check_terminal_markings)
+        ok = not any(d["severity"] == "error" for d in checker.diagnostics)
+        return {"ok": ok, "status": "pass" if ok else "fail", "diagnostics": checker.diagnostics,
+                "measurements": checker.measurements}
+
     def assert_pass(self, report=None):
         report = report if report is not None else self.report()
         self.assertTrue(report["ok"], json.dumps(report["diagnostics"], indent=2))
@@ -800,6 +808,92 @@ class GeometryTests(unittest.TestCase):
             self.assertAlmostEqual(east_edge - actual[2] - pose, margin)
             # Retain the declared inward-routing budget, not a guaranteed fabrication tolerance.
             self.assertAlmostEqual(east_edge - 0.20 - actual[2] - pose, margin - 0.20)
+        lip = next(line for line in earth.children("fp_line")
+                   if line.one("layer").atoms() == ["F.SilkS"]
+                   and tuple(map(float, line.one("start").atoms())) == (-5.3, -11.43)
+                   and tuple(map(float, line.one("end").atoms())) == (-5.3, 11.43))
+        lip_x = move((-5.3, 0), (x, y), angle)[0]
+        self.assertAlmostEqual(east_edge - lip_x, 1.70)
+        self.assertAlmostEqual(east_edge - lip_x - float(lip.one("stroke").one("width").atoms()[0]) / 2, 1.625)
+        for ref, rear_count in (("J_IN", 4), ("J_EARTH", 6)):
+            fp = footprint(self.authoritative, ref)
+            silk = {(tuple(map(float, line.one("start").atoms())), tuple(map(float, line.one("end").atoms())))
+                    for line in fp.children("fp_line") if line.one("layer").atoms() == ["F.SilkS"]}
+            fab = {(tuple(map(float, line.one("start").atoms())), tuple(map(float, line.one("end").atoms())))
+                   for line in fp.children("fp_line") if line.one("layer").atoms() == ["F.Fab"]}
+            self.assertIn(((-5.3, -11.43), (-5.3, 11.43)), silk)
+            self.assertIn(((-4.4, -11.43), (-4.4, 11.43)), silk)
+            self.assertIn(((-4.4, -12.5), (-4.4, 12.5)), fab)
+            self.assertEqual(sum(a[0] == b[0] == 5.2 for a, b in silk), rear_count)
+        for ref in ("J_LED_A", "J_LED_C"):
+            fp = footprint(self.authoritative, ref)
+            for layer, bevel_y in (("F.SilkS", 5.63), ("F.Fab", 6.1)):
+                lines = {(tuple(map(float, line.one("start").atoms())), tuple(map(float, line.one("end").atoms())))
+                         for line in fp.children("fp_line") if line.one("layer").atoms() == [layer]}
+                self.assertIn(((5.0, -bevel_y), (5.0, bevel_y)), lines)
+
+    def test_terminal_opening_arrows_point_outward_on_both_layers(self):
+        rows = self.assert_pass()["measurements"]["terminal_opening_arrows"]
+        expected = {"J_IN": (-1, 0, 3), "J_EARTH": (1, 0, 3),
+                    "J_LED_A": (0, -1, 1), "J_LED_C": (0, 1, 1)}
+        self.assertEqual(len(rows), 16)
+        for ref, (dx, dy, count) in expected.items():
+            for layer in ("F.SilkS", "F.Fab"):
+                arrows = [row for row in rows if (row["reference"], row["layer"]) == (ref, layer)]
+                self.assertEqual(len(arrows), count)
+                self.assertTrue(all(row["ok"] and row["direction_pcb"] == [dx, dy] for row in arrows))
+
+    def test_terminal_arrows_reject_reversed_missing_and_ambiguous_heads(self):
+        for ref in ("J_IN", "J_EARTH", "J_LED_A", "J_LED_C"):
+            three_pin = ref in ("J_IN", "J_EARTH")
+            low, high = (-4.1, -2.2) if three_pin else (1, 4)
+            for layer in ("F.SilkS", "F.Fab"):
+                for y0 in ((-7.62, 0, 7.62) if three_pin else (0,)):
+                    for defect in ("reverse", "missing_head", "missing_shaft", "double_head", "duplicate", "wrong_layer"):
+                        board = deepcopy(self.positive)
+                        fp = footprint(board, ref)
+                        arrow = [line for line in fp.children("fp_line") if line.one("layer").atoms() == [layer]
+                                 and all(low - 1e-6 <= float(line.one(edge).atoms()[0]) <= high + 1e-6
+                                         and abs(float(line.one(edge).atoms()[1]) - y0) <= 0.750001
+                                         for edge in ("start", "end"))]
+                        self.assertEqual(len(arrow), 3)
+                        fins = [line for line in arrow if line.one("start").atoms()[1] != line.one("end").atoms()[1]]
+                        self.assertEqual(len(fins), 2)
+                        if defect in ("reverse", "double_head"):
+                            changed = arrow if defect == "reverse" else [deepcopy(line) for line in fins]
+                            if defect == "double_head":
+                                fp.values.extend(changed)
+                            for line in changed:
+                                for edge in ("start", "end"):
+                                    x, y = map(float, line.one(edge).atoms())
+                                    replace(line, f"({edge} {low + high - x:.6f} {y:.6f})")
+                        elif defect == "missing_head":
+                            fp.values.remove(fins[0])
+                        elif defect == "missing_shaft":
+                            fp.values.remove(next(line for line in arrow if line not in fins))
+                        elif defect == "duplicate":
+                            fp.values.append(deepcopy(fins[0]))
+                        else:
+                            for line in arrow:
+                                replace(line, '(layer "B.SilkS")')
+                        with self.subTest(ref=ref, layer=layer, y=y0, defect=defect):
+                            self.assert_defect("TERMINAL_OPENING_ARROW", self.marking_report(board))
+
+    def test_terminal_arrows_use_global_rotation_not_line_endpoint_order(self):
+        for ref in ("J_IN", "J_EARTH", "J_LED_A", "J_LED_C"):
+            fp = footprint(self.board, ref)
+            at = list(map(float, fp.one("at").atoms()))
+            angle = at[2] if len(at) == 3 else 0
+            replace(fp, f"(at {at[0]} {at[1]} {angle - 360})")
+            for line in fp.children("fp_line"):
+                a, b = line.one("start").atoms(), line.one("end").atoms()
+                replace(line, f"(start {' '.join(b)})")
+                replace(line, f"(end {' '.join(a)})")
+            board = deepcopy(self.board)
+            replace(footprint(board, ref), f"(at {at[0]} {at[1]} {angle + 180})")
+            with self.subTest(ref=ref):
+                self.assert_defect("TERMINAL_OPENING_ARROW", self.marking_report(board))
+        self.assert_pass(self.report())
 
     def test_axial_forming_room_is_a_geometric_ceiling_not_bend_approval(self):
         for ref, axis, wire, room in (("GDT_A_E", 0, 1.05, 4.32),

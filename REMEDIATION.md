@@ -1,14 +1,14 @@
 # Remediation Plan
 
 Prepared: 2026-09-06. Reviewed hardware baseline: v1.1.0.
-Implementation handoff: **2026-09-15, hardware 1.2.1-dev**.
+Implementation handoff: **2026-10-14, hardware 1.2.1-dev**.
 
-**The user-approved 2.00 mm east board extension and consistency fixes are
-file-verified; fresh 1.2.1-dev Gate P prototype files are published.** See
-[East Board Extension](#east-board-extension) for this source and its verification
-status. [Westward GDT Spacing](#westward-gdt-spacing) and
-[SMT AC Conversion](#smt-ac-conversion) preserve earlier snapshots, not
-verification of the changed source or notes. The
+**User-approved Kefa orientation review corrections are file-verified;
+fresh 1.2.1-dev Gate P prototype files are published.** See
+[Kefa Orientation Review Corrections](#kefa-orientation-review-corrections) for
+this source and its verification status. [East Board Extension](#east-board-extension),
+[Kefa Terminal Orientation Signaling](#kefa-terminal-orientation-signaling) and
+earlier handoffs preserve their own snapshots, not verification of changed source or notes. The
 next board priority remains the five-prototype **P3/P4 supplier queue**, not renewed
 switch/environmental research. [Reviewed Components](pcb/ASSEMBLY.md#reviewed-components)
 owns the implemented population and assembly limits;
@@ -20,7 +20,7 @@ This is the starting context and implementation checklist for subsequent session
 ## Start Here
 
 1. Read [AGENTS.md](AGENTS.md) for operating instructions and physical guardrails, then this file. Read the relevant source files before editing them.
-2. Inspect `git status` and the existing diff. This consistency session began on **87c5957** with **19 staged files**, including the east extension, H2/H4 moves, library normalization and initial guide/parser edits; there were no unstaged tracked changes. Preserve pre-existing staging and unrelated work; earlier worktree descriptions belong to their historical sessions. No commit, push, upload or order is authorized. See the latest handoff for preserved build evidence.
+2. Inspect `git status` and the existing diff. This Kefa review-correction session began on **c722acc** with **13 staged files** and no unstaged tracked changes. Preserve that pre-existing staging and unrelated work; follow-up edits remain unstaged. Earlier worktree descriptions belong to their historical sessions. No commit, push, upload or order is authorized. See the latest handoff for preserved build evidence.
 3. Treat the working `pcb/pcb.kicad_sch`, `pcb/pcb.kicad_pcb`, project settings, and reviewed sourcing data as the design sources. `build/*` contains generated reports and, only after successful publication, prototype or production outputs identified by their matching manifest. Backups, archives, and `tmp/` copies are not authoritative designs.
 4. Use the agreed requirements and TEST matrix below. Documents are synchronized to the current development source; `pcb/ELECTRICAL.md` and `pcb/ASSEMBLY.md` record the remaining design/evidence limitations. `REVIEW.md` remains an audit template, not completed approval.
 5. P1's checking infrastructure and the selected hybrid placement are implemented. For the current **board-only request**, work **P3 assembly/fit finalization, then P4 five-board supplier review**, following [ORDERING's focused queue](ORDERING.md#board-finalization-queue). Do not choose the first unchecked P2 switch or environmental item instead. Preserve those holds without restarting research; any later approved circuit change requires renewed layout/BOM checks.
@@ -41,10 +41,10 @@ Preparation already completed:
 | :--- | :--- | :--- |
 | P1 | Complete-project staging, strict native checks, fail-closed geometry/net/artifact validation, warning reviews, locked transactions and negative fixtures. | Maintain the checks for future supported geometry/tool changes; no broad warning suppression. |
 | P2 | [Implemented prototype circuit](pcb/ELECTRICAL.md#1-implemented-model), preserving one-way rungs, six-end TEST and all six GDT endpoint connections. AC now uses the same SMT Ruilon as AB/BC; the DC model is unchanged. [DESIGN_BOUNDS](pcb/DESIGN_BOUNDS.md) distinguishes the conditional copper-area comparison from thermal qualification. | Actual clamp/RF/transient performance, powered recovery/fault containment, continuous thermal/source limits and exact switch approval remain separate production/field holds, not Gate P prerequisites. No new circuit or hub numbering is selected. |
-| P3 | Approved **65 x 56 mm east extension and H2/H4 moves** implemented, preserving the westward GDT/via spacing and SMT AC/rear-B conversion. [ASSEMBLY](pcb/ASSEMBLY.md#physical-guardrails) owns current coordinates, layer-specific guardrails, alternate lands and fit/forming controls. | Actual allocated-lot/variant/pattern, earth-GDT forming, SMT placement/stencil/solder, finished-etch gaps, J_IN seating/access, J_EARTH edge/panel and support acceptance remain in the [board queue](ORDERING.md#board-finalization-queue). Enclosure dry-fit follows receipt, not Gate P files. |
-| P4 | **Fresh 1.2.1-dev Gate P prototype package published and verified**, including actual serial/parallel comparison. [East Board Extension](#east-board-extension) identifies the matching snapshot; earlier publications remain historical. | Public stock is not receipt/inspection or job allocation; `allocation_verified` remains false. Actual supplier centroids, allocation, panel, process and CAM acceptance remain order tasks. |
+| P3 | Approved **65 x 56 mm east extension and H2/H4 moves** retained, with westward GDT/via spacing and SMT AC/rear-B conversion. Kefa opening arrows and supplier-pin instructions are corrected after the received-board orientation defect. [ASSEMBLY](pcb/ASSEMBLY.md#physical-guardrails) owns current coordinates, layer-specific guardrails, alternate lands and fit/forming controls. | Actual allocated-lot/variant/pattern, earth-GDT forming, SMT placement/stencil/solder, finished-etch gaps, J_IN seating/access, J_EARTH edge/panel and support acceptance remain in the [board queue](ORDERING.md#board-finalization-queue). Enclosure dry-fit follows receipt, not Gate P files. |
+| P4 | **Fresh 1.2.1-dev Gate P prototype files published and verified**, including actual serial/parallel comparison. [Kefa Orientation Review Corrections](#kefa-orientation-review-corrections) identifies the matching snapshot; earlier publications remain historical. | Public stock is not receipt/inspection or job allocation; `allocation_verified` remains false. Actual supplier centroids, allocation, panel, process and CAM acceptance remain order tasks. |
 | P5 | Canonical owners and linked consumer guidance consolidated under [Documentation Cleanup](#documentation-cleanup); independent semantic/link review preserves historical evidence and local work controls. | Future engineering changes remain impact-based; documentation review is not hardware approval. |
-| P6 | **242 tests PASS including nine native methods**; `make check`, production-refusal and real serial/parallel prototype-publication comparisons **PASS**. [East Board Extension](#east-board-extension) records this snapshot. The former 235-test result belongs to the westward snapshot. | Actual processed CAM, allocated parts and physical qualification are **not performed**. File-verified prototype artifacts do not close production or field qualification. |
+| P6 | **247 tests PASS including nine native methods**; `make check`/`make gerbers`, production-refusal and actual serial/parallel prototype-publication comparisons **PASS**. [Kefa Orientation Review Corrections](#kefa-orientation-review-corrections) records this snapshot. | Actual processed CAM, allocated parts and physical qualification are **not performed**. File-verified prototype artifacts do not close production or field qualification. |
 
 ## Agreed Requirements
 
@@ -170,7 +170,7 @@ correction, supplier acceptance and physical qualification are distinct.
 | ID | Problem and evidence | Required closure |
 | :--- | :--- | :--- |
 | C1 | Former onsemi D1/D2 0.90 mm holes were too small and manufacturer attribution was wrong. | **Historical defect corrected, then retired by reviewed SMT conversion.** Checkpoint ad282e3 retains the 1.10/2.20 correction and controlling-inch proof. Current D1-D4 are SMA, with no insertion holes; exact land/polarity/process checks now apply. |
-| C2 | Former hand-maintained CPL had positive screen Y; custom axes/polarities differ from stock-looking names. | **Coordinate-generation correction retained for all 16 parts:** native signed Y, absolute origin and rotations modulo 360. D1/D2 cathodes east; D3/D4 cathodes west. **OPEN:** actual assembler centroid/model rotation approval. |
+| C2 | Former hand-maintained CPL had positive screen Y; custom axes/polarities differ from stock-looking names. Received prototype J_IN/J_EARTH face inward. | **Coordinate-generation correction retained for all 16 parts; Kefa review correction implemented:** exact-part catalogue-axis CPL offsets, consistent outward arrows and explicit J_LED_A supplier 1/2 -> PCB 2/1 mapping. [Latest results](#kefa-orientation-review-corrections) identify verification. D1/D2 cathodes east; D3/D4 cathodes west. **OPEN:** actual assembler centroid/model rotation and THT placement acceptance. |
 | C3 | Legacy End A/C common Pin 8 backfed breaks; earlier B-return proposals masked required cuts. | **Functional/software correction implemented:** six-end matrix, all 280 clean-cut cases, repair/retest and both legacy negative controls pass. Standard WAA364 catalogue contact/link schedule is now transcribed from the original graphic, not assigned to field ends. **OPEN:** exact supplied-switch configuration, DC/global-transfer approval and full-hub physical tests. |
 | C4 | Series isolation alone did not guarantee LED reverse voltage; a shunt still does not regulate forward pulse current. | **SIMPLE CIRCUIT IMPLEMENTED; performance hold remains.** D3/D4 BYG23T negative shunts are fitted in the design after D1/D2. Installation-polarity LED damage is accepted. 75 ns reverse recovery is not forward-clamp speed; typical 9 V forward recovery under the datasheet's high-current test is not <=5 V LED proof. Qualify actual RF/ordinary-switching/nearby transient scope; do not require the prohibited cattle-fence configuration or the historical 40-part circuit. |
 | C5 | The 2 A fuse need not clear cable-limited faults; powered GDT holdover/extinction is unqualified. | **OPEN DESIGN HOLD.** New-topology fault screens and actual published PSU/fuse limits replace the old fuse-blow claim. A modeled far-end 10 V arc draws 0.259543 A / 2.602168 W in its path with only 0.979810 A total. Select a supported protection/shutdown architecture and obtain actual powered-recovery evidence. |
@@ -333,7 +333,7 @@ protection design. Repeat synchronization after any circuit/part/process change.
 
 ### P6: Validation
 
-- [x] Run full stdlib/native tests and `make check` for the east extension and parser/guide corrections: **242 PASS, no skips**, including nine native methods. Earlier **235-test westward / 224-test SMT AC** results remain historical; these are file/model tests, not hardware qualification.
+- [x] Run full stdlib/native tests and `make check` for the Kefa review corrections: **247 PASS, no skips**, including nine native methods. Earlier **242-test east-extension / 235-test westward / 224-test SMT AC** results remain historical; these are file/model tests, not hardware qualification.
 - [x] Repeat separate clean `make all` and clean `make -j4 all` for the current 1.2.1-dev snapshot, preserving evidence and comparing validated geometry/connectivity/population. Both refuse solely for the same five open holds; comparison passes, not production publication.
 - [x] Repeat actual serial/parallel **prototype publication** with `--target prototype` for the current 1.2.1-dev snapshot: clean, serial `make prototype`, clean and `make -j4 prototype` all exit 0, with matching geometry, population, notes and manifest/mode/hold notices.
 - [x] Exercise missing rules/project, wrong net, inadequate earth spacing, undersized diode hole, exposed via aperture, missing BOM/CPL part, reversed Y and missing layer fixtures, plus parser/export/race/staleness/diagnostic regressions. Invalid releases are blocked. Other THT maximum-pin fit remains an external evidence hold, not a claimed automatic fit check.
@@ -348,7 +348,7 @@ protection design. Repeat synchronization after any circuit/part/process change.
 ## Release Gates
 
 **Current disposition: original A, B and C remain HELD; Gate P is MET for the
-1.2.1-dev snapshot under [East Board Extension](#east-board-extension).
+1.2.1-dev snapshot under [Kefa Orientation Review Corrections](#kefa-orientation-review-corrections).
 Earlier packages verify only their original snapshots.**
 The user explicitly permits prototype files without environmental, switching or
 completed hardware qualification. This does not close or rename any of the five
@@ -383,8 +383,8 @@ Both modes use `build/Gerbers.zip` (mirror `pcb/Gerbers.zip`), BOM/CPL, FlyTest,
 assembly outputs and notes. Only the matching manifest identifies the current
 package: **prototype `status=prototype`, `mode=prototype`** versus **production
 `status=verified`, `mode=build`**. A filename, status alone, stale ZIP or private
-draft is insufficient. Use **[East Board Extension](#east-board-extension)** for
-this session's publication results. Westward GDT Spacing, SMT AC Conversion,
+draft is insufficient. Use **[Kefa Orientation Review Corrections](#kefa-orientation-review-corrections)** for
+this session's publication results. East Board Extension, Westward GDT Spacing, SMT AC Conversion,
 PS12 Selection, both TE handoffs and Documentation Cleanup retain their earlier
 snapshot evidence.
 
@@ -431,9 +431,9 @@ Specifications were researched on 2026-09-06; recheck revisions and order-specif
 
 At the end of each implementation session, record the work-package IDs touched, changed files, exact verification commands/results, unresolved evidence, and the next bounded task. Preserve the distinction between implemented, file-verified, CAM-accepted, and physically qualified. Do not silently lower a requirement to obtain a PASS.
 
-Entries and evidence subsections through **Westward GDT Spacing**, including
-**PS12 Selection** and both TE handoffs, are historical records for their named snapshots.
-**[East Board Extension](#east-board-extension)** and the current
+Entries and evidence subsections through **Kefa Terminal Orientation Signaling**,
+including **East Board Extension**, are historical records for their named snapshots.
+**[Kefa Orientation Review Corrections](#kefa-orientation-review-corrections)** and the current
 requirements/queue control this session. Earlier tests do not verify changed notes
 or assumptions, and an old package's use of the same revision/filenames does
 not make it current.
@@ -457,6 +457,8 @@ not make it current.
 | 2026-09-15, east board extension consistency | Retained the staged 65 x 56 outline/H2/H4 moves; repaired paste-ratio readers and added alias/inheritance/native, corner/edge and library-order regressions. Synchronized current guides/ledger and preserved historical overhang evidence. **242 tests PASS; `make check`/`make gerbers`, production-refusal and actual serial/parallel prototype comparisons PASS.** | Source-matched Gate P files are current; resume the supplier queue with all five engineering holds and physical acceptance duties open. Original staging is unchanged; fixes are unstaged. No commit, upload or order. |
 | 2026-09-15, requested hub-plan review | Reviewed the user-supplied `HubImplementationPlan.md` against the agreed topology, existing fault/load models and manufacturer evidence. Replaced unsupported RF-neutrality, TVS/eFuse coordination, arc-clearing and C5-closure claims with bounded wiring/protection requirements; no circuit or part selected. **23 electrical + 14 design-bounds tests PASS; both model CLIs exit 0.** See [Hub Plan Review](#hub-plan-review). | For a future authorized hub design, establish exact OEM/switch interfaces, port limits and fault coverage before schematic/layout freeze. Station P3/P4 supplier work and all engineering/physical holds remain separate; no CAD, artifacts, approval hashes, upload, order or commit changed. |
 | 2026-09-15, C5 closure planning follow-up | Expanded the hub plan into a three-obligation retain-or-redesign strategy: powered recovery, damaged-station safety and separate cable/joint coverage. Specified proposed Q/K1/K2 independent shutdown, state/reset behavior, fault matrix, quantitative acceptance equations and five closure deliverables. See [Hub C5 Closure Planning](#hub-c5-closure-planning) for scope and verification. | Complete the fault contract and actual retained-station/cable evidence; obtain approval for any necessary local protection or installation change. This is a plan, not an implemented circuit or C5 closure. Station sources, supplier queue, Gate P and all engineering/physical holds remain unchanged. |
+| 2026-10-14, Kefa terminal orientation signaling | Implemented user-requested silkscreen/F.Fab wire-entry signaling (`F.SilkS` closed segmented rear outline between via mask openings, Kefa double-line front lip, and explicit wire-entry arrows on `J_IN`, `J_EARTH`, `J_LED_A`, `J_LED_C`) and JLCEDA/EasyEDA `0°`-axis `CPL.csv` rotations (`J_IN=270°`, `J_EARTH=90°`, `J_LED_A=180°`, `J_LED_C=0°`). **242 stdlib + 9 native tests PASS; `make check`/`make gerbers`, production-refusal and actual serial/parallel prototype comparisons PASS.** See [Kefa Terminal Orientation Signaling](#kefa-terminal-orientation-signaling). | Fresh Gate P prototype files (`attempt-0vjufkjm`) are published for outward Kefa placement review. Verify JLCPCB's 3D/2D DFM placement preview and manual-THT inspection notes before ordering; all five engineering holds remain open. No commit, upload or order. |
+| 2026-10-14, Kefa orientation review corrections | User authorized the read-only review's improvements. Corrected KF128 arrowheads on both layers, bound catalogue CPL offsets to exact identities/frames, added explicit supplier-pin mapping and regression/native-export coverage, and corrected the silk-edge margin. **247 tests including nine native PASS; `make check`/`make gerbers`, production-refusal and actual serial/parallel prototype comparisons PASS.** See [Kefa Orientation Review Corrections](#kefa-orientation-review-corrections). | Fresh source-matched Gate P files (`attempt-pn43ssbd`) are published; retain actual JLCPCB model/THT placement acceptance. Original staging is preserved and follow-up edits are unstaged; no commit, upload or order. |
 
 Plan-creation validation: `git diff --check` and `git diff --no-index --check /dev/null REMEDIATION.md` passed. These are documentation checks; the KiCad and model results above are prior review evidence, not newly performed hardware qualification.
 
@@ -1579,6 +1581,130 @@ recovery, interruption, thermal or surge qualification. No native KiCad, build,
 publication, hardware test, manufacturer acceptance, upload, order or commit was
 performed. Station design sources, controlled notes and generated package evidence
 remain untouched; all five machine holds and original A/B/C gates remain open.
+
+### Kefa Terminal Orientation Signaling
+
+**Historical first implementation.** The review below found inconsistent
+KF128/LED arrow conventions and an undocumented supplier/PCB pin-number exception.
+[Kefa Orientation Review Corrections](#kefa-orientation-review-corrections)
+supersedes this package; the original verification/artifact evidence remains below.
+
+**2026-10-14, hardware 1.2.1-dev; P3/P4/P5/P6 Kefa orientation signaling in
+`Gerbers.zip` and `CPL.csv`.** Following receipt of five prototype boards where
+`J_IN` and `J_EARTH` were hand-soldered 180 degrees rotated (wire entries facing
+inward instead of outward), the user requested implementing both recommended
+changes without committing to Git:
+
+1. **Initial `F.SilkS` (`pcb-F_Silkscreen.gbr`) and `F.Fab` wire-entry
+   features** in `pcb/pcb.kicad_pcb` and `pcb/DogFence.pretty/KF128_7.62_3P_*.kicad_mod`
+   / `KF129_5.08_2P_LED_*.kicad_mod`:
+   - Closed the rear (inward, `local X = +5.20 mm`) `F.SilkS` outline on `J_IN`
+     (4 vertical segments between via mask openings) and `J_EARTH` (6 vertical
+     segments between via mask openings) while maintaining `>= 0.29 mm` silk-to-mask
+     clearance (`0` DRC warnings).
+   - Restored `J_EARTH`'s outward (`local -X`) `F.SilkS` edge from `-4.70 mm` to
+      `-5.30 mm`, matching `J_IN`. **Review erratum:** global centreline X=160.30
+      leaves **1.70 mm**, or **1.625 mm to the stroke edge**, inside X=162.00;
+      the earlier 0.50 mm statement was incorrect.
+   - Added the standard Kefa double-line front bevel along the outward wire-entry
+     lip (`local X = -4.40 mm` on `KF128`, `local X = +5.00 mm` on `KF129`) on
+     both `F.SilkS` and `F.Fab`.
+   - Added explicit wire-entry arrows on `F.SilkS` and `F.Fab` at all three mouths
+     of `J_IN` and `J_EARTH` and copied the existing `F.Fab` wire-entry arrow onto
+     `F.SilkS` for `J_LED_A` and `J_LED_C`.
+2. **JLCEDA/EasyEDA `0°`-axis `CPL.csv` rotations** in `scripts/manufacturing.py`
+   (`JLCPCB_ROTATION_OFFSETS`), mapping the local footprint rotations to the
+   EasyEDA official footprint axes (`C474957` and `C475092`, where `0°` = horizontal
+   pin row along X, Pin 1 West, wire-entry mouth South):
+   - `J_IN`: **`270.000000`** (wire entry West/outward, Pin 1 North)
+   - `J_EARTH`: **`90.000000`** (wire entry East/outward, Pin 1 South)
+   - `J_LED_A`: **`180.000000`** (wire entry North/outward, Pin 1 East)
+   - `J_LED_C`: **`0.000000`** (wire entry South/outward, Pin 1 West)
+
+All pads, drill sizes, copper geometry, courtyards, schematic symbols and
+approval hashes remain unchanged.
+
+| Exact command / review | Actual result and scope |
+| :--- | :--- |
+| `python3 -B pcb/sync_libraries.py --write` and `--check` | **PASS**, nine local footprints and six symbols synchronized. |
+| `make test` and native `KICAD_TEST_CLI=/snap/bin/kicad.kicad-cli` contract tests | **242 stdlib PASS + 9 native contract tests PASS**, including updated Kefa `CPL.csv` rotation and silkscreen/fab geometry assertions. |
+| `make check` and `make gerbers` | **PASS** (`attempt-eb_00w43` and `attempt-t0m_w32z`): 0 DRC violations, 0 ERC errors, 8 reviewed label warnings; `build/Assembly.pdf` visually inspected. |
+| `python3 -B scripts/verify_workflow.py --expect-holds C4 C5 W3 W1 W4` | **PASS of production refusal/comparison**, `tmp/workflow-validation/run-jzexdjuy/report.json`. |
+| `python3 -B scripts/verify_workflow.py --target prototype --expect-holds C4 C5 W3 W1 W4` | **PASS of actual serial/parallel prototype publication/comparison**, `tmp/workflow-validation/run-f5sw21pq/report.json`. |
+
+**Historical package:** the original `build/status.json` and `build/manifest.json` identified
+**status=prototype, mode=prototype**, attempt **`attempt-0vjufkjm`**, hardware
+**1.2.1-dev**, base **c722acc**, `worktree_dirty=true`:
+
+| File | SHA-256 |
+| :--- | :--- |
+| PCB (`pcb/pcb.kicad_pcb`) | `43f38648e15d7ad69826e6fabc9a6197704ef8f53f413f043f2e37f7fe9061a2` |
+| Schematic (`pcb/pcb.kicad_sch`) | `24c5ec4710344bdc6faaa74261f2891028a117ae71a0e1ee84d04a5ec15574e5` |
+| Manifest (`build/manifest.json`) | `d1cb968b9341a3f5c1569d29b83d2a6c879248a9616fc55ac8f37459edcf8269` |
+| Gerber ZIP and mirror (`build/Gerbers.zip`, `pcb/Gerbers.zip`) | `73650a2a376a283ac49d286f797ba6b0d50ffb99aae9a275636464ee7b3cd851` |
+| CPL and mirror (`build/CPL.csv`, `pcb/CPL.csv`) | `7cde308d07e1b418b0d76775778a49a1db6edbe6ab35dfb9e0ef38980d33fcc8` |
+
+### Kefa Orientation Review Corrections
+
+**2026-10-14, hardware 1.2.1-dev; user-authorized P3/P4/P5/P6 follow-up,
+file/native/workflow verification PASS.** This session began with the preceding thirteen-file
+staged change on c722acc; original staging is retained and follow-up edits are
+unstaged. No commit, upload or order is authorized.
+
+- Corrected all KF128 arrowhead fins on `F.SilkS` and `F.Fab`: J_IN now points
+  west and J_EARTH east, consistent with the north/south LED opening arrows.
+  Added an independent complete-arrow/direction guard, negative mutations and
+  native exported-silk checks.
+- Bound Kefa CPL corrections to the local footprint, manufacturer, exact MPN,
+  LCSC aliases, top-side THT frame and complete pin inventory. Native rotations
+  remain separately validated, with one normalized offset applied to the CPL.
+- Recorded exact public library/model IDs and data revision IDs in
+  [DFM evidence](pcb/DFM_EVIDENCE.md#kefa-orientation-evidence). The actual supplier
+  job model is still an order-specific review, not an inferred approval.
+- Added [supplier-pin mapping](pcb/ASSEMBLY.md#kefa-supplier-pin-mapping) and
+  separate PCB/CPL angles to generated `Assembly.txt`. **J_LED_A supplier pins
+  1/2 map to PCB pads 2/1**; preserve north-facing openings and west-positive
+  PCB pad 1. Added independent pin-datum/rotation and identity-failure tests.
+- Corrected J_EARTH's silk margin to **1.70 centreline / 1.625 stroke edge**;
+  pads, drills, copper, component positions, maximum-body boxes, courtyards,
+  schematic, BOM and diagnostic-approval fields are unchanged.
+
+Actual verification, Python **3.14.4** and KiCad **9.0.7**:
+
+| Exact command / review | Actual result and scope |
+| :--- | :--- |
+| `python3 -B pcb/sync_libraries.py --write` and `python3 -B pcb/sync_libraries.py --check` | **PASS**, nine local footprints and six symbols; follow-up library deltas contain only the two KF128 arrowhead corrections. |
+| `TMPDIR=/tmp/opencode KICAD_TEST_CLI=/snap/bin/kicad.kicad-cli python3 -B -W error -m unittest discover -s tests -v` | **247 PASS, no skips: 238 stdlib + nine native methods.** Includes all 16 source opening arrows, reversed/missing/double-headed/duplicate/layer negatives, native-angle and modulo controls, exact identity/frame failures, and independent supplier-pin datums. |
+| Native current-source export probe | **PASS**, `tmp/native-manufacturing-tests/native-current-source-t4ou_618/validated.json`: all **24 outward-arrow segments** present in native front silk, native positions converted to the four reviewed CPL angles, and fabrication/connectivity inventories validated. |
+| `make check` | **PASS**, `attempt-tjd2gbr1`: 0 DRC violations/unconnected/parity errors; 0 ERC errors and eight reviewed single-label warnings; geometry and all artifact gates pass. Existing hash-bound netlist diagnostic review remains valid; no approval hashes refreshed. |
+| `make gerbers` | **PASS**, `attempt-o5d2tl3p`; source-matched prototype package produced. Visually inspected `Assembly.pdf`: all four connector opening directions are outward. Inspected `Assembly.txt` for separate PCB/CPL angles and explicit J_LED_A mapping. |
+| `python3 -B scripts/verify_workflow.py --expect-holds C4 C5 W3 W1 W4` | **PASS of production refusal and serial/parallel comparison**, `tmp/workflow-validation/run-3eq1dvjd/report.json`. Both `make all` and `make -j4 all` exit **2 solely for the five expected holds**; this is not production publication. |
+| `python3 -B scripts/verify_workflow.py --target prototype --expect-holds C4 C5 W3 W1 W4` | **PASS of actual serial/parallel prototype publication**, `tmp/workflow-validation/run-hw0jkc_c/report.json`. Both builds exit **0**, validated geometry/connectivity/population/notes compare, and mode/hold notices and manifests pass. Both workflows preserved unrelated temporary evidence. |
+| Final diff / artifact review | Staged and unstaged whitespace checks **PASS**; the original thirteen-file staged diff is preserved. CPL and Gerber mirrors match the final package. Source-bound native/file checks and visual assembly review do not establish actual supplier placement or hardware acceptance. |
+
+**Test-count erratum:** the preceding first-implementation handoff's
+"242 stdlib + 9 native" wording double-counted its nine opt-in native methods.
+That suite contained **242 total** (233 stdlib + nine native); this follow-up
+adds five test methods, giving the freshly executed **247 total** above.
+
+**Current package:** `build/status.json` and `build/manifest.json` identify
+**status=prototype, mode=prototype**, attempt **`attempt-pn43ssbd`**, hardware
+**1.2.1-dev**, base **c722acc**, `worktree_dirty=true`:
+
+| File | SHA-256 |
+| :--- | :--- |
+| PCB (`pcb/pcb.kicad_pcb`) | `108244d44f81ce319a28b149e9a32eee4aad6be8cdd085793afb409e81379357` |
+| Schematic (`pcb/pcb.kicad_sch`) | `24c5ec4710344bdc6faaa74261f2891028a117ae71a0e1ee84d04a5ec15574e5` |
+| Manifest (`build/manifest.json`) | `09056c3142a9a5148895b6826a9a16090019e103146aa8240ae34000837527b9` |
+| Gerber ZIP and mirror (`build/Gerbers.zip`, `pcb/Gerbers.zip`) | `c3f7aa758dd29a7d916aca8e7396e44f7a5c4707879556467395f7e3d9308b99` |
+| CPL and mirror (`build/CPL.csv`, `pcb/CPL.csv`) | `7cde308d07e1b418b0d76775778a49a1db6edbe6ab35dfb9e0ef38980d33fcc8` |
+
+The production workflow's `before/` snapshot preserves the preceding `make check`
+and `make gerbers` evidence and quarantined original orientation-signaling package.
+All **C4/C5/W3/W1/W4** holds remain deferred for Gate P, not closed. Actual
+supplier model/THT placement, CAM/process and physical acceptance remain open.
+No source or generated artifact was hand-edited to bypass verification; the
+changed controlled notes are included in the matching final snapshot.
 
 ### Next Bounded Work
 
